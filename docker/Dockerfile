@@ -38,8 +38,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY requirements/prod.txt ./
-RUN pip install --no-cache-dir -r prod.txt
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir -r requirements/prod.txt
 
 # Stage 3: Production image
 FROM python:3.12-slim AS production
