@@ -9,6 +9,10 @@ on:
 env:
   DOCKER_IMAGE: elohite/chronicle
 
+# Allow workflow to push version updates
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
