@@ -26,13 +26,15 @@ FROM python:3.12-slim AS python-builder
 
 WORKDIR /build
 
-# Install build dependencies for WeasyPrint
+# Install build dependencies for WeasyPrint and other packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
     libffi-dev \
-    libpango-1.0-0 \
-    libpangoft2-1.0-0 \
+    libpango1.0-dev \
+    libcairo2-dev \
+    libgdk-pixbuf2.0-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
@@ -57,10 +59,10 @@ WORKDIR /app
 # Install runtime dependencies for WeasyPrint (Debian Bookworm packages)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
-    libpangoft2-1.0-0 \
-    libharfbuzz0b \
-    libfontconfig1 \
-    libglib2.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf2.0-0 \
+    libffi8 \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
