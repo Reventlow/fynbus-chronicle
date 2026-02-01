@@ -26,11 +26,13 @@ FROM python:3.12-slim AS python-builder
 
 WORKDIR /build
 
-# Install build dependencies
+# Install build dependencies for WeasyPrint
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
+    libharfbuzz-subset0 \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
@@ -56,8 +58,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libffi-dev \
+    libharfbuzz-subset0 \
+    libgdk-pixbuf-2.0-0 \
+    libffi8 \
     shared-mime-info \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
