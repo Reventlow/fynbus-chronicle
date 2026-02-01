@@ -9,7 +9,11 @@ from .base import *  # noqa: F401, F403
 DEBUG = False
 
 # Security settings
-SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+# Trust X-Forwarded-Proto header from reverse proxy (Traefik, nginx)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Disable SSL redirect when behind a reverse proxy that handles SSL
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
