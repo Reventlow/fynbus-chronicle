@@ -1,0 +1,38 @@
+# Production Docker Compose with SQLite
+# Run: docker compose -f docker-compose.sqlite.yml up -d
+#
+# Simple deployment without PostgreSQL - good for small teams.
+# Data persists in the sqlite_data volume.
+
+services:
+  web:
+    image: elohite/chronicle:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost}
+      - SQLITE_DIR=/app/data
+      # SSO (optional)
+      - SSO_ENABLED=${SSO_ENABLED:-False}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET:-}
+      - MICROSOFT_TENANT_ID=${MICROSOFT_TENANT_ID:-common}
+      # Email (optional)
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-it@fynbus.dk}
+      - CHRONICLE_EMAIL_RECIPIENTS=${CHRONICLE_EMAIL_RECIPIENTS:-}
+      # Security
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-}
+    volumes:
+      - sqlite_data:/app/data
+      - static_files:/app/staticfiles
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  static_files:
