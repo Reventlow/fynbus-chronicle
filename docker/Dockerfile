@@ -21,20 +21,16 @@ COPY apps/ ./apps/
 # Build CSS
 RUN npm run build:css
 
-# Stage 2: Python dependencies
-FROM python:3.12-slim AS python-builder
+# Stage 2: Python dependencies (use full image for building - has more libs)
+FROM python:3.12-bookworm AS python-builder
 
 WORKDIR /build
 
-# Install build dependencies for WeasyPrint and other packages
+# Install build dependencies for WeasyPrint
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    python3-dev \
-    libffi-dev \
     libpango1.0-dev \
     libcairo2-dev \
     libgdk-pixbuf-2.0-dev \
-    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
