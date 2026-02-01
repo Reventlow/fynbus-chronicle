@@ -1,0 +1,138 @@
+<div class="card">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+      Helpdesk statistik
+    </h2>
+    <span class="text-sm text-sand-500 dark:text-sand-400">Åbne sager over tid</span>
+  </div>
+
+  <div class="relative h-64">
+    <canvas id="helpdesk-chart"></canvas>
+  </div>
+
+  <!-- Stats summary -->
+  <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-sand-200 dark:border-sand-700">
+    <div class="text-center">
+      <div id="stat-min-open" class="text-xl font-semibold text-sage-600 dark:text-sage-400">—</div>
+      <div class="text-xs text-sand-500 dark:text-sand-400">Laveste</div>
+    </div>
+    <div class="text-center">
+      <div id="stat-current-open" class="text-xl font-semibold text-sand-700 dark:text-sand-300">—</div>
+      <div class="text-xs text-sand-500 dark:text-sand-400">Nuværende</div>
+    </div>
+    <div class="text-center">
+      <div id="stat-max-open" class="text-xl font-semibold text-terracotta-600 dark:text-terracotta-400">—</div>
+      <div class="text-xs text-sand-500 dark:text-sand-400">Højeste</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Execute immediately - this partial is loaded via HTMX after page load
+(function() {
+  // Wait a tick to ensure the canvas element is in the DOM
+  setTimeout(function() {
+    // Fetch chart data (include credentials for authenticated request)
+    fetch('{% url "dashboard:api-helpdesk-data" %}', { credentials: 'same-origin' })
+    .then(response => response.json())
+    .then(data => {
+      // Check for empty data
+      if (!data.weeks || data.weeks.length === 0) {
+        console.log('No chart data available');
+        document.getElementById('helpdesk-chart').parentElement.innerHTML =
+          '<p class="text-center text-sand-500 py-8">Ingen data tilgængelig</p>';
+        return;
+      }
+
+      // Calculate stats from open cases
+      const openCases = data.weeks.map(w => w.open);
+      const minOpen = Math.min(...openCases);
+      const maxOpen = Math.max(...openCases);
+      const currentOpen = openCases[openCases.length - 1] || 0;
+
+      // Update stats
+      document.getElementById('stat-min-open').textContent = minOpen;
+      document.getElementById('stat-current-open').textContent = currentOpen;
+      document.getElementById('stat-max-open').textContent = maxOpen;
+
+      console.log('Chart data loaded:', data.weeks.length, 'weeks');
+
+      // Get theme colors
+      const isDark = document.documentElement.classList.contains('dark');
+      const gridColor = isDark ? 'rgba(180, 172, 154, 0.1)' : 'rgba(107, 99, 91, 0.1)';
+      const textColor = isDark ? '#D4CCC0' : '#6B635B';
+
+      // Chart.js configuration - Line chart for open cases
+      const ctx = document.getElementById('helpdesk-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.weeks.map(w => w.label),
+          datasets: [
+            {
+              label: 'Åbne sager',
+              data: openCases,
+              borderColor: isDark ? 'rgba(196, 163, 90, 1)' : 'rgba(139, 115, 85, 1)',
+              backgroundColor: isDark ? 'rgba(196, 163, 90, 0.1)' : 'rgba(139, 115, 85, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: isDark ? '#C4A35A' : '#8B7355',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#4A4540' : '#FFFFFF',
+              titleColor: isDark ? '#F0EDE8' : '#2C2825',
+              bodyColor: isDark ? '#D4CCC0' : '#4A4540',
+              borderColor: isDark ? '#6B635B' : '#E5E0D8',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  return 'Åbne sager: ' + context.parsed.y;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false,
+              },
+              ticks: {
+                color: textColor,
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 12,
+              }
+            },
+            y: {
+              beginAtZero: false,
+              grid: {
+                color: gridColor,
+              },
+              ticks: {
+                color: textColor,
+              }
+            }
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error('Error loading chart data:', error);
+      document.getElementById('helpdesk-chart').parentElement.innerHTML =
+        '<p class="text-center text-sand-500 py-8">Kunne ikke indlæse data</p>';
+    });
+  }, 50);  // Small delay to ensure DOM is ready
+})();
+</script>

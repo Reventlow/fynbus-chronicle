@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kontrolpanel - FynBus Chronicle{% endblock %}
+
+{% block extra_js_head %}
+<script src="{% static 'js/chart.min.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Kontrolpanel</h1>
+      <p class="text-sand-500 dark:text-sand-400 mt-1">Overblik over IT-afdelingens ugelige aktiviteter</p>
+    </div>
+    <div class="flex space-x-3">
+      <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Ny ugelog
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Current week card (HTMX loaded) -->
+    <div class="lg:col-span-2"
+         hx-get="{% url 'dashboard:partial-current-week' %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse h-48">
+        <div class="skeleton h-6 w-32 mb-4"></div>
+        <div class="skeleton h-4 w-full mb-2"></div>
+        <div class="skeleton h-4 w-3/4"></div>
+      </div>
+    </div>
+
+    <!-- Quick stats cards -->
+    <div class="card flex flex-col justify-center">
+      <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Åbne sager</div>
+      <div class="text-3xl font-bold text-sand-800 dark:text-sand-100">
+        {{ current_week.helpdesk_open|default:"—" }}
+      </div>
+      {% if current_week %}
+        <div class="text-sm mt-2 {% if current_week.helpdesk_delta > 0 %}text-terracotta-500{% elif current_week.helpdesk_delta < 0 %}text-sage-500{% else %}text-sand-500{% endif %}">
+          {% if current_week.helpdesk_delta > 0 %}+{% endif %}{{ current_week.helpdesk_delta }} denne uge
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card flex flex-col justify-center">
+      <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Ugens sager</div>
+      <div class="flex items-baseline space-x-4">
+        <div>
+          <span class="text-2xl font-bold text-sage-600 dark:text-sage-400">{{ current_week.helpdesk_closed|default:"—" }}</span>
+          <span class="text-sm text-sand-500 dark:text-sand-400">lukkede</span>
+        </div>
+        <div>
+          <span class="text-2xl font-bold text-gold-600 dark:text-gold-400">{{ current_week.helpdesk_new|default:"—" }}</span>
+          <span class="text-sm text-sand-500 dark:text-sand-400">nye</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Helpdesk chart (2 columns) -->
+    <div class="lg:col-span-2"
+         hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse h-80">
+        <div class="skeleton h-6 w-40 mb-4"></div>
+        <div class="skeleton h-64 w-full"></div>
+      </div>
+    </div>
+
+    <!-- Recent incidents (1 column) -->
+    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse h-80">
+        <div class="skeleton h-6 w-32 mb-4"></div>
+        <div class="space-y-3">
+          <div class="skeleton h-16 w-full"></div>
+          <div class="skeleton h-16 w-full"></div>
+          <div class="skeleton h-16 w-full"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2
+           font-medium rounded-lg transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-sand-600 text-white
+           hover:bg-sand-700 focus:ring-sand-500
+           dark:bg-gold-500 dark:hover:bg-gold-600 dark:focus:ring-gold-400;
+  }
+
+  .btn-secondary {
+    @apply btn bg-sand-200 text-sand-800
+           hover:bg-sand-300 focus:ring-sand-400
+           dark:bg-sand-700 dark:text-sand-100 dark:hover:bg-sand-600;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-sand-300 text-sand-700 bg-transparent
+           hover:bg-sand-100 focus:ring-sand-400
+           dark:border-sand-600 dark:text-sand-200 dark:hover:bg-sand-800;
+  }
+
+  .btn-danger {
+    @apply btn bg-terracotta-500 text-white
+           hover:bg-terracotta-600 focus:ring-terracotta-400;
+  }
+
+  .btn-sm {
+    @apply text-sm px-3 py-1.5;
+  }
+
+  .btn-lg {
+    @apply text-lg px-6 py-3;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-soft border border-sand-200 p-6
+           dark:bg-sand-800 dark:border-sand-700;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-soft-lg hover:border-sand-300
+           transition-all duration-200
+           dark:hover:border-sand-600;
+  }
+
+  /* Form elements */
+  .input-field {
+    @apply w-full px-3 py-2 border border-sand-300 rounded-lg
+           bg-white text-sand-900
+           placeholder:text-sand-400
+           focus:ring-2 focus:ring-sand-500 focus:border-transparent
+           dark:bg-sand-800 dark:border-sand-600 dark:text-sand-100
+           dark:placeholder:text-sand-500 dark:focus:ring-gold-500;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-sand-700 mb-1
+           dark:text-sand-200;
+  }
+
+  .input-error {
+    @apply border-terracotta-500 focus:ring-terracotta-500
+           dark:border-terracotta-400;
+  }
+
+  .input-help {
+    @apply mt-1 text-sm text-sand-500 dark:text-sand-400;
+  }
+
+  .input-error-message {
+    @apply mt-1 text-sm text-terracotta-600 dark:text-terracotta-400;
+  }
+
+  /* Select dropdown */
+  .select-field {
+    @apply input-field cursor-pointer appearance-none
+           bg-no-repeat bg-right pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B635B' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-size: 1.5em 1.5em;
+  }
+
+  /* Textarea */
+  .textarea-field {
+    @apply input-field resize-y min-h-[100px];
+  }
+
+  /* Checkbox and radio */
+  .checkbox-field {
+    @apply h-4 w-4 rounded border-sand-300 text-sand-600
+           focus:ring-sand-500
+           dark:border-sand-600 dark:bg-sand-800 dark:text-gold-500;
+  }
+
+  .radio-field {
+    @apply checkbox-field rounded-full;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply px-3 py-2 text-sm font-medium text-sand-600 rounded-lg
+           hover:bg-sand-100 hover:text-sand-900
+           transition-colors duration-150
+           dark:text-sand-300 dark:hover:bg-sand-800 dark:hover:text-sand-100;
+  }
+
+  .nav-link-active {
+    @apply nav-link bg-sand-200 text-sand-900
+           dark:bg-sand-700 dark:text-sand-100;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full
+           text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-sand-200 text-sand-800
+           dark:bg-sand-700 dark:text-sand-200;
+  }
+
+  .badge-success {
+    @apply badge bg-sage-100 text-sage-700
+           dark:bg-sage-800 dark:text-sage-200;
+  }
+
+  .badge-warning {
+    @apply badge bg-gold-100 text-gold-700
+           dark:bg-gold-800 dark:text-gold-200;
+  }
+
+  .badge-danger {
+    @apply badge bg-terracotta-100 text-terracotta-700
+           dark:bg-terracotta-800 dark:text-terracotta-200;
+  }
+
+  /* Table */
+  .table-container {
+    @apply overflow-x-auto rounded-lg border border-sand-200
+           dark:border-sand-700;
+  }
+
+  .table {
+    @apply min-w-full divide-y divide-sand-200
+           dark:divide-sand-700;
+  }
+
+  .table-header {
+    @apply bg-sand-50 dark:bg-sand-800;
+  }
+
+  .table-header-cell {
+    @apply px-6 py-3 text-left text-xs font-medium text-sand-500
+           uppercase tracking-wider
+           dark:text-sand-400;
+  }
+
+  .table-body {
+    @apply bg-white divide-y divide-sand-200
+           dark:bg-sand-800 dark:divide-sand-700;
+  }
+
+  .table-row {
+    @apply hover:bg-sand-50 transition-colors
+           dark:hover:bg-sand-750;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-sand-900
+           dark:text-sand-100;
+  }
+
+  /* Alerts */
+  .alert {
+    @apply p-4 rounded-lg border;
+  }
+
+  .alert-info {
+    @apply alert bg-sand-50 border-sand-200 text-sand-700
+           dark:bg-sand-800 dark:border-sand-600 dark:text-sand-200;
+  }
+
+  .alert-success {
+    @apply alert bg-sage-50 border-sage-200 text-sage-700
+           dark:bg-sage-900 dark:border-sage-700 dark:text-sage-200;
+  }
+
+  .alert-warning {
+    @apply alert bg-gold-50 border-gold-200 text-gold-700
+           dark:bg-gold-900 dark:border-gold-700 dark:text-gold-200;
+  }
+
+  .alert-error {
+    @apply alert bg-terracotta-50 border-terracotta-200 text-terracotta-700
+           dark:bg-terracotta-900 dark:border-terracotta-700 dark:text-terracotta-200;
+  }
+
+  /* Loading states */
+  .skeleton {
+    @apply animate-pulse bg-sand-200 rounded dark:bg-sand-700;
+  }
+
+  .spinner {
+    @apply animate-spin h-5 w-5 border-2 border-sand-300
+           border-t-sand-600 rounded-full
+           dark:border-sand-600 dark:border-t-gold-400;
+  }
+
+  /* HTMX loading indicator */
+  .htmx-indicator {
+    @apply opacity-0 transition-opacity duration-200;
+  }
+
+  .htmx-request .htmx-indicator {
+    @apply opacity-100;
+  }
+
+  .htmx-request.htmx-indicator {
+    @apply opacity-100;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.sand.300') transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-sand-300 rounded-full;
+  }
+
+  .dark .scrollbar-thin {
+    scrollbar-color: theme('colors.sand.600') transparent;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-sand-600;
+  }
+}

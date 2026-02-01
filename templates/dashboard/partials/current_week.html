@@ -1,0 +1,78 @@
+<div class="card h-full">
+  {% if weeklog %}
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+          {{ weeklog.week_label }}
+        </h2>
+        <p class="text-sm text-sand-500 dark:text-sand-400">Aktuel ugelog</p>
+      </div>
+      <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}"
+         class="btn-secondary btn-sm">
+        Se detaljer
+      </a>
+    </div>
+
+    {% if weeklog.summary %}
+      <div class="mb-4">
+        <p class="text-sand-700 dark:text-sand-300 line-clamp-3">
+          {{ weeklog.summary|truncatewords:50 }}
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Active priority items -->
+    {% if priority_items %}
+      <div class="border-t border-sand-200 dark:border-sand-700 pt-4">
+        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-2">
+          Aktive opgaver
+        </h3>
+        <ul class="space-y-2">
+          {% for item in priority_items %}
+            <li class="flex items-center justify-between text-sm">
+              <span class="text-sand-700 dark:text-sand-300 truncate mr-2">{{ item.title }}</span>
+              <span class="flex-shrink-0 badge {% if item.status == 'blocked' %}badge-danger{% else %}badge-warning{% endif %}">
+                {{ item.get_status_display }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Absences -->
+    {% if absences %}
+      <div class="border-t border-sand-200 dark:border-sand-700 pt-4 mt-4">
+        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-2">
+          Fravær denne uge
+        </h3>
+        <ul class="space-y-1">
+          {% for absence in absences %}
+            <li class="text-sm text-sand-600 dark:text-sand-400">
+              <span class="font-medium text-sand-700 dark:text-sand-300">{{ absence.staff_name }}</span>
+              - {{ absence.get_absence_type_display }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- No weeklog for current week -->
+    <div class="flex flex-col items-center justify-center h-full text-center py-8">
+      <svg class="w-12 h-12 text-sand-300 dark:text-sand-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <h3 class="text-lg font-medium text-sand-700 dark:text-sand-300 mb-1">
+        Ingen ugelog for uge {{ current_week }}
+      </h3>
+      <p class="text-sand-500 dark:text-sand-400 mb-4">
+        Opret en ny ugelog for at komme i gang
+      </p>
+      <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary btn-sm">
+        Opret ugelog
+      </a>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,101 @@
+{% load static %}
+
+<nav class="bg-white dark:bg-sand-800 shadow-soft border-b border-sand-200 dark:border-sand-700">
+  <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo and brand -->
+      <div class="flex items-center space-x-4">
+        <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-2">
+          <svg class="w-8 h-8 text-sand-600 dark:text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="text-lg font-semibold text-sand-800 dark:text-sand-100">FynBus Chronicle</span>
+        </a>
+      </div>
+
+      <!-- Navigation links -->
+      <div class="hidden md:flex items-center space-x-1">
+        <a href="{% url 'dashboard:index' %}"
+           class="{% if request.resolver_match.url_name == 'index' and request.resolver_match.app_name == 'dashboard' %}nav-link-active{% else %}nav-link{% endif %}">
+          Kontrolpanel
+        </a>
+        <a href="{% url 'logbook:weeklog-list' %}"
+           class="{% if request.resolver_match.app_name == 'logbook' %}nav-link-active{% else %}nav-link{% endif %}">
+          Ugelogs
+        </a>
+        <a href="{% url 'dashboard:docs-index' %}"
+           class="{% if 'docs' in request.resolver_match.url_name %}nav-link-active{% else %}nav-link{% endif %}">
+          Dokumentation
+        </a>
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="nav-link">
+            Admin
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Right side: theme toggle and user menu -->
+      <div class="flex items-center space-x-4">
+        {% include 'components/theme_toggle.html' %}
+
+        <!-- User dropdown -->
+        <div x-data="{ open: false }" class="relative">
+          <button @click="open = !open"
+                  @click.away="open = false"
+                  class="flex items-center space-x-2 nav-link">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="hidden sm:inline">{{ user.get_short_name|default:user.username }}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div x-show="open"
+               x-transition:enter="transition ease-out duration-100"
+               x-transition:enter-start="transform opacity-0 scale-95"
+               x-transition:enter-end="transform opacity-100 scale-100"
+               x-transition:leave="transition ease-in duration-75"
+               x-transition:leave-start="transform opacity-100 scale-100"
+               x-transition:leave-end="transform opacity-0 scale-95"
+               class="absolute right-0 mt-2 w-48 bg-white dark:bg-sand-800 rounded-lg shadow-soft-lg border border-sand-200 dark:border-sand-700 py-1 z-50">
+            <div class="px-4 py-2 border-b border-sand-200 dark:border-sand-700">
+              <p class="text-sm font-medium text-sand-900 dark:text-sand-100">{{ user.username }}</p>
+              <p class="text-xs text-sand-500 dark:text-sand-400">{{ user.email }}</p>
+            </div>
+            <a href="{% url 'accounts:logout' %}"
+               class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
+              Log ud
+            </a>
+          </div>
+        </div>
+
+        <!-- Mobile menu button -->
+        <button @click="$dispatch('toggle-mobile-menu')"
+                class="md:hidden nav-link">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile navigation -->
+    <div x-data="{ mobileOpen: false }"
+         @toggle-mobile-menu.window="mobileOpen = !mobileOpen"
+         x-show="mobileOpen"
+         class="md:hidden pb-4">
+      <div class="flex flex-col space-y-1">
+        <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
+        <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelogs</a>
+        <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="nav-link">Admin</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>

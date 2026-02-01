@@ -1,0 +1,105 @@
+{% if weeklogs %}
+  {% for weeklog in weeklogs %}
+    <div class="card-hover">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex-grow">
+          <div class="flex items-center gap-3">
+            <h3 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+              {{ weeklog.week_label }}
+            </h3>
+            {% if weeklog.incidents.exists %}
+              <span class="badge badge-warning">
+                {{ weeklog.incidents.count }} hændelse{{ weeklog.incidents.count|pluralize:"r" }}
+              </span>
+            {% endif %}
+          </div>
+
+          {% if weeklog.summary %}
+            <p class="text-sand-600 dark:text-sand-400 mt-2 line-clamp-2">
+              {{ weeklog.summary|truncatewords:30 }}
+            </p>
+          {% endif %}
+
+          <div class="flex flex-wrap items-center gap-4 mt-3 text-sm text-sand-500 dark:text-sand-400">
+            <span class="flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              {{ weeklog.priority_items.count }} opgave{{ weeklog.priority_items.count|pluralize:"r" }}
+            </span>
+            <span class="flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              {{ weeklog.absences.count }} fravær
+            </span>
+            <span>
+              Helpdesk: {{ weeklog.helpdesk_new }} nye / {{ weeklog.helpdesk_closed }} lukkede
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}"
+             class="btn-secondary btn-sm">
+            Se detaljer
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-6">
+      <nav class="flex items-center gap-1">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+             class="btn-secondary btn-sm"
+             hx-get="?page={{ page_obj.previous_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+             hx-target="#weeklog-list"
+             hx-swap="innerHTML">
+            &larr; Forrige
+          </a>
+        {% endif %}
+
+        <span class="px-4 text-sand-600 dark:text-sand-400">
+          Side {{ page_obj.number }} af {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+             class="btn-secondary btn-sm"
+             hx-get="?page={{ page_obj.next_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}"
+             hx-target="#weeklog-list"
+             hx-swap="innerHTML">
+            Næste &rarr;
+          </a>
+        {% endif %}
+      </nav>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="card text-center py-12">
+    <svg class="w-16 h-16 text-sand-300 dark:text-sand-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <h3 class="text-lg font-medium text-sand-700 dark:text-sand-300 mb-2">
+      Ingen ugelogs fundet
+    </h3>
+    <p class="text-sand-500 dark:text-sand-400 mb-4">
+      {% if selected_year %}
+        Der er ingen ugelogs for {{ selected_year }}.
+      {% else %}
+        Opret din første ugelog for at komme i gang.
+      {% endif %}
+    </p>
+    <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary">
+      Opret ugelog
+    </a>
+  </div>
+{% endif %}

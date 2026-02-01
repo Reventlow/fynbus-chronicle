@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Log ind - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <!-- Logo and title -->
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-4">
+        <svg class="w-16 h-16 text-sand-600 dark:text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">FynBus Chronicle</h1>
+      <p class="text-sand-500 dark:text-sand-400 mt-2">IT Ugelog System</p>
+    </div>
+
+    <!-- Login card -->
+    <div class="card">
+      <div id="login-form-container">
+        {% include 'accounts/partials/login_form.html' %}
+      </div>
+
+      {% if sso_enabled %}
+        <div class="mt-6">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-sand-200 dark:border-sand-700"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white dark:bg-sand-800 text-sand-500 dark:text-sand-400">
+                Eller log ind med
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <a href="{% url 'socialaccount_login' 'microsoft' %}"
+               class="w-full btn btn-outline flex items-center justify-center space-x-2">
+              <!-- Microsoft logo -->
+              <svg class="w-5 h-5" viewBox="0 0 21 21">
+                <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+              </svg>
+              <span>Office 365</span>
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Theme toggle for login page -->
+    <div class="flex justify-center mt-6">
+      {% include 'components/theme_toggle.html' %}
+    </div>
+  </div>
+</div>
+{% endblock %}

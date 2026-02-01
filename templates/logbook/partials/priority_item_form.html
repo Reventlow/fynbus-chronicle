@@ -1,0 +1,60 @@
+<div class="p-4 bg-sand-100 dark:bg-sand-750 rounded-lg border border-sand-300 dark:border-sand-600"
+     id="priority-item-form-container">
+  <form method="post"
+        hx-post="{% if object %}{% url 'logbook:priority-item-edit' object.pk %}{% else %}{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog_id }}{% endif %}"
+        hx-target="{% if object %}#priority-item-{{ object.id }}{% else %}#priority-items-list{% endif %}"
+        hx-swap="{% if object %}outerHTML{% else %}beforeend{% endif %}"
+        class="space-y-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div>
+      <label for="{{ form.title.id_for_label }}" class="input-label">Titel</label>
+      {{ form.title }}
+      {% if form.title.errors %}
+        <p class="input-error-message">{{ form.title.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="{{ form.priority.id_for_label }}" class="input-label">Prioritet</label>
+        {{ form.priority }}
+      </div>
+      <div>
+        <label for="{{ form.status.id_for_label }}" class="input-label">Status</label>
+        {{ form.status }}
+      </div>
+    </div>
+
+    <div>
+      <label for="{{ form.description.id_for_label }}" class="input-label">Beskrivelse</label>
+      {{ form.description }}
+    </div>
+
+    <div>
+      <label for="{{ form.notes.id_for_label }}" class="input-label">Noter</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button type="button"
+              hx-get="{% if object %}{% url 'logbook:priority-item-edit' object.pk %}{% else %}#{% endif %}"
+              hx-target="#priority-item-form-container"
+              hx-swap="delete"
+              class="btn-secondary btn-sm">
+        Annuller
+      </button>
+      <button type="submit" class="btn-primary btn-sm">
+        {% if object %}Gem{% else %}Tilføj{% endif %}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,67 @@
+<div class="p-4 bg-sand-100 dark:bg-sand-750 rounded-lg border border-sand-300 dark:border-sand-600"
+     id="absence-form-container">
+  <form method="post"
+        hx-post="{% if object %}{% url 'logbook:absence-edit' object.pk %}{% else %}{% url 'logbook:absence-create' %}?weeklog={{ weeklog_id }}{% endif %}"
+        hx-target="{% if object %}#absence-{{ object.id }}{% else %}#absences-list{% endif %}"
+        hx-swap="{% if object %}outerHTML{% else %}beforeend{% endif %}"
+        class="space-y-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="{{ form.staff_name.id_for_label }}" class="input-label">Medarbejder</label>
+        {{ form.staff_name }}
+        {% if form.staff_name.errors %}
+          <p class="input-error-message">{{ form.staff_name.errors.0 }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label for="{{ form.absence_type.id_for_label }}" class="input-label">Type</label>
+        {{ form.absence_type }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="{{ form.start_date.id_for_label }}" class="input-label">Fra dato</label>
+        {{ form.start_date }}
+        {% if form.start_date.errors %}
+          <p class="input-error-message">{{ form.start_date.errors.0 }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label for="{{ form.end_date.id_for_label }}" class="input-label">Til dato</label>
+        {{ form.end_date }}
+        {% if form.end_date.errors %}
+          <p class="input-error-message">{{ form.end_date.errors.0 }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div>
+      <label for="{{ form.notes.id_for_label }}" class="input-label">Noter</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button type="button"
+              hx-get="#"
+              hx-target="#absence-form-container"
+              hx-swap="delete"
+              class="btn-secondary btn-sm">
+        Annuller
+      </button>
+      <button type="submit" class="btn-primary btn-sm">
+        {% if object %}Gem{% else %}Tilføj{% endif %}
+      </button>
+    </div>
+  </form>
+</div>

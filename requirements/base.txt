@@ -1,0 +1,18 @@
+# Core Django
+Django>=5.0,<6.0
+python-decouple>=3.8
+dj-database-url>=2.1.0
+
+# Authentication
+django-allauth>=0.61.0
+requests>=2.31.0  # Required by allauth
+
+# HTMX integration
+django-htmx>=1.17.0
+
+# PDF generation
+WeasyPrint>=61.0
+Pillow>=10.0.0
+
+# Documentation rendering
+Markdown>=3.5

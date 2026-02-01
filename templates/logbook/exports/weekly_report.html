@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>FynBus IT Ugelog - {{ weeklog.week_label }}</title>
+</head>
+<body>
+  <div class="report-header">
+    <h1>FynBus IT Ugelog</h1>
+    <div class="report-meta">
+      <p><strong>Periode:</strong> {{ weeklog.week_label }}</p>
+      <p><strong>Oprettet af:</strong> {% if weeklog.created_by %}{{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}{% else %}Ukendt{% endif %}</p>
+      <p><strong>Genereret:</strong> {% now "d. F Y H:i" %}</p>
+    </div>
+  </div>
+
+  <!-- Helpdesk Statistics -->
+  <div class="section">
+    <h2>Helpdesk Statistik</h2>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">{{ weeklog.helpdesk_new }}</div>
+        <div class="stat-label">Nye sager</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ weeklog.helpdesk_closed }}</div>
+        <div class="stat-label">Lukkede sager</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ weeklog.helpdesk_open }}</div>
+        <div class="stat-label">Åbne sager</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
+        <div class="stat-label">Netto ændring</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  {% if weeklog.summary %}
+  <div class="section">
+    <h2>Ugeoversigt</h2>
+    <div class="summary-box">
+      <p>{{ weeklog.summary|linebreaksbr }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Priority Items -->
+  {% if priority_items %}
+  <div class="section">
+    <h2>Prioriterede Opgaver</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Opgave</th>
+          <th>Prioritet</th>
+          <th>Status</th>
+          <th>Beskrivelse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in priority_items %}
+        <tr>
+          <td>{{ item.title }}</td>
+          <td>
+            <span class="priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
+          </td>
+          <td>
+            <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}">
+              {{ item.get_status_display }}
+            </span>
+          </td>
+          <td>{{ item.description|default:"-"|truncatewords:20 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% for item in priority_items %}
+      {% if item.notes %}
+      <div class="section-card no-break">
+        <h3>{{ item.title }}</h3>
+        <p><strong>Noter:</strong> {{ item.notes }}</p>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Absences -->
+  {% if absences %}
+  <div class="section">
+    <h2>Fravær</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Medarbejder</th>
+          <th>Type</th>
+          <th>Fra</th>
+          <th>Til</th>
+          <th>Dage</th>
+          <th>Noter</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for absence in absences %}
+        <tr>
+          <td>{{ absence.staff_name }}</td>
+          <td>{{ absence.get_absence_type_display }}</td>
+          <td>{{ absence.start_date|date:"d/m/Y" }}</td>
+          <td>{{ absence.end_date|date:"d/m/Y" }}</td>
+          <td>{{ absence.duration_days }}</td>
+          <td>{{ absence.notes|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- Incidents -->
+  {% if incidents %}
+  <div class="section">
+    <h2>Hændelser</h2>
+    {% for incident in incidents %}
+    <div class="section-card no-break">
+      <h3>
+        {{ incident.title }}
+        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}">
+          {{ incident.get_severity_display }}
+        </span>
+        {% if incident.resolved %}
+        <span class="status-done">Løst</span>
+        {% else %}
+        <span class="status-blocked">Uløst</span>
+        {% endif %}
+      </h3>
+      <p>
+        <strong>Type:</strong> {{ incident.get_incident_type_display }} |
+        <strong>Tidspunkt:</strong> {{ incident.occurred_at|date:"d/m/Y H:i" }}
+      </p>
+      <p>{{ incident.description }}</p>
+      {% if incident.resolution %}
+      <p><strong>Løsning:</strong> {{ incident.resolution }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="report-footer">
+    <p>FynBus IT Chronicle | Genereret {% now "d/m/Y H:i" %}</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="da" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" :class="{ 'dark': darkMode }">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FynBus IT Ugelog">
+  <title>{% block title %}FynBus Chronicle{% endblock %}</title>
+
+  {% load static %}
+
+  <!-- Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{% static 'css/output.css' %}?v=2" rel="stylesheet">
+
+  {% block extra_css %}{% endblock %}
+
+  <!-- HTMX -->
+  <script src="{% static 'js/htmx.min.js' %}" defer></script>
+
+  <!-- Alpine.js for theme toggle and other interactions -->
+  <script src="{% static 'js/alpine.min.js' %}" defer></script>
+
+  {% block extra_js_head %}{% endblock %}
+</head>
+<body class="bg-sand-50 text-sand-900 dark:bg-sand-900 dark:text-sand-50
+             min-h-screen flex flex-col transition-colors duration-200"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+  {% if user.is_authenticated %}
+    {% include 'components/nav.html' %}
+  {% endif %}
+
+  <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block messages %}
+      {% if messages %}
+        <div class="space-y-2 mb-6">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endblock %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if user.is_authenticated %}
+    {% include 'components/footer.html' %}
+  {% endif %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

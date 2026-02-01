@@ -1,0 +1,58 @@
+[project]
+name = "fynbus-chronicle"
+version = "0.1.0"
+description = "FynBus IT weekly logbook application"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "FynBus IT", email = "it@fynbus.dk"}
+]
+keywords = ["django", "logbook", "it-management", "fynbus"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django :: 5.0",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "Django>=5.0,<6.0",
+    "python-decouple>=3.8",
+    "django-allauth>=0.61.0",
+    "django-htmx>=1.17.0",
+    "WeasyPrint>=61.0",
+    "Pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-debug-toolbar>=4.2",
+    "django-browser-reload>=1.12.0",
+    "pytest-django>=4.5",
+    "pytest>=7.4",
+    "ruff>=0.1.0",
+]
+prod = [
+    "gunicorn>=21.0",
+    "psycopg[binary]>=3.1",
+    "whitenoise>=6.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "chronicle.settings.dev"
+python_files = ["test_*.py", "*_test.py"]

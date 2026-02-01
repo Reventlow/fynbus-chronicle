@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if weeklog %}Rediger {{ weeklog.week_label }}{% else %}Ny ugelog{% endif %} - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <!-- Page header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-sand-500 dark:text-sand-400 mb-1">
+      <a href="{% url 'logbook:weeklog-list' %}" class="hover:text-sand-700 dark:hover:text-sand-200">
+        Ugelogs
+      </a>
+      <span>/</span>
+      <span>{% if object %}Rediger{% else %}Ny ugelog{% endif %}</span>
+    </div>
+    <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">
+      {% if object %}Rediger {{ object.week_label }}{% else %}Opret ny ugelog{% endif %}
+    </h1>
+  </div>
+
+  <!-- Form card -->
+  <div class="card">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Year and Week -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="{{ form.year.id_for_label }}" class="input-label">År</label>
+          {{ form.year }}
+          {% if form.year.errors %}
+            <p class="input-error-message">{{ form.year.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label for="{{ form.week_number.id_for_label }}" class="input-label">Uge</label>
+          {{ form.week_number }}
+          {% if form.week_number.errors %}
+            <p class="input-error-message">{{ form.week_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Helpdesk stats -->
+      <div>
+        <h3 class="text-md font-medium text-sand-700 dark:text-sand-300 mb-3">Helpdesk statistik</h3>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label for="{{ form.helpdesk_new.id_for_label }}" class="input-label">Nye sager</label>
+            {{ form.helpdesk_new }}
+            {% if form.helpdesk_new.errors %}
+              <p class="input-error-message">{{ form.helpdesk_new.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_closed.id_for_label }}" class="input-label">Lukkede sager</label>
+            {{ form.helpdesk_closed }}
+            {% if form.helpdesk_closed.errors %}
+              <p class="input-error-message">{{ form.helpdesk_closed.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open.id_for_label }}" class="input-label">Åbne sager</label>
+            {{ form.helpdesk_open }}
+            {% if form.helpdesk_open.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div>
+        <label for="{{ form.summary.id_for_label }}" class="input-label">Ugeoversigt</label>
+        {{ form.summary }}
+        <p class="input-help">Kort beskrivelse af ugens vigtigste aktiviteter.</p>
+        {% if form.summary.errors %}
+          <p class="input-error-message">{{ form.summary.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-sand-200 dark:border-sand-700">
+        <a href="{% if object %}{% url 'logbook:weeklog-detail' object.pk %}{% else %}{% url 'logbook:weeklog-list' %}{% endif %}"
+           class="btn-secondary">
+          Annuller
+        </a>
+        <button type="submit" class="btn-primary">
+          {% if object %}Gem ændringer{% else %}Opret ugelog{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

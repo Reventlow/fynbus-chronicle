@@ -1,0 +1,63 @@
+<div class="card h-full flex flex-col">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+      Seneste hændelser
+    </h2>
+    {% if unresolved_count > 0 %}
+      <span class="badge badge-danger">
+        {{ unresolved_count }} uløst{{ unresolved_count|pluralize:"e" }}
+      </span>
+    {% endif %}
+  </div>
+
+  {% if incidents %}
+    <div class="flex-grow overflow-y-auto scrollbar-thin space-y-3">
+      {% for incident in incidents %}
+        <div class="p-3 rounded-lg bg-sand-50 dark:bg-sand-750 border border-sand-200 dark:border-sand-700
+                    {% if not incident.resolved %}border-l-4 border-l-terracotta-400{% endif %}">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex-grow min-w-0">
+              <h4 class="font-medium text-sand-800 dark:text-sand-100 truncate">
+                {{ incident.title }}
+              </h4>
+              <div class="flex items-center gap-2 mt-1 text-xs text-sand-500 dark:text-sand-400">
+                <span class="badge {% if incident.severity == 'critical' %}badge-danger{% elif incident.severity == 'high' %}badge-warning{% else %}badge-primary{% endif %}">
+                  {{ incident.get_severity_display }}
+                </span>
+                <span>{{ incident.occurred_at|date:"d. M" }}</span>
+              </div>
+            </div>
+            {% if incident.resolved %}
+              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            {% else %}
+              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-4 pt-4 border-t border-sand-200 dark:border-sand-700">
+      <a href="{% url 'admin:logbook_incident_changelist' %}"
+         class="text-sm text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200">
+        Se alle hændelser &rarr;
+      </a>
+    </div>
+
+  {% else %}
+    <div class="flex-grow flex items-center justify-center">
+      <div class="text-center py-8">
+        <svg class="w-12 h-12 text-sage-300 dark:text-sage-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sand-500 dark:text-sand-400">Ingen hændelser registreret</p>
+      </div>
+    </div>
+  {% endif %}
+</div>

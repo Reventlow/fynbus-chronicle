@@ -1,0 +1,62 @@
+<form method="post" action="{% url 'accounts:login' %}" class="space-y-6">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error">
+      {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Username field -->
+  <div>
+    <label for="id_username" class="input-label">Brugernavn</label>
+    <input type="text"
+           name="username"
+           id="id_username"
+           value="{{ form.username.value|default:'' }}"
+           class="input-field {% if form.username.errors %}input-error{% endif %}"
+           placeholder="Dit brugernavn"
+           autocomplete="username"
+           autofocus
+           required>
+    {% if form.username.errors %}
+      <p class="input-error-message">{{ form.username.errors.0 }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Password field -->
+  <div>
+    <label for="id_password" class="input-label">Adgangskode</label>
+    <input type="password"
+           name="password"
+           id="id_password"
+           class="input-field {% if form.password.errors %}input-error{% endif %}"
+           placeholder="Din adgangskode"
+           autocomplete="current-password"
+           required>
+    {% if form.password.errors %}
+      <p class="input-error-message">{{ form.password.errors.0 }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Remember me -->
+  <div class="flex items-center justify-between">
+    <label class="flex items-center">
+      <input type="checkbox" name="remember" class="checkbox-field">
+      <span class="ml-2 text-sm text-sand-600 dark:text-sand-300">Husk mig</span>
+    </label>
+  </div>
+
+  <!-- Submit button -->
+  <button type="submit" class="w-full btn-primary">
+    <span class="htmx-indicator spinner mr-2"></span>
+    Log ind
+  </button>
+
+  <!-- Hidden redirect field -->
+  {% if next %}
+    <input type="hidden" name="next" value="{{ next }}">
+  {% endif %}
+</form>

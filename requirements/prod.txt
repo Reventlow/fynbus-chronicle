@@ -1,0 +1,10 @@
+-r base.txt
+
+# Production server
+gunicorn>=21.0
+
+# PostgreSQL
+psycopg[binary]>=3.1
+
+# Static files
+whitenoise>=6.6
