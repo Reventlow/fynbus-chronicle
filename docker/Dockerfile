@@ -29,10 +29,10 @@ WORKDIR /build
 # Install build dependencies for WeasyPrint
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libharfbuzz-subset0 \
+    python3-dev \
     libffi-dev \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
@@ -54,14 +54,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install runtime dependencies for WeasyPrint
+# Install runtime dependencies for WeasyPrint (Debian Bookworm packages)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libharfbuzz-subset0 \
-    libgdk-pixbuf-2.0-0 \
-    libffi8 \
-    shared-mime-info \
+    libpangoft2-1.0-0 \
+    libharfbuzz0b \
+    libfontconfig1 \
+    libglib2.0-0 \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
