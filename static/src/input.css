@@ -67,19 +67,44 @@
            dark:hover:border-sand-600;
   }
 
-  /* Form elements */
+  /* Form elements - using !important to override @tailwindcss/forms plugin */
   .input-field {
-    @apply w-full px-3 py-2 border border-sand-300 rounded-lg
-           bg-white text-sand-900
-           placeholder:text-sand-400
-           focus:ring-2 focus:ring-sand-500 focus:border-transparent
-           dark:bg-sand-800 dark:border-sand-600 dark:text-sand-100
-           dark:placeholder:text-sand-500 dark:focus:ring-gold-500;
-    /* Fix for date/datetime inputs in dark mode */
-    color-scheme: light dark;
+    @apply w-full px-3 py-2 rounded-lg;
+    background-color: white !important;
+    color: #2C2825 !important;
+    border: 1px solid #D4CCC0 !important;
   }
 
-  /* Ensure date inputs use correct colors in dark mode */
+  .input-field:focus {
+    @apply ring-2 ring-sand-500 border-transparent;
+  }
+
+  .input-field::placeholder {
+    color: #B8AC9A !important;
+  }
+
+  /* Dark mode form fields */
+  .dark .input-field {
+    background-color: #4A4540 !important;
+    color: #FAF9F7 !important;
+    border-color: #6B635B !important;
+  }
+
+  .dark .input-field:focus {
+    @apply ring-2 ring-gold-500;
+  }
+
+  .dark .input-field::placeholder {
+    color: #A69076 !important;
+  }
+
+  /* Date/datetime inputs */
+  .input-field[type="date"],
+  .input-field[type="datetime-local"],
+  .input-field[type="time"] {
+    color-scheme: light;
+  }
+
   .dark .input-field[type="date"],
   .dark .input-field[type="datetime-local"],
   .dark .input-field[type="time"] {
@@ -106,29 +131,69 @@
 
   /* Select dropdown */
   .select-field {
-    @apply input-field cursor-pointer appearance-none
-           bg-no-repeat bg-right pr-10;
+    @apply w-full px-3 py-2 rounded-lg cursor-pointer appearance-none bg-no-repeat bg-right pr-10;
+    background-color: white !important;
+    color: #2C2825 !important;
+    border: 1px solid #D4CCC0 !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B635B' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
     background-size: 1.5em 1.5em;
   }
 
-  /* Select dropdown arrow in dark mode */
+  .select-field:focus {
+    @apply ring-2 ring-sand-500 border-transparent;
+  }
+
+  /* Select dropdown in dark mode */
   .dark .select-field {
+    background-color: #4A4540 !important;
+    color: #FAF9F7 !important;
+    border-color: #6B635B !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23C4A35A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
   }
 
-  /* Select options in dark mode */
+  .dark .select-field:focus {
+    @apply ring-2 ring-gold-500;
+  }
+
+  /* Select options */
   .select-field option {
-    @apply bg-white text-sand-900;
+    background-color: white;
+    color: #2C2825;
   }
 
   .dark .select-field option {
-    @apply bg-sand-800 text-sand-100;
+    background-color: #4A4540;
+    color: #FAF9F7;
   }
 
   /* Textarea */
   .textarea-field {
-    @apply input-field resize-y min-h-[100px];
+    @apply w-full px-3 py-2 rounded-lg resize-y min-h-[100px];
+    background-color: white !important;
+    color: #2C2825 !important;
+    border: 1px solid #D4CCC0 !important;
+  }
+
+  .textarea-field:focus {
+    @apply ring-2 ring-sand-500 border-transparent;
+  }
+
+  .textarea-field::placeholder {
+    color: #B8AC9A !important;
+  }
+
+  .dark .textarea-field {
+    background-color: #4A4540 !important;
+    color: #FAF9F7 !important;
+    border-color: #6B635B !important;
+  }
+
+  .dark .textarea-field:focus {
+    @apply ring-2 ring-gold-500;
+  }
+
+  .dark .textarea-field::placeholder {
+    color: #A69076 !important;
   }
 
   /* Checkbox and radio */
