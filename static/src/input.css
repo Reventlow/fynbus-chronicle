@@ -274,7 +274,7 @@
 
   .table-row {
     @apply hover:bg-sand-50 transition-colors
-           dark:hover:bg-sand-750;
+           dark:hover:bg-sand-700;
   }
 
   .table-cell {
