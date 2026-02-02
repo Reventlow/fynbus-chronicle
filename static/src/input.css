@@ -75,6 +75,15 @@
            focus:ring-2 focus:ring-sand-500 focus:border-transparent
            dark:bg-sand-800 dark:border-sand-600 dark:text-sand-100
            dark:placeholder:text-sand-500 dark:focus:ring-gold-500;
+    /* Fix for date/datetime inputs in dark mode */
+    color-scheme: light dark;
+  }
+
+  /* Ensure date inputs use correct colors in dark mode */
+  .dark .input-field[type="date"],
+  .dark .input-field[type="datetime-local"],
+  .dark .input-field[type="time"] {
+    color-scheme: dark;
   }
 
   .input-label {
@@ -101,6 +110,20 @@
            bg-no-repeat bg-right pr-10;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B635B' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
     background-size: 1.5em 1.5em;
+  }
+
+  /* Select dropdown arrow in dark mode */
+  .dark .select-field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23C4A35A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  }
+
+  /* Select options in dark mode */
+  .select-field option {
+    @apply bg-white text-sand-900;
+  }
+
+  .dark .select-field option {
+    @apply bg-sand-800 text-sand-100;
   }
 
   /* Textarea */
