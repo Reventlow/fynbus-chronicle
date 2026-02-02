@@ -129,20 +129,23 @@ class PriorityItemCreateView(LoginRequiredMixin, CreateView):
     template_name = "logbook/partials/priority_item_form.html"
 
     def form_valid(self, form) -> HttpResponse:
-        """Set weeklog from query param and return row partial."""
+        """Set weeklog from query param and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
         self.object = form.save()
 
-        from django.template.response import TemplateResponse
+        from django.template.loader import render_to_string
 
-        response = TemplateResponse(
-            self.request,
+        # Render the new row
+        row_html = render_to_string(
             "logbook/partials/priority_item_row.html",
             {"item": self.object},
+            request=self.request,
         )
-        response["HX-Trigger"] = "closePriorityItemForm"
-        return response
+        # Add OOB swap to delete the form
+        oob_html = '<div id="priority-item-form-container" hx-swap-oob="delete"></div>'
+
+        return HttpResponse(row_html + oob_html)
 
     def form_invalid(self, form) -> HttpResponse:
         """Return form with errors."""
@@ -202,20 +205,23 @@ class AbsenceCreateView(LoginRequiredMixin, CreateView):
     template_name = "logbook/partials/absence_form.html"
 
     def form_valid(self, form) -> HttpResponse:
-        """Set weeklog and return row partial."""
+        """Set weeklog and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
         self.object = form.save()
 
-        from django.template.response import TemplateResponse
+        from django.template.loader import render_to_string
 
-        response = TemplateResponse(
-            self.request,
+        # Render the new row
+        row_html = render_to_string(
             "logbook/partials/absence_row.html",
             {"absence": self.object},
+            request=self.request,
         )
-        response["HX-Trigger"] = "closeAbsenceForm"
-        return response
+        # Add OOB swap to delete the form
+        oob_html = '<div id="absence-form-container" hx-swap-oob="delete"></div>'
+
+        return HttpResponse(row_html + oob_html)
 
     def get_context_data(self, **kwargs) -> dict:
         """Add weeklog ID to context."""
@@ -269,20 +275,23 @@ class IncidentCreateView(LoginRequiredMixin, CreateView):
     template_name = "logbook/partials/incident_form.html"
 
     def form_valid(self, form) -> HttpResponse:
-        """Set weeklog and return row partial."""
+        """Set weeklog and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
         self.object = form.save()
 
-        from django.template.response import TemplateResponse
+        from django.template.loader import render_to_string
 
-        response = TemplateResponse(
-            self.request,
+        # Render the new row
+        row_html = render_to_string(
             "logbook/partials/incident_row.html",
             {"incident": self.object},
+            request=self.request,
         )
-        response["HX-Trigger"] = "closeIncidentForm"
-        return response
+        # Add OOB swap to delete the form
+        oob_html = '<div id="incident-form-container" hx-swap-oob="delete"></div>'
+
+        return HttpResponse(row_html + oob_html)
 
     def get_context_data(self, **kwargs) -> dict:
         """Add weeklog ID to context."""
