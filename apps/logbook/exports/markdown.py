@@ -52,25 +52,18 @@ def generate_markdown(weeklog: WeekLog) -> str:
     if priority_items:
         lines.append("## Prioriterede Opgaver")
         lines.append("")
-        lines.append("| Opgave | Prioritet | Status |")
-        lines.append("|--------|-----------|--------|")
         for item in priority_items:
-            lines.append(
-                f"| {item.title} | {item.get_priority_display()} | {item.get_status_display()} |"
-            )
-        lines.append("")
-
-        # Add descriptions for items that have them
-        for item in priority_items:
-            if item.description or item.notes:
-                lines.append(f"### {item.title}")
+            # Show each item as a subsection
+            lines.append(f"### {item.title}")
+            lines.append("")
+            lines.append(f"**Prioritet:** {item.get_priority_display()} | **Status:** {item.get_status_display()}")
+            lines.append("")
+            if item.description:
+                lines.append(item.description)
                 lines.append("")
-                if item.description:
-                    lines.append(item.description)
-                    lines.append("")
-                if item.notes:
-                    lines.append(f"**Noter:** {item.notes}")
-                    lines.append("")
+            if item.notes:
+                lines.append(f"**Noter:** {item.notes}")
+                lines.append("")
 
     # Absences
     absences = weeklog.absences.all()
