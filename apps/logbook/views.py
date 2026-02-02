@@ -318,6 +318,44 @@ class IncidentDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # =============================================================================
+# Row Partial Views (for cancel operations)
+# =============================================================================
+
+
+@login_required
+def priority_item_row(request: HttpRequest, pk: int) -> HttpResponse:
+    """Return just the priority item row partial (for cancel)."""
+    from django.template.response import TemplateResponse
+
+    item = get_object_or_404(PriorityItem, pk=pk)
+    return TemplateResponse(
+        request, "logbook/partials/priority_item_row.html", {"item": item}
+    )
+
+
+@login_required
+def absence_row(request: HttpRequest, pk: int) -> HttpResponse:
+    """Return just the absence row partial (for cancel)."""
+    from django.template.response import TemplateResponse
+
+    absence = get_object_or_404(Absence, pk=pk)
+    return TemplateResponse(
+        request, "logbook/partials/absence_row.html", {"absence": absence}
+    )
+
+
+@login_required
+def incident_row(request: HttpRequest, pk: int) -> HttpResponse:
+    """Return just the incident row partial (for cancel)."""
+    from django.template.response import TemplateResponse
+
+    incident = get_object_or_404(Incident, pk=pk)
+    return TemplateResponse(
+        request, "logbook/partials/incident_row.html", {"incident": incident}
+    )
+
+
+# =============================================================================
 # Export Views
 # =============================================================================
 

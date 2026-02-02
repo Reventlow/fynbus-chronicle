@@ -45,13 +45,21 @@
     </div>
 
     <div class="flex justify-end gap-2">
+      {% if object %}
       <button type="button"
-              hx-get="{% if object %}{% url 'logbook:priority-item-edit' object.pk %}{% else %}#{% endif %}"
+              hx-get="{% url 'logbook:priority-item-row' object.pk %}"
               hx-target="#priority-item-form-container"
-              hx-swap="delete"
+              hx-swap="outerHTML"
               class="btn-secondary btn-sm">
         Annuller
       </button>
+      {% else %}
+      <button type="button"
+              onclick="this.closest('#priority-item-form-container').remove()"
+              class="btn-secondary btn-sm">
+        Annuller
+      </button>
+      {% endif %}
       <button type="submit" class="btn-primary btn-sm">
         {% if object %}Gem{% else %}Tilføj{% endif %}
       </button>

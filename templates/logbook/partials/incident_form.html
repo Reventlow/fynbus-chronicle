@@ -60,13 +60,21 @@
     </div>
 
     <div class="flex justify-end gap-2">
+      {% if object %}
       <button type="button"
-              hx-get="#"
+              hx-get="{% url 'logbook:incident-row' object.pk %}"
               hx-target="#incident-form-container"
-              hx-swap="delete"
+              hx-swap="outerHTML"
               class="btn-secondary btn-sm">
         Annuller
       </button>
+      {% else %}
+      <button type="button"
+              onclick="this.closest('#incident-form-container').remove()"
+              class="btn-secondary btn-sm">
+        Annuller
+      </button>
+      {% endif %}
       <button type="submit" class="btn-primary btn-sm">
         {% if object %}Gem{% else %}Tilføj{% endif %}
       </button>

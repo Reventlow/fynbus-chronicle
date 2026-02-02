@@ -28,6 +28,11 @@ urlpatterns = [
         views.PriorityItemDeleteView.as_view(),
         name="priority-item-delete",
     ),
+    path(
+        "priority-item/<int:pk>/row/",
+        views.priority_item_row,
+        name="priority-item-row",
+    ),
     # HTMX partials for absences
     path("absence/new/", views.AbsenceCreateView.as_view(), name="absence-create"),
     path(
@@ -40,6 +45,11 @@ urlpatterns = [
         views.AbsenceDeleteView.as_view(),
         name="absence-delete",
     ),
+    path(
+        "absence/<int:pk>/row/",
+        views.absence_row,
+        name="absence-row",
+    ),
     # HTMX partials for incidents
     path("incident/new/", views.IncidentCreateView.as_view(), name="incident-create"),
     path(
@@ -51,6 +61,11 @@ urlpatterns = [
         "incident/<int:pk>/delete/",
         views.IncidentDeleteView.as_view(),
         name="incident-delete",
+    ),
+    path(
+        "incident/<int:pk>/row/",
+        views.incident_row,
+        name="incident-row",
     ),
     # Export endpoints
     path("<int:pk>/export/pdf/", views.export_pdf, name="export-pdf"),
