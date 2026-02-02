@@ -1,5 +1,6 @@
 <div class="p-4 bg-sand-100 dark:bg-sand-750 rounded-lg border border-sand-300 dark:border-sand-600"
-     id="priority-item-form-container">
+     id="priority-item-form-container"
+     hx-on:closePriorityItemForm="this.remove()">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:priority-item-edit' object.pk %}{% else %}{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog_id }}{% endif %}"
         hx-target="{% if object %}#priority-item-{{ object.id }}{% else %}#priority-items-list{% endif %}"

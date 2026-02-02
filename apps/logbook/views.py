@@ -136,11 +136,13 @@ class PriorityItemCreateView(LoginRequiredMixin, CreateView):
 
         from django.template.response import TemplateResponse
 
-        return TemplateResponse(
+        response = TemplateResponse(
             self.request,
             "logbook/partials/priority_item_row.html",
             {"item": self.object},
         )
+        response["HX-Trigger"] = "closePriorityItemForm"
+        return response
 
     def form_invalid(self, form) -> HttpResponse:
         """Return form with errors."""
@@ -207,11 +209,13 @@ class AbsenceCreateView(LoginRequiredMixin, CreateView):
 
         from django.template.response import TemplateResponse
 
-        return TemplateResponse(
+        response = TemplateResponse(
             self.request,
             "logbook/partials/absence_row.html",
             {"absence": self.object},
         )
+        response["HX-Trigger"] = "closeAbsenceForm"
+        return response
 
     def get_context_data(self, **kwargs) -> dict:
         """Add weeklog ID to context."""
@@ -272,11 +276,13 @@ class IncidentCreateView(LoginRequiredMixin, CreateView):
 
         from django.template.response import TemplateResponse
 
-        return TemplateResponse(
+        response = TemplateResponse(
             self.request,
             "logbook/partials/incident_row.html",
             {"incident": self.object},
         )
+        response["HX-Trigger"] = "closeIncidentForm"
+        return response
 
     def get_context_data(self, **kwargs) -> dict:
         """Add weeklog ID to context."""

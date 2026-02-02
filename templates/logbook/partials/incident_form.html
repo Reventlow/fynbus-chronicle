@@ -1,5 +1,6 @@
 <div class="p-4 bg-sand-100 dark:bg-sand-750 rounded-lg border border-sand-300 dark:border-sand-600"
-     id="incident-form-container">
+     id="incident-form-container"
+     hx-on:closeIncidentForm="this.remove()">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:incident-edit' object.pk %}{% else %}{% url 'logbook:incident-create' %}?weeklog={{ weeklog_id }}{% endif %}"
         hx-target="{% if object %}#incident-{{ object.id }}{% else %}#incidents-list{% endif %}"

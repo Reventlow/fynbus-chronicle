@@ -1,5 +1,6 @@
 <div class="p-4 bg-sand-100 dark:bg-sand-750 rounded-lg border border-sand-300 dark:border-sand-600"
-     id="absence-form-container">
+     id="absence-form-container"
+     hx-on:closeAbsenceForm="this.remove()">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:absence-edit' object.pk %}{% else %}{% url 'logbook:absence-create' %}?weeklog={{ weeklog_id }}{% endif %}"
         hx-target="{% if object %}#absence-{{ object.id }}{% else %}#absences-list{% endif %}"
