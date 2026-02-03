@@ -15,6 +15,11 @@ urlpatterns = [
         name="partial-current-week",
     ),
     path(
+        "partials/helpdesk-stats/",
+        views.HelpdeskStatsPartialView.as_view(),
+        name="partial-helpdesk-stats",
+    ),
+    path(
         "partials/helpdesk-chart/",
         views.HelpdeskChartPartialView.as_view(),
         name="partial-helpdesk-chart",

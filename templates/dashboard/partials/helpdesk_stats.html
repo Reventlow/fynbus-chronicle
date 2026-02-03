@@ -1,0 +1,27 @@
+<!-- Åbne sager card -->
+<div class="card flex flex-col justify-center">
+  <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Åbne sager</div>
+  <div class="text-3xl font-bold text-sand-800 dark:text-sand-100">
+    {{ weeklog.helpdesk_open|default:"—" }}
+  </div>
+  {% if weeklog %}
+    <div class="text-sm mt-2 {% if weeklog.helpdesk_delta > 0 %}text-terracotta-500{% elif weeklog.helpdesk_delta < 0 %}text-sage-500{% else %}text-sand-500{% endif %}">
+      {% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }} denne uge
+    </div>
+  {% endif %}
+</div>
+
+<!-- Ugens sager card -->
+<div class="card flex flex-col justify-center">
+  <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Ugens sager</div>
+  <div class="flex items-baseline space-x-4">
+    <div>
+      <span class="text-2xl font-bold text-sage-600 dark:text-sage-400">{{ weeklog.helpdesk_closed|default:"—" }}</span>
+      <span class="text-sm text-sand-500 dark:text-sand-400">lukkede</span>
+    </div>
+    <div>
+      <span class="text-2xl font-bold text-gold-600 dark:text-gold-400">{{ weeklog.helpdesk_new|default:"—" }}</span>
+      <span class="text-sm text-sand-500 dark:text-sand-400">nye</span>
+    </div>
+  </div>
+</div>

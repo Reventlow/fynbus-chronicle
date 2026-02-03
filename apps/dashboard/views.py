@@ -77,6 +77,18 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class HelpdeskStatsPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial for helpdesk stats cards (polls for live updates)."""
+
+    template_name = "dashboard/partials/helpdesk_stats.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        """Get current week helpdesk stats."""
+        context = super().get_context_data(**kwargs)
+        context["weeklog"] = WeekLog.get_current_week()
+        return context
+
+
 class HelpdeskChartPartialView(LoginRequiredMixin, TemplateView):
     """HTMX partial for helpdesk statistics chart."""
 

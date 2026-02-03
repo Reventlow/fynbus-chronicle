@@ -27,10 +27,10 @@
 
   <!-- Stats grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Current week card (HTMX loaded) -->
+    <!-- Current week card (HTMX loaded + polling) -->
     <div class="lg:col-span-2"
          hx-get="{% url 'dashboard:partial-current-week' %}"
-         hx-trigger="load"
+         hx-trigger="load, every 60s"
          hx-swap="innerHTML">
       <div class="card animate-pulse h-48">
         <div class="skeleton h-6 w-32 mb-4"></div>
@@ -39,40 +39,28 @@
       </div>
     </div>
 
-    <!-- Quick stats cards -->
-    <div class="card flex flex-col justify-center">
-      <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Åbne sager</div>
-      <div class="text-3xl font-bold text-sand-800 dark:text-sand-100">
-        {{ current_week.helpdesk_open|default:"—" }}
+    <!-- Quick stats cards (HTMX loaded + polling every 30s) -->
+    <div class="contents"
+         hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
+         hx-trigger="load, every 30s"
+         hx-swap="innerHTML">
+      <div class="card flex flex-col justify-center animate-pulse">
+        <div class="skeleton h-4 w-20 mb-2"></div>
+        <div class="skeleton h-8 w-16"></div>
       </div>
-      {% if current_week %}
-        <div class="text-sm mt-2 {% if current_week.helpdesk_delta > 0 %}text-terracotta-500{% elif current_week.helpdesk_delta < 0 %}text-sage-500{% else %}text-sand-500{% endif %}">
-          {% if current_week.helpdesk_delta > 0 %}+{% endif %}{{ current_week.helpdesk_delta }} denne uge
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="card flex flex-col justify-center">
-      <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Ugens sager</div>
-      <div class="flex items-baseline space-x-4">
-        <div>
-          <span class="text-2xl font-bold text-sage-600 dark:text-sage-400">{{ current_week.helpdesk_closed|default:"—" }}</span>
-          <span class="text-sm text-sand-500 dark:text-sand-400">lukkede</span>
-        </div>
-        <div>
-          <span class="text-2xl font-bold text-gold-600 dark:text-gold-400">{{ current_week.helpdesk_new|default:"—" }}</span>
-          <span class="text-sm text-sand-500 dark:text-sand-400">nye</span>
-        </div>
+      <div class="card flex flex-col justify-center animate-pulse">
+        <div class="skeleton h-4 w-20 mb-2"></div>
+        <div class="skeleton h-8 w-32"></div>
       </div>
     </div>
   </div>
 
   <!-- Main content grid -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Helpdesk chart (2 columns) -->
+    <!-- Helpdesk chart (2 columns) - refreshes every 60s -->
     <div class="lg:col-span-2"
          hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-         hx-trigger="load"
+         hx-trigger="load, every 60s"
          hx-swap="innerHTML">
       <div class="card animate-pulse h-80">
         <div class="skeleton h-6 w-40 mb-4"></div>
@@ -80,9 +68,9 @@
       </div>
     </div>
 
-    <!-- Recent incidents (1 column) -->
+    <!-- Recent incidents (1 column) - refreshes every 60s -->
     <div hx-get="{% url 'dashboard:partial-incidents' %}"
-         hx-trigger="load"
+         hx-trigger="load, every 60s"
          hx-swap="innerHTML">
       <div class="card animate-pulse h-80">
         <div class="skeleton h-6 w-32 mb-4"></div>

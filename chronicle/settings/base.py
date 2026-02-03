@@ -34,6 +34,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.microsoft",
     "django_htmx",
+    "django_apscheduler",
 ]
 
 LOCAL_APPS = [
@@ -181,3 +182,13 @@ CHRONICLE_EMAIL_RECIPIENTS = config("CHRONICLE_EMAIL_RECIPIENTS", default="", ca
 
 # Security settings (override in prod.py)
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+
+# ServiceDesk Plus Integration
+SERVICEDESK_URL = config("SERVICEDESK_URL", default="")
+SERVICEDESK_API_KEY = config("SERVICEDESK_API_KEY", default="")
+SERVICEDESK_SYNC_ENABLED = config("SERVICEDESK_SYNC_ENABLED", default=False, cast=bool)
+SERVICEDESK_SYNC_INTERVAL = config("SERVICEDESK_SYNC_INTERVAL", default=300, cast=int)
+
+# APScheduler settings
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+APSCHEDULER_RUN_NOW_TIMEOUT = 25  # seconds

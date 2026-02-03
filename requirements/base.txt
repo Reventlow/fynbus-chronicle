@@ -16,3 +16,6 @@ Pillow>=10.0.0
 
 # Documentation rendering
 Markdown>=3.5
+
+# Scheduled tasks
+django-apscheduler>=0.6.2

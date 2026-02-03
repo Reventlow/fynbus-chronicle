@@ -50,6 +50,28 @@ services:
       timeout: 5s
       retries: 5
 
+  # ServiceDesk sync scheduler
+  sync:
+    image: elohite/chronicle_sync_servicedesk:latest
+    # To build locally instead of pulling from DockerHub, comment above and uncomment:
+    # build:
+    #   context: .
+    #   dockerfile: docker/Dockerfile.sync
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - SQLITE_DIR=/app/data
+      - SERVICEDESK_URL=${SERVICEDESK_URL:-https://servicedesk.fynbus.dk}
+      - SERVICEDESK_API_KEY=${SERVICEDESK_API_KEY}
+      - SERVICEDESK_SYNC_ENABLED=${SERVICEDESK_SYNC_ENABLED:-True}
+      - SERVICEDESK_SYNC_INTERVAL=${SERVICEDESK_SYNC_INTERVAL:-300}
+    volumes:
+      - sqlite_data:/app/data  # Share SQLite with web service
+    depends_on:
+      - web
+    restart: unless-stopped
+
   # Optional: Nginx reverse proxy
   # nginx:
   #   image: nginx:alpine
