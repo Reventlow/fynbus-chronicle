@@ -158,6 +158,10 @@ python manage.py createsuperuser
 | `EMAIL_HOST_PASSWORD` | SMTP password | - |
 | `DEFAULT_FROM_EMAIL` | Default sender email | `it@fynbus.dk` |
 | `CHRONICLE_EMAIL_RECIPIENTS` | Comma-separated email recipients | - |
+| `SERVICEDESK_URL` | ServiceDesk Plus base URL | `https://servicedesk.fynbus.dk` |
+| `SERVICEDESK_API_KEY` | ServiceDesk Plus API technician key | - |
+| `SERVICEDESK_SYNC_ENABLED` | Enable automatic ticket sync | `False` |
+| `SERVICEDESK_SYNC_INTERVAL` | Sync interval in seconds | `300` (5 min) |
 
 ## Troubleshooting
 

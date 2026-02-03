@@ -58,6 +58,12 @@ SSO_ENABLED=True
 MICROSOFT_CLIENT_ID=<app-id>
 MICROSOFT_CLIENT_SECRET=<secret>
 MICROSOFT_TENANT_ID=<tenant-id>
+
+# ServiceDesk Plus Integration (Optional)
+SERVICEDESK_URL=https://servicedesk.fynbus.dk
+SERVICEDESK_API_KEY=<your-api-key>
+SERVICEDESK_SYNC_ENABLED=True
+SERVICEDESK_SYNC_INTERVAL=300
 ```
 
 Generate a secure secret key:
@@ -281,3 +287,126 @@ docker compose -f docker-compose.prod.yml exec web python manage.py collectstati
 # Check static files directory
 docker compose -f docker-compose.prod.yml exec web ls -la /app/staticfiles
 ```
+
+## ServiceDesk Plus Integration
+
+FynBus Chronicle can automatically sync helpdesk ticket counts from ManageEngine ServiceDesk Plus. This provides real-time statistics on the dashboard.
+
+### Prerequisites
+
+- ServiceDesk Plus instance with API access enabled
+- API technician key (generated in ServiceDesk Plus admin)
+
+### Configuration
+
+1. Generate an API key in ServiceDesk Plus:
+   - Log in to ServiceDesk Plus as admin
+   - Go to Admin > API > Technicians
+   - Generate a new API key for a technician account
+
+2. Add environment variables to your `.env.prod`:
+
+```env
+SERVICEDESK_URL=https://servicedesk.fynbus.dk
+SERVICEDESK_API_KEY=<your-api-key>
+SERVICEDESK_SYNC_ENABLED=True
+SERVICEDESK_SYNC_INTERVAL=300
+```
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SERVICEDESK_URL` | Base URL of your ServiceDesk Plus instance | `https://servicedesk.fynbus.dk` |
+| `SERVICEDESK_API_KEY` | API technician key | Required for sync |
+| `SERVICEDESK_SYNC_ENABLED` | Enable/disable automatic sync | `False` |
+| `SERVICEDESK_SYNC_INTERVAL` | Sync interval in seconds | `300` (5 minutes) |
+
+### Docker Deployment
+
+The production docker-compose includes a dedicated `sync` service that runs the scheduler:
+
+```yaml
+# In docker-compose.prod.yml
+sync:
+  image: elohite/chronicle_sync_servicedesk:latest
+  environment:
+    - SERVICEDESK_URL=${SERVICEDESK_URL}
+    - SERVICEDESK_API_KEY=${SERVICEDESK_API_KEY}
+    - SERVICEDESK_SYNC_ENABLED=${SERVICEDESK_SYNC_ENABLED:-True}
+    - SERVICEDESK_SYNC_INTERVAL=${SERVICEDESK_SYNC_INTERVAL:-300}
+    # ... other settings
+  volumes:
+    - sqlite_data:/app/data  # Share database with web service
+```
+
+The sync service:
+- Runs as a separate container to avoid blocking the web server
+- Shares the SQLite database volume with the web service
+- Automatically syncs ticket counts at the configured interval (default: 5 minutes)
+- Updates the current week's WeekLog with new, closed, and open ticket counts
+
+### Management Commands
+
+Two management commands are available for ServiceDesk integration:
+
+**Run the scheduler (for production)**
+```bash
+python manage.py run_scheduler
+```
+Starts a blocking scheduler that syncs tickets at regular intervals. Used by the Docker sync service.
+
+**Manual sync (for testing/debugging)**
+```bash
+# Sync current week only
+python manage.py sync_servicedesk
+
+# Sync all existing WeekLogs
+python manage.py sync_servicedesk --all
+```
+
+### Verify Integration
+
+Check if the sync service is running:
+
+```bash
+docker compose -f docker-compose.prod.yml logs sync
+```
+
+Expected output:
+```
+Added ServiceDesk sync job (every 300 seconds)
+Starting scheduler...
+```
+
+### Disable Integration
+
+To disable ServiceDesk sync:
+
+1. Set `SERVICEDESK_SYNC_ENABLED=False` in your environment
+2. Optionally stop the sync container:
+   ```bash
+   docker compose -f docker-compose.prod.yml stop sync
+   ```
+
+When disabled, helpdesk statistics can still be entered manually in the WeekLog form.
+
+### Troubleshooting
+
+**Sync not working**
+
+1. Check sync service logs:
+   ```bash
+   docker compose -f docker-compose.prod.yml logs sync
+   ```
+
+2. Verify API key works:
+   ```bash
+   docker compose -f docker-compose.prod.yml exec sync python manage.py sync_servicedesk
+   ```
+
+3. Check ServiceDesk Plus API is accessible from the container
+
+**Database locked errors (SQLite)**
+
+This can occur if both web and sync services access SQLite simultaneously. The sync service includes retry logic, but consider:
+- Using PostgreSQL for production environments
+- Increasing `SERVICEDESK_SYNC_INTERVAL` to reduce frequency

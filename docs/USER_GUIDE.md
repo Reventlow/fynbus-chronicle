@@ -32,6 +32,15 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 
 Kontrolpanelet giver et overblik over den aktuelle uges aktiviteter.
 
+### Live opdateringer
+
+Kontrolpanelet opdateres automatisk uden at du behøver genindlæse siden:
+- **Helpdesk statistik**: Opdateres hvert 30. sekund
+- **Aktuel uge**: Opdateres hvert minut
+- **Graf og hændelser**: Opdateres hvert minut
+
+Hvis ServiceDesk-integration er aktiveret, hentes helpdesk-tal automatisk fra ServiceDesk Plus.
+
 ### Komponenter
 
 **Aktuel uge**
@@ -43,6 +52,7 @@ Kontrolpanelet giver et overblik over den aktuelle uges aktiviteter.
 - Graf over de sidste 52 ugers sager
 - Gennemsnitlige nye og lukkede sager
 - Antal åbne sager lige nu
+- Opdateres automatisk hvis ServiceDesk-integration er aktiv
 
 **Seneste hændelser**
 - Liste over nylige hændelser

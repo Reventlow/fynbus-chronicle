@@ -73,6 +73,7 @@ COPY templates/ ./templates/
 COPY static/ ./static/
 COPY docs/ ./docs/
 COPY LICENSE ./
+COPY version.txt ./
 
 # Copy built CSS from Tailwind builder
 COPY --from=tailwind-builder /build/static/css/output.css ./static/css/output.css

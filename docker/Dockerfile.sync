@@ -31,6 +31,7 @@ RUN pip install --no-cache-dir -r requirements/base.txt
 COPY manage.py ./
 COPY chronicle/ ./chronicle/
 COPY apps/ ./apps/
+COPY version.txt ./
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data

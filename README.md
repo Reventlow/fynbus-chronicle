@@ -63,6 +63,8 @@ python manage.py runserver
 ## Features
 
 - **Dashboard**: Overview of current week, helpdesk chart, recent incidents
+- **Live Updates**: Dashboard auto-refreshes every 30-60 seconds without page reload
+- **ServiceDesk Integration**: Automatic sync of ticket counts from ManageEngine ServiceDesk Plus
 - **HTMX Forms**: Inline add/edit/delete without page reloads
 - **Exports**: PDF, Markdown, and Email reports
 - **Dark Mode**: Scandinavian-themed light/dark mode
