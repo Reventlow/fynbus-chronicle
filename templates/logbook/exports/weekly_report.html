@@ -9,7 +9,6 @@
     <h1>FynBus IT Ugelog</h1>
     <div class="report-meta">
       <p><strong>Periode:</strong> {{ weeklog.week_label }}</p>
-      <p><strong>Oprettet af:</strong> {% if weeklog.created_by %}{{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}{% else %}Ukendt{% endif %}</p>
       <p><strong>Genereret:</strong> {% now "d. F Y H:i" %}</p>
     </div>
   </div>

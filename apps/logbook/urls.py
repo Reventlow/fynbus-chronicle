@@ -70,5 +70,6 @@ urlpatterns = [
     # Export endpoints
     path("<int:pk>/export/pdf/", views.export_pdf, name="export-pdf"),
     path("<int:pk>/export/markdown/", views.export_markdown, name="export-markdown"),
+    path("<int:pk>/export/html/", views.export_html, name="export-html"),
     path("<int:pk>/export/email/", views.export_email, name="export-email"),
 ]

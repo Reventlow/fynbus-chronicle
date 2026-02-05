@@ -20,6 +20,7 @@ from django.views.generic import (
 )
 
 from .exports.email import send_weeklog_email
+from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
 from .forms import AbsenceForm, IncidentForm, PriorityItemForm, WeekLogForm
@@ -395,6 +396,18 @@ def export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
 
     filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.md"
     response = HttpResponse(md_content, content_type="text/markdown; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+def export_html(request: HttpRequest, pk: int) -> HttpResponse:
+    """Export a week log as HTML."""
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    html_content = generate_html(weeklog)
+
+    filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.html"
+    response = HttpResponse(html_content, content_type="text/html; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 

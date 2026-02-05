@@ -49,6 +49,10 @@
              class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
             Download Markdown
           </a>
+          <a href="{% url 'logbook:export-html' weeklog.pk %}"
+             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
+            Download HTML
+          </a>
           <a href="{% url 'logbook:export-email' weeklog.pk %}"
              class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
             Send som email

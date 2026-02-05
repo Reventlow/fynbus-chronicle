@@ -25,9 +25,6 @@ def generate_markdown(weeklog: WeekLog) -> str:
     lines.append("# FynBus IT Ugelog")
     lines.append("")
     lines.append(f"**Periode:** {weeklog.week_label}")
-    if weeklog.created_by:
-        name = weeklog.created_by.get_full_name() or weeklog.created_by.username
-        lines.append(f"**Oprettet af:** {name}")
     lines.append(f"**Genereret:** {datetime.now().strftime('%d. %B %Y %H:%M')}")
     lines.append("")
     lines.append("---")
