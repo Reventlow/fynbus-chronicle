@@ -50,7 +50,7 @@
           {% for absence in absences %}
             <li class="text-sm text-sand-600 dark:text-sand-400">
               <span class="font-medium text-sand-700 dark:text-sand-300">{{ absence.staff_name }}</span>
-              - {{ absence.get_absence_type_display }}
+              - {{ absence.get_absence_type_display }}, {{ absence.weekday_range }}
             </li>
           {% endfor %}
         </ul>

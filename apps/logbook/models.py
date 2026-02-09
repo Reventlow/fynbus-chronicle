@@ -264,6 +264,18 @@ class Absence(models.Model):
         """Calculate duration in days (inclusive)."""
         return (self.end_date - self.start_date).days + 1
 
+    @property
+    def weekday_range(self) -> str:
+        """Return Danish weekday range, e.g. 'onsdag til fredag' or 'mandag'."""
+        days_da = [
+            "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag",
+        ]
+        start_day = days_da[self.start_date.weekday()]
+        end_day = days_da[self.end_date.weekday()]
+        if self.start_date == self.end_date:
+            return start_day.capitalize()
+        return f"{start_day.capitalize()} til {end_day}"
+
 
 class Incident(models.Model):
     """
