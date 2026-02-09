@@ -115,6 +115,12 @@ class IncidentsPartialView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class FooterVersionPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial for footer version display."""
+
+    template_name = "components/partials/footer_version.html"
+
+
 @login_required
 def helpdesk_chart_data(request) -> JsonResponse:
     """

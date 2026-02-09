@@ -29,6 +29,11 @@ urlpatterns = [
         views.IncidentsPartialView.as_view(),
         name="partial-incidents",
     ),
+    path(
+        "partials/footer-version/",
+        views.FooterVersionPartialView.as_view(),
+        name="partial-footer-version",
+    ),
     # Chart data API
     path("api/helpdesk-data/", views.helpdesk_chart_data, name="api-helpdesk-data"),
     # Documentation
