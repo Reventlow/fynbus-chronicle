@@ -3,7 +3,7 @@
      hx-on:closeAbsenceForm="this.remove()">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:absence-edit' object.pk %}{% else %}{% url 'logbook:absence-create' %}?weeklog={{ weeklog_id }}{% endif %}"
-        hx-target="{% if object %}#absence-{{ object.id }}{% else %}#absences-list{% endif %}"
+        hx-target="{% if object %}#absence-form-container{% else %}#absences-list{% endif %}"
         hx-swap="{% if object %}outerHTML{% else %}beforeend{% endif %}"
         class="space-y-4">
     {% csrf_token %}

@@ -135,12 +135,14 @@ class AbsenceForm(forms.ModelForm):
                 }
             ),
             "start_date": forms.DateInput(
+                format="%Y-%m-%d",
                 attrs={
                     "class": "input-field",
                     "type": "date",
                 }
             ),
             "end_date": forms.DateInput(
+                format="%Y-%m-%d",
                 attrs={
                     "class": "input-field",
                     "type": "date",
