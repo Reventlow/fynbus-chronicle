@@ -219,6 +219,7 @@ class Absence(models.Model):
         SICK = "sick", "Sygdom"
         COURSE = "course", "Kursus"
         MEETING = "meeting", "Møde/Konference"
+        FLEX = "flex", "Flex fri"
         OTHER = "other", "Andet"
 
     weeklog = models.ForeignKey(
