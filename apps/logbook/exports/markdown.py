@@ -59,9 +59,8 @@ def generate_markdown(weeklog: WeekLog) -> str:
         lines.append("|--------|-----------|--------|-------------|")
         for item in priority_items:
             desc = item.description or "-"
-            # Truncate description
-            if len(desc) > 50:
-                desc = desc[:47] + "..."
+            # Replace newlines with spaces for table cell compatibility
+            desc = desc.replace("\n", " ").replace("\r", "")
             lines.append(
                 f"| {item.title} | {item.get_priority_display()} | "
                 f"{item.get_status_display()} | {desc} |"

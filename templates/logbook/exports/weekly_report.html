@@ -71,7 +71,7 @@
               {{ item.get_status_display }}
             </span>
           </td>
-          <td>{{ item.description|default:"-"|truncatewords:20 }}</td>
+          <td>{{ item.description|default:"-"|linebreaksbr }}</td>
         </tr>
         {% endfor %}
       </tbody>
