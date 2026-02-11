@@ -25,43 +25,48 @@
     </div>
   </div>
 
-  <!-- Stats grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-    <!-- Current week card (HTMX loaded + polling) -->
-    <div class="lg:col-span-2"
+  <!-- Top section: week overview (left) + stat cards (right) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+    <!-- Current week card (HTMX loaded + polling) - spans 2 columns -->
+    <div class="lg:col-span-2 h-full"
          hx-get="{% url 'dashboard:partial-current-week' %}"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
-      <div class="card animate-pulse h-48">
+      <div class="card animate-pulse h-64">
         <div class="skeleton h-6 w-32 mb-4"></div>
         <div class="skeleton h-4 w-full mb-2"></div>
-        <div class="skeleton h-4 w-3/4"></div>
+        <div class="skeleton h-4 w-3/4 mb-6"></div>
+        <div class="skeleton h-4 w-1/2 mb-2"></div>
+        <div class="skeleton h-4 w-2/3"></div>
       </div>
     </div>
 
-    <!-- Quick stats cards (HTMX loaded + polling every 30s) -->
-    <div class="contents"
-         hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
-         hx-trigger="load, every 30s"
-         hx-swap="innerHTML">
-      <div class="card flex flex-col justify-center animate-pulse">
-        <div class="skeleton h-4 w-20 mb-2"></div>
-        <div class="skeleton h-8 w-16"></div>
+    <!-- Right column: 3 stat cards stacked vertically -->
+    <div class="flex flex-col gap-4">
+      <!-- Helpdesk stats: Åbne sager + Ugens sager (HTMX loaded + polling every 30s) -->
+      <div class="flex flex-col gap-4"
+           hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
+           hx-trigger="load, every 30s"
+           hx-swap="innerHTML">
+        <div class="card flex flex-col justify-center animate-pulse">
+          <div class="skeleton h-4 w-20 mb-2"></div>
+          <div class="skeleton h-8 w-16"></div>
+        </div>
+        <div class="card flex flex-col justify-center animate-pulse">
+          <div class="skeleton h-4 w-20 mb-2"></div>
+          <div class="skeleton h-8 w-32"></div>
+        </div>
       </div>
-      <div class="card flex flex-col justify-center animate-pulse">
-        <div class="skeleton h-4 w-20 mb-2"></div>
-        <div class="skeleton h-8 w-32"></div>
-      </div>
-    </div>
-  </div>
 
-  <!-- On-call status (HTMX loaded) -->
-  <div hx-get="{% url 'dashboard:partial-oncall' %}"
-       hx-trigger="load, every 60s"
-       hx-swap="innerHTML">
-    <div class="card animate-pulse h-24">
-      <div class="skeleton h-4 w-24 mb-2"></div>
-      <div class="skeleton h-6 w-32"></div>
+      <!-- On-call status (HTMX loaded + polling every 60s) -->
+      <div hx-get="{% url 'dashboard:partial-oncall' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card flex flex-col justify-center animate-pulse">
+          <div class="skeleton h-4 w-24 mb-2"></div>
+          <div class="skeleton h-6 w-32"></div>
+        </div>
+      </div>
     </div>
   </div>
 
