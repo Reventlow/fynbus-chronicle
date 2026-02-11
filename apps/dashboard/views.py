@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.views.generic import TemplateView
 
 from apps.logbook.models import Incident, WeekLog
+from apps.oncall.models import OnCallDuty
 
 
 # Documentation configuration
@@ -112,6 +113,17 @@ class IncidentsPartialView(LoginRequiredMixin, TemplateView):
         # Get unresolved count
         context["unresolved_count"] = Incident.objects.filter(resolved=False).count()
 
+        return context
+
+
+class OnCallPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial for on-call status on the dashboard."""
+
+    template_name = "dashboard/partials/oncall_status.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["oncall"] = OnCallDuty.get_current()
         return context
 
 

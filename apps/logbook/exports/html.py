@@ -7,6 +7,8 @@ Generates a standalone HTML document with embedded styles.
 from django.conf import settings
 from django.template.loader import render_to_string
 
+from apps.oncall.models import OnCallDuty
+
 from ..models import WeekLog
 
 
@@ -26,6 +28,7 @@ def generate_html(weeklog: WeekLog) -> str:
         "priority_items": weeklog.priority_items.all(),
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
+        "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
     }
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)

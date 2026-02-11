@@ -10,6 +10,9 @@
     <div class="report-meta">
       <p><strong>Periode:</strong> {{ weeklog.week_label }}</p>
       <p><strong>Genereret:</strong> {% now "d. F Y H:i" %}</p>
+      {% if oncall %}
+      <p><strong>Rådighedsvagt:</strong> {{ oncall.user.get_full_name|default:oncall.user.username }}</p>
+      {% endif %}
     </div>
   </div>
 

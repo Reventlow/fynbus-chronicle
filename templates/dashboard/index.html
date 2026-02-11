@@ -55,6 +55,16 @@
     </div>
   </div>
 
+  <!-- On-call status (HTMX loaded) -->
+  <div hx-get="{% url 'dashboard:partial-oncall' %}"
+       hx-trigger="load, every 60s"
+       hx-swap="innerHTML">
+    <div class="card animate-pulse h-24">
+      <div class="skeleton h-4 w-24 mb-2"></div>
+      <div class="skeleton h-6 w-32"></div>
+    </div>
+  </div>
+
   <!-- Main content grid -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Helpdesk chart (2 columns) - refreshes every 60s -->

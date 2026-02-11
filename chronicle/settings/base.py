@@ -41,6 +41,7 @@ LOCAL_APPS = [
     "apps.logbook",
     "apps.accounts",
     "apps.dashboard",
+    "apps.oncall",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

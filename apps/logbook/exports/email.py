@@ -8,6 +8,8 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
+from apps.oncall.models import OnCallDuty
+
 from ..models import WeekLog
 from .pdf import generate_pdf
 
@@ -36,6 +38,7 @@ def send_weeklog_email(weeklog: WeekLog) -> tuple[bool, str]:
         "priority_items": weeklog.priority_items.all(),
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
+        "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
     }
 
     try:

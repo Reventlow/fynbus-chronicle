@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Rådighedsvagt - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Page header -->
+  <div>
+    <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Rådighedsvagt</h1>
+    <p class="text-sand-500 dark:text-sand-400 mt-1">Planlæg hvem der har rådighedsvagt de kommende uger</p>
+  </div>
+
+  <!-- Calendar grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    {% for week in weeks %}
+      {% include 'oncall/partials/week_card.html' with week=week %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

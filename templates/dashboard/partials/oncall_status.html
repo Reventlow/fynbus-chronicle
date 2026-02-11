@@ -1,0 +1,22 @@
+<div class="card flex flex-col justify-center">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-xs font-medium text-sand-500 dark:text-sand-400 uppercase tracking-wide">Rådighedsvagt</p>
+      {% if oncall %}
+        <p class="text-lg font-semibold text-sand-800 dark:text-sand-100 mt-1">
+          {{ oncall.user.get_full_name|default:oncall.user.username }}
+        </p>
+      {% else %}
+        <p class="text-lg font-semibold text-sand-400 dark:text-sand-500 mt-1 italic">Ikke tildelt</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'oncall:calendar' %}"
+       class="text-sand-400 hover:text-sand-600 dark:text-sand-500 dark:hover:text-sand-300 transition-colors"
+       title="Se vagtplan">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+    </a>
+  </div>
+</div>

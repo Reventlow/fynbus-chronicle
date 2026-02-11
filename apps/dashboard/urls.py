@@ -30,6 +30,11 @@ urlpatterns = [
         name="partial-incidents",
     ),
     path(
+        "partials/oncall/",
+        views.OnCallPartialView.as_view(),
+        name="partial-oncall",
+    ),
+    path(
         "partials/footer-version/",
         views.FooterVersionPartialView.as_view(),
         name="partial-footer-version",

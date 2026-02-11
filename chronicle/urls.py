@@ -21,6 +21,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
     path("logbook/", include("apps.logbook.urls")),
+    path("oncall/", include("apps.oncall.urls")),
     path("allauth/", include("allauth.urls")),
 ]
 

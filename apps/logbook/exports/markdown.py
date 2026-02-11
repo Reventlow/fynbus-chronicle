@@ -6,6 +6,8 @@ Generates a Markdown document from a WeekLog instance.
 
 from datetime import datetime
 
+from apps.oncall.models import OnCallDuty
+
 from ..models import WeekLog
 
 
@@ -26,6 +28,9 @@ def generate_markdown(weeklog: WeekLog) -> str:
     lines.append("")
     lines.append(f"**Periode:** {weeklog.week_label}")
     lines.append(f"**Genereret:** {datetime.now().strftime('%d. %B %Y %H:%M')}")
+    oncall = OnCallDuty.get_for_week(weeklog.year, weeklog.week_number)
+    if oncall:
+        lines.append(f"**Rådighedsvagt:** {oncall.user.get_full_name() or oncall.user.username}")
     lines.append("")
     lines.append("---")
     lines.append("")
