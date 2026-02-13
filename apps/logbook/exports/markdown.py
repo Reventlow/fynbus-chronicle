@@ -84,7 +84,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
     # Absences
     absences = weeklog.absences.all()
     if absences:
-        lines.append("## Fravær")
+        lines.append("## Bemanding")
         lines.append("")
         lines.append("| Medarbejder | Type | Fra | Til | Dage | Noter |")
         lines.append("|-------------|------|-----|-----|------|-------|")

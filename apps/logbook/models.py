@@ -220,6 +220,7 @@ class Absence(models.Model):
         COURSE = "course", "Kursus"
         MEETING = "meeting", "Møde/Konference"
         FLEX = "flex", "Flex fri"
+        WFH = "wfh", "Arbejder hjemme"
         OTHER = "other", "Andet"
 
     weeklog = models.ForeignKey(
@@ -252,8 +253,8 @@ class Absence(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Fravær"
-        verbose_name_plural = "Fravær"
+        verbose_name = "Bemanding"
+        verbose_name_plural = "Bemanding"
         ordering = ["start_date"]
 
     def __str__(self) -> str:

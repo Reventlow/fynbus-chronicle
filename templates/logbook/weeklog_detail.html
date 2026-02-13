@@ -121,7 +121,7 @@
   <!-- Absences -->
   <div class="card">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Fravær</h2>
+      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Bemanding</h2>
       <button hx-get="{% url 'logbook:absence-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#absences-list"
               hx-swap="beforeend"
@@ -138,7 +138,7 @@
         {% include 'logbook/partials/absence_row.html' %}
       {% empty %}
         <p class="text-sand-500 dark:text-sand-400 text-center py-4" id="no-absences">
-          Ingen fravær registreret.
+          Ingen bemanding registreret.
         </p>
       {% endfor %}
     </div>
