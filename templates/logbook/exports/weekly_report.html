@@ -40,6 +40,14 @@
     </div>
   </div>
 
+  <!-- Helpdesk Trend Chart -->
+  {% if chart_image %}
+  <div class="section">
+    <h2>Helpdesk Trend</h2>
+    <img src="{{ chart_image }}" style="width:100%;" alt="Helpdesk trend chart">
+  </div>
+  {% endif %}
+
   <!-- Summary -->
   {% if weeklog.summary %}
   <div class="section">

@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from apps.oncall.models import OnCallDuty
 
 from ..models import WeekLog
+from .chart import generate_helpdesk_chart
 
 
 def generate_pdf(weeklog: WeekLog) -> bytes:
@@ -29,6 +30,9 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
             "Install it with: pip install WeasyPrint"
         ) from e
 
+    # Generate helpdesk trend chart
+    chart_image = generate_helpdesk_chart(weeklog)
+
     # Render HTML template
     context = {
         "weeklog": weeklog,
@@ -36,6 +40,7 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
+        "chart_image": chart_image,
     }
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)

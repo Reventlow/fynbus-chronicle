@@ -123,6 +123,13 @@
     </div>
   </div>
 
+  {% if chart_image %}
+  <div style="margin: 15px 0;">
+    <h2>Helpdesk Trend</h2>
+    <img src="{{ chart_image }}" style="width:100%; max-width:600px;" alt="Helpdesk trend chart">
+  </div>
+  {% endif %}
+
   {% if weeklog.summary %}
   <h2>Ugeoversigt</h2>
   <div class="summary">
