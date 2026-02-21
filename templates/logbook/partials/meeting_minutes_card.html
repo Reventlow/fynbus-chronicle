@@ -3,6 +3,7 @@
 <div id="meeting-minutes-card" class="card">
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Referat af mandags møde</h2>
+    {% if is_editor %}
     <button hx-get="{% url 'logbook:meeting-minutes-edit' weeklog.pk %}"
             hx-target="#meeting-minutes-card"
             hx-swap="outerHTML"
@@ -13,6 +14,7 @@
       </svg>
       Rediger
     </button>
+    {% endif %}
   </div>
 
   {% if weeklog.meeting_skipped %}

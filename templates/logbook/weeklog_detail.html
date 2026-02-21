@@ -19,6 +19,7 @@
         {{ weeklog.week_label }}
       </h1>
     </div>
+    {% if is_editor %}
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'logbook:weeklog-edit' weeklog.pk %}" class="btn-secondary btn-sm">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +70,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <!-- Helpdesk stats -->
@@ -108,6 +110,7 @@
   <div class="card">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Prioriterede opgaver</h2>
+      {% if is_editor %}
       <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#priority-items-list"
               hx-swap="beforeend"
@@ -117,6 +120,7 @@
         </svg>
         Tilføj
       </button>
+      {% endif %}
     </div>
 
     <div id="priority-items-list" class="space-y-2">
@@ -134,6 +138,7 @@
   <div class="card">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Bemanding</h2>
+      {% if is_editor %}
       <button hx-get="{% url 'logbook:absence-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#absences-list"
               hx-swap="beforeend"
@@ -143,6 +148,7 @@
         </svg>
         Tilføj
       </button>
+      {% endif %}
     </div>
 
     <div id="absences-list" class="space-y-2">
@@ -160,6 +166,7 @@
   <div class="card">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Hændelser</h2>
+      {% if is_editor %}
       <button hx-get="{% url 'logbook:incident-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#incidents-list"
               hx-swap="beforeend"
@@ -169,6 +176,7 @@
         </svg>
         Tilføj
       </button>
+      {% endif %}
     </div>
 
     <div id="incidents-list" class="space-y-3">
@@ -192,6 +200,7 @@
 </div>
 {% endblock %}
 
+{% if is_editor %}
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -223,3 +232,4 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 {% endblock %}
+{% endif %}

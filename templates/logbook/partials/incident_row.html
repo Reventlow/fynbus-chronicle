@@ -31,6 +31,7 @@
       {% endif %}
     </div>
 
+    {% if is_editor %}
     <div class="flex items-center gap-1">
       <button hx-get="{% url 'logbook:incident-edit' incident.pk %}"
               class="p-1.5 text-sand-500 hover:text-sand-700 dark:hover:text-sand-300 rounded hover:bg-sand-200 dark:hover:bg-sand-700"
@@ -50,5 +51,6 @@
         </svg>
       </button>
     </div>
+    {% endif %}
   </div>
 </div>

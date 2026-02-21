@@ -70,9 +70,11 @@
       <p class="text-sand-500 dark:text-sand-400 mb-4">
         Opret en ny ugelog for at komme i gang
       </p>
+      {% if is_editor %}
       <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary btn-sm">
         Opret ugelog
       </a>
+      {% endif %}
     </div>
   {% endif %}
 </div>

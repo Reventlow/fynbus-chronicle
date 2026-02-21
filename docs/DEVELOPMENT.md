@@ -20,9 +20,11 @@ fynbus-chronicle/
 │   │   ├── admin.py       # Admin with inlines and exports
 │   │   ├── forms.py       # Django forms
 │   │   └── exports/       # PDF, Markdown, Email export modules
-│   ├── accounts/          # Authentication
+│   ├── accounts/          # Authentication & permissions
 │   │   ├── views.py       # Custom login/logout
-│   │   └── urls.py
+│   │   ├── urls.py
+│   │   ├── permissions.py # is_editor(), EditorRequiredMixin, @editor_required
+│   │   └── context_processors.py  # Adds is_editor to template context
 │   └── dashboard/         # Dashboard views
 │       └── views.py       # Dashboard and chart API
 ├── templates/             # Global templates
@@ -167,6 +169,53 @@ Uses class-based dark mode with Alpine.js:
 <html x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
       :class="{ 'dark': darkMode }">
 ```
+
+## Permissions / Role-Based Access Control
+
+The app uses a "Viewer" group to restrict users to read-only access. Users **not** in the Viewer group have full access (the default). Staff users always bypass the check.
+
+### Key components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `is_editor(user)` | `apps/accounts/permissions.py` | Returns `False` if user is in the Viewer group |
+| `EditorRequiredMixin` | `apps/accounts/permissions.py` | CBV mixin — raises `PermissionDenied` for viewers |
+| `@editor_required` | `apps/accounts/permissions.py` | FBV decorator — same behavior |
+| `editor_context` | `apps/accounts/context_processors.py` | Adds `is_editor` boolean to template context |
+
+### Protecting a new write view
+
+**Class-based view:** Replace `LoginRequiredMixin` with `EditorRequiredMixin`:
+
+```python
+from apps.accounts.permissions import EditorRequiredMixin
+
+class MyCreateView(EditorRequiredMixin, CreateView):
+    ...
+```
+
+**Function-based view:** Stack `@editor_required` after `@login_required`:
+
+```python
+from apps.accounts.permissions import editor_required
+
+@login_required
+@editor_required
+def my_write_view(request):
+    ...
+```
+
+### Hiding UI elements from viewers
+
+Use the `is_editor` context variable in templates:
+
+```html
+{% if is_editor %}
+  <button>Tilføj</button>
+{% endif %}
+```
+
+This hides the element for viewers while the server-side mixin/decorator still blocks direct URL access.
 
 ## Adding New Features
 

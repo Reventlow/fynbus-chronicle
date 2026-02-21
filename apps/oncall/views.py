@@ -15,6 +15,8 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.generic import TemplateView
 
+from apps.accounts.permissions import editor_required
+
 from .models import OnCallDuty
 
 
@@ -89,6 +91,7 @@ class OnCallCalendarView(LoginRequiredMixin, TemplateView):
 
 
 @login_required
+@editor_required
 def oncall_claim(request, year: int, week: int) -> HttpResponse:
     """HTMX endpoint to claim an on-call week."""
     if request.method != "POST":
@@ -105,6 +108,7 @@ def oncall_claim(request, year: int, week: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
 def oncall_release(request, year: int, week: int) -> HttpResponse:
     """HTMX endpoint to release an on-call week (only your own)."""
     if request.method != "POST":

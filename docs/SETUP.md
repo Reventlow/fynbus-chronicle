@@ -101,7 +101,17 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 8. Run Development Server
+### 8. Create Viewer Group
+
+The migration creates a "Viewer" auth group automatically when you run migrations (step 7). To restrict a user to read-only access:
+
+1. Go to Django Admin: `http://localhost:8000/admin/auth/group/`
+2. Click on the "Viewer" group
+3. Add users to the group
+
+Users in the Viewer group can see all pages but cannot create, edit, delete, reorder, or export anything. Staff users always have full access regardless of group membership.
+
+### 9. Run Development Server
 
 ```bash
 python manage.py runserver

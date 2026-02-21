@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Adgang nægtet - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+  <svg class="w-16 h-16 text-terracotta-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M12 15v.01M12 12a1.5 1.5 0 011.5-1.5h.01M12 12a1.5 1.5 0 00-1.5-1.5h-.01M18.364 5.636a9 9 0 11-12.728 12.728A9 9 0 0118.364 5.636z"/>
+  </svg>
+  <h1 class="text-3xl font-bold text-sand-800 dark:text-sand-100 mb-2">Adgang nægtet</h1>
+  <p class="text-sand-600 dark:text-sand-400 mb-6 max-w-md">
+    Du har ikke tilladelse til at udføre denne handling. Din konto har kun læseadgang.
+  </p>
+  <a href="{% url 'dashboard:index' %}" class="btn-primary">
+    Tilbage til kontrolpanel
+  </a>
+</div>
+{% endblock %}

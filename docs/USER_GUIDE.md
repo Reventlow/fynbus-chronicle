@@ -5,10 +5,11 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 ## Indhold
 
 1. [Log ind](#log-ind)
-2. [Kontrolpanel](#kontrolpanel)
-3. [Ugelogs](#ugelogs)
-4. [Eksporter rapporter](#eksporter-rapporter)
-5. [Mørk tilstand](#mørk-tilstand)
+2. [Brugerroller](#brugerroller)
+3. [Kontrolpanel](#kontrolpanel)
+4. [Ugelogs](#ugelogs)
+5. [Eksporter rapporter](#eksporter-rapporter)
+6. [Mørk tilstand](#mørk-tilstand)
 
 ---
 
@@ -25,6 +26,36 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 1. Klik på "Office 365" knappen
 2. Log ind med din FynBus Office 365-konto
 3. Godkend adgang første gang
+
+---
+
+## Brugerroller
+
+FynBus Chronicle har to brugerroller:
+
+### Redaktør (standard)
+
+Alle brugere er redaktører som standard og har fuld adgang til at:
+
+- Oprette, redigere og slette ugelogs
+- Tilføje og administrere opgaver, fravær og hændelser
+- Redigere mødereferater
+- Eksportere rapporter (PDF, Markdown, HTML, email)
+- Tage og frigive vagtuge i vagtkalenderen
+- Sortere prioriterede opgaver via træk-og-slip
+
+### Læser (Viewer)
+
+Brugere der er tilføjet til gruppen "Viewer" har kun læseadgang:
+
+- **Kan se**: Kontrolpanel, ugelogs, vagtkalender og dokumentation
+- **Kan ikke**: Oprette, redigere, slette, sortere eller eksportere noget
+
+Læsere ser ikke nogen handlingsknapper (Tilføj, Rediger, Slet, Eksporter osv.). Forsøg på at tilgå skrivebeskyttede funktioner direkte via URL returnerer en fejlside.
+
+> **Bemærk:** Administratorer (staff-brugere) har altid fuld adgang uanset gruppemedlemskab.
+
+Kontakt din administrator for at ændre din brugerrolle.
 
 ---
 

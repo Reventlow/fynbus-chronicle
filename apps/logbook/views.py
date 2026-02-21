@@ -23,6 +23,8 @@ from django.views.generic import (
     UpdateView,
 )
 
+from apps.accounts.permissions import EditorRequiredMixin, editor_required
+
 from .exports.email import send_weeklog_email
 from .exports.html import generate_html
 from .exports.markdown import generate_markdown
@@ -84,7 +86,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class WeekLogCreateView(LoginRequiredMixin, CreateView):
+class WeekLogCreateView(EditorRequiredMixin, CreateView):
     """Create view for new week logs."""
 
     model = WeekLog
@@ -103,7 +105,7 @@ class WeekLogCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy("logbook:weeklog-detail", kwargs={"pk": self.object.pk})
 
 
-class WeekLogUpdateView(LoginRequiredMixin, UpdateView):
+class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
     """Update view for existing week logs."""
 
     model = WeekLog
@@ -126,7 +128,7 @@ class WeekLogUpdateView(LoginRequiredMixin, UpdateView):
 # =============================================================================
 
 
-class PriorityItemCreateView(LoginRequiredMixin, CreateView):
+class PriorityItemCreateView(EditorRequiredMixin, CreateView):
     """HTMX view for creating priority items inline."""
 
     model = PriorityItem
@@ -170,7 +172,7 @@ class PriorityItemCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class PriorityItemUpdateView(LoginRequiredMixin, UpdateView):
+class PriorityItemUpdateView(EditorRequiredMixin, UpdateView):
     """HTMX view for updating priority items inline."""
 
     model = PriorityItem
@@ -190,7 +192,7 @@ class PriorityItemUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class PriorityItemDeleteView(LoginRequiredMixin, DeleteView):
+class PriorityItemDeleteView(EditorRequiredMixin, DeleteView):
     """HTMX view for deleting priority items."""
 
     model = PriorityItem
@@ -203,6 +205,7 @@ class PriorityItemDeleteView(LoginRequiredMixin, DeleteView):
 
 
 @login_required
+@editor_required
 @require_POST
 def reorder_priority_items(request: HttpRequest) -> HttpResponse:
     """Reorder priority items via drag-and-drop."""
@@ -223,7 +226,7 @@ def reorder_priority_items(request: HttpRequest) -> HttpResponse:
 # =============================================================================
 
 
-class AbsenceCreateView(LoginRequiredMixin, CreateView):
+class AbsenceCreateView(EditorRequiredMixin, CreateView):
     """HTMX view for creating absences inline."""
 
     model = Absence
@@ -256,7 +259,7 @@ class AbsenceCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class AbsenceUpdateView(LoginRequiredMixin, UpdateView):
+class AbsenceUpdateView(EditorRequiredMixin, UpdateView):
     """HTMX view for updating absences inline."""
 
     model = Absence
@@ -276,7 +279,7 @@ class AbsenceUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class AbsenceDeleteView(LoginRequiredMixin, DeleteView):
+class AbsenceDeleteView(EditorRequiredMixin, DeleteView):
     """HTMX view for deleting absences."""
 
     model = Absence
@@ -293,7 +296,7 @@ class AbsenceDeleteView(LoginRequiredMixin, DeleteView):
 # =============================================================================
 
 
-class IncidentCreateView(LoginRequiredMixin, CreateView):
+class IncidentCreateView(EditorRequiredMixin, CreateView):
     """HTMX view for creating incidents inline."""
 
     model = Incident
@@ -326,7 +329,7 @@ class IncidentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class IncidentUpdateView(LoginRequiredMixin, UpdateView):
+class IncidentUpdateView(EditorRequiredMixin, UpdateView):
     """HTMX view for updating incidents inline."""
 
     model = Incident
@@ -346,7 +349,7 @@ class IncidentUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class IncidentDeleteView(LoginRequiredMixin, DeleteView):
+class IncidentDeleteView(EditorRequiredMixin, DeleteView):
     """HTMX view for deleting incidents."""
 
     model = Incident
@@ -364,6 +367,7 @@ class IncidentDeleteView(LoginRequiredMixin, DeleteView):
 
 
 @login_required
+@editor_required
 def meeting_minutes_edit(request: HttpRequest, pk: int) -> HttpResponse:
     """HTMX view for editing meeting attendees and minutes inline."""
     from django.template.response import TemplateResponse
@@ -446,6 +450,7 @@ def incident_row(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
 def export_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     """Export a week log as PDF."""
     weeklog = get_object_or_404(WeekLog, pk=pk)
@@ -458,6 +463,7 @@ def export_pdf(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
 def export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
     """Export a week log as Markdown."""
     weeklog = get_object_or_404(WeekLog, pk=pk)
@@ -470,6 +476,7 @@ def export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
 def export_html(request: HttpRequest, pk: int) -> HttpResponse:
     """Export a week log as HTML."""
     weeklog = get_object_or_404(WeekLog, pk=pk)
@@ -482,6 +489,7 @@ def export_html(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
 def export_email(request: HttpRequest, pk: int) -> HttpResponse:
     """Send a week log via email."""
     weeklog = get_object_or_404(WeekLog, pk=pk)

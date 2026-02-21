@@ -98,8 +98,10 @@
         Opret din første ugelog for at komme i gang.
       {% endif %}
     </p>
+    {% if is_editor %}
     <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary">
       Opret ugelog
     </a>
+    {% endif %}
   </div>
 {% endif %}

@@ -24,7 +24,7 @@
           {{ week.duty.user.get_full_name|default:week.duty.user.username }}
         </span>
       </div>
-      {% if week.is_own %}
+      {% if week.is_own and is_editor %}
         <button hx-post="{% url 'oncall:release' week.year week.week %}"
                 hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
                 hx-swap="outerHTML"
@@ -36,12 +36,14 @@
   {% else %}
     <div class="flex items-center justify-between">
       <span class="text-sm text-sand-400 dark:text-sand-500 italic">Ledig</span>
+      {% if is_editor %}
       <button hx-post="{% url 'oncall:claim' week.year week.week %}"
               hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
               hx-swap="outerHTML"
               class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800 transition-colors">
         Tag vagt
       </button>
+      {% endif %}
     </div>
   {% endif %}
 </div>
