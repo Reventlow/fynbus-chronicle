@@ -10,9 +10,10 @@ requests>=2.31.0  # Required by allauth
 # HTMX integration
 django-htmx>=1.17.0
 
-# PDF generation
+# PDF generation & charts
 WeasyPrint>=61.0
 Pillow>=10.0.0
+matplotlib>=3.8
 
 # Documentation rendering
 Markdown>=3.5
