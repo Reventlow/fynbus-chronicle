@@ -101,6 +101,13 @@ class WeekLogAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Referat af mandags møde",
+            {
+                "fields": ["meeting_skipped", "meeting_skipped_reason", "meeting_attendees", "meeting_minutes"],
+                "classes": ["collapse"],
+            },
+        ),
+        (
             "Metadata",
             {
                 "fields": ["created_by", "created_at", "updated_at"],

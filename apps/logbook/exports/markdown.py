@@ -55,6 +55,23 @@ def generate_markdown(weeklog: WeekLog) -> str:
         lines.append(f"> {weeklog.summary}")
         lines.append("")
 
+    # Meeting minutes
+    if weeklog.meeting_skipped:
+        lines.append("## Referat af mandags møde")
+        lines.append("")
+        reason = weeklog.meeting_skipped_reason or ""
+        lines.append(f"*Mødet blev ikke afholdt denne uge.*{' ' + reason if reason else ''}")
+        lines.append("")
+    elif weeklog.meeting_attendees or weeklog.meeting_minutes:
+        lines.append("## Referat af mandags møde")
+        lines.append("")
+        if weeklog.meeting_attendees:
+            lines.append(f"**Deltagere:** {weeklog.meeting_attendees}")
+            lines.append("")
+        if weeklog.meeting_minutes:
+            lines.append(weeklog.meeting_minutes)
+            lines.append("")
+
     # Priority items
     priority_items = weeklog.priority_items.all()
     if priority_items:

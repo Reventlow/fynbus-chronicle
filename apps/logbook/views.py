@@ -27,7 +27,7 @@ from .exports.email import send_weeklog_email
 from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
-from .forms import AbsenceForm, IncidentForm, PriorityItemForm, WeekLogForm
+from .forms import AbsenceForm, IncidentForm, MeetingMinutesForm, PriorityItemForm, WeekLogForm
 from .models import Absence, Incident, PriorityItem, WeekLog
 
 
@@ -356,6 +356,50 @@ class IncidentDeleteView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         self.object.delete()
         return HttpResponse("")
+
+
+# =============================================================================
+# Meeting Minutes HTMX Views
+# =============================================================================
+
+
+@login_required
+def meeting_minutes_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    """HTMX view for editing meeting attendees and minutes inline."""
+    from django.template.response import TemplateResponse
+
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+
+    if request.method == "POST":
+        form = MeetingMinutesForm(request.POST, instance=weeklog)
+        if form.is_valid():
+            form.save()
+            return TemplateResponse(
+                request,
+                "logbook/partials/meeting_minutes_card.html",
+                {"weeklog": weeklog},
+            )
+    else:
+        form = MeetingMinutesForm(instance=weeklog)
+
+    return TemplateResponse(
+        request,
+        "logbook/partials/meeting_minutes_form.html",
+        {"form": form, "weeklog": weeklog},
+    )
+
+
+@login_required
+def meeting_minutes_card(request: HttpRequest, pk: int) -> HttpResponse:
+    """Return the meeting minutes display card (for cancel)."""
+    from django.template.response import TemplateResponse
+
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    return TemplateResponse(
+        request,
+        "logbook/partials/meeting_minutes_card.html",
+        {"weeklog": weeklog},
+    )
 
 
 # =============================================================================

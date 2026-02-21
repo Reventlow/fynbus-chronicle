@@ -1,3 +1,4 @@
+{% load markdown_extras %}
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -127,6 +128,21 @@
   <div class="summary">
     {{ weeklog.summary|linebreaksbr }}
   </div>
+  {% endif %}
+
+  {% if weeklog.meeting_skipped %}
+  <h2>Referat af mandags møde</h2>
+  <p><em>Mødet blev ikke afholdt denne uge.</em>{% if weeklog.meeting_skipped_reason %} {{ weeklog.meeting_skipped_reason }}{% endif %}</p>
+  {% elif weeklog.meeting_attendees or weeklog.meeting_minutes %}
+  <h2>Referat af mandags møde</h2>
+  {% if weeklog.meeting_attendees %}
+  <p><strong>Deltagere:</strong> {{ weeklog.meeting_attendees }}</p>
+  {% endif %}
+  {% if weeklog.meeting_minutes %}
+  <div class="summary">
+    {{ weeklog.meeting_minutes|render_markdown }}
+  </div>
+  {% endif %}
   {% endif %}
 
   {% if priority_items %}

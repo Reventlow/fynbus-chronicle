@@ -12,6 +12,17 @@ urlpatterns = [
     path("<int:pk>/", views.WeekLogDetailView.as_view(), name="weeklog-detail"),
     path("create/", views.WeekLogCreateView.as_view(), name="weeklog-create"),
     path("<int:pk>/edit/", views.WeekLogUpdateView.as_view(), name="weeklog-edit"),
+    # HTMX partials for meeting minutes
+    path(
+        "<int:pk>/meeting/edit/",
+        views.meeting_minutes_edit,
+        name="meeting-minutes-edit",
+    ),
+    path(
+        "<int:pk>/meeting/card/",
+        views.meeting_minutes_card,
+        name="meeting-minutes-card",
+    ),
     # HTMX partials for priority items
     path(
         "priority-item/new/",

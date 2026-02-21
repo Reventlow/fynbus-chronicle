@@ -58,6 +58,29 @@ class WeekLog(models.Model):
         help_text="Kort beskrivelse af ugens vigtigste aktiviteter",
     )
 
+    # Monday meeting minutes
+    meeting_skipped = models.BooleanField(
+        verbose_name="Møde aflyst",
+        default=False,
+        help_text="Angiv om mandagsmødet blev aflyst denne uge",
+    )
+    meeting_skipped_reason = models.CharField(
+        verbose_name="Årsag til aflysning",
+        max_length=200,
+        blank=True,
+        help_text="Kort begrundelse for hvorfor mødet blev aflyst",
+    )
+    meeting_attendees = models.TextField(
+        verbose_name="Deltagere",
+        blank=True,
+        help_text="Deltagere til mandagsmødet",
+    )
+    meeting_minutes = models.TextField(
+        verbose_name="Referat",
+        blank=True,
+        help_text="Referat af mandagsmødet",
+    )
+
     # Metadata
     created_by = models.ForeignKey(
         User,

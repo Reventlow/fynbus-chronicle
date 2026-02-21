@@ -171,6 +171,38 @@ class AbsenceForm(forms.ModelForm):
         return cleaned_data
 
 
+class MeetingMinutesForm(forms.ModelForm):
+    """Form for editing meeting attendees and minutes inline."""
+
+    class Meta:
+        model = WeekLog
+        fields = [
+            "meeting_skipped",
+            "meeting_skipped_reason",
+            "meeting_attendees",
+            "meeting_minutes",
+        ]
+        widgets = {
+            "meeting_skipped": forms.HiddenInput(),
+            "meeting_skipped_reason": forms.TextInput(
+                attrs={
+                    "class": "input-field",
+                    "placeholder": "F.eks. helligdag, ferie, ingen agenda...",
+                }
+            ),
+            "meeting_attendees": forms.HiddenInput(),
+            "meeting_minutes": forms.Textarea(
+                attrs={
+                    "class": "textarea-field",
+                    "rows": 6,
+                    "placeholder": "Referat af mandagsmødet...",
+                    "x-ref": "minutesTextarea",
+                    "@input": "minutesText = $event.target.value",
+                }
+            ),
+        }
+
+
 class IncidentForm(forms.ModelForm):
     """Form for creating and editing incidents."""
 

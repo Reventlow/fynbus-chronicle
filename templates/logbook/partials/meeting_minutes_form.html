@@ -1,0 +1,142 @@
+<div id="meeting-minutes-card" class="card"
+     x-data="{
+       skipped: {{ form.meeting_skipped.value|yesno:'true,false' }},
+       attendees: '{{ form.meeting_attendees.value|default_if_none:''|escapejs }}'.trim() ? '{{ form.meeting_attendees.value|default_if_none:''|escapejs }}'.split(', ').filter(a => a.trim()) : ['Dennis', 'Morten', 'Peter', 'Gorm'],
+       newName: '',
+       minutesText: '',
+       markedReady: false,
+       addAttendee() {
+         let name = this.newName.trim().replace(/,/g, '');
+         if (name && !this.attendees.includes(name)) {
+           this.attendees.push(name);
+         }
+         this.newName = '';
+       },
+       removeAttendee(index) {
+         this.attendees.splice(index, 1);
+       },
+       renderedMarkdown() {
+         if (!this.markedReady || !window.marked) return '';
+         if (!this.minutesText.trim()) return '';
+         try {
+           return marked.parse(this.minutesText);
+         } catch (e) {
+           return '<p class=&quot;text-red-500&quot;>Fejl ved markdown rendering</p>';
+         }
+       }
+     }"
+     x-effect="$refs.attendeesInput.value = attendees.join(', ')"
+     x-init="
+       minutesText = $refs.minutesTextarea ? $refs.minutesTextarea.value : '';
+       /* Load marked.js from CDN if not already present */
+       if (!window.marked) {
+         let s = document.createElement('script');
+         s.src = 'https://cdn.jsdelivr.net/npm/marked@15/marked.min.js';
+         s.onload = () => { markedReady = true; };
+         document.head.appendChild(s);
+       } else {
+         markedReady = true;
+       }
+     ">
+
+ <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-3">Referat af mandags m&oslash;de</h2>
+
+ <form method="post"
+       hx-post="{% url 'logbook:meeting-minutes-edit' weeklog.pk %}"
+       hx-target="#meeting-minutes-card"
+       hx-swap="outerHTML"
+       class="space-y-4">
+   {% csrf_token %}
+
+   <!-- Meeting skipped toggle -->
+   <div class="flex items-center gap-3">
+     <button type="button"
+             @click="skipped = !skipped"
+             role="switch"
+             :aria-checked="skipped.toString()"
+             :style="'position:relative; display:inline-flex; align-items:center; width:2.25rem; height:1.25rem; border-radius:9999px; cursor:pointer; border:none; transition:background-color 200ms; background-color:' + (skipped ? '#A65D57' : '#C4B8A8')"
+             style="flex-shrink:0;">
+       <span :style="'display:block; width:1rem; height:1rem; border-radius:9999px; background:white; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform 200ms; transform:translateX(' + (skipped ? '1.05rem' : '0.15rem') + ')'"></span>
+     </button>
+     <span class="text-sm text-sand-700 dark:text-sand-300">Mødet blev ikke afholdt denne uge</span>
+   </div>
+   <input type="hidden" name="meeting_skipped" :value="skipped ? 'on' : ''">
+
+   <!-- Skipped reason (shown when skipped) -->
+   <div x-show="skipped" x-transition>
+     <label for="{{ form.meeting_skipped_reason.id_for_label }}" class="input-label">&Aring;rsag</label>
+     {{ form.meeting_skipped_reason }}
+   </div>
+
+   <!-- Attendees and minutes (hidden when skipped) -->
+   <div x-show="!skipped" x-transition>
+     <!-- Attendees pills -->
+     <div class="mb-4">
+       <label class="input-label">Deltagere</label>
+       <div class="flex flex-wrap gap-1.5 mb-2">
+         <template x-for="(name, index) in attendees" :key="index">
+           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium bg-sand-200 dark:bg-sand-800 text-sand-700 dark:text-sand-100">
+             <span x-text="name"></span>
+             <button type="button" @click="removeAttendee(index)"
+                     class="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-sand-300 dark:hover:bg-sand-700 text-sand-500 dark:text-sand-400 hover:text-sand-700 dark:hover:text-sand-100">
+               &times;
+             </button>
+           </span>
+         </template>
+       </div>
+       <div class="flex gap-2">
+         <input type="text" x-model="newName"
+                @keydown.enter.prevent="addAttendee()"
+                @keydown.comma.prevent="addAttendee()"
+                class="input-field flex-1"
+                placeholder="Tilf&oslash;j deltager...">
+         <button type="button" @click="addAttendee()" class="btn-secondary btn-sm">Tilf&oslash;j</button>
+       </div>
+     </div>
+
+     <!-- Minutes with live markdown preview -->
+     <div>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <!-- Left: Textarea -->
+         <div>
+           <label for="{{ form.meeting_minutes.id_for_label }}" class="input-label">Referat</label>
+           {{ form.meeting_minutes }}
+           <p class="input-help">Underst&oslash;tter Markdown.</p>
+         </div>
+
+         <!-- Right: Live preview -->
+         <div>
+           <label class="input-label">Forh&aring;ndsvisning</label>
+           <div class="w-full px-3 py-2 rounded-lg min-h-[100px] border border-sand-200 dark:border-sand-700 bg-sand-50 dark:bg-sand-800/50 overflow-y-auto"
+                style="max-height: 300px;">
+             <template x-if="minutesText.trim() && markedReady">
+               <div class="prose prose-sand dark:prose-invert prose-sm max-w-none text-sand-700 dark:text-sand-300"
+                    x-html="renderedMarkdown()"></div>
+             </template>
+             <template x-if="!minutesText.trim() || !markedReady">
+               <p class="text-sand-400 dark:text-sand-500 text-sm italic">
+                 Skriv markdown i feltet til venstre...
+               </p>
+             </template>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <input type="hidden" name="meeting_attendees" x-ref="attendeesInput"
+          :value="attendees.join(', ')">
+
+   <!-- Actions -->
+   <div class="flex justify-end gap-2">
+     <button type="button"
+             hx-get="{% url 'logbook:meeting-minutes-card' weeklog.pk %}"
+             hx-target="#meeting-minutes-card"
+             hx-swap="outerHTML"
+             class="btn-secondary btn-sm">
+       Annuller
+     </button>
+     <button type="submit" class="btn-primary btn-sm">Gem</button>
+   </div>
+ </form>
+</div>
