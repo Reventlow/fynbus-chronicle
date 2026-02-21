@@ -1,66 +1,66 @@
-# Microsoft Graph Email Setup Guide
+# Opsætning af email via Microsoft Graph
 
-This guide covers configuring FynBus Chronicle to send emails via the Microsoft Graph API instead of SMTP.
+Denne guide beskriver hvordan FynBus Chronicle konfigureres til at sende emails via Microsoft Graph API i stedet for SMTP.
 
-## Why Graph API?
+## Hvorfor Graph API?
 
-- Works with M365 tenants that have disabled SMTP AUTH
-- No SMTP credentials to manage
-- The logged-in user appears as the email sender
-- Reuses the existing Azure AD app registration (from SSO setup)
+- Virker med M365-tenants der har deaktiveret SMTP AUTH
+- Ingen SMTP-legitimationsoplysninger at administrere
+- Den indloggede bruger vises som emailafsender
+- Genbruger den eksisterende Azure AD-appregistrering (fra SSO-opsætningen)
 
-## Prerequisites
+## Forudsætninger
 
-- Azure AD app registration (see [SSO Setup](SSO_SETUP.md) if not already configured)
-- Azure AD admin access to grant application permissions
-- A valid M365 mailbox for the sender address
+- Azure AD-appregistrering (se [SSO Opsætning](/dashboard/docs/sso/) hvis den ikke allerede er konfigureret)
+- Azure AD-administratoradgang til at tildele applikationstilladelser
+- En gyldig M365-postkasse for afsenderadressen
 
-## Step 1: Add Mail.Send Permission
+## Trin 1: Tilføj Mail.Send-tilladelse
 
-1. Go to [Azure Portal](https://portal.azure.com)
-2. Navigate to **Microsoft Entra ID** > **App registrations**
-3. Select your FynBus Chronicle app
-4. Go to **API permissions** > **Add a permission**
-5. Select **Microsoft Graph**
-6. Select **Application permissions** (not Delegated)
-7. Search for and add: `Mail.Send`
-8. Click **Add permissions**
-9. Click **Grant admin consent for [Organization]**
+1. Gå til [Azure Portal](https://portal.azure.com)
+2. Naviger til **Microsoft Entra ID** > **App registrations**
+3. Vælg din FynBus Chronicle-app
+4. Gå til **API permissions** > **Add a permission**
+5. Vælg **Microsoft Graph**
+6. Vælg **Application permissions** (ikke Delegated)
+7. Søg efter og tilføj: `Mail.Send`
+8. Klik **Add permissions**
+9. Klik **Grant admin consent for [Organisation]**
 
-> **Important**: Use *Application* permissions (not *Delegated*) since email is sent server-side via client credentials flow.
+> **Vigtigt**: Brug *Application*-tilladelser (ikke *Delegated*), da email sendes server-side via client credentials flow.
 
-## Step 2: Configure Environment
+## Trin 2: Konfigurer miljøvariabler
 
-Add to your `.env` or `.env.prod`:
+Tilføj til din `.env` eller `.env.prod`:
 
 ```env
 EMAIL_USE_GRAPH=True
 ```
 
-The Graph backend reuses these existing settings (from SSO):
+Graph-backenden genbruger disse eksisterende indstillinger (fra SSO):
 
 ```env
 MICROSOFT_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-MICROSOFT_CLIENT_SECRET=your-client-secret-value
+MICROSOFT_CLIENT_SECRET=din-client-secret-værdi
 MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-These email settings are still used:
+Disse email-indstillinger bruges stadig:
 
 ```env
 DEFAULT_FROM_EMAIL=it@fynbus.dk
 CHRONICLE_EMAIL_RECIPIENTS=manager@fynbus.dk,team@fynbus.dk
 ```
 
-If using Docker, add to your docker-compose environment:
+Hvis du bruger Docker, tilføj til docker-compose environment:
 
 ```yaml
 - EMAIL_USE_GRAPH=${EMAIL_USE_GRAPH:-False}
 ```
 
-## Step 3: Verify
+## Trin 3: Verificering
 
-### Quick test via Django shell
+### Hurtig test via Django shell
 
 ```bash
 python manage.py shell
@@ -70,90 +70,90 @@ python manage.py shell
 from django.core.mail import send_mail
 
 send_mail(
-    subject="Test from Chronicle",
-    message="Graph email backend works!",
+    subject="Test fra Chronicle",
+    message="Graph email-backend virker!",
     from_email="it@fynbus.dk",
-    recipient_list=["your-email@fynbus.dk"],
+    recipient_list=["din-email@fynbus.dk"],
 )
 ```
 
-A successful send returns `1` with no exceptions.
+En succesfuld afsendelse returnerer `1` uden exceptions.
 
-### Check logs
+### Tjek logs
 
-The backend logs all send attempts:
+Backenden logger alle afsendelsesforsøg:
 
 ```
-INFO Email sent via Graph API from=it@fynbus.dk to=['recipient@fynbus.dk'] subject='...'
+INFO Email sent via Graph API from=it@fynbus.dk to=['modtager@fynbus.dk'] subject='...'
 ```
 
-## Troubleshooting
+## Fejlfinding
 
 ### 403 Forbidden
 
-**Cause**: Missing or unapproved `Mail.Send` permission.
+**Årsag**: Manglende eller ikke-godkendt `Mail.Send`-tilladelse.
 
-**Fix**:
-1. Verify `Mail.Send` is listed under API permissions
-2. Ensure admin consent has been granted (green checkmark)
-3. Wait a few minutes for permission propagation
+**Løsning**:
+1. Bekræft at `Mail.Send` er listet under API-tilladelser
+2. Sørg for at admin-samtykke er givet (grønt flueben)
+3. Vent et par minutter på at tilladelserne propageres
 
 ### 404 Not Found
 
-**Cause**: The `from_email` address is not a valid mailbox in the tenant.
+**Årsag**: `from_email`-adressen er ikke en gyldig postkasse i tenanten.
 
-**Fix**: Ensure `DEFAULT_FROM_EMAIL` (or the logged-in user's email) corresponds to a real M365 mailbox.
+**Løsning**: Sørg for at `DEFAULT_FROM_EMAIL` (eller den indloggede brugers email) svarer til en rigtig M365-postkasse.
 
-### Token acquisition failure
+### Token-hentningsfejl
 
-**Cause**: Invalid client credentials.
+**Årsag**: Ugyldige klient-legitimationsoplysninger.
 
-**Fix**:
-1. Verify `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, and `MICROSOFT_TENANT_ID` are correct
-2. Check if the client secret has expired
-3. Create a new secret if needed (see [SSO Setup](SSO_SETUP.md#step-3-create-client-secret))
+**Løsning**:
+1. Bekræft at `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` og `MICROSOFT_TENANT_ID` er korrekte
+2. Tjek om client secret er udløbet
+3. Opret en ny secret om nødvendigt (se [SSO Opsætning](/dashboard/docs/sso/#step-3-create-client-secret))
 
-### Emails sent but not appearing
+### Emails sendt men modtages ikke
 
-**Cause**: The email may be in the recipient's junk/spam folder.
+**Årsag**: Emailen kan ligge i modtagerens uønsket post/spam-mappe.
 
-**Fix**:
-1. Check spam/junk folders
-2. Add the sender address to the organization's safe senders list
-3. Verify SPF/DKIM/DMARC records for your domain
+**Løsning**:
+1. Tjek spam/uønsket post-mapper
+2. Tilføj afsenderadressen til organisationens liste over sikre afsendere
+3. Bekræft SPF/DKIM/DMARC-records for dit domæne
 
-## Security Considerations
+## Sikkerhedsovervejelser
 
-### Principle of Least Privilege
+### Princippet om mindst mulig adgang
 
-The `Mail.Send` application permission allows the app to send email as *any* user in the tenant. To restrict this:
+`Mail.Send`-applikationstilladelsen giver appen mulighed for at sende email som *enhver* bruger i tenanten. For at begrænse dette:
 
-1. In Azure Portal, go to **Enterprise applications** > select your app
-2. Under **Properties**, set **Assignment required** to Yes
-3. Use [Application Access Policies](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access) to restrict which mailboxes the app can send from
+1. Gå i Azure Portal til **Enterprise applications** > vælg din app
+2. Under **Properties**, sæt **Assignment required** til Yes
+3. Brug [Application Access Policies](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access) til at begrænse hvilke postkasser appen kan sende fra
 
-### Secret Rotation
+### Rotation af secrets
 
-The same client secret is used for SSO and Graph email. When rotating secrets:
+Den samme client secret bruges til SSO og Graph-email. Når du roterer secrets:
 
-1. Create a new secret in Azure (while the old one still works)
-2. Update `MICROSOFT_CLIENT_SECRET` in your environment
-3. Restart the application
-4. Verify both SSO and email still work
-5. Delete the old secret in Azure
+1. Opret en ny secret i Azure (mens den gamle stadig virker)
+2. Opdater `MICROSOFT_CLIENT_SECRET` i dit miljø
+3. Genstart applikationen
+4. Verificer at både SSO og email stadig virker
+5. Slet den gamle secret i Azure
 
-## Fallback to SMTP
+## Skift tilbage til SMTP
 
-To switch back to SMTP, set:
+For at skifte tilbage til SMTP, sæt:
 
 ```env
 EMAIL_USE_GRAPH=False
 ```
 
-The SMTP settings (`EMAIL_HOST`, `EMAIL_PORT`, etc.) are preserved and will be used automatically.
+SMTP-indstillingerne (`EMAIL_HOST`, `EMAIL_PORT` osv.) bevares og bruges automatisk.
 
-## Reference
+## Referencer
 
 - [Microsoft Graph sendMail API](https://learn.microsoft.com/en-us/graph/api/user-sendmail)
-- [Application permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview#application-permissions)
-- [Limit application permissions to specific mailboxes](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access)
+- [Oversigt over applikationstilladelser](https://learn.microsoft.com/en-us/graph/permissions-overview#application-permissions)
+- [Begræns applikationstilladelser til specifikke postkasser](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access)
