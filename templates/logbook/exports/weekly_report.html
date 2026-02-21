@@ -26,21 +26,24 @@
       stripped on paste).  The .stats-grid / .stat-item classes are kept so
       existing CSS still applies for browser and PDF rendering.
     -->
-    <table class="stats-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:12px 0;">
+    <table class="stats-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
       <tr>
-        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+        <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_new }}</div>
           <div class="stat-label" style="font-size:9pt; color:#6B635B;">Nye sager</div>
         </td>
-        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+        <td width="2%" style="border:none;"></td>
+        <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_closed }}</div>
           <div class="stat-label" style="font-size:9pt; color:#6B635B;">Lukkede sager</div>
         </td>
-        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+        <td width="2%" style="border:none;"></td>
+        <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_open }}</div>
           <div class="stat-label" style="font-size:9pt; color:#6B635B;">Åbne sager</div>
         </td>
-        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+        <td width="2%" style="border:none;"></td>
+        <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
           <div class="stat-label" style="font-size:9pt; color:#6B635B;">Netto ændring</div>
         </td>
