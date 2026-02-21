@@ -70,43 +70,43 @@
     </div>
   </div>
 
-  <!-- Main content grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Helpdesk chart (2 columns) - refreshes every 60s -->
-    <div class="lg:col-span-2"
-         hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <div class="card animate-pulse h-80">
-        <div class="skeleton h-6 w-40 mb-4"></div>
-        <div class="skeleton h-64 w-full"></div>
+  <!-- Charts + incidents grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+    <!-- Left column: both charts stacked with tight gap -->
+    <div class="lg:col-span-2 flex flex-col gap-3">
+      <!-- Helpdesk open-tickets chart -->
+      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse h-80">
+          <div class="skeleton h-6 w-40 mb-4"></div>
+          <div class="skeleton h-64 w-full"></div>
+        </div>
+      </div>
+
+      <!-- Helpdesk new vs closed chart -->
+      <div hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse h-80">
+          <div class="skeleton h-6 w-48 mb-4"></div>
+          <div class="skeleton h-64 w-full"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Recent incidents (1 column) - refreshes every 60s -->
-    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+    <!-- Right column: incidents spanning full height of both charts -->
+    <div class="h-full"
+         hx-get="{% url 'dashboard:partial-incidents' %}"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
-      <div class="card animate-pulse h-80">
+      <div class="card animate-pulse h-full min-h-80">
         <div class="skeleton h-6 w-32 mb-4"></div>
         <div class="space-y-3">
           <div class="skeleton h-16 w-full"></div>
           <div class="skeleton h-16 w-full"></div>
           <div class="skeleton h-16 w-full"></div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Helpdesk flow chart (new vs closed) -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2"
-         hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <div class="card animate-pulse h-80">
-        <div class="skeleton h-6 w-48 mb-4"></div>
-        <div class="skeleton h-64 w-full"></div>
       </div>
     </div>
   </div>
