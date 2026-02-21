@@ -3,7 +3,7 @@
 
 services:
   web:
-    image: elohite/chronicle:0.1.28
+    image: elohite/chronicle:0.1.29
     # To build locally instead of pulling from DockerHub, comment above and uncomment:
     # build:
     #   context: .
@@ -53,7 +53,7 @@ services:
 
   # ServiceDesk sync scheduler
   sync:
-    image: elohite/chronicle:0.1.28
+    image: elohite/chronicle:0.1.29
     # To build locally instead of pulling from DockerHub, comment above and uncomment:
     # build:
     #   context: .
