@@ -169,6 +169,31 @@ tr:nth-child(even) {
   font-size: 9pt;
 }
 
+/* Item rows (priority items) */
+.item-row {
+  background-color: #FAF9F7;
+  border: 1px solid #E5E0D8;
+  border-radius: 12pt;
+  padding: 0.3cm 0.4cm;
+  margin-bottom: 0.2cm;
+}
+
+.item-row-header {
+  display: block;
+}
+
+.item-row-title {
+  font-weight: 600;
+  color: #4A4540;
+  margin-right: 0.2cm;
+}
+
+.item-row-desc {
+  font-size: 9pt;
+  color: #6B635B;
+  margin-top: 0.1cm;
+}
+
 /* Summary box */
 .summary-box {
   background-color: #FAF9F7;

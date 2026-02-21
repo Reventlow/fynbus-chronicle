@@ -82,40 +82,22 @@
   {% if priority_items %}
   <div class="section">
     <h2>Prioriterede Opgaver</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Opgave</th>
-          <th>Prioritet</th>
-          <th>Status</th>
-          <th>Beskrivelse</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in priority_items %}
-        <tr>
-          <td>{{ item.title }}</td>
-          <td>
-            <span class="priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
-          </td>
-          <td>
-            <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}">
-              {{ item.get_status_display }}
-            </span>
-          </td>
-          <td>{{ item.description|default:"-"|linebreaksbr }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
     {% for item in priority_items %}
-      {% if item.notes %}
-      <div class="section-card no-break">
-        <h3>{{ item.title }}</h3>
-        <p><strong>Noter:</strong> {{ item.notes }}</p>
+    <div class="item-row no-break">
+      <div class="item-row-header">
+        <span class="item-row-title">{{ item.title }}</span>
+        <span class="priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
+        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}">
+          {{ item.get_status_display }}
+        </span>
       </div>
+      {% if item.description %}
+      <div class="item-row-desc">{{ item.description|linebreaksbr }}</div>
       {% endif %}
+      {% if item.notes %}
+      <div class="item-row-desc"><strong>Noter:</strong> {{ item.notes|linebreaksbr }}</div>
+      {% endif %}
+    </div>
     {% endfor %}
   </div>
   {% endif %}

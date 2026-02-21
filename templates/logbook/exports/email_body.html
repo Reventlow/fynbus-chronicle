@@ -155,20 +155,20 @@
 
   {% if priority_items %}
   <h2>Prioriterede Opgaver ({{ priority_items.count }})</h2>
-  <table>
-    <tr>
-      <th>Opgave</th>
-      <th>Prioritet</th>
-      <th>Status</th>
-    </tr>
-    {% for item in priority_items %}
-    <tr>
-      <td>{{ item.title }}</td>
-      <td><span class="badge badge-{{ item.priority }}">{{ item.get_priority_display }}</span></td>
-      <td>{{ item.get_status_display }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+  {% for item in priority_items %}
+  <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;">
+    <div>
+      <strong style="color: #4A4540;">{{ item.title }}</strong>
+      <span class="badge badge-{{ item.priority }}">{{ item.get_priority_display }}</span>
+      <span class="badge {% if item.status == 'completed' %}badge-resolved{% elif item.status == 'blocked' %}badge-unresolved{% else %}badge-medium{% endif %}">
+        {{ item.get_status_display }}
+      </span>
+    </div>
+    {% if item.description %}
+    <div style="font-size: 13px; color: #6B635B; margin-top: 6px;">{{ item.description|linebreaksbr }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
   {% endif %}
 
   {% if absences %}
