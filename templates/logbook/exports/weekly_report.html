@@ -112,19 +112,29 @@
   <div class="section">
     <h2>Prioriterede Opgaver</h2>
     {% for item in priority_items %}
-    <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header" style="display:block;">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ item.title }}</span>&nbsp;
-        <span class="priority-{{ item.priority }}" style="display:inline-block; background-color:{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ item.get_priority_display }}</span>&nbsp;
-        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}" style="display:inline-block; background-color:{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ item.get_status_display }}</span>
-      </div>
+    <!--
+      Each card is a <table> so that pill bgcolor survives Outlook web paste.
+      Row 1: title + pill cells.  Row 2 (optional): description spanning all cols.
+    -->
+    <table class="item-row no-break" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8; margin-bottom:8px;" bgcolor="#FAF9F7">
+      <tr>
+        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">{{ item.title }}</td>
+        <td width="90" bgcolor="{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}" style="background-color:{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ item.get_priority_display }}</td>
+        <td width="4" style="border:none;"></td>
+        <td width="90" bgcolor="{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}" style="background-color:{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ item.get_status_display }}</td>
+        <td width="10" style="border:none;"></td>
+      </tr>
       {% if item.description %}
-      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">{{ item.description|linebreaksbr }}</div>
+      <tr>
+        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ item.description|linebreaksbr }}</td>
+      </tr>
       {% endif %}
       {% if item.notes %}
-      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;"><strong>Noter:</strong> {{ item.notes|linebreaksbr }}</div>
+      <tr>
+        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;"><strong>Noter:</strong> {{ item.notes|linebreaksbr }}</td>
+      </tr>
       {% endif %}
-    </div>
+    </table>
     {% endfor %}
   </div>
   {% endif %}
@@ -134,17 +144,20 @@
   <div class="section">
     <h2>Bemanding</h2>
     {% for absence in absences %}
-    <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header" style="display:block;">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ absence.staff_name }}</span>&nbsp;
-        <span class="status-ongoing" style="display:inline-block; background-color:#C4A35A; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ absence.get_absence_type_display }}</span>
-      </div>
-      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
-        {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
-        ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
-        {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
-      </div>
-    </div>
+    <table class="item-row no-break" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8; margin-bottom:8px;" bgcolor="#FAF9F7">
+      <tr>
+        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">{{ absence.staff_name }}</td>
+        <td width="100" bgcolor="#C4A35A" style="background-color:#C4A35A; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ absence.get_absence_type_display }}</td>
+        <td width="10" style="border:none;"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">
+          {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
+          ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
+          {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
+        </td>
+      </tr>
+    </table>
     {% endfor %}
   </div>
   {% endif %}
@@ -154,22 +167,30 @@
   <div class="section">
     <h2>Hændelser</h2>
     {% for incident in incidents %}
-    <div class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if not incident.resolved %} border-left:4px solid #A65D57;{% endif %} padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header" style="display:block;">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ incident.title }}</span>&nbsp;
-        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}" style="display:inline-block; background-color:{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ incident.get_severity_display }}</span>&nbsp;
-        {% if incident.resolved %}<span class="status-done" style="display:inline-block; background-color:#7D8471; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Løst</span>{% else %}<span class="status-blocked" style="display:inline-block; background-color:#A65D57; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Uløst</span>{% endif %}
-      </div>
-      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
-        {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
-      </div>
-      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">{{ incident.description }}</div>
+    <table class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if not incident.resolved %} border-left:4px solid #A65D57;{% endif %} margin-bottom:8px;" bgcolor="#FAF9F7">
+      <tr>
+        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">{{ incident.title }}</td>
+        <td width="90" bgcolor="{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}" style="background-color:{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ incident.get_severity_display }}</td>
+        <td width="4" style="border:none;"></td>
+        {% if incident.resolved %}<td width="60" bgcolor="#7D8471" style="background-color:#7D8471; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">Løst</td>{% else %}<td width="60" bgcolor="#A65D57" style="background-color:#A65D57; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">Uløst</td>{% endif %}
+        <td width="10" style="border:none;"></td>
+      </tr>
+      <tr>
+        <td colspan="5" style="padding:0 14px 4px 14px; font-size:9pt; color:#6B635B;">
+          {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ incident.description }}</td>
+      </tr>
       {% if incident.resolution %}
-      <div class="item-row-resolution" style="font-size:9pt; background-color:#F0EDE8; border-radius:8px; padding:8px 12px; margin-top:6px;">
-        <strong>Løsning:</strong> {{ incident.resolution }}
-      </div>
+      <tr>
+        <td colspan="5" bgcolor="#F0EDE8" style="background-color:#F0EDE8; padding:8px 14px; font-size:9pt;">
+          <strong>Løsning:</strong> {{ incident.resolution }}
+        </td>
+      </tr>
       {% endif %}
-    </div>
+    </table>
     {% endfor %}
   </div>
   {% endif %}
