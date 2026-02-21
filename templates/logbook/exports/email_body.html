@@ -173,32 +173,41 @@
 
   {% if absences %}
   <h2>Bemanding ({{ absences.count }})</h2>
-  <table>
-    <tr>
-      <th>Medarbejder</th>
-      <th>Type</th>
-      <th>Periode</th>
-    </tr>
-    {% for absence in absences %}
-    <tr>
-      <td>{{ absence.staff_name }}</td>
-      <td>{{ absence.get_absence_type_display }}</td>
-      <td>{{ absence.start_date|date:"d/m" }} - {{ absence.end_date|date:"d/m" }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+  {% for absence in absences %}
+  <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;">
+    <div>
+      <strong style="color: #4A4540;">{{ absence.staff_name }}</strong>
+      <span class="badge badge-medium">{{ absence.get_absence_type_display }}</span>
+    </div>
+    <div style="font-size: 13px; color: #6B635B; margin-top: 6px;">
+      {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
+      ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
+      {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
   {% endif %}
 
   {% if incidents %}
   <h2>Hændelser ({{ incidents.count }})</h2>
   {% for incident in incidents %}
-  <div class="incident {% if not incident.resolved %}incident-unresolved{% endif %}">
-    <strong>{{ incident.title }}</strong>
-    <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span>
-    <span class="badge {% if incident.resolved %}badge-resolved{% else %}badge-unresolved{% endif %}">
-      {% if incident.resolved %}Løst{% else %}Uløst{% endif %}
-    </span>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">{{ incident.description|truncatewords:30 }}</p>
+  <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;{% if not incident.resolved %} border-left: 4px solid #A65D57;{% endif %}">
+    <div>
+      <strong style="color: #4A4540;">{{ incident.title }}</strong>
+      <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span>
+      <span class="badge {% if incident.resolved %}badge-resolved{% else %}badge-unresolved{% endif %}">
+        {% if incident.resolved %}Løst{% else %}Uløst{% endif %}
+      </span>
+    </div>
+    <div style="font-size: 13px; color: #6B635B; margin-top: 6px;">
+      {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d. M Y H:i" }}
+    </div>
+    <div style="font-size: 13px; color: #6B635B; margin-top: 4px;">{{ incident.description|truncatewords:30 }}</div>
+    {% if incident.resolution %}
+    <div style="font-size: 13px; background-color: #F0EDE8; border-radius: 8px; padding: 8px 10px; margin-top: 8px;">
+      <strong>Løsning:</strong> {{ incident.resolution }}
+    </div>
+    {% endif %}
   </div>
   {% endfor %}
   {% endif %}

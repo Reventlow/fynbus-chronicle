@@ -194,6 +194,18 @@ tr:nth-child(even) {
   margin-top: 0.1cm;
 }
 
+.item-row-alert {
+  border-left: 4pt solid #A65D57;
+}
+
+.item-row-resolution {
+  font-size: 9pt;
+  background-color: #F0EDE8;
+  border-radius: 8pt;
+  padding: 0.2cm 0.3cm;
+  margin-top: 0.15cm;
+}
+
 /* Summary box */
 .summary-box {
   background-color: #FAF9F7;

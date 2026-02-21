@@ -106,30 +106,19 @@
   {% if absences %}
   <div class="section">
     <h2>Bemanding</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Medarbejder</th>
-          <th>Type</th>
-          <th>Fra</th>
-          <th>Til</th>
-          <th>Dage</th>
-          <th>Noter</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for absence in absences %}
-        <tr>
-          <td>{{ absence.staff_name }}</td>
-          <td>{{ absence.get_absence_type_display }}</td>
-          <td>{{ absence.start_date|date:"d/m/Y" }}</td>
-          <td>{{ absence.end_date|date:"d/m/Y" }}</td>
-          <td>{{ absence.duration_days }}</td>
-          <td>{{ absence.notes|default:"-" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    {% for absence in absences %}
+    <div class="item-row no-break">
+      <div class="item-row-header">
+        <span class="item-row-title">{{ absence.staff_name }}</span>
+        <span class="status-ongoing">{{ absence.get_absence_type_display }}</span>
+      </div>
+      <div class="item-row-desc">
+        {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
+        ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
+        {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
+      </div>
+    </div>
+    {% endfor %}
   </div>
   {% endif %}
 
@@ -138,9 +127,9 @@
   <div class="section">
     <h2>Hændelser</h2>
     {% for incident in incidents %}
-    <div class="section-card no-break">
-      <h3>
-        {{ incident.title }}
+    <div class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}">
+      <div class="item-row-header">
+        <span class="item-row-title">{{ incident.title }}</span>
         <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}">
           {{ incident.get_severity_display }}
         </span>
@@ -149,14 +138,15 @@
         {% else %}
         <span class="status-blocked">Uløst</span>
         {% endif %}
-      </h3>
-      <p>
-        <strong>Type:</strong> {{ incident.get_incident_type_display }} |
-        <strong>Tidspunkt:</strong> {{ incident.occurred_at|date:"d/m/Y H:i" }}
-      </p>
-      <p>{{ incident.description }}</p>
+      </div>
+      <div class="item-row-desc">
+        {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
+      </div>
+      <div class="item-row-desc">{{ incident.description }}</div>
       {% if incident.resolution %}
-      <p><strong>Løsning:</strong> {{ incident.resolution }}</p>
+      <div class="item-row-resolution">
+        <strong>Løsning:</strong> {{ incident.resolution }}
+      </div>
       {% endif %}
     </div>
     {% endfor %}
