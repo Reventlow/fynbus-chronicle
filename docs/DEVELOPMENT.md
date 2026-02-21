@@ -21,6 +21,9 @@ fynbus-chronicle/
 │   │   ├── forms.py       # Django forms
 │   │   └── exports/       # PDF, Markdown, Email export modules
 │   ├── accounts/          # Authentication & permissions
+│   │   ├── models.py      # LoginLog (login/logout tracking)
+│   │   ├── admin.py       # Read-only LoginLog admin
+│   │   ├── signals.py     # Login/logout signal handlers
 │   │   ├── views.py       # Custom login/logout
 │   │   ├── urls.py
 │   │   ├── permissions.py # is_editor(), EditorRequiredMixin, @editor_required
