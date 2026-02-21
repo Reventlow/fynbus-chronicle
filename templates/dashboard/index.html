@@ -97,5 +97,18 @@
       </div>
     </div>
   </div>
+
+  <!-- Helpdesk flow chart (new vs closed) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2"
+         hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse h-80">
+        <div class="skeleton h-6 w-48 mb-4"></div>
+        <div class="skeleton h-64 w-full"></div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

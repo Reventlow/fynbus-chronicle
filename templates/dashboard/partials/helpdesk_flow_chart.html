@@ -1,0 +1,122 @@
+<div class="card">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+      Nye vs. lukkede sager
+    </h2>
+    <span class="text-sm text-sand-500 dark:text-sand-400">Per uge</span>
+  </div>
+
+  <div class="relative h-64">
+    <canvas id="helpdesk-flow-chart"></canvas>
+  </div>
+
+  <!-- Stats summary -->
+  <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-sand-200 dark:border-sand-700">
+    <div class="text-center">
+      <div id="stat-avg-new" class="text-xl font-semibold text-gold-600 dark:text-gold-400">—</div>
+      <div class="text-xs text-sand-500 dark:text-sand-400">Gns. nye/uge</div>
+    </div>
+    <div class="text-center">
+      <div id="stat-avg-closed" class="text-xl font-semibold text-sage-600 dark:text-sage-400">—</div>
+      <div class="text-xs text-sand-500 dark:text-sand-400">Gns. lukkede/uge</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  setTimeout(function() {
+    fetch('{% url "dashboard:api-helpdesk-data" %}', { credentials: 'same-origin' })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.weeks || data.weeks.length === 0) {
+        document.getElementById('helpdesk-flow-chart').parentElement.innerHTML =
+          '<p class="text-center text-sand-500 py-8">Ingen data tilgængelig</p>';
+        return;
+      }
+
+      // Update averages
+      document.getElementById('stat-avg-new').textContent = data.stats.avg_new;
+      document.getElementById('stat-avg-closed').textContent = data.stats.avg_closed;
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const gridColor = isDark ? 'rgba(180, 172, 154, 0.1)' : 'rgba(107, 99, 91, 0.1)';
+      const textColor = isDark ? '#D4CCC0' : '#6B635B';
+
+      const ctx = document.getElementById('helpdesk-flow-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.weeks.map(w => w.label),
+          datasets: [
+            {
+              label: 'Nye sager',
+              data: data.weeks.map(w => w.new),
+              backgroundColor: isDark ? 'rgba(196, 163, 90, 0.8)' : 'rgba(196, 163, 90, 0.7)',
+              borderColor: isDark ? '#C4A35A' : '#8B7355',
+              borderWidth: 1,
+              borderRadius: 4,
+            },
+            {
+              label: 'Lukkede sager',
+              data: data.weeks.map(w => w.closed),
+              backgroundColor: isDark ? 'rgba(125, 132, 113, 0.8)' : 'rgba(125, 132, 113, 0.7)',
+              borderColor: isDark ? '#7D8471' : '#5C6352',
+              borderWidth: 1,
+              borderRadius: 4,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                color: textColor,
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                boxWidth: 12,
+                boxHeight: 12,
+                padding: 16,
+                font: { size: 12 },
+              }
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#4A4540' : '#FFFFFF',
+              titleColor: isDark ? '#F0EDE8' : '#2C2825',
+              bodyColor: isDark ? '#D4CCC0' : '#4A4540',
+              borderColor: isDark ? '#6B635B' : '#E5E0D8',
+              borderWidth: 1,
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: textColor,
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 12,
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor },
+              ticks: { color: textColor }
+            }
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error('Error loading flow chart data:', error);
+      document.getElementById('helpdesk-flow-chart').parentElement.innerHTML =
+        '<p class="text-center text-sand-500 py-8">Kunne ikke indlæse data</p>';
+    });
+  }, 50);
+})();
+</script>

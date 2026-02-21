@@ -97,6 +97,12 @@ class HelpdeskChartPartialView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/partials/helpdesk_chart.html"
 
 
+class HelpdeskFlowChartPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial for helpdesk new vs closed grouped bar chart."""
+
+    template_name = "dashboard/partials/helpdesk_flow_chart.html"
+
+
 class IncidentsPartialView(LoginRequiredMixin, TemplateView):
     """HTMX partial for recent incidents list."""
 

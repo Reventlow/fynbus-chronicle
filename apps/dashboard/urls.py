@@ -25,6 +25,11 @@ urlpatterns = [
         name="partial-helpdesk-chart",
     ),
     path(
+        "partials/helpdesk-flow-chart/",
+        views.HelpdeskFlowChartPartialView.as_view(),
+        name="partial-helpdesk-flow-chart",
+    ),
+    path(
         "partials/incidents/",
         views.IncidentsPartialView.as_view(),
         name="partial-incidents",
