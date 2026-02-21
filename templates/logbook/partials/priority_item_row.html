@@ -1,7 +1,15 @@
 <div class="flex items-center justify-between p-3 bg-sand-50 dark:bg-sand-700 rounded-lg border border-sand-200 dark:border-sand-600"
      id="priority-item-{{ item.id }}"
+     data-id="{{ item.id }}"
      hx-target="this"
      hx-swap="outerHTML">
+  <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-sand-400 hover:text-sand-600 dark:hover:text-sand-300 mr-2 flex-shrink-0">
+    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+      <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+      <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+    </svg>
+  </div>
   <div class="flex-grow min-w-0">
     <div class="flex items-center gap-2">
       <span class="font-medium text-sand-800 dark:text-sand-100 truncate">{{ item.title }}</span>

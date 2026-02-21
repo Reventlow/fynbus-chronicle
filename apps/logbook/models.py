@@ -189,13 +189,17 @@ class PriorityItem(models.Model):
         blank=True,
         help_text="Eventuelle noter eller opdateringer",
     )
+    order = models.PositiveIntegerField(
+        verbose_name="Rækkefølge",
+        default=0,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Prioriteret opgave"
         verbose_name_plural = "Prioriterede opgaver"
-        ordering = ["-priority", "title"]
+        ordering = ["order", "-priority", "title"]
 
     def __str__(self) -> str:
         return self.title

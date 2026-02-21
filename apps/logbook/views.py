@@ -5,11 +5,15 @@ Provides views for WeekLog CRUD operations and HTMX partials
 for inline editing of priority items, absences, and incidents.
 """
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, HttpResponse
+from django.db import models as db_models
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -133,6 +137,11 @@ class PriorityItemCreateView(LoginRequiredMixin, CreateView):
         """Set weeklog from query param and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
+        # Append new items at the end by setting order to max + 1
+        max_order = PriorityItem.objects.filter(
+            weeklog_id=weeklog_id
+        ).aggregate(db_models.Max("order"))["order__max"]
+        form.instance.order = (max_order or 0) + 1
         self.object = form.save()
 
         from django.template.loader import render_to_string
@@ -191,6 +200,22 @@ class PriorityItemDeleteView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         self.object.delete()
         return HttpResponse("")
+
+
+@login_required
+@require_POST
+def reorder_priority_items(request: HttpRequest) -> HttpResponse:
+    """Reorder priority items via drag-and-drop."""
+    try:
+        data = json.loads(request.body)
+        order_ids = data.get("order", [])
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    for position, item_id in enumerate(order_ids):
+        PriorityItem.objects.filter(pk=item_id).update(order=position)
+
+    return HttpResponse(status=204)
 
 
 # =============================================================================

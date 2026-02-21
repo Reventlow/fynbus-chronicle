@@ -33,6 +33,11 @@ urlpatterns = [
         views.priority_item_row,
         name="priority-item-row",
     ),
+    path(
+        "priority-item/reorder/",
+        views.reorder_priority_items,
+        name="priority-item-reorder",
+    ),
     # HTMX partials for absences
     path("absence/new/", views.AbsenceCreateView.as_view(), name="absence-create"),
     path(

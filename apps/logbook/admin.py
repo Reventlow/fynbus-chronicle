@@ -25,8 +25,8 @@ class PriorityItemInline(admin.TabularInline):
     classes = ["collapse"]
 
     def get_queryset(self, request: HttpRequest):
-        """Order by priority descending, then title."""
-        return super().get_queryset(request).order_by("-priority", "title")
+        """Order by manual order, then priority descending, then title."""
+        return super().get_queryset(request).order_by("order", "-priority", "title")
 
 
 class AbsenceInline(admin.TabularInline):

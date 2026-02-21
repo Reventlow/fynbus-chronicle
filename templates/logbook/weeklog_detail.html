@@ -188,3 +188,35 @@
   </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var el = document.getElementById("priority-items-list");
+  if (!el) return;
+
+  Sortable.create(el, {
+    handle: ".drag-handle",
+    animation: 150,
+    ghostClass: "opacity-30",
+    onEnd: function() {
+      var items = el.querySelectorAll("[data-id]");
+      var order = Array.from(items).map(function(item) {
+        return parseInt(item.dataset.id);
+      });
+
+      fetch("{% url 'logbook:priority-item-reorder' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector("[hx-headers]").getAttribute("hx-headers")
+            ? JSON.parse(document.querySelector("[hx-headers]").getAttribute("hx-headers"))["X-CSRFToken"]
+            : ""
+        },
+        body: JSON.stringify({ order: order })
+      });
+    }
+  });
+});
+</script>
+{% endblock %}
