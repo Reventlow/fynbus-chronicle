@@ -1,7 +1,7 @@
 """
 Email export functionality for week logs.
 
-Sends weekly reports via email with PDF attachment.
+Sends weekly reports via email in HTML, PDF, or both formats.
 """
 
 from django.conf import settings
@@ -14,25 +14,29 @@ from ..models import WeekLog
 from .pdf import generate_pdf
 
 
-def send_weeklog_email(weeklog: WeekLog) -> tuple[bool, str]:
+def send_weeklog_email(
+    weeklog: WeekLog, format: str = "both", from_email: str | None = None
+) -> tuple[bool, str]:
     """
     Send a week log report via email.
 
-    Sends an email with the weekly summary in the body and
-    a PDF attachment with the full report.
-
     Args:
         weeklog: The WeekLog instance to send.
+        format: Email format - "html", "pdf", or "both".
+        from_email: Sender address. Falls back to DEFAULT_FROM_EMAIL.
 
     Returns:
         Tuple of (success: bool, message: str).
     """
+    if format not in ("html", "pdf", "both"):
+        return False, f"Ugyldigt format: {format}. Brug 'html', 'pdf' eller 'both'."
+
     recipients = getattr(settings, "CHRONICLE_EMAIL_RECIPIENTS", [])
 
     if not recipients:
         return False, "Ingen email-modtagere konfigureret. Tjek CHRONICLE_EMAIL_RECIPIENTS."
 
-    # Render email body
+    # Render HTML body
     context = {
         "weeklog": weeklog,
         "priority_items": weeklog.priority_items.all(),
@@ -46,31 +50,44 @@ def send_weeklog_email(weeklog: WeekLog) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Fejl ved generering af email-indhold: {e}"
 
-    # Generate PDF attachment
-    try:
-        pdf_content = generate_pdf(weeklog)
-    except Exception as e:
-        return False, f"Fejl ved generering af PDF: {e}"
-
     # Create email
     subject = f"FynBus IT Ugelog - {weeklog.week_label}"
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "it@fynbus.dk")
+    if not from_email:
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "it@fynbus.dk")
 
-    email = EmailMessage(
-        subject=subject,
-        body=body_html,
-        from_email=from_email,
-        to=recipients,
-    )
-    email.content_subtype = "html"
+    if format == "pdf":
+        # Plain text body with PDF attachment only
+        body = f"FynBus IT Ugelog - {weeklog.week_label}\n\nRapporten er vedhæftet som PDF."
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=from_email,
+            to=recipients,
+        )
+    else:
+        # HTML body for "html" and "both"
+        email = EmailMessage(
+            subject=subject,
+            body=body_html,
+            from_email=from_email,
+            to=recipients,
+        )
+        email.content_subtype = "html"
 
-    # Attach PDF
-    filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.pdf"
-    email.attach(filename, pdf_content, "application/pdf")
+    # Attach PDF for "pdf" and "both"
+    if format in ("pdf", "both"):
+        try:
+            pdf_content = generate_pdf(weeklog)
+        except Exception as e:
+            return False, f"Fejl ved generering af PDF: {e}"
+
+        filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.pdf"
+        email.attach(filename, pdf_content, "application/pdf")
 
     # Send email
     try:
         email.send(fail_silently=False)
-        return True, f"Email sendt til {len(recipients)} modtager(e)."
+        format_label = {"html": "HTML", "pdf": "PDF", "both": "HTML + PDF"}[format]
+        return True, f"Email ({format_label}) sendt til {len(recipients)} modtager(e)."
     except Exception as e:
         return False, f"Fejl ved afsendelse af email: {e}"

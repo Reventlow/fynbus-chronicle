@@ -152,6 +152,7 @@ python manage.py createsuperuser
 | `MICROSOFT_CLIENT_ID` | Azure AD app client ID | - |
 | `MICROSOFT_CLIENT_SECRET` | Azure AD app secret | - |
 | `MICROSOFT_TENANT_ID` | Azure AD tenant ID | `common` |
+| `EMAIL_USE_GRAPH` | Use Microsoft Graph API for email | `False` |
 | `EMAIL_HOST` | SMTP server | - |
 | `EMAIL_PORT` | SMTP port | `587` |
 | `EMAIL_HOST_USER` | SMTP username | - |
@@ -193,3 +194,4 @@ This can happen with concurrent access. Either:
 
 - [Development Guide](DEVELOPMENT.md) - Coding standards and patterns
 - [SSO Setup](SSO_SETUP.md) - Configure Office 365 authentication
+- [Graph Email Setup](GRAPH_EMAIL_SETUP.md) - Send email via Microsoft Graph API

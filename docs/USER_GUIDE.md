@@ -160,10 +160,11 @@ Brug hændelser til at dokumentere:
 ### Email
 
 1. Åbn en ugelog
-2. Klik "Eksporter" > "Send som email"
-3. Rapporten sendes til konfigurerede modtagere
+2. Vælg format (HTML, PDF eller begge dele)
+3. Klik "Send som email"
+4. Rapporten sendes til konfigurerede modtagere med dig som afsender
 
-> **Bemærk:** Email-funktionen kræver at administratoren har konfigureret email-modtagere i systemet.
+> **Bemærk:** Email-funktionen kræver at administratoren har konfigureret email-modtagere i systemet. Afsenderen er den bruger der er logget ind.
 
 ---
 

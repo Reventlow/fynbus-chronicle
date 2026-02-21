@@ -173,7 +173,13 @@ if SSO_ENABLED and MICROSOFT_CLIENT_ID:
     }
 
 # Email configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_GRAPH = config("EMAIL_USE_GRAPH", default=False, cast=bool)
+
+if EMAIL_USE_GRAPH:
+    EMAIL_BACKEND = "chronicle.email_backends.graph.GraphEmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 EMAIL_HOST = config("EMAIL_HOST", default="")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)

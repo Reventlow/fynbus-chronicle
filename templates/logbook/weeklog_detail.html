@@ -53,9 +53,18 @@
              class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
             Download HTML
           </a>
-          <a href="{% url 'logbook:export-email' weeklog.pk %}"
+          <div class="border-t border-sand-200 dark:border-sand-700 my-1"></div>
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=html"
              class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Send som email
+            Email som HTML
+          </a>
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=pdf"
+             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
+            Email som PDF
+          </a>
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=both"
+             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
+            Email som HTML + PDF
           </a>
         </div>
       </div>

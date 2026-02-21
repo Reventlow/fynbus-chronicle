@@ -45,11 +45,16 @@ DATABASE_URL=postgres://chronicle:<password>@db:5432/fynbus_chronicle
 CSRF_TRUSTED_ORIGINS=https://chronicle.fynbus.dk
 SECURE_SSL_REDIRECT=True
 
-# Email (Optional)
+# Email (Optional - choose SMTP or Graph)
+# Option A: Microsoft Graph API (recommended, see docs/GRAPH_EMAIL_SETUP.md)
+EMAIL_USE_GRAPH=True
+
+# Option B: SMTP (set EMAIL_USE_GRAPH=False)
 EMAIL_HOST=smtp.office365.com
 EMAIL_PORT=587
 EMAIL_HOST_USER=it@fynbus.dk
 EMAIL_HOST_PASSWORD=<password>
+
 DEFAULT_FROM_EMAIL=it@fynbus.dk
 CHRONICLE_EMAIL_RECIPIENTS=manager@fynbus.dk,team@fynbus.dk
 

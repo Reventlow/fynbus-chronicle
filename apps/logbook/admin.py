@@ -208,7 +208,9 @@ class WeekLogAdmin(admin.ModelAdmin):
     def send_email(self, request: HttpRequest, queryset) -> None:
         """Send selected week logs via email."""
         for weeklog in queryset:
-            success, message = send_weeklog_email(weeklog)
+            success, message = send_weeklog_email(
+                weeklog, from_email=request.user.email
+            )
             level = "success" if success else "error"
             self.message_user(request, f"{weeklog.week_label}: {message}", level)
 

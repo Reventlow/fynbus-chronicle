@@ -416,7 +416,10 @@ def export_html(request: HttpRequest, pk: int) -> HttpResponse:
 def export_email(request: HttpRequest, pk: int) -> HttpResponse:
     """Send a week log via email."""
     weeklog = get_object_or_404(WeekLog, pk=pk)
-    success, message = send_weeklog_email(weeklog)
+    format = request.GET.get("format", "both")
+    success, message = send_weeklog_email(
+        weeklog, format=format, from_email=request.user.email
+    )
 
     if success:
         messages.success(request, message)
