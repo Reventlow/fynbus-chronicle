@@ -113,12 +113,10 @@
     <h2>Prioriterede Opgaver</h2>
     {% for item in priority_items %}
     <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ item.title }}</span>
-        <span class="priority-{{ item.priority }}" style="display:inline-block; background-color:{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ item.get_priority_display }}</span>
-        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}" style="display:inline-block; background-color:{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">
-          {{ item.get_status_display }}
-        </span>
+      <div class="item-row-header" style="display:block;">
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ item.title }}</span>&nbsp;
+        <span class="priority-{{ item.priority }}" style="display:inline-block; background-color:{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ item.get_priority_display }}</span>&nbsp;
+        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}" style="display:inline-block; background-color:{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ item.get_status_display }}</span>
       </div>
       {% if item.description %}
       <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">{{ item.description|linebreaksbr }}</div>
@@ -137,8 +135,8 @@
     <h2>Bemanding</h2>
     {% for absence in absences %}
     <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ absence.staff_name }}</span>
+      <div class="item-row-header" style="display:block;">
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ absence.staff_name }}</span>&nbsp;
         <span class="status-ongoing" style="display:inline-block; background-color:#C4A35A; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ absence.get_absence_type_display }}</span>
       </div>
       <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
@@ -157,16 +155,10 @@
     <h2>Hændelser</h2>
     {% for incident in incidents %}
     <div class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if not incident.resolved %} border-left:4px solid #A65D57;{% endif %} padding:10px 14px; margin-bottom:8px;">
-      <div class="item-row-header">
-        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ incident.title }}</span>
-        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}" style="display:inline-block; background-color:{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">
-          {{ incident.get_severity_display }}
-        </span>
-        {% if incident.resolved %}
-        <span class="status-done" style="display:inline-block; background-color:#7D8471; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Løst</span>
-        {% else %}
-        <span class="status-blocked" style="display:inline-block; background-color:#A65D57; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Uløst</span>
-        {% endif %}
+      <div class="item-row-header" style="display:block;">
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ incident.title }}</span>&nbsp;
+        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}" style="display:inline-block; background-color:{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">{{ incident.get_severity_display }}</span>&nbsp;
+        {% if incident.resolved %}<span class="status-done" style="display:inline-block; background-color:#7D8471; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Løst</span>{% else %}<span class="status-blocked" style="display:inline-block; background-color:#A65D57; color:white; padding:2px 10px; border-radius:8px; font-size:9pt; font-weight:500;">Uløst</span>{% endif %}
       </div>
       <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
         {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
