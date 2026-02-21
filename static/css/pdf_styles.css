@@ -59,7 +59,7 @@ h3 {
 .report-meta {
   background-color: #FAF9F7;
   border: 1px solid #E5E0D8;
-  border-radius: 4pt;
+  border-radius: 12pt;
   padding: 0.5cm;
   margin-bottom: 0.8cm;
 }
@@ -82,7 +82,7 @@ h3 {
 .section-card {
   background-color: #FFFFFF;
   border: 1px solid #E5E0D8;
-  border-radius: 4pt;
+  border-radius: 12pt;
   padding: 0.4cm;
   margin-bottom: 0.4cm;
 }
@@ -120,8 +120,8 @@ tr:nth-child(even) {
 .priority-high {
   background-color: #A65D57;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
   font-weight: 500;
 }
@@ -129,8 +129,8 @@ tr:nth-child(even) {
 .priority-medium {
   background-color: #C4A35A;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
   font-weight: 500;
 }
@@ -138,8 +138,8 @@ tr:nth-child(even) {
 .priority-low {
   background-color: #7D8471;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
   font-weight: 500;
 }
@@ -148,24 +148,24 @@ tr:nth-child(even) {
 .status-done {
   background-color: #7D8471;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
 }
 
 .status-ongoing {
   background-color: #C4A35A;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
 }
 
 .status-blocked {
   background-color: #A65D57;
   color: white;
-  padding: 0.1cm 0.2cm;
-  border-radius: 2pt;
+  padding: 0.1cm 0.3cm;
+  border-radius: 8pt;
   font-size: 9pt;
 }
 
@@ -173,6 +173,7 @@ tr:nth-child(even) {
 .summary-box {
   background-color: #FAF9F7;
   border-left: 4pt solid #8B7355;
+  border-radius: 0 12pt 12pt 0;
   padding: 0.4cm;
   margin: 0.5cm 0;
 }
