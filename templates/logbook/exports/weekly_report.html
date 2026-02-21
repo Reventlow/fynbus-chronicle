@@ -8,7 +8,7 @@
 <body>
   <div class="report-header">
     <h1>FynBus IT Ugelog</h1>
-    <div class="report-meta">
+    <div class="report-meta" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:14px 16px;">
       <p><strong>Periode:</strong> {{ weeklog.week_label }}</p>
       <p><strong>Genereret:</strong> {% now "d. F Y H:i" %}</p>
       {% if oncall %}
@@ -20,41 +20,57 @@
   <!-- Helpdesk Statistics -->
   <div class="section">
     <h2>Helpdesk Statistik</h2>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-value">{{ weeklog.helpdesk_new }}</div>
-        <div class="stat-label">Nye sager</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ weeklog.helpdesk_closed }}</div>
-        <div class="stat-label">Lukkede sager</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ weeklog.helpdesk_open }}</div>
-        <div class="stat-label">Åbne sager</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
-        <div class="stat-label">Netto ændring</div>
-      </div>
-    </div>
+    <!--
+      Stats use a real <table> so the four-column layout survives when the
+      rendered page is copy-pasted into Outlook web (flexbox/CSS-grid is
+      stripped on paste).  The .stats-grid / .stat-item classes are kept so
+      existing CSS still applies for browser and PDF rendering.
+    -->
+    <table class="stats-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:8px 0;">
+      <tr>
+        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_new }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Nye sager</div>
+        </td>
+        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_closed }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Lukkede sager</div>
+        </td>
+        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_open }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Åbne sager</div>
+        </td>
+        <td class="stat-item" width="25%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Netto ændring</div>
+        </td>
+      </tr>
+    </table>
   </div>
 
   <!-- Helpdesk Charts -->
   {% if chart_image or flow_chart_image %}
   <div class="section">
-    <div class="charts-row">
-      {% if chart_image %}
-      <div class="chart-col">
-        <img src="{{ chart_image }}" style="width:100%;" alt="Helpdesk trend chart">
-      </div>
-      {% endif %}
-      {% if flow_chart_image %}
-      <div class="chart-col">
-        <img src="{{ flow_chart_image }}" style="width:100%;" alt="Nye vs. lukkede sager">
-      </div>
-      {% endif %}
-    </div>
+    <!--
+      Charts use a real <table> so the side-by-side layout survives Outlook
+      web copy-paste.  HTML width/height attributes on the <img> tags give
+      Outlook a concrete size to work with (CSS-only dimensions are lost on
+      paste).  The CSS classes are kept for browser/PDF styling.
+    -->
+    <table class="charts-row" role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        {% if chart_image %}
+        <td class="chart-col" width="50%" style="vertical-align:top; padding:0 6px 0 0;">
+          <img src="{{ chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Helpdesk trend chart">
+        </td>
+        {% endif %}
+        {% if flow_chart_image %}
+        <td class="chart-col" width="50%" style="vertical-align:top; padding:0 0 0 6px;">
+          <img src="{{ flow_chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Nye vs. lukkede sager">
+        </td>
+        {% endif %}
+      </tr>
+    </table>
   </div>
   {% endif %}
 
@@ -62,7 +78,7 @@
   {% if weeklog.summary %}
   <div class="section">
     <h2>Ugeoversigt</h2>
-    <div class="summary-box">
+    <div class="summary-box" style="background-color:#FAF9F7; border-left:4px solid #8B7355; padding:14px 16px; margin:12px 0;">
       <p>{{ weeklog.summary|linebreaksbr }}</p>
     </div>
   </div>
@@ -81,7 +97,7 @@
     <p><strong>Deltagere:</strong> {{ weeklog.meeting_attendees }}</p>
     {% endif %}
     {% if weeklog.meeting_minutes %}
-    <div class="summary-box">
+    <div class="summary-box" style="background-color:#FAF9F7; border-left:4px solid #8B7355; padding:14px 16px; margin:12px 0;">
       {{ weeklog.meeting_minutes|render_markdown }}
     </div>
     {% endif %}
@@ -93,19 +109,19 @@
   <div class="section">
     <h2>Prioriterede Opgaver</h2>
     {% for item in priority_items %}
-    <div class="item-row no-break">
+    <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
       <div class="item-row-header">
-        <span class="item-row-title">{{ item.title }}</span>
-        <span class="priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
-        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}">
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ item.title }}</span>
+        <span class="priority-{{ item.priority }}" style="background-color:{% if item.priority == 'high' %}#A65D57{% elif item.priority == 'medium' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 8px; font-size:9pt;">{{ item.get_priority_display }}</span>
+        <span class="status-{% if item.status == 'completed' %}done{% elif item.status == 'blocked' %}blocked{% else %}ongoing{% endif %}" style="background-color:{% if item.status == 'completed' %}#7D8471{% elif item.status == 'blocked' %}#A65D57{% else %}#C4A35A{% endif %}; color:white; padding:2px 8px; font-size:9pt;">
           {{ item.get_status_display }}
         </span>
       </div>
       {% if item.description %}
-      <div class="item-row-desc">{{ item.description|linebreaksbr }}</div>
+      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">{{ item.description|linebreaksbr }}</div>
       {% endif %}
       {% if item.notes %}
-      <div class="item-row-desc"><strong>Noter:</strong> {{ item.notes|linebreaksbr }}</div>
+      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;"><strong>Noter:</strong> {{ item.notes|linebreaksbr }}</div>
       {% endif %}
     </div>
     {% endfor %}
@@ -117,12 +133,12 @@
   <div class="section">
     <h2>Bemanding</h2>
     {% for absence in absences %}
-    <div class="item-row no-break">
+    <div class="item-row no-break" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:10px 14px; margin-bottom:8px;">
       <div class="item-row-header">
-        <span class="item-row-title">{{ absence.staff_name }}</span>
-        <span class="status-ongoing">{{ absence.get_absence_type_display }}</span>
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ absence.staff_name }}</span>
+        <span class="status-ongoing" style="background-color:#C4A35A; color:white; padding:2px 8px; font-size:9pt;">{{ absence.get_absence_type_display }}</span>
       </div>
-      <div class="item-row-desc">
+      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
         {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
         ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
         {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
@@ -137,24 +153,24 @@
   <div class="section">
     <h2>Hændelser</h2>
     {% for incident in incidents %}
-    <div class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}">
+    <div class="item-row no-break {% if not incident.resolved %}item-row-alert{% endif %}" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if not incident.resolved %} border-left:4px solid #A65D57;{% endif %} padding:10px 14px; margin-bottom:8px;">
       <div class="item-row-header">
-        <span class="item-row-title">{{ incident.title }}</span>
-        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}">
+        <span class="item-row-title" style="font-weight:600; color:#4A4540;">{{ incident.title }}</span>
+        <span class="priority-{% if incident.severity == 'critical' %}high{% elif incident.severity == 'high' %}medium{% else %}low{% endif %}" style="background-color:{% if incident.severity == 'critical' %}#A65D57{% elif incident.severity == 'high' %}#C4A35A{% else %}#7D8471{% endif %}; color:white; padding:2px 8px; font-size:9pt;">
           {{ incident.get_severity_display }}
         </span>
         {% if incident.resolved %}
-        <span class="status-done">Løst</span>
+        <span class="status-done" style="background-color:#7D8471; color:white; padding:2px 8px; font-size:9pt;">Løst</span>
         {% else %}
-        <span class="status-blocked">Uløst</span>
+        <span class="status-blocked" style="background-color:#A65D57; color:white; padding:2px 8px; font-size:9pt;">Uløst</span>
         {% endif %}
       </div>
-      <div class="item-row-desc">
+      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">
         {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
       </div>
-      <div class="item-row-desc">{{ incident.description }}</div>
+      <div class="item-row-desc" style="font-size:9pt; color:#6B635B; margin-top:4px;">{{ incident.description }}</div>
       {% if incident.resolution %}
-      <div class="item-row-resolution">
+      <div class="item-row-resolution" style="font-size:9pt; background-color:#F0EDE8; padding:8px 12px; margin-top:6px;">
         <strong>Løsning:</strong> {{ incident.resolution }}
       </div>
       {% endif %}
@@ -164,7 +180,7 @@
   {% endif %}
 
   <!-- Footer -->
-  <div class="report-footer">
+  <div class="report-footer" style="margin-top:30px; padding-top:12px; border-top:1px solid #E5E0D8; font-size:9pt; color:#6B635B;">
     <p>FynBus IT Chronicle | Genereret {% now "d/m/Y H:i" %}</p>
   </div>
 </body>

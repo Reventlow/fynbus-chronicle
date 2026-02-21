@@ -20,7 +20,7 @@ from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
 # - Max-width centering for the document body
 # - Padding and margin adjustments using px instead of cm/pt
 # - Responsive image constraints
-# - Flexbox-based stats grid (browsers handle it better than display:table)
+# - Border-radius polish (stripped on Outlook paste but looks nice in browser)
 _BROWSER_CSS = """
 /* ── Browser-specific overrides for HTML export ── */
 body {
@@ -36,16 +36,13 @@ img {
   height: auto;
 }
 
-/* Charts row: use flexbox for browsers */
+/*
+ * Charts row and stats grid are now real <table> elements in the HTML
+ * template (for Outlook paste compatibility).  Only minimal overrides
+ * are needed here for browser polish.
+ */
 .charts-row {
-  display: flex;
-  gap: 12px;
-}
-
-.chart-col {
-  display: block;
-  flex: 1 1 0;
-  min-width: 0;
+  margin: 8px 0;
 }
 
 .chart-col img {
@@ -55,19 +52,7 @@ img {
   border-radius: 8px;
 }
 
-/* Stats grid: use flexbox for browsers */
-.stats-grid {
-  display: flex;
-  gap: 8px;
-}
-
 .stat-item {
-  display: block;
-  flex: 1 1 0;
-  text-align: center;
-  padding: 10px 8px;
-  background-color: #FAF9F7;
-  border: 1px solid #E5E0D8;
   border-radius: 12px;
 }
 
