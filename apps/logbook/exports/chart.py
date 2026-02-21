@@ -1,8 +1,11 @@
 """
-Server-side helpdesk trend chart generation using matplotlib.
+Server-side helpdesk chart generation using matplotlib.
 
-Generates a line chart of open helpdesk tickets over time,
-returned as a base64-encoded PNG data URI for embedding in exports.
+Generates charts for export embedding:
+- Line chart of open helpdesk tickets over time
+- Grouped bar chart of new vs closed tickets per week
+
+Both returned as base64-encoded PNG data URIs.
 """
 
 import base64
@@ -11,8 +14,25 @@ import io
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import numpy as np
 
 matplotlib.use("Agg")
+
+
+def _query_recent_logs(weeklog, limit=12):
+    """Query up to `limit` most recent WeekLogs ending at weeklog."""
+    from django.db.models import Q
+
+    from ..models import WeekLog
+
+    logs = list(
+        WeekLog.objects.filter(
+            Q(year__lt=weeklog.year)
+            | Q(year=weeklog.year, week_number__lte=weeklog.week_number)
+        ).order_by("-year", "-week_number")[:limit]
+    )
+    logs.reverse()
+    return logs
 
 
 def generate_helpdesk_chart(weeklog) -> str | None:
@@ -29,24 +49,10 @@ def generate_helpdesk_chart(weeklog) -> str | None:
     Returns:
         Base64-encoded PNG data URI string, or None if insufficient data.
     """
-    from django.db.models import Q
+    recent_logs = _query_recent_logs(weeklog)
 
-    from ..models import WeekLog
-
-    # Get up to 12 weeks of data ending at this weeklog (inclusive)
-    recent_logs = list(
-        WeekLog.objects.filter(
-            Q(year__lt=weeklog.year)
-            | Q(year=weeklog.year, week_number__lte=weeklog.week_number)
-        ).order_by("-year", "-week_number")[:12]
-    )
-
-    # Need at least 2 data points for a meaningful chart
     if len(recent_logs) < 2:
         return None
-
-    # Reverse to chronological order
-    recent_logs.reverse()
 
     # Build data series
     labels = [f"U{log.week_number}" for log in recent_logs]
@@ -104,6 +110,68 @@ def generate_helpdesk_chart(weeklog) -> str | None:
     plt.tight_layout()
 
     # Render to base64 PNG
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    buf.seek(0)
+
+    encoded = base64.b64encode(buf.read()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
+def generate_helpdesk_flow_chart(weeklog) -> str | None:
+    """
+    Generate a grouped bar chart of new vs closed tickets per week.
+
+    Args:
+        weeklog: The WeekLog instance being exported.
+
+    Returns:
+        Base64-encoded PNG data URI string, or None if insufficient data.
+    """
+    recent_logs = _query_recent_logs(weeklog)
+
+    if len(recent_logs) < 2:
+        return None
+
+    labels = [f"U{log.week_number}" for log in recent_logs]
+    new_counts = [log.helpdesk_new for log in recent_logs]
+    closed_counts = [log.helpdesk_closed for log in recent_logs]
+
+    # Project colors
+    color_gold = "#C4A35A"
+    color_sage = "#7D8471"
+    color_dark = "#4A4540"
+    color_bg = "#FAF9F7"
+    color_grid = "#E5E0D8"
+
+    x = np.arange(len(labels))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(7, 2.8))
+    fig.patch.set_facecolor(color_bg)
+    ax.set_facecolor(color_bg)
+
+    ax.bar(x - width / 2, new_counts, width, label="Nye", color=color_gold,
+           edgecolor=color_dark, linewidth=0.5, zorder=2)
+    ax.bar(x + width / 2, closed_counts, width, label="Lukkede", color=color_sage,
+           edgecolor=color_dark, linewidth=0.5, zorder=2)
+
+    ax.set_title("Nye vs. lukkede sager", fontsize=12, color=color_dark, pad=10)
+    ax.set_ylabel("Antal", fontsize=10, color=color_dark)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.tick_params(axis="both", colors=color_dark, labelsize=9)
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    ax.grid(axis="y", color=color_grid, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.legend(fontsize=9, frameon=False, labelcolor=color_dark)
+
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    plt.tight_layout()
+
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)

@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from apps.oncall.models import OnCallDuty
 
 from ..models import WeekLog
-from .chart import generate_helpdesk_chart
+from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
 from .pdf import generate_pdf
 
 
@@ -37,8 +37,9 @@ def send_weeklog_email(
     if not recipients:
         return False, "Ingen email-modtagere konfigureret. Tjek CHRONICLE_EMAIL_RECIPIENTS."
 
-    # Generate helpdesk trend chart
+    # Generate helpdesk charts
     chart_image = generate_helpdesk_chart(weeklog)
+    flow_chart_image = generate_helpdesk_flow_chart(weeklog)
 
     # Render HTML body
     context = {
@@ -48,6 +49,7 @@ def send_weeklog_email(
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
         "chart_image": chart_image,
+        "flow_chart_image": flow_chart_image,
     }
 
     try:

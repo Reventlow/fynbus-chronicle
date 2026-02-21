@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from apps.oncall.models import OnCallDuty
 
 from ..models import WeekLog
-from .chart import generate_helpdesk_chart
+from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
 
 
 def generate_html(weeklog: WeekLog) -> str:
@@ -23,8 +23,9 @@ def generate_html(weeklog: WeekLog) -> str:
     Returns:
         HTML formatted string with embedded styles.
     """
-    # Generate helpdesk trend chart
+    # Generate helpdesk charts
     chart_image = generate_helpdesk_chart(weeklog)
+    flow_chart_image = generate_helpdesk_flow_chart(weeklog)
 
     # Render HTML template
     context = {
@@ -34,6 +35,7 @@ def generate_html(weeklog: WeekLog) -> str:
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
         "chart_image": chart_image,
+        "flow_chart_image": flow_chart_image,
     }
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)

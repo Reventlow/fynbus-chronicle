@@ -124,10 +124,20 @@
     </div>
   </div>
 
-  {% if chart_image %}
+  {% if chart_image or flow_chart_image %}
   <div style="margin: 15px 0;">
-    <h2>Helpdesk Trend</h2>
-    <img src="{{ chart_image }}" style="width:100%; max-width:600px;" alt="Helpdesk trend chart">
+    <table style="width:100%; border-collapse: separate; border-spacing: 8px 0; border: none;"><tr>
+      {% if chart_image %}
+      <td style="width:50%; vertical-align: top; padding: 0; border: none;">
+        <img src="{{ chart_image }}" style="width:100%;" alt="Helpdesk trend chart">
+      </td>
+      {% endif %}
+      {% if flow_chart_image %}
+      <td style="width:50%; vertical-align: top; padding: 0; border: none;">
+        <img src="{{ flow_chart_image }}" style="width:100%;" alt="Nye vs. lukkede sager">
+      </td>
+      {% endif %}
+    </tr></table>
   </div>
   {% endif %}
 

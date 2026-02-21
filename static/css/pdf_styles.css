@@ -206,6 +206,28 @@ tr:nth-child(even) {
   margin-top: 0.15cm;
 }
 
+/* Charts side by side */
+.charts-row {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.chart-col {
+  display: table-cell;
+  width: 50%;
+  vertical-align: top;
+  padding: 0 0.1cm;
+}
+
+.chart-col:first-child {
+  padding-left: 0;
+}
+
+.chart-col:last-child {
+  padding-right: 0;
+}
+
 /* Summary box */
 .summary-box {
   background-color: #FAF9F7;
