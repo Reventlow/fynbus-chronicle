@@ -2,6 +2,9 @@
 HTML export functionality for week logs.
 
 Generates a standalone HTML document with embedded styles.
+The PDF styles (pdf_styles.css) are injected for shared layout, and
+supplementary browser-specific styles are added so the HTML export
+renders well in web browsers (the PDF export is unaffected).
 """
 
 from django.conf import settings
@@ -12,10 +15,105 @@ from apps.oncall.models import OnCallDuty
 from ..models import WeekLog
 from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
 
+# Browser-specific overrides layered on top of pdf_styles.css.
+# These handle differences between WeasyPrint (print) and browser rendering:
+# - Max-width centering for the document body
+# - Padding and margin adjustments using px instead of cm/pt
+# - Responsive image constraints
+# - Flexbox-based stats grid (browsers handle it better than display:table)
+_BROWSER_CSS = """
+/* ── Browser-specific overrides for HTML export ── */
+body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px 40px;
+  background-color: #FFFFFF;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Charts row: use flexbox for browsers */
+.charts-row {
+  display: flex;
+  gap: 12px;
+}
+
+.chart-col {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.chart-col img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Stats grid: use flexbox for browsers */
+.stats-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-item {
+  display: block;
+  flex: 1 1 0;
+  text-align: center;
+  padding: 10px 8px;
+  background-color: #FAF9F7;
+  border: 1px solid #E5E0D8;
+  border-radius: 12px;
+}
+
+/* Section spacing in px for browsers */
+.section {
+  margin-bottom: 24px;
+}
+
+/* Item row spacing */
+.item-row {
+  margin-bottom: 8px;
+  padding: 10px 14px;
+}
+
+.item-row-resolution {
+  padding: 8px 12px;
+  margin-top: 6px;
+}
+
+/* Summary box padding */
+.summary-box {
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+
+/* Report meta */
+.report-meta {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+/* Report footer */
+.report-footer {
+  margin-top: 30px;
+  padding-top: 12px;
+}
+"""
+
 
 def generate_html(weeklog: WeekLog) -> str:
     """
     Generate a standalone HTML document for a week log.
+
+    Injects both the shared pdf_styles.css and browser-specific overrides
+    so the output looks as close to the PDF as possible when viewed in a
+    web browser.
 
     Args:
         weeklog: The WeekLog instance to export.
@@ -40,14 +138,18 @@ def generate_html(weeklog: WeekLog) -> str:
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)
 
-    # Load CSS for embedding
+    # Load shared PDF/print CSS
     css_path = settings.BASE_DIR / "static" / "css" / "pdf_styles.css"
     css_content = ""
     if css_path.exists():
         css_content = css_path.read_text()
 
-    # Inject CSS into head
-    style_tag = f"<style>\n{css_content}\n</style>"
+    # Inject shared styles + browser overrides into <head>.
+    # Order matters: pdf_styles.css first, then browser overrides on top.
+    style_tag = (
+        f"<style>\n{css_content}\n</style>\n"
+        f"<style>\n{_BROWSER_CSS}\n</style>"
+    )
     html_content = html_content.replace("</head>", f"{style_tag}\n</head>")
 
     return html_content

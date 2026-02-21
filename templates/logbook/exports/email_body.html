@@ -126,15 +126,15 @@
 
   {% if chart_image or flow_chart_image %}
   <div style="margin: 15px 0;">
-    <table style="width:100%; border-collapse: separate; border-spacing: 8px 0; border: none;"><tr>
+    <table style="width:100%; max-width:600px; table-layout:fixed; border-collapse:separate; border-spacing:8px 0; border:none;"><tr>
       {% if chart_image %}
-      <td style="width:50%; vertical-align: top; padding: 0; border: none;">
-        <img src="{{ chart_image }}" style="width:100%;" alt="Helpdesk trend chart">
+      <td style="width:50%; vertical-align:top; padding:0; border:none;">
+        <img src="{{ chart_image }}" style="display:block; width:100%; max-width:290px; height:auto;" alt="Helpdesk trend chart">
       </td>
       {% endif %}
       {% if flow_chart_image %}
-      <td style="width:50%; vertical-align: top; padding: 0; border: none;">
-        <img src="{{ flow_chart_image }}" style="width:100%;" alt="Nye vs. lukkede sager">
+      <td style="width:50%; vertical-align:top; padding:0; border:none;">
+        <img src="{{ flow_chart_image }}" style="display:block; width:100%; max-width:290px; height:auto;" alt="Nye vs. lukkede sager">
       </td>
       {% endif %}
     </tr></table>
