@@ -160,6 +160,25 @@ class WeekLog(models.Model):
         """Calculate net change in helpdesk tickets."""
         return self.helpdesk_new - self.helpdesk_closed
 
+    @staticmethod
+    def helpdesk_weekly_averages() -> dict[str, float]:
+        """
+        Calculate average weekly created and closed tickets over the last 52 weeks.
+
+        Returns:
+            Dict with 'avg_new' and 'avg_closed' rounded to one decimal.
+        """
+        from django.db.models import Avg
+
+        result = WeekLog.objects.order_by("-year", "-week_number")[:52].aggregate(
+            avg_new=Avg("helpdesk_new"),
+            avg_closed=Avg("helpdesk_closed"),
+        )
+        return {
+            "avg_new": round(result["avg_new"] or 0, 1),
+            "avg_closed": round(result["avg_closed"] or 0, 1),
+        }
+
 
 class PriorityItem(models.Model):
     """

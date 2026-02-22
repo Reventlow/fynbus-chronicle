@@ -122,6 +122,18 @@
         <div class="stat-label">Netto</div>
       </div>
     </div>
+    {% if avg_new is not None and avg_closed is not None %}
+    <div class="stats-grid" style="display:flex; justify-content:space-between; text-align:center; margin-top:10px;">
+      <div class="stat-item" style="flex:1;">
+        <div class="stat-value" style="font-size:24px; font-weight:bold; color:#4A4540;">{{ avg_new }}</div>
+        <div class="stat-label" style="font-size:12px; color:#6B635B;">Gns. nye/uge</div>
+      </div>
+      <div class="stat-item" style="flex:1;">
+        <div class="stat-value" style="font-size:24px; font-weight:bold; color:#4A4540;">{{ avg_closed }}</div>
+        <div class="stat-label" style="font-size:12px; color:#6B635B;">Gns. lukkede/uge</div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   {% if chart_image or flow_chart_image %}

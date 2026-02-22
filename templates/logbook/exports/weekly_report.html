@@ -48,6 +48,20 @@
           <div class="stat-label" style="font-size:9pt; color:#6B635B;">Netto ændring</div>
         </td>
       </tr>
+      {% if avg_new is not None and avg_closed is not None %}
+      <tr><td colspan="7" style="border:none; height:8px;"></td></tr>
+      <tr>
+        <td class="stat-item" width="49%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ avg_new }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Gns. nye/uge</div>
+        </td>
+        <td width="2%" style="border:none;"></td>
+        <td class="stat-item" width="49%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ avg_closed }}</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Gns. lukkede/uge</div>
+        </td>
+      </tr>
+      {% endif %}
     </table>
   </div>
 

@@ -41,6 +41,9 @@ def send_weeklog_email(
     chart_image = generate_helpdesk_chart(weeklog)
     flow_chart_image = generate_helpdesk_flow_chart(weeklog)
 
+    # Calculate weekly averages
+    avgs = weeklog.helpdesk_weekly_averages()
+
     # Render HTML body
     context = {
         "weeklog": weeklog,
@@ -50,6 +53,8 @@ def send_weeklog_email(
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
         "chart_image": chart_image,
         "flow_chart_image": flow_chart_image,
+        "avg_new": avgs["avg_new"],
+        "avg_closed": avgs["avg_closed"],
     }
 
     try:

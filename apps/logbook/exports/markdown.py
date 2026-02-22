@@ -47,6 +47,12 @@ def generate_markdown(weeklog: WeekLog) -> str:
         f"**Netto:** {delta_str}"
     )
     lines.append("")
+    avgs = WeekLog.helpdesk_weekly_averages()
+    lines.append(
+        f"**Gns. nye/uge:** {avgs['avg_new']} | "
+        f"**Gns. lukkede/uge:** {avgs['avg_closed']}"
+    )
+    lines.append("")
 
     # Summary
     if weeklog.summary:
