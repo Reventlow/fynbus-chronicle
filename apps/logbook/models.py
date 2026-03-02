@@ -73,11 +73,13 @@ class WeekLog(models.Model):
     meeting_attendees = models.TextField(
         verbose_name="Deltagere",
         blank=True,
+        default="",
         help_text="Deltagere til mandagsmødet",
     )
     meeting_minutes = models.TextField(
         verbose_name="Referat",
         blank=True,
+        default="",
         help_text="Referat af mandagsmødet",
     )
 
