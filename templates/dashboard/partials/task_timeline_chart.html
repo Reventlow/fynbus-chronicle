@@ -138,6 +138,7 @@
           scales: {
             x: {
               type: 'time',
+              min: new Date(tasks[0].planned_start).getTime(),
               time: {
                 unit: 'week',
                 tooltipFormat: 'dd MMM yyyy',
