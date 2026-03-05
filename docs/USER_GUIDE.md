@@ -8,8 +8,9 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 2. [Brugerroller](#brugerroller)
 3. [Kontrolpanel](#kontrolpanel)
 4. [Ugelogs](#ugelogs)
-5. [Eksporter rapporter](#eksporter-rapporter)
-6. [Mørk tilstand](#mørk-tilstand)
+5. [Opgaver](#opgaver)
+6. [Eksporter rapporter](#eksporter-rapporter)
+7. [Mørk tilstand](#mørk-tilstand)
 
 ---
 
@@ -38,7 +39,8 @@ FynBus Chronicle har to brugerroller:
 Alle brugere er redaktører som standard og har fuld adgang til at:
 
 - Oprette, redigere og slette ugelogs
-- Tilføje og administrere opgaver, fravær og hændelser
+- Oprette og styre opgaver med statusworkflow, noter og vedhæftede filer
+- Tilføje og administrere prioriterede opgaver, fravær og hændelser
 - Redigere mødereferater
 - Eksportere rapporter (PDF, Markdown, HTML, email)
 - Tage og frigive vagtuge i vagtkalenderen
@@ -171,6 +173,26 @@ Brug hændelser til at dokumentere:
    - Beskrivelse
 3. Marker som løst når relevant
 4. Tilføj løsningsbeskrivelse
+
+---
+
+## Opgaver
+
+Opgaver-modulet bruges til at registrere og følge IT-opgaver og projekter.
+
+### Grundlæggende funktioner
+
+- **Opret opgaver** med titel, beskrivelse, planlagte datoer, ansvarlige og godkendere
+- **Statusworkflow**: Todo → I gang → Test → Godkendelse → Færdig
+- **Skift status** direkte fra opgavedetaljer via klik på statusbadget
+- **Tilføj noter** med emne, tekst og vedhæftede filer
+- **Statushistorik**: Alle statusændringer logges automatisk med tidspunkt og bruger
+
+### Tidslinjevisning
+
+Kontrolpanelet viser en Gantt-lignende tidslinje over aktive opgaver med farvekodning efter status. Klik på en opgave i tidslinjen for at se detaljer.
+
+Se den fulde dokumentation under [Dokumentation > Opgaver](/dashboard/docs/tasks/).
 
 ---
 

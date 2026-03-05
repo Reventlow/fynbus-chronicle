@@ -3,6 +3,7 @@ URL configuration for FynBus Chronicle.
 """
 
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
@@ -22,6 +23,7 @@ urlpatterns = [
     path("dashboard/", include("apps.dashboard.urls")),
     path("logbook/", include("apps.logbook.urls")),
     path("oncall/", include("apps.oncall.urls")),
+    path("tasks/", include("apps.tasks.urls")),
     path("allauth/", include("allauth.urls")),
 ]
 
@@ -39,3 +41,4 @@ if settings.DEBUG:
         debug_urls.append(path("__reload__/", include("django_browser_reload.urls")))
 
     urlpatterns = debug_urls + urlpatterns
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

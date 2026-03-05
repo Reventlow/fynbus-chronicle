@@ -1,0 +1,41 @@
+<div class="card">
+  <h3 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-4">Tilføj note</h3>
+  <form hx-post="{% url 'tasks:task-note-create' task.pk %}"
+        hx-target="#notes-list"
+        hx-swap="afterbegin"
+        hx-on::after-request="if(event.detail.successful) this.reset()"
+        enctype="multipart/form-data"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label for="id_subject" class="input-label">Emne</label>
+      {{ note_form.subject }}
+      {% if note_form.subject.errors %}
+        <p class="input-error-message">{{ note_form.subject.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div>
+      <label for="id_text" class="input-label">Tekst</label>
+      {{ note_form.text }}
+      {% if note_form.text.errors %}
+        <p class="input-error-message">{{ note_form.text.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div>
+      <label for="id_files" class="input-label">Vedhæft filer</label>
+      <input type="file" name="files" multiple
+             class="input-field"
+             accept=".png,.jpg,.jpeg,.gif,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.md">
+      <p class="input-help">Tilladte filtyper: PNG, JPG, GIF, PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, MD</p>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="submit" class="btn-primary btn-sm">
+        Tilføj note
+      </button>
+    </div>
+  </form>
+</div>

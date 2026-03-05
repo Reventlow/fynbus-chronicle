@@ -1,0 +1,184 @@
+<div class="card">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold text-sand-800 dark:text-sand-200">Opgave Tidslinje</h3>
+    <a href="{% url 'tasks:task-list' %}" class="text-sm text-sand-600 hover:text-sand-800 dark:text-sand-400 dark:hover:text-sand-200">
+      Se alle &rarr;
+    </a>
+  </div>
+  <div id="task-timeline-container" style="min-height: 200px;">
+    <canvas id="taskTimelineChart"></canvas>
+  </div>
+</div>
+
+<!-- Date adapter for Chart.js time scale -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+(function() {
+  setTimeout(function() {
+    fetch('{% url "dashboard:api-task-timeline-data" %}', { credentials: 'same-origin' })
+    .then(response => response.json())
+    .then(data => {
+      var container = document.getElementById('task-timeline-container');
+
+      if (!data.tasks || data.tasks.length === 0) {
+        container.innerHTML =
+          '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Ingen aktive opgaver</p>';
+        return;
+      }
+
+      // Filter to tasks that have both planned_start and planned_end
+      var tasks = data.tasks.filter(function(t) {
+        return t.planned_start && t.planned_end;
+      });
+
+      if (tasks.length === 0) {
+        container.innerHTML =
+          '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Ingen opgaver med planlagte datoer</p>';
+        return;
+      }
+
+      // Status color mapping
+      var statusColors = {
+        todo:     '#9CA3AF',
+        doing:    '#3B82F6',
+        paused:   '#EAB308',
+        testing:  '#8B5CF6',
+        approval: '#F97316',
+        complete: '#22C55E'
+      };
+
+      // Status display names
+      var statusLabels = {
+        todo:     'Todo',
+        doing:    'I gang',
+        paused:   'Pause',
+        testing:  'Test',
+        approval: 'Godkendelse',
+        complete: 'Færdig'
+      };
+
+      // Build one dataset per task (floating bar)
+      var datasets = tasks.map(function(task, i) {
+        return {
+          label: task.title,
+          data: [{
+            x: [task.planned_start, task.planned_end],
+            y: task.title
+          }],
+          backgroundColor: statusColors[task.status] || '#9CA3AF',
+          borderRadius: 4,
+          borderSkipped: false,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8,
+          // Store metadata for tooltip and click
+          _taskMeta: task
+        };
+      });
+
+      // Adjust container height based on number of tasks
+      var chartHeight = Math.max(200, tasks.length * 40 + 80);
+      container.style.height = chartHeight + 'px';
+
+      // Theme-aware colors
+      var isDark = document.documentElement.classList.contains('dark');
+      var gridColor = isDark ? 'rgba(180, 172, 154, 0.1)' : 'rgba(107, 99, 91, 0.1)';
+      var textColor = isDark ? '#D4CCC0' : '#6B635B';
+
+      var ctx = document.getElementById('taskTimelineChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: tasks.map(function(t) { return t.title; }),
+          datasets: datasets
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#4A4540' : '#FFFFFF',
+              titleColor: isDark ? '#F0EDE8' : '#2C2825',
+              bodyColor: isDark ? '#D4CCC0' : '#4A4540',
+              borderColor: isDark ? '#6B635B' : '#E5E0D8',
+              borderWidth: 1,
+              callbacks: {
+                title: function(items) {
+                  if (!items.length) return '';
+                  var ds = items[0].dataset;
+                  return ds._taskMeta ? ds._taskMeta.title : ds.label;
+                },
+                label: function(context) {
+                  var meta = context.dataset._taskMeta;
+                  if (!meta) return '';
+                  var lines = [];
+                  lines.push('Status: ' + (statusLabels[meta.status] || meta.status));
+                  lines.push('Start: ' + meta.planned_start);
+                  lines.push('Slut: ' + meta.planned_end);
+                  if (meta.assignees && meta.assignees.length > 0) {
+                    lines.push('Tildelt: ' + meta.assignees.join(', '));
+                  }
+                  if (meta.approvers && meta.approvers.length > 0) {
+                    lines.push('Godkendere: ' + meta.approvers.join(', '));
+                  }
+                  return lines;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'day',
+                tooltipFormat: 'dd MMM yyyy',
+                displayFormats: {
+                  day: 'dd MMM'
+                }
+              },
+              grid: {
+                color: gridColor
+              },
+              ticks: {
+                color: textColor,
+                maxRotation: 0,
+                autoSkip: true
+              }
+            },
+            y: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: textColor,
+                font: { size: 12 }
+              }
+            }
+          },
+          onClick: function(event, elements) {
+            if (elements.length > 0) {
+              var idx = elements[0].datasetIndex;
+              var meta = datasets[idx]._taskMeta;
+              if (meta && meta.id) {
+                window.location.href = '/tasks/' + meta.id + '/';
+              }
+            }
+          },
+          onHover: function(event, elements) {
+            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+          }
+        }
+      });
+    })
+    .catch(function(error) {
+      console.error('Error loading task timeline data:', error);
+      document.getElementById('task-timeline-container').innerHTML =
+        '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Kunne ikke indlæse data</p>';
+    });
+  }, 50);
+})();
+</script>

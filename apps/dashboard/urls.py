@@ -44,8 +44,19 @@ urlpatterns = [
         views.FooterVersionPartialView.as_view(),
         name="partial-footer-version",
     ),
-    # Chart data API
+    # Task timeline
+    path(
+        "partials/task-timeline/",
+        views.TaskTimelinePartialView.as_view(),
+        name="task-timeline-partial",
+    ),
+    # Chart data APIs
     path("api/helpdesk-data/", views.helpdesk_chart_data, name="api-helpdesk-data"),
+    path(
+        "api/task-timeline-data/",
+        views.task_timeline_chart_data,
+        name="api-task-timeline-data",
+    ),
     # Documentation
     path("docs/", views.DocsIndexView.as_view(), name="docs-index"),
     path("docs/<slug:slug>/", views.DocsPageView.as_view(), name="docs-page"),

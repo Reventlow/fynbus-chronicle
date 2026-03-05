@@ -27,6 +27,7 @@ DOCS_PAGES = {
     "setup": {"file": "SETUP.md", "title": "Opsætning", "icon": "wrench"},
     "development": {"file": "DEVELOPMENT.md", "title": "Udvikling", "icon": "code"},
     "deployment": {"file": "DEPLOYMENT.md", "title": "Deployment", "icon": "server"},
+    "tasks": {"file": "TASKS.md", "title": "Opgaver", "icon": "clipboard-list"},
     "user-guide": {"file": "USER_GUIDE.md", "title": "Brugervejledning", "icon": "book-open"},
     "sso": {"file": "SSO_SETUP.md", "title": "SSO Opsætning", "icon": "key"},
     "graph-email": {"file": "GRAPH_EMAIL_SETUP.md", "title": "Email Opsætning", "icon": "envelope"},
@@ -187,6 +188,63 @@ def helpdesk_chart_data(request) -> JsonResponse:
             },
         }
     )
+
+
+class TaskTimelinePartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial view for task timeline chart."""
+
+    template_name = "dashboard/partials/task_timeline_chart.html"
+
+
+@login_required
+def task_timeline_chart_data(request) -> JsonResponse:
+    """
+    JSON API endpoint for task timeline chart data.
+
+    Returns non-complete tasks with planned dates, status,
+    assignees, and approvers for Gantt chart rendering.
+    """
+    from apps.tasks.models import Task
+
+    tasks = (
+        Task.objects.exclude(status=Task.Status.COMPLETE)
+        .select_related("created_by")
+        .prefetch_related("state_changes", "approvers", "assigned_to")
+        .order_by("planned_start", "created_at")
+    )
+
+    data = []
+    for task in tasks:
+        data.append(
+            {
+                "id": task.pk,
+                "title": task.title,
+                "planned_start": (
+                    task.planned_start.isoformat() if task.planned_start else None
+                ),
+                "planned_end": (
+                    task.planned_end.isoformat() if task.planned_end else None
+                ),
+                "status": task.status,
+                "state_changes": [
+                    {
+                        "changed_at": sc.changed_at.isoformat(),
+                        "from_state": sc.from_state,
+                        "to_state": sc.to_state,
+                    }
+                    for sc in task.state_changes.all()
+                ],
+                "approvers": [
+                    u.get_full_name() or u.username for u in task.approvers.all()
+                ],
+                "assignees": [
+                    u.get_full_name() or u.username
+                    for u in task.assigned_to.all()
+                ],
+            }
+        )
+
+    return JsonResponse({"tasks": data})
 
 
 class DocsIndexView(LoginRequiredMixin, TemplateView):

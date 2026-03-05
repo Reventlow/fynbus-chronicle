@@ -1,0 +1,88 @@
+<div id="task-status-{{ task.pk }}" class="inline-block">
+  {% if is_editor %}
+  <div x-data="{ open: false }" class="relative inline-block">
+    <button @click="open = !open" type="button"
+            class="badge cursor-pointer
+              {% if task.status == 'todo' %}bg-sand-200 text-sand-700 dark:bg-sand-600 dark:text-sand-200
+              {% elif task.status == 'doing' %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200
+              {% elif task.status == 'paused' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+              {% elif task.status == 'testing' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200
+              {% elif task.status == 'approval' %}bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200
+              {% elif task.status == 'complete' %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200
+              {% endif %}">
+      {{ task.get_status_display }}
+      <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    <div x-show="open" @click.away="open = false" x-transition
+         class="absolute left-0 mt-2 w-40 bg-white dark:bg-sand-800 rounded-lg shadow-soft-lg border border-sand-200 dark:border-sand-700 py-1 z-50">
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "todo"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-sand-700 dark:text-sand-200 {% if task.status == 'todo' %}font-semibold{% endif %}">
+        Todo
+      </button>
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "doing"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-blue-700 dark:text-blue-300 {% if task.status == 'doing' %}font-semibold{% endif %}">
+        I gang
+      </button>
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "paused"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-yellow-800 dark:text-yellow-300 {% if task.status == 'paused' %}font-semibold{% endif %}">
+        Pause
+      </button>
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "testing"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-purple-700 dark:text-purple-300 {% if task.status == 'testing' %}font-semibold{% endif %}">
+        Test
+      </button>
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "approval"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-orange-700 dark:text-orange-300 {% if task.status == 'approval' %}font-semibold{% endif %}">
+        Godkendelse
+      </button>
+      <button type="button"
+              hx-post="{% url 'tasks:task-status' task.pk %}"
+              hx-vals='{"status": "complete"}'
+              hx-target="#task-status-{{ task.pk }}"
+              hx-swap="outerHTML"
+              @click="open = false"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-sand-100 dark:hover:bg-sand-700 text-green-700 dark:text-green-300 {% if task.status == 'complete' %}font-semibold{% endif %}">
+        Færdig
+      </button>
+    </div>
+  </div>
+  {% else %}
+  <span class="badge
+    {% if task.status == 'todo' %}bg-sand-200 text-sand-700 dark:bg-sand-600 dark:text-sand-200
+    {% elif task.status == 'doing' %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200
+    {% elif task.status == 'paused' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+    {% elif task.status == 'testing' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200
+    {% elif task.status == 'approval' %}bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200
+    {% elif task.status == 'complete' %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200
+    {% endif %}">
+    {{ task.get_status_display }}
+  </span>
+  {% endif %}
+</div>

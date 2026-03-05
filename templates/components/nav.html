@@ -24,6 +24,10 @@
            class="{% if request.resolver_match.app_name == 'logbook' %}nav-link-active{% else %}nav-link{% endif %}">
           Ugelogs
         </a>
+        <a href="{% url 'tasks:task-list' %}"
+           class="{% if request.resolver_match.app_name == 'tasks' %}nav-link-active{% else %}nav-link{% endif %}">
+          Opgaver
+        </a>
         <a href="{% url 'oncall:calendar' %}"
            class="{% if request.resolver_match.app_name == 'oncall' %}nav-link-active{% else %}nav-link{% endif %}">
           Rådighedsvagt
@@ -95,6 +99,7 @@
       <div class="flex flex-col space-y-1">
         <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
         <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelogs</a>
+        <a href="{% url 'tasks:task-list' %}" class="nav-link">Opgaver</a>
         <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
         <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
         {% if user.is_staff %}

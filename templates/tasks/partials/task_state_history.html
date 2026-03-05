@@ -1,0 +1,57 @@
+<div id="state-history">
+  {% if task.state_changes.all %}
+  <div class="relative pl-6">
+    <!-- Vertical timeline line -->
+    <div class="absolute left-2 top-2 bottom-2 w-0.5 bg-sand-200 dark:bg-sand-600"></div>
+
+    <div class="space-y-4">
+      {% for change in task.state_changes.all %}
+      <div class="relative">
+        <!-- Timeline dot -->
+        <div class="absolute -left-4 top-1.5 w-3 h-3 rounded-full border-2 border-sand-300 dark:border-sand-500 bg-white dark:bg-sand-800"></div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+          <span class="text-xs text-sand-500 dark:text-sand-400 whitespace-nowrap">
+            {{ change.changed_at|date:"d. M Y H:i" }}
+          </span>
+          <span class="text-sm text-sand-600 dark:text-sand-300">
+            {{ change.changed_by.get_full_name|default:change.changed_by.username }}
+          </span>
+          <div class="flex items-center gap-1.5">
+            {% if change.from_state %}
+            <span class="badge
+              {% if change.from_state == 'todo' %}bg-sand-200 text-sand-700 dark:bg-sand-600 dark:text-sand-200
+              {% elif change.from_state == 'doing' %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200
+              {% elif change.from_state == 'paused' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+              {% elif change.from_state == 'testing' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200
+              {% elif change.from_state == 'approval' %}bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200
+              {% elif change.from_state == 'complete' %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200
+              {% endif %}">
+              {{ change.get_from_state_display }}
+            </span>
+            <svg class="w-3 h-3 text-sand-400 dark:text-sand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            {% else %}
+            <span class="text-xs text-sand-400 dark:text-sand-500">Oprettet som</span>
+            {% endif %}
+            <span class="badge
+              {% if change.to_state == 'todo' %}bg-sand-200 text-sand-700 dark:bg-sand-600 dark:text-sand-200
+              {% elif change.to_state == 'doing' %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200
+              {% elif change.to_state == 'paused' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+              {% elif change.to_state == 'testing' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200
+              {% elif change.to_state == 'approval' %}bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200
+              {% elif change.to_state == 'complete' %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200
+              {% endif %}">
+              {{ change.get_to_state_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p class="text-sand-500 dark:text-sand-400 text-center py-4">Ingen statusændringer</p>
+  {% endif %}
+</div>

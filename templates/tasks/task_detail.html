@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ task.title }} - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Breadcrumb and header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-sand-500 dark:text-sand-400 mb-1">
+        <a href="{% url 'tasks:task-list' %}" class="hover:text-sand-700 dark:hover:text-sand-200">
+          Opgaver
+        </a>
+        <span>/</span>
+        <span>{{ task.title }}</span>
+      </div>
+      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">
+        {{ task.title }}
+      </h1>
+    </div>
+    {% if is_editor %}
+    <a href="{% url 'tasks:task-edit' task.pk %}" class="btn-secondary btn-sm">
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Rediger
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Info card -->
+  <div class="card">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Left column -->
+      <div class="space-y-4">
+        <div>
+          <h3 class="input-label">Status</h3>
+          {% include 'tasks/partials/task_status_badge.html' %}
+        </div>
+
+        {% if task.description %}
+        <div>
+          <h3 class="input-label">Beskrivelse</h3>
+          <p class="text-sand-700 dark:text-sand-300 whitespace-pre-wrap">{{ task.description }}</p>
+        </div>
+        {% endif %}
+
+        <div>
+          <h3 class="input-label">Oprettet af</h3>
+          <p class="text-sand-700 dark:text-sand-300">
+            {% if task.created_by %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% else %}Ukendt{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <h3 class="input-label">Planlagt start</h3>
+            <p class="text-sand-700 dark:text-sand-300">
+              {% if task.planned_start %}{{ task.planned_start|date:"d. M Y" }}{% else %}-{% endif %}
+            </p>
+          </div>
+          <div>
+            <h3 class="input-label">Planlagt slut</h3>
+            <p class="text-sand-700 dark:text-sand-300">
+              {% if task.planned_end %}{{ task.planned_end|date:"d. M Y" }}{% else %}-{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="input-label">Tildelt</h3>
+          <p class="text-sand-700 dark:text-sand-300">
+            {% for user in task.assigned_to.all %}
+              {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              Ingen
+            {% endfor %}
+          </p>
+        </div>
+
+        <div>
+          <h3 class="input-label">Godkendere</h3>
+          <p class="text-sand-700 dark:text-sand-300">
+            {% for user in task.approvers.all %}
+              {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              Ingen
+            {% endfor %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State history -->
+  <div class="card">
+    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-4">Statushistorik</h2>
+    {% include 'tasks/partials/task_state_history.html' %}
+  </div>
+
+  <!-- Notes section -->
+  <div class="card">
+    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-4">Noter</h2>
+
+    <div id="notes-list" class="space-y-0">
+      {% for note in task.notes.all %}
+        {% include 'tasks/partials/task_note_row.html' %}
+      {% empty %}
+        <p class="text-sand-500 dark:text-sand-400 text-center py-4" id="no-notes">
+          Ingen noter endnu.
+        </p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Note form (editor only) -->
+  {% if is_editor %}
+    {% include 'tasks/partials/task_note_form.html' %}
+  {% endif %}
+
+  <!-- Metadata -->
+  <div class="text-sm text-sand-500 dark:text-sand-400">
+    Oprettet {{ task.created_at|date:"d. M Y H:i" }}
+    {% if task.created_by %}af {{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}
+    &middot;
+    Sidst opdateret {{ task.updated_at|date:"d. M Y H:i" }}
+  </div>
+</div>
+{% endblock %}

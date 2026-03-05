@@ -112,5 +112,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Task Timeline Chart -->
+  <div class="mt-6">
+    <div hx-get="{% url 'dashboard:task-timeline-partial' %}"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+      <!-- Skeleton loader -->
+      <div class="card">
+        <div class="animate-pulse">
+          <div class="h-4 skeleton rounded w-1/4 mb-4"></div>
+          <div class="h-48 skeleton rounded"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

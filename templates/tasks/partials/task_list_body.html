@@ -1,0 +1,9 @@
+{% for task in tasks %}
+  {% include 'tasks/partials/task_row.html' %}
+{% empty %}
+  <tr>
+    <td colspan="5" class="table-cell text-center text-sand-500 dark:text-sand-400 py-8">
+      Ingen opgaver endnu
+    </td>
+  </tr>
+{% endfor %}
