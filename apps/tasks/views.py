@@ -39,7 +39,7 @@ DEFAULT_SORT = ["planned_start", "created_at"]
 def _get_sorted_task_queryset(request):
     """Return task queryset with sorting, select_related, and prefetch_related."""
     qs = Task.objects.select_related("created_by").prefetch_related(
-        "approvers", "assigned_to"
+        "assigned_to"
     )
     sort_param = request.GET.get("sort", "")
     if sort_param in SORT_OPTIONS:
@@ -86,7 +86,6 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
             "notes__author",
             "state_changes",
             "state_changes__changed_by",
-            "approvers",
             "assigned_to",
         )
 
@@ -231,7 +230,7 @@ def task_row(request, pk):
 
     task = get_object_or_404(
         Task.objects.select_related("created_by").prefetch_related(
-            "approvers", "assigned_to"
+            "assigned_to"
         ),
         pk=pk,
     )
@@ -256,7 +255,7 @@ def task_chart_data(request):
 
     tasks = (
         Task.objects.exclude(status=Task.Status.COMPLETE)
-        .prefetch_related("state_changes", "approvers", "assigned_to")
+        .prefetch_related("state_changes", "assigned_to")
     )
 
     data = []
@@ -275,9 +274,7 @@ def task_chart_data(request):
                 }
                 for sc in task.state_changes.all()
             ],
-            "approvers": [
-                u.get_full_name() or u.username for u in task.approvers.all()
-            ],
+            "approvers": task.approvers,
             "assignees": [
                 u.get_full_name() or u.username for u in task.assigned_to.all()
             ],

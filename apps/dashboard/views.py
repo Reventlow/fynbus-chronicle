@@ -209,7 +209,7 @@ def task_timeline_chart_data(request) -> JsonResponse:
     tasks = (
         Task.objects.exclude(status=Task.Status.COMPLETE)
         .select_related("created_by")
-        .prefetch_related("state_changes", "approvers", "assigned_to")
+        .prefetch_related("state_changes", "assigned_to")
         .order_by("planned_start", "created_at")
     )
 
@@ -234,9 +234,7 @@ def task_timeline_chart_data(request) -> JsonResponse:
                     }
                     for sc in task.state_changes.all()
                 ],
-                "approvers": [
-                    u.get_full_name() or u.username for u in task.approvers.all()
-                ],
+                "approvers": task.approvers,
                 "assignees": [
                     u.get_full_name() or u.username
                     for u in task.assigned_to.all()

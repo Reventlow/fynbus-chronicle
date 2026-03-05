@@ -95,15 +95,9 @@
 
       <!-- Approvers -->
       <div>
-        <label class="input-label">Godkendere</label>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
-          {% for checkbox in form.approvers %}
-          <label class="flex items-center gap-2 text-sm text-sand-700 dark:text-sand-300 cursor-pointer">
-            {{ checkbox.tag }}
-            {{ checkbox.choice_label }}
-          </label>
-          {% endfor %}
-        </div>
+        <label for="{{ form.approvers.id_for_label }}" class="input-label">Godkendere</label>
+        {{ form.approvers }}
+        <p class="text-xs text-sand-500 dark:text-sand-400 mt-1">Navne adskilt med komma</p>
         {% if form.approvers.errors %}
           <p class="input-error-message">{{ form.approvers.errors.0 }}</p>
         {% endif %}

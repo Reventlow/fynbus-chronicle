@@ -56,11 +56,11 @@ class Task(models.Model):
         null=True,
         blank=True,
     )
-    approvers = models.ManyToManyField(
-        User,
-        related_name="approved_tasks",
+    approvers = models.CharField(
         verbose_name="Godkendere",
+        max_length=500,
         blank=True,
+        help_text="Navne på godkendere, adskilt med komma",
     )
     assigned_to = models.ManyToManyField(
         User,

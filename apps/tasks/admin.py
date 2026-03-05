@@ -87,7 +87,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ["status", "planned_start", "created_at"]
     search_fields = ["title", "description"]
     readonly_fields = ["created_by", "created_at", "updated_at"]
-    filter_horizontal = ["approvers", "assigned_to"]
+    filter_horizontal = ["assigned_to"]
     inlines = [TaskStateChangeInline, TaskNoteInline]
 
     def colored_status(self, obj: Task) -> str:

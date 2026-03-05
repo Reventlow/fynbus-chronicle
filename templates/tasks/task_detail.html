@@ -86,11 +86,7 @@
         <div>
           <h3 class="input-label">Godkendere</h3>
           <p class="text-sand-700 dark:text-sand-300">
-            {% for user in task.approvers.all %}
-              {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-              Ingen
-            {% endfor %}
+            {{ task.approvers|default:"Ingen" }}
           </p>
         </div>
       </div>

@@ -60,9 +60,10 @@ class TaskForm(forms.ModelForm):
                     "type": "date",
                 }
             ),
-            "approvers": forms.CheckboxSelectMultiple(
+            "approvers": forms.TextInput(
                 attrs={
-                    "class": "checkbox-field",
+                    "class": "input-field",
+                    "placeholder": "F.eks. Anna Lise, Dennis",
                 }
             ),
             "assigned_to": forms.CheckboxSelectMultiple(
@@ -73,10 +74,9 @@ class TaskForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Set querysets for user fields to active users."""
+        """Set queryset for assigned_to to active users."""
         super().__init__(*args, **kwargs)
         active_users = User.objects.filter(is_active=True).order_by("first_name")
-        self.fields["approvers"].queryset = active_users
         self.fields["assigned_to"].queryset = active_users
 
 
