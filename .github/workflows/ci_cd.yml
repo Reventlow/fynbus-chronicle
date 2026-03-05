@@ -9,6 +9,11 @@ on:
 env:
   DOCKER_IMAGE: elohite/chronicle
 
+# Cancel in-progress runs on same branch to avoid Docker Hub rate limits
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Allow workflow to push version updates
 permissions:
   contents: write
