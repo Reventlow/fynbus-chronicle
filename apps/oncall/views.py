@@ -91,6 +91,12 @@ class OnCallCalendarView(LoginRequiredMixin, TemplateView):
 
 
 @login_required
+def oncall_week_status(request, year: int, week: int) -> HttpResponse:
+    """HTMX polling endpoint to refresh a single week card."""
+    return HttpResponse(_render_week_card(request, year, week))
+
+
+@login_required
 @editor_required
 def oncall_claim(request, year: int, week: int) -> HttpResponse:
     """HTMX endpoint to claim an on-call week."""

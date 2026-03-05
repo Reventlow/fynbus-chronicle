@@ -8,6 +8,7 @@ app_name = "oncall"
 
 urlpatterns = [
     path("", views.OnCallCalendarView.as_view(), name="calendar"),
+    path("<int:year>/<int:week>/status/", views.oncall_week_status, name="week-status"),
     path("<int:year>/<int:week>/claim/", views.oncall_claim, name="claim"),
     path("<int:year>/<int:week>/release/", views.oncall_release, name="release"),
 ]

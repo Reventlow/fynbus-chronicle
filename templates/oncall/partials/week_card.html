@@ -1,4 +1,7 @@
 <div id="oncall-week-{{ week.year }}-{{ week.week }}"
+     hx-get="{% url 'oncall:week-status' week.year week.week %}"
+     hx-trigger="every 30s"
+     hx-swap="outerHTML"
      class="card {% if week.is_current %}ring-2 ring-gold-400{% endif %}">
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
