@@ -114,7 +114,6 @@
       <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#priority-items-list"
               hx-swap="beforeend"
-              hx-on::after-settle="var el = document.querySelector('#priority-items-list > :last-child'); el.scrollIntoView({behavior: 'smooth', block: 'center'}); var inp = el.querySelector('input[type=text]'); if (inp) inp.focus();"
               class="btn-secondary btn-sm">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
