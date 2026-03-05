@@ -13,8 +13,26 @@ from django.contrib.auth.models import User
 from .models import Task, TaskNote, TaskNoteAttachment
 
 
+APPROVER_CHOICES = [
+    ("Anna Lise", "Anna Lise"),
+    ("Dennis", "Dennis"),
+    ("Morten", "Morten"),
+    ("Peter", "Peter"),
+    ("Gorm", "Gorm"),
+]
+
+
 class TaskForm(forms.ModelForm):
     """Form for creating and editing tasks."""
+
+    approvers = forms.MultipleChoiceField(
+        label="Godkendere",
+        choices=APPROVER_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(
+            attrs={"class": "checkbox-field"}
+        ),
+    )
 
     class Meta:
         model = Task
@@ -60,12 +78,6 @@ class TaskForm(forms.ModelForm):
                     "type": "date",
                 }
             ),
-            "approvers": forms.TextInput(
-                attrs={
-                    "class": "input-field",
-                    "placeholder": "F.eks. Anna Lise, Dennis",
-                }
-            ),
             "assigned_to": forms.CheckboxSelectMultiple(
                 attrs={
                     "class": "checkbox-field",
@@ -74,10 +86,20 @@ class TaskForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Set queryset for assigned_to to active users."""
+        """Set queryset for assigned_to and load approvers from CSV."""
         super().__init__(*args, **kwargs)
         active_users = User.objects.filter(is_active=True).order_by("first_name")
         self.fields["assigned_to"].queryset = active_users
+        # Load comma-separated approvers string into multi-select initial value
+        if self.instance and self.instance.pk and self.instance.approvers:
+            self.initial["approvers"] = [
+                name.strip() for name in self.instance.approvers.split(",") if name.strip()
+            ]
+
+    def clean_approvers(self):
+        """Convert selected list back to comma-separated string."""
+        selected = self.cleaned_data.get("approvers", [])
+        return ", ".join(selected)
 
 
 class TaskNoteForm(forms.ModelForm):
