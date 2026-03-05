@@ -204,45 +204,57 @@ def task_timeline_chart_data(request) -> JsonResponse:
     Returns non-complete tasks with planned dates, status,
     assignees, and approvers for Gantt chart rendering.
     """
+    import logging
+
     from apps.tasks.models import Task
 
-    tasks = (
-        Task.objects.exclude(status=Task.Status.COMPLETE)
-        .select_related("created_by")
-        .prefetch_related("state_changes", "assigned_to")
-        .order_by("planned_start", "created_at")
-    )
+    logger = logging.getLogger(__name__)
 
-    data = []
-    for task in tasks:
-        data.append(
-            {
-                "id": task.pk,
-                "title": task.title,
-                "planned_start": (
-                    task.planned_start.isoformat() if task.planned_start else None
-                ),
-                "planned_end": (
-                    task.planned_end.isoformat() if task.planned_end else None
-                ),
-                "status": task.status,
-                "state_changes": [
-                    {
-                        "changed_at": sc.changed_at.isoformat(),
-                        "from_state": sc.from_state,
-                        "to_state": sc.to_state,
-                    }
-                    for sc in task.state_changes.all()
-                ],
-                "approvers": task.approvers,
-                "assignees": [
-                    u.get_full_name() or u.username
-                    for u in task.assigned_to.all()
-                ],
-            }
+    try:
+        tasks = (
+            Task.objects.exclude(status=Task.Status.COMPLETE)
+            .select_related("created_by")
+            .prefetch_related("state_changes", "assigned_to")
+            .order_by("planned_start", "created_at")
         )
 
-    return JsonResponse({"tasks": data})
+        data = []
+        for task in tasks:
+            data.append(
+                {
+                    "id": task.pk,
+                    "title": task.title,
+                    "planned_start": (
+                        task.planned_start.isoformat() if task.planned_start else None
+                    ),
+                    "planned_end": (
+                        task.planned_end.isoformat() if task.planned_end else None
+                    ),
+                    "status": task.status,
+                    "state_changes": [
+                        {
+                            "changed_at": sc.changed_at.isoformat(),
+                            "from_state": sc.from_state,
+                            "to_state": sc.to_state,
+                        }
+                        for sc in task.state_changes.all()
+                    ],
+                    "approvers": [
+                        name.strip()
+                        for name in task.approvers.split(",")
+                        if name.strip()
+                    ] if task.approvers else [],
+                    "assignees": [
+                        u.get_full_name() or u.username
+                        for u in task.assigned_to.all()
+                    ],
+                }
+            )
+
+        return JsonResponse({"tasks": data})
+    except Exception:
+        logger.exception("Error in task_timeline_chart_data")
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
 
 class DocsIndexView(LoginRequiredMixin, TemplateView):

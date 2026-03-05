@@ -17,8 +17,11 @@
 (function() {
   setTimeout(function() {
     fetch('{% url "dashboard:api-task-timeline-data" %}', { credentials: 'same-origin' })
-    .then(response => response.json())
-    .then(data => {
+    .then(function(response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    })
+    .then(function(data) {
       var container = document.getElementById('task-timeline-container');
 
       if (!data.tasks || data.tasks.length === 0) {
@@ -37,6 +40,11 @@
           '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Ingen opgaver med planlagte datoer</p>';
         return;
       }
+
+      // Sort by planned_start date
+      tasks.sort(function(a, b) {
+        return new Date(a.planned_start) - new Date(b.planned_start);
+      });
 
       // Status color mapping
       var statusColors = {
@@ -58,26 +66,17 @@
         complete: 'Færdig'
       };
 
-      // Build one dataset per task (floating bar)
-      var datasets = tasks.map(function(task, i) {
-        return {
-          label: task.title,
-          data: [{
-            x: [task.planned_start, task.planned_end],
-            y: task.title
-          }],
-          backgroundColor: statusColors[task.status] || '#9CA3AF',
-          borderRadius: 4,
-          borderSkipped: false,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8,
-          // Store metadata for tooltip and click
-          _taskMeta: task
-        };
+      // Build labels (task titles) and single dataset with per-bar colors
+      var labels = tasks.map(function(t) { return t.title; });
+      var barData = tasks.map(function(t) {
+        return [new Date(t.planned_start).getTime(), new Date(t.planned_end).getTime()];
+      });
+      var barColors = tasks.map(function(t) {
+        return statusColors[t.status] || '#9CA3AF';
       });
 
       // Adjust container height based on number of tasks
-      var chartHeight = Math.max(200, tasks.length * 40 + 80);
+      var chartHeight = Math.max(200, tasks.length * 45 + 80);
       container.style.height = chartHeight + 'px';
 
       // Theme-aware colors
@@ -89,8 +88,15 @@
       new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: tasks.map(function(t) { return t.title; }),
-          datasets: datasets
+          labels: labels,
+          datasets: [{
+            data: barData,
+            backgroundColor: barColors,
+            borderRadius: 4,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+          }]
         },
         options: {
           indexAxis: 'y',
@@ -109,21 +115,20 @@
               callbacks: {
                 title: function(items) {
                   if (!items.length) return '';
-                  var ds = items[0].dataset;
-                  return ds._taskMeta ? ds._taskMeta.title : ds.label;
+                  return tasks[items[0].dataIndex].title;
                 },
                 label: function(context) {
-                  var meta = context.dataset._taskMeta;
-                  if (!meta) return '';
+                  var task = tasks[context.dataIndex];
+                  if (!task) return '';
                   var lines = [];
-                  lines.push('Status: ' + (statusLabels[meta.status] || meta.status));
-                  lines.push('Start: ' + meta.planned_start);
-                  lines.push('Slut: ' + meta.planned_end);
-                  if (meta.assignees && meta.assignees.length > 0) {
-                    lines.push('Tildelt: ' + meta.assignees.join(', '));
+                  lines.push('Status: ' + (statusLabels[task.status] || task.status));
+                  lines.push('Start: ' + task.planned_start);
+                  lines.push('Slut: ' + task.planned_end);
+                  if (task.assignees && task.assignees.length > 0) {
+                    lines.push('Tildelt: ' + task.assignees.join(', '));
                   }
-                  if (meta.approvers && meta.approvers.length > 0) {
-                    lines.push('Godkendere: ' + meta.approvers.join(', '));
+                  if (task.approvers && task.approvers.length > 0) {
+                    lines.push('Godkendere: ' + task.approvers.join(', '));
                   }
                   return lines;
                 }
@@ -134,10 +139,11 @@
             x: {
               type: 'time',
               time: {
-                unit: 'day',
+                unit: 'week',
                 tooltipFormat: 'dd MMM yyyy',
                 displayFormats: {
-                  day: 'dd MMM'
+                  week: 'dd MMM',
+                  month: 'MMM yyyy'
                 }
               },
               grid: {
@@ -145,8 +151,9 @@
               },
               ticks: {
                 color: textColor,
-                maxRotation: 0,
-                autoSkip: true
+                maxRotation: 45,
+                autoSkip: true,
+                maxTicksLimit: 15
               }
             },
             y: {
@@ -155,16 +162,20 @@
               },
               ticks: {
                 color: textColor,
-                font: { size: 12 }
+                font: { size: 12 },
+                // Truncate long task titles
+                callback: function(value, index) {
+                  var label = labels[index];
+                  return label && label.length > 40 ? label.substring(0, 37) + '...' : label;
+                }
               }
             }
           },
           onClick: function(event, elements) {
             if (elements.length > 0) {
-              var idx = elements[0].datasetIndex;
-              var meta = datasets[idx]._taskMeta;
-              if (meta && meta.id) {
-                window.location.href = '/tasks/' + meta.id + '/';
+              var task = tasks[elements[0].index];
+              if (task && task.id) {
+                window.location.href = '/tasks/' + task.id + '/';
               }
             }
           },

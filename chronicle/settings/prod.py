@@ -29,3 +29,30 @@ DATABASE_URL = config("DATABASE_URL", default="")
 if DATABASE_URL:
     import dj_database_url
     DATABASES["default"] = dj_database_url.parse(DATABASE_URL)  # noqa: F405
+
+# Logging - send errors to stdout so they appear in Docker logs
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
