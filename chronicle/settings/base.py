@@ -34,7 +34,6 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.microsoft",
     "django_htmx",
-    "django_apscheduler",
 ]
 
 LOCAL_APPS = [
@@ -198,7 +197,3 @@ SERVICEDESK_URL = config("SERVICEDESK_URL", default="")
 SERVICEDESK_API_KEY = config("SERVICEDESK_API_KEY", default="")
 SERVICEDESK_SYNC_ENABLED = config("SERVICEDESK_SYNC_ENABLED", default=False, cast=bool)
 SERVICEDESK_SYNC_INTERVAL = config("SERVICEDESK_SYNC_INTERVAL", default=300, cast=int)
-
-# APScheduler settings
-APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
-APSCHEDULER_RUN_NOW_TIMEOUT = 25  # seconds

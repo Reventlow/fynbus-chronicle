@@ -1,20 +1,18 @@
 """
-Management command to run the APScheduler for periodic tasks.
+Management command to periodically sync ServiceDesk tickets.
 
 Usage:
     python manage.py run_scheduler
 
-This starts a blocking scheduler that runs periodic tasks like
-syncing ticket counts from ServiceDesk Plus.
+Runs a simple loop that syncs ticket counts every SERVICEDESK_SYNC_INTERVAL
+seconds (default: 300). The dashboard sync button works independently.
 """
 
 import logging
+import time
 
-from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django_apscheduler.jobstores import DjangoJobStore
 
 from apps.logbook.tasks import sync_current_week_tickets
 
@@ -22,44 +20,39 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    """Run the APScheduler for periodic background tasks."""
+    """Run periodic ServiceDesk sync in a simple loop."""
 
-    help = "Run the APScheduler for periodic tasks (ServiceDesk sync, etc.)"
+    help = "Run periodic ServiceDesk sync (loops forever, Ctrl+C to stop)"
 
     def handle(self, *args, **options) -> None:
-        """Start the scheduler with configured jobs."""
-        scheduler = BlockingScheduler()
-        scheduler.add_jobstore(DjangoJobStore(), "default")
-
-        # Get sync interval from settings (default: 5 minutes)
+        """Loop forever: sync tickets, sleep, repeat."""
         interval = getattr(settings, "SERVICEDESK_SYNC_INTERVAL", 300)
         sync_enabled = getattr(settings, "SERVICEDESK_SYNC_ENABLED", False)
 
-        if sync_enabled:
-            scheduler.add_job(
-                sync_current_week_tickets,
-                trigger=IntervalTrigger(seconds=interval),
-                id="sync_servicedesk_tickets",
-                name="Sync ServiceDesk ticket counts",
-                replace_existing=True,
-            )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Added ServiceDesk sync job (every {interval} seconds)"
-                )
-            )
-        else:
+        if not sync_enabled:
             self.stdout.write(
                 self.style.WARNING(
                     "ServiceDesk sync is disabled (SERVICEDESK_SYNC_ENABLED=False)"
                 )
             )
+            return
 
-        self.stdout.write(self.style.SUCCESS("Starting scheduler..."))
-        self.stdout.write("Press Ctrl+C to exit")
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Starting ServiceDesk sync loop (every {interval}s). "
+                "Press Ctrl+C to stop."
+            )
+        )
 
         try:
-            scheduler.start()
+            while True:
+                try:
+                    sync_current_week_tickets()
+                    self.stdout.write(
+                        self.style.SUCCESS("Sync complete, sleeping...")
+                    )
+                except Exception:
+                    logger.exception("Error during sync")
+                time.sleep(interval)
         except KeyboardInterrupt:
-            self.stdout.write(self.style.WARNING("Scheduler stopped"))
-            scheduler.shutdown()
+            self.stdout.write(self.style.WARNING("\nScheduler stopped."))
