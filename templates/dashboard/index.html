@@ -46,7 +46,7 @@
     <!-- Right column: 3 stat cards stacked vertically -->
     <div class="flex flex-col gap-4">
       <!-- Helpdesk stats: Åbne sager + Ugens sager (HTMX loaded + polling every 30s) -->
-      <div class="flex flex-col gap-4"
+      <div id="helpdesk-stats-container" class="flex flex-col gap-4"
            hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
            hx-trigger="load, every 30s"
            hx-swap="innerHTML">

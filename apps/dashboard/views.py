@@ -142,6 +142,59 @@ class FooterVersionPartialView(LoginRequiredMixin, TemplateView):
 
 
 @login_required
+def sync_servicedesk_stats(request):
+    """HTMX endpoint to manually trigger ServiceDesk sync and return updated stats."""
+    import logging
+
+    from apps.logbook.services.servicedesk import ServiceDeskClient
+
+    logger = logging.getLogger(__name__)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    client = ServiceDeskClient()
+    if not client.enabled:
+        logger.warning("ServiceDesk sync triggered but disabled")
+        weeklog = WeekLog.get_current_week()
+        from django.template.loader import render_to_string
+
+        html = render_to_string(
+            "dashboard/partials/helpdesk_stats.html",
+            {"weeklog": weeklog, "sync_error": "ServiceDesk sync er deaktiveret"},
+            request=request,
+        )
+        from django.http import HttpResponse
+
+        return HttpResponse(html)
+
+    try:
+        weeklog = WeekLog.get_or_create_current_week()
+        stats = client.get_week_stats(weeklog.year, weeklog.week_number)
+        weeklog.helpdesk_new = stats["created"]
+        weeklog.helpdesk_closed = stats["closed"]
+        weeklog.helpdesk_open = stats["open"]
+        weeklog.save(
+            update_fields=["helpdesk_new", "helpdesk_closed", "helpdesk_open", "updated_at"]
+        )
+        logger.info("Manual sync: %s new=%d closed=%d open=%d",
+                     weeklog.week_label, stats["created"], stats["closed"], stats["open"])
+    except Exception:
+        logger.exception("Manual ServiceDesk sync failed")
+        weeklog = WeekLog.get_current_week()
+
+    from django.http import HttpResponse
+    from django.template.loader import render_to_string
+
+    html = render_to_string(
+        "dashboard/partials/helpdesk_stats.html",
+        {"weeklog": weeklog},
+        request=request,
+    )
+    return HttpResponse(html)
+
+
+@login_required
 def helpdesk_chart_data(request) -> JsonResponse:
     """
     API endpoint for helpdesk chart data.

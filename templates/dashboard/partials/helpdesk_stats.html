@@ -1,6 +1,19 @@
 <!-- Åbne sager card -->
 <div class="card flex flex-col justify-center">
-  <div class="text-sm text-sand-500 dark:text-sand-400 mb-1">Åbne sager</div>
+  <div class="flex items-center justify-between mb-1">
+    <div class="text-sm text-sand-500 dark:text-sand-400">Åbne sager</div>
+    <button hx-post="{% url 'dashboard:sync-servicedesk' %}"
+            hx-target="#helpdesk-stats-container"
+            hx-swap="innerHTML"
+            class="sync-btn p-1 text-sand-400 hover:text-sand-600 dark:hover:text-sand-300 rounded hover:bg-sand-200 dark:hover:bg-sand-700 transition-colors"
+            title="Synkroniser med ServiceDesk"
+            onclick="this.querySelector('svg').classList.add('animate-spin')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+    </button>
+  </div>
   <div class="text-3xl font-bold text-sand-800 dark:text-sand-100">
     {{ weeklog.helpdesk_open|default:"—" }}
   </div>
@@ -8,6 +21,9 @@
     <div class="text-sm mt-2 {% if weeklog.helpdesk_delta > 0 %}text-terracotta-500{% elif weeklog.helpdesk_delta < 0 %}text-sage-500{% else %}text-sand-500{% endif %}">
       {% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }} denne uge
     </div>
+  {% endif %}
+  {% if sync_error %}
+    <div class="text-xs text-terracotta-500 mt-1">{{ sync_error }}</div>
   {% endif %}
 </div>
 

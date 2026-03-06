@@ -50,6 +50,12 @@ urlpatterns = [
         views.TaskTimelinePartialView.as_view(),
         name="task-timeline-partial",
     ),
+    # Actions
+    path(
+        "api/sync-servicedesk/",
+        views.sync_servicedesk_stats,
+        name="sync-servicedesk",
+    ),
     # Chart data APIs
     path("api/helpdesk-data/", views.helpdesk_chart_data, name="api-helpdesk-data"),
     path(
