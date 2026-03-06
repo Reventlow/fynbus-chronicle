@@ -1,7 +1,7 @@
 <div class="p-4 bg-sand-100 dark:bg-sand-700 rounded-lg border border-sand-300 dark:border-sand-600"
      id="priority-item-form-container"
      hx-on:closePriorityItemForm="this.remove()"
-     x-data x-init="$nextTick(() => { $el.scrollIntoView({behavior: 'smooth', block: 'center'}); $el.querySelector('input[type=text]')?.focus(); })"
+     x-data x-init="$nextTick(() => { $el.scrollIntoView({behavior: 'smooth', block: 'center'}); $el.querySelector('input[type=text]')?.focus(); })">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:priority-item-edit' object.pk %}{% else %}{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog_id }}{% endif %}"
         hx-target="{% if object %}#priority-item-form-container{% else %}#priority-items-list{% endif %}"
