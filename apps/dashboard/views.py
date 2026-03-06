@@ -201,18 +201,31 @@ def task_timeline_chart_data(request) -> JsonResponse:
     """
     JSON API endpoint for task timeline chart data.
 
-    Returns non-complete tasks with planned dates, status,
-    assignees, and approvers for Gantt chart rendering.
+    Returns active tasks plus recently completed tasks (within 7 days)
+    with planned dates, status, assignees, and approvers for Gantt chart.
     """
     import logging
+    from datetime import timedelta
+
+    from django.db.models import Q
+    from django.utils import timezone
 
     from apps.tasks.models import Task
 
     logger = logging.getLogger(__name__)
 
     try:
+        one_week_ago = timezone.now() - timedelta(days=7)
         tasks = (
-            Task.objects.exclude(status=Task.Status.COMPLETE)
+            Task.objects.filter(
+                Q(~Q(status=Task.Status.COMPLETE))
+                | Q(
+                    status=Task.Status.COMPLETE,
+                    state_changes__to_state="complete",
+                    state_changes__changed_at__gte=one_week_ago,
+                )
+            )
+            .distinct()
             .select_related("created_by")
             .prefetch_related("state_changes", "assigned_to")
             .order_by("planned_start", "created_at")

@@ -66,14 +66,87 @@
         complete: 'Færdig'
       };
 
-      // Build labels (task titles) and single dataset with per-bar colors
+      // Build labels (task titles)
       var labels = tasks.map(function(t) { return t.title; });
-      var barData = tasks.map(function(t) {
-        return [new Date(t.planned_start).getTime(), new Date(t.planned_end).getTime()];
+
+      // Build time segments per task from state_changes
+      var taskSegments = tasks.map(function(t) {
+        var segments = [];
+        var changes = (t.state_changes || []).slice().sort(function(a, b) {
+          return new Date(a.changed_at) - new Date(b.changed_at);
+        });
+
+        var start = new Date(t.planned_start).getTime();
+        var end = new Date(t.planned_end).getTime();
+
+        // For completed tasks, end the bar at the completion date
+        if (t.status === 'complete') {
+          for (var c = changes.length - 1; c >= 0; c--) {
+            if (changes[c].to_state === 'complete') {
+              end = new Date(changes[c].changed_at).getTime();
+              break;
+            }
+          }
+        }
+
+        if (changes.length === 0) {
+          // No state changes — single segment with current status
+          segments.push({ state: t.status, start: start, end: end });
+        } else {
+          // First segment: from planned_start to first state change
+          var firstChangeTime = new Date(changes[0].changed_at).getTime();
+          if (firstChangeTime > start) {
+            segments.push({
+              state: changes[0].from_state || t.status,
+              start: start,
+              end: Math.min(firstChangeTime, end)
+            });
+          }
+
+          // Segments between state changes
+          for (var i = 0; i < changes.length; i++) {
+            var segStart = new Date(changes[i].changed_at).getTime();
+            var segEnd = (i + 1 < changes.length)
+              ? new Date(changes[i + 1].changed_at).getTime()
+              : end;
+            if (segStart < end) {
+              segments.push({
+                state: changes[i].to_state,
+                start: Math.max(segStart, start),
+                end: Math.min(segEnd, end)
+              });
+            }
+          }
+        }
+
+        return segments;
       });
-      var barColors = tasks.map(function(t) {
-        return statusColors[t.status] || '#9CA3AF';
-      });
+
+      // Create datasets: one per segment slot, colored by state
+      var maxSegments = Math.max.apply(null, taskSegments.map(function(s) { return s.length; }));
+      var datasets = [];
+      for (var s = 0; s < maxSegments; s++) {
+        var segData = [];
+        var segColors = [];
+        for (var t = 0; t < tasks.length; t++) {
+          if (s < taskSegments[t].length) {
+            var seg = taskSegments[t][s];
+            segData.push([seg.start, seg.end]);
+            segColors.push(statusColors[seg.state] || '#9CA3AF');
+          } else {
+            segData.push(null);
+            segColors.push('transparent');
+          }
+        }
+        datasets.push({
+          data: segData,
+          backgroundColor: segColors,
+          borderRadius: 2,
+          borderSkipped: false,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8
+        });
+      }
 
       // Adjust container height based on number of tasks
       var chartHeight = Math.max(200, tasks.length * 45 + 80);
@@ -89,14 +162,7 @@
         type: 'bar',
         data: {
           labels: labels,
-          datasets: [{
-            data: barData,
-            backgroundColor: barColors,
-            borderRadius: 4,
-            borderSkipped: false,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          }]
+          datasets: datasets
         },
         options: {
           indexAxis: 'y',
@@ -104,7 +170,23 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: true,
+              position: 'bottom',
+              labels: {
+                color: textColor,
+                generateLabels: function() {
+                  var keys = Object.keys(statusColors);
+                  return keys.map(function(key) {
+                    return {
+                      text: statusLabels[key] || key,
+                      fillStyle: statusColors[key],
+                      strokeStyle: statusColors[key],
+                      lineWidth: 0,
+                      borderRadius: 2
+                    };
+                  });
+                }
+              }
             },
             tooltip: {
               backgroundColor: isDark ? '#4A4540' : '#FFFFFF',
@@ -118,12 +200,20 @@
                   return tasks[items[0].dataIndex].title;
                 },
                 label: function(context) {
-                  var task = tasks[context.dataIndex];
+                  var taskIdx = context.dataIndex;
+                  var segIdx = context.datasetIndex;
+                  var task = tasks[taskIdx];
                   if (!task) return '';
+                  var seg = taskSegments[taskIdx][segIdx];
+                  if (!seg) return '';
                   var lines = [];
-                  lines.push('Status: ' + (statusLabels[task.status] || task.status));
-                  lines.push('Start: ' + task.planned_start);
-                  lines.push('Slut: ' + task.planned_end);
+                  var fmtDate = function(ms) {
+                    var d = new Date(ms);
+                    return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+                  };
+                  lines.push('Status: ' + (statusLabels[seg.state] || seg.state));
+                  lines.push('Fra: ' + fmtDate(seg.start));
+                  lines.push('Til: ' + fmtDate(seg.end));
                   if (task.assignees && task.assignees.length > 0) {
                     lines.push('Tildelt: ' + task.assignees.join(', '));
                   }
