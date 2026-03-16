@@ -3,7 +3,7 @@
 
 services:
   web:
-    image: elohite/chronicle:0.1.52
+    image: elohite/chronicle:0.1.53
     # To build locally instead of pulling from DockerHub, comment above and uncomment:
     # build:
     #   context: .
@@ -53,11 +53,12 @@ services:
 
   # ServiceDesk sync scheduler
   sync:
-    image: elohite/chronicle:0.1.52
+    image: elohite/chronicle:0.1.53
     # To build locally instead of pulling from DockerHub, comment above and uncomment:
     # build:
     #   context: .
     #   dockerfile: docker/Dockerfile.sync
+    command: ["python", "manage.py", "run_scheduler"]
     environment:
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY}
