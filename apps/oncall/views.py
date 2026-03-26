@@ -27,16 +27,16 @@ def _get_week_dates(year: int, week: int) -> tuple[datetime, datetime]:
     return monday, sunday
 
 
-def _build_weeks_context(user) -> list[dict]:
-    """Build context data for 13 weeks starting from current week."""
+def _build_weeks_context(user, num_weeks: int = 13) -> list[dict]:
+    """Build context data for num_weeks weeks starting from current week."""
     now = timezone.now()
     iso = now.isocalendar()
     current_year, current_week = iso.year, iso.week
 
     weeks = []
-    # Start from current week, iterate 13 weeks
+    # Start from current week, iterate num_weeks weeks
     date = now.date() - timedelta(days=now.weekday())  # Monday of current week
-    for i in range(13):
+    for i in range(num_weeks):
         week_date = date + timedelta(weeks=i)
         iso_cal = week_date.isocalendar()
         year, week = iso_cal[0], iso_cal[1]
@@ -79,14 +79,24 @@ def _render_week_card(request, year: int, week: int) -> str:
     return render_to_string("oncall/partials/week_card.html", context, request=request)
 
 
+ALLOWED_WEEK_RANGES = {13, 56}
+
+
 class OnCallCalendarView(LoginRequiredMixin, TemplateView):
-    """Calendar grid showing 13 weeks of on-call assignments."""
+    """Calendar grid showing on-call assignments."""
 
     template_name = "oncall/calendar.html"
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
-        context["weeks"] = _build_weeks_context(self.request.user)
+        try:
+            num_weeks = int(self.request.GET.get("weeks", 13))
+        except (TypeError, ValueError):
+            num_weeks = 13
+        if num_weeks not in ALLOWED_WEEK_RANGES:
+            num_weeks = 13
+        context["weeks"] = _build_weeks_context(self.request.user, num_weeks)
+        context["num_weeks"] = num_weeks
         return context
 
 

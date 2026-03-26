@@ -5,9 +5,21 @@
 {% block content %}
 <div class="space-y-6">
   <!-- Page header -->
-  <div>
-    <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Rådighedsvagt</h1>
-    <p class="text-sand-500 dark:text-sand-400 mt-1">Planlæg hvem der har rådighedsvagt de kommende uger</p>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Rådighedsvagt</h1>
+      <p class="text-sand-500 dark:text-sand-400 mt-1">Planlæg hvem der har rådighedsvagt de kommende uger</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="?weeks=13"
+         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 13 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
+        13 uger
+      </a>
+      <a href="?weeks=56"
+         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 56 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
+        56 uger
+      </a>
+    </div>
   </div>
 
   <!-- Calendar grid -->
