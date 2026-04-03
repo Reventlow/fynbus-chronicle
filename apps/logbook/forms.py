@@ -206,6 +206,19 @@ class MeetingMinutesForm(forms.ModelForm):
 class IncidentForm(forms.ModelForm):
     """Form for creating and editing incidents."""
 
+    occurred_at = forms.DateTimeField(
+        label="Tidspunkt",
+        widget=forms.DateTimeInput(
+            attrs={
+                "class": "input-field",
+                "type": "datetime-local",
+            },
+            format="%Y-%m-%dT%H:%M",
+        ),
+        input_formats=["%Y-%m-%dT%H:%M"],
+        localize=False,
+    )
+
     class Meta:
         model = Incident
         fields = [
@@ -240,13 +253,6 @@ class IncidentForm(forms.ModelForm):
                     "rows": 4,
                     "placeholder": "Beskriv hændelsen...",
                 }
-            ),
-            "occurred_at": forms.DateTimeInput(
-                attrs={
-                    "class": "input-field",
-                    "type": "datetime-local",
-                },
-                format="%Y-%m-%dT%H:%M",
             ),
             "resolved": forms.CheckboxInput(
                 attrs={
