@@ -245,7 +245,8 @@ class IncidentForm(forms.ModelForm):
                 attrs={
                     "class": "input-field",
                     "type": "datetime-local",
-                }
+                },
+                format="%Y-%m-%dT%H:%M",
             ),
             "resolved": forms.CheckboxInput(
                 attrs={
