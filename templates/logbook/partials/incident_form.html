@@ -3,8 +3,8 @@
      hx-on:closeIncidentForm="this.remove()">
   <form method="post"
         hx-post="{% if object %}{% url 'logbook:incident-edit' object.pk %}{% else %}{% url 'logbook:incident-create' %}?weeklog={{ weeklog_id }}{% endif %}"
-        hx-target="{% if object %}#incident-{{ object.id }}{% else %}#incidents-list{% endif %}"
-        hx-swap="{% if object %}outerHTML{% else %}beforeend{% endif %}"
+        hx-target="{% if object %}#incident-form-container{% else %}#incidents-list{% endif %}"
+        hx-swap="outerHTML"
         class="space-y-4">
     {% csrf_token %}
 
