@@ -23,7 +23,10 @@ from apps.oncall.models import OnCallDuty
 DOCS_DIR = Path(settings.BASE_DIR) / "docs"
 LICENSE_FILE = Path(settings.BASE_DIR) / "LICENSE"
 
+CHANGELOG_FILE = Path(settings.BASE_DIR) / "CHANGELOG.md"
+
 DOCS_PAGES = {
+    "changelog": {"file": None, "title": "Changelog", "icon": "clock"},  # Special case
     "setup": {"file": "SETUP.md", "title": "Opsætning", "icon": "wrench"},
     "development": {"file": "DEVELOPMENT.md", "title": "Udvikling", "icon": "code"},
     "deployment": {"file": "DEPLOYMENT.md", "title": "Deployment", "icon": "server"},
@@ -353,11 +356,20 @@ class DocsPageView(LoginRequiredMixin, TemplateView):
         context["docs_pages"] = DOCS_PAGES
         context["current_slug"] = slug
 
-        # Handle license file specially
-        if slug == "license":
+        # Handle special-case files
+        if slug == "changelog":
+            if CHANGELOG_FILE.exists():
+                md_content = CHANGELOG_FILE.read_text(encoding="utf-8")
+                md = markdown.Markdown(
+                    extensions=["fenced_code", "tables", "toc", "sane_lists"]
+                )
+                context["content"] = md.convert(md_content)
+                context["toc"] = md.toc
+            else:
+                context["content"] = "<p>Changelog not found.</p>"
+        elif slug == "license":
             if LICENSE_FILE.exists():
                 content = LICENSE_FILE.read_text(encoding="utf-8")
-                # Wrap in code block for license
                 context["content"] = f"<pre class='license-text'>{content}</pre>"
             else:
                 context["content"] = "<p>License file not found.</p>"
