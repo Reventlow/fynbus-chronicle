@@ -54,6 +54,9 @@ jobs:
       # 1. Check out repository
       - uses: actions/checkout@v4
 
+      - name: Read version from version.txt
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -70,6 +73,7 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ env.VERSION }}
             ${{ env.DOCKER_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
