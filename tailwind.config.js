@@ -62,9 +62,24 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
+      letterSpacing: {
+        'display': '-0.04em',    // Headings 2xl+ (Notion/Linear-inspired)
+        'heading': '-0.025em',   // Headings lg-xl
+        'tight': '-0.015em',     // Sub-headings
+        'micro': '0.01em',       // Badges/labels (Notion positive tracking)
+      },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'soft-lg': '0 10px 40px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        // Notion-inspired: 4-layer card shadow with sub-0.05 opacity per layer
+        'soft': 'rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2px 8px, rgba(0,0,0,0.02) 0px 0.8px 3px, rgba(0,0,0,0.01) 0px 0.2px 1px',
+        // Cal.com-inspired: ring + diffused + contact shadow for elevated cards
+        'soft-lg': 'rgba(0,0,0,0.06) 0px 0px 0px 1px, rgba(0,0,0,0.05) 0px 4px 8px, rgba(0,0,0,0.5) 0px 1px 5px -4px',
+        // Notion deep: 5-layer for modals and dropdowns
+        'deep': 'rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px',
+        // Cal.com inset highlight for active/pressed buttons
+        'inset-highlight': 'rgba(255,255,255,0.15) 0px 2px 0px inset',
+      },
+      borderRadius: {
+        '2xl': '1rem',   // Featured cards (Notion 16px)
       },
     },
   },
