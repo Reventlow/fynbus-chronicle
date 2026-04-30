@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.5 — 2026-04-30
+
+### Removed
+- "Opgave Tidslinje" Gantt-style card pulled from the bottom of the dashboard. The `dashboard:task-timeline-partial` endpoint and its API still exist for any external use, but it no longer renders on the kontrolpanel.
+
 ## 0.2.4 — 2026-04-30
 
 ### Removed

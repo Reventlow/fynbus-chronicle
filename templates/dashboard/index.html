@@ -174,14 +174,5 @@
     </div>
   </div>
 
-  {# === Task timeline (full width) ========================================= #}
-  <div hx-get="{% url 'dashboard:task-timeline-partial' %}"
-       hx-trigger="load, every 60s"
-       hx-swap="innerHTML">
-    <div class="card animate-pulse">
-      <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 14px;"></div>
-      <div class="skeleton" style="height: 200px; width: 100%;"></div>
-    </div>
-  </div>
 </div>
 {% endblock %}
