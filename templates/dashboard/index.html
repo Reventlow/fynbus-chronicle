@@ -1,25 +1,57 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Kontrolpanel - FynBus Chronicle{% endblock %}
+{% block title %}Kontrolpanel — FynBus Chronicle{% endblock %}
 
 {% block extra_js_head %}
 <script src="{% static 'js/chart.min.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-  <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# === Editorial header band ============================================== #}
+  <div class="flex flex-wrap items-end justify-between gap-6">
     <div>
-      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Kontrolpanel</h1>
-      <p class="text-sand-500 dark:text-sand-400 mt-1 text-[15px]">Overblik over IT-afdelingens ugelige aktiviteter</p>
+      <div class="label-eyebrow" style="margin-bottom: 10px;">
+        {% now "\\U\\g\\e W · j N Y" %}
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Godmorgen, {{ user.first_name|default:user.get_short_name|default:user.username }}.
+        <span class="display-italic" style="color: var(--ink-3);">her er ugen.</span>
+      </h1>
+      <div style="margin-top: 12px; color: var(--ink-3); font-size: 14.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+        <span class="inline-flex items-center" style="gap: 6px;">
+          <span class="pill-dot animate-pulse-glow" style="background: var(--good);"></span>
+          Live · synkroniseret kl <span class="num">{% now "H:i" %}</span>
+        </span>
+        <span style="color: var(--ink-5);">·</span>
+        <span hx-get="{% url 'dashboard:partial-incidents' %}"
+              hx-trigger="load"
+              hx-select="[data-incident-count]"
+              hx-swap="innerHTML">
+          <span class="num">—</span> hændelser denne uge
+        </span>
+        <span style="color: var(--ink-5);">·</span>
+        <span hx-get="{% url 'dashboard:partial-oncall' %}"
+              hx-trigger="load"
+              hx-select="[data-oncall-name]"
+              hx-swap="innerHTML">
+          Rådighedsvagt: <strong style="color: var(--ink-1); font-weight: 600;">…</strong>
+        </span>
+      </div>
     </div>
     {% if is_editor %}
-    <div class="flex space-x-3">
-      <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    <div class="flex gap-2">
+      <a href="{% url 'logbook:weeklog-list' %}" class="btn btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Eksportér
+      </a>
+      <a href="{% url 'logbook:weeklog-create' %}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
         </svg>
         Ny ugelog
       </a>
@@ -27,104 +59,132 @@
     {% endif %}
   </div>
 
-  <!-- Top section: week overview (left) + stat cards (right) -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-    <!-- Current week card (HTMX loaded + polling) - spans 2 columns -->
-    <div class="lg:col-span-2 h-full"
-         hx-get="{% url 'dashboard:partial-current-week' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <div class="card animate-pulse h-64">
-        <div class="skeleton h-6 w-32 mb-4"></div>
-        <div class="skeleton h-4 w-full mb-2"></div>
-        <div class="skeleton h-4 w-3/4 mb-6"></div>
-        <div class="skeleton h-4 w-1/2 mb-2"></div>
-        <div class="skeleton h-4 w-2/3"></div>
+  {# === KPI strip — helpdesk stats ========================================= #}
+  <div id="helpdesk-stats-container"
+       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+       style="gap: var(--gutter);"
+       hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
+       hx-trigger="load, every 30s"
+       hx-swap="innerHTML">
+    {# Skeleton loader — 4 cards #}
+    {% for _ in "1234" %}
+      <div class="card flex flex-col gap-3">
+        <div class="skeleton" style="height: 12px; width: 96px;"></div>
+        <div class="skeleton" style="height: 38px; width: 64px;"></div>
+        <div class="skeleton" style="height: 34px; width: 100%;"></div>
       </div>
-    </div>
-
-    <!-- Right column: 3 stat cards stacked vertically -->
-    <div class="flex flex-col gap-4">
-      <!-- Helpdesk stats: Åbne sager + Ugens sager (HTMX loaded + polling every 30s) -->
-      <div id="helpdesk-stats-container" class="flex flex-col gap-4"
-           hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
-           hx-trigger="load, every 30s"
-           hx-swap="innerHTML">
-        <div class="card flex flex-col justify-center animate-pulse">
-          <div class="skeleton h-4 w-20 mb-2"></div>
-          <div class="skeleton h-8 w-16"></div>
-        </div>
-        <div class="card flex flex-col justify-center animate-pulse">
-          <div class="skeleton h-4 w-20 mb-2"></div>
-          <div class="skeleton h-8 w-32"></div>
-        </div>
-      </div>
-
-      <!-- On-call status (HTMX loaded + polling every 60s) -->
-      <div hx-get="{% url 'dashboard:partial-oncall' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card flex flex-col justify-center animate-pulse">
-          <div class="skeleton h-4 w-24 mb-2"></div>
-          <div class="skeleton h-6 w-32"></div>
-        </div>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
-  <!-- Charts + incidents grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-    <!-- Left column: both charts stacked with tight gap -->
-    <div class="lg:col-span-2 flex flex-col gap-3">
-      <!-- Helpdesk open-tickets chart -->
-      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card animate-pulse h-80">
-          <div class="skeleton h-6 w-40 mb-4"></div>
-          <div class="skeleton h-64 w-full"></div>
+  {# === Main grid: chart (1.7fr) + side rail (1fr) ========================= #}
+  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.7fr)_minmax(0,1fr)]"
+       style="gap: var(--gutter);">
+
+    {# === Flow chart card === #}
+    <div class="card overflow-hidden" style="padding: 0;">
+      <div class="flex items-start justify-between" style="padding: 20px 24px 12px;">
+        <div>
+          <div class="label-eyebrow">Helpdesk · 12 uger</div>
+          <h2 style="margin: 6px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+            Ny vs. lukket — flow over tid
+          </h2>
+        </div>
+        <div class="segmented">
+          <button type="button" class="segmented-btn segmented-btn-active">12U</button>
+          <button type="button" class="segmented-btn">26U</button>
+          <button type="button" class="segmented-btn">12M</button>
         </div>
       </div>
 
-      <!-- Helpdesk new vs closed chart -->
       <div hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
            hx-trigger="load, every 60s"
            hx-swap="innerHTML">
-        <div class="card animate-pulse h-80">
-          <div class="skeleton h-6 w-48 mb-4"></div>
-          <div class="skeleton h-64 w-full"></div>
+        <div class="animate-pulse" style="padding: 0 24px;">
+          <div class="skeleton" style="height: 220px; width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6"
+           style="padding: 12px 24px 20px; border-top: 1px solid var(--hairline); margin-top: 4px; font-size: 12.5px; color: var(--ink-3);">
+        <div class="flex items-center gap-2">
+          <span style="width: 12px; height: 3px; background: var(--info); border-radius: 2px;"></span>
+          Nye sager
+        </div>
+        <div class="flex items-center gap-2">
+          <span style="width: 12px; height: 3px; background: var(--good); border-radius: 2px;"></span>
+          Lukkede sager
+        </div>
+        <div class="ml-auto label-eyebrow" style="font-size: 10.5px;">
+          Kilde: ManageEngine · synk hver 30. min
         </div>
       </div>
     </div>
 
-    <!-- Right column: incidents spanning full height of both charts -->
-    <div class="h-full"
-         hx-get="{% url 'dashboard:partial-incidents' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <div class="card animate-pulse h-full min-h-80">
-        <div class="skeleton h-6 w-32 mb-4"></div>
-        <div class="space-y-3">
-          <div class="skeleton h-16 w-full"></div>
-          <div class="skeleton h-16 w-full"></div>
-          <div class="skeleton h-16 w-full"></div>
+    {# === Right rail: on-call + system status === #}
+    <div class="flex flex-col" style="gap: var(--gutter);">
+      <div hx-get="{% url 'dashboard:partial-oncall' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse">
+          <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+          <div class="skeleton" style="height: 44px; width: 220px;"></div>
+        </div>
+      </div>
+
+      <div hx-get="{% url 'dashboard:partial-current-week' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse">
+          <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 12px;"></div>
+          <div class="skeleton" style="height: 18px; width: 200px; margin-bottom: 10px;"></div>
+          <div class="skeleton" style="height: 14px; width: 100%;"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Task Timeline Chart -->
-  <div class="mt-6">
-    <div hx-get="{% url 'dashboard:task-timeline-partial' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <!-- Skeleton loader -->
-      <div class="card">
-        <div class="animate-pulse">
-          <div class="h-4 skeleton rounded w-1/4 mb-4"></div>
-          <div class="h-48 skeleton rounded"></div>
+  {# === Tasks + incidents row ============================================= #}
+  <div class="grid grid-cols-1 lg:grid-cols-2" style="gap: var(--gutter);">
+
+    {# Helpdesk open-tickets chart (kept) #}
+    <div class="card overflow-hidden" style="padding: 0;">
+      <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+        <div>
+          <div class="label-eyebrow">Helpdesk</div>
+          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+            Åbne sager — udvikling
+          </h2>
         </div>
       </div>
+      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="animate-pulse" style="padding: 0 24px 20px;">
+          <div class="skeleton" style="height: 240px; width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    {# Incidents #}
+    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse">
+        <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  {# === Task timeline (full width) ========================================= #}
+  <div hx-get="{% url 'dashboard:task-timeline-partial' %}"
+       hx-trigger="load, every 60s"
+       hx-swap="innerHTML">
+    <div class="card animate-pulse">
+      <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 14px;"></div>
+      <div class="skeleton" style="height: 200px; width: 100%;"></div>
     </div>
   </div>
 </div>

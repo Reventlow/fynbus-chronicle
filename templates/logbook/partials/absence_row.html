@@ -1,37 +1,47 @@
-<div class="flex items-center justify-between p-3 bg-sand-50 dark:bg-sand-700 rounded-lg border border-sand-200 dark:border-sand-600"
+{# Absence / staffing row — gradient avatar + name + kind pill + mono date range. #}
+<div class="grid items-center gap-3 row-hoverable"
+     style="grid-template-columns: 32px 1fr auto auto auto;
+            padding: 12px 24px;
+            border-top: 1px solid var(--hairline);
+            transition: background 0.12s;"
      id="absence-{{ absence.id }}"
      hx-target="this"
-     hx-swap="outerHTML">
-  <div class="flex-grow min-w-0">
-    <div class="flex items-center gap-2">
-      <span class="font-medium text-sand-800 dark:text-sand-100">{{ absence.staff_name }}</span>
-      <span class="badge badge-primary">{{ absence.get_absence_type_display }}</span>
-    </div>
-    <p class="text-sm text-sand-600 dark:text-sand-400 mt-1">
-      {{ absence.start_date|date:"d. M" }} - {{ absence.end_date|date:"d. M Y" }}
-      ({{ absence.duration_days }} dag{{ absence.duration_days|pluralize:"e" }})
-      {% if absence.notes %}&middot; {{ absence.notes }}{% endif %}
-    </p>
+     hx-swap="outerHTML"
+     onmouseover="this.style.background='var(--surface-2)'"
+     onmouseout="this.style.background='transparent'">
+
+  <span class="avatar avatar-32 avatar-gradient">{{ absence.staff_name|slice:":2"|upper }}</span>
+
+  <div style="min-width: 0;">
+    <div style="font-size: 13.5px; font-weight: 500; color: var(--ink-1);">{{ absence.staff_name }}</div>
+    {% if absence.notes %}
+      <div style="font-size: 12px; color: var(--ink-4); margin-top: 2px;">{{ absence.notes }}</div>
+    {% endif %}
   </div>
+
+  <span class="pill pill-info">{{ absence.get_absence_type_display }}</span>
+
+  <span class="num" style="font-size: 12.5px; color: var(--ink-3); min-width: 200px; text-align: right;">
+    {{ absence.start_date|date:"D j. M" }} → {{ absence.end_date|date:"D j. M" }}
+  </span>
+
   {% if is_editor %}
-  <div class="flex items-center gap-1 ml-4">
-    <button hx-get="{% url 'logbook:absence-edit' absence.pk %}"
-            class="p-1.5 text-sand-500 hover:text-sand-700 dark:hover:text-sand-300 rounded hover:bg-sand-200 dark:hover:bg-sand-700"
-            title="Rediger">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+  <div class="flex items-center gap-1">
+    <button hx-get="{% url 'logbook:absence-edit' absence.pk %}" class="icon-btn" style="width: 26px; height: 26px;" title="Rediger">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
     </button>
     <button hx-delete="{% url 'logbook:absence-delete' absence.pk %}"
             hx-confirm="Er du sikker på, at du vil slette denne bemanding?"
-            class="p-1.5 text-sand-500 hover:text-terracotta-600 dark:hover:text-terracotta-400 rounded hover:bg-sand-200 dark:hover:bg-sand-700"
-            title="Slet">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            class="icon-btn" style="width: 26px; height: 26px;" title="Slet">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
     </button>
   </div>
+  {% else %}
+    <span></span>
   {% endif %}
 </div>

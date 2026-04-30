@@ -2,6 +2,20 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.1.61 — 2026-04-30
+
+### Changed
+- Implement editorial Chronicle redesign from `chronicle.zip` design handoff: switch to Inter Tight + Instrument Serif + JetBrains Mono fonts, slate-cool OKLCH ink palette, normalized semantic color tokens (`--paper`, `--surface-1`, `--ink-1…5`, `--accent`, `--good`, `--warn`, `--bad`, `--info`)
+- Rebuild navigation shell as sticky blurred top bar with brand mark, search affordance, theme toggle, density/accent tweaks panel, bell, and gradient-avatar user dropdown
+- Rebuild dashboard with editorial header band ("Godmorgen, {name}. her er ugen."), live sync indicator, 4-card KPI strip, 1.7fr/1fr grid (flow chart + on-call/current-week rail), incidents list with severity rail
+- Rebuild weeklog detail with breadcrumb, 64px Instrument Serif H1, KPI strip, pull-quote summary card, restyled priority/absence/incident rows (drag handle, custom check, gradient avatars, collapsible incidents)
+- Recolor Chart.js helpdesk charts to use the new CSS-variable palette so they react to dark mode and accent changes
+- Add `data-density="compact"` and `data-accent="sage|terracotta|ink"` modifiers wired via Alpine + localStorage
+
+### Added
+- `templates/components/{pill,avatar,kpi_card,section_head,segmented,tabs}.html` reusable partials
+- `slideIn` and `pulseGlow` keyframes for inline-edit animations and live sync dot
+
 ## 0.1.60 — 2026-04-11
 
 ### Changed

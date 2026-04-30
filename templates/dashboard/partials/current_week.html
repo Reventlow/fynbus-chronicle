@@ -1,37 +1,30 @@
-<div class="card h-full">
+{# Current week card — system status / activity summary card on the dashboard rail. #}
+<div class="card">
   {% if weeklog %}
-    <div class="flex items-start justify-between mb-4">
+    <div class="flex items-start justify-between" style="margin-bottom: 14px;">
       <div>
-        <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
+        <div class="label-eyebrow">Aktuel ugelog</div>
+        <h2 style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
           {{ weeklog.week_label }}
         </h2>
-        <p class="text-sm text-sand-500 dark:text-sand-400">Aktuel ugelog</p>
       </div>
-      <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}"
-         class="btn-secondary btn-sm">
-        Se detaljer
-      </a>
+      <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}" class="btn btn-sm">Se detaljer</a>
     </div>
 
     {% if weeklog.summary %}
-      <div class="mb-4">
-        <p class="text-sand-700 dark:text-sand-300 line-clamp-3">
-          {{ weeklog.summary|truncatewords:50 }}
-        </p>
-      </div>
+      <p style="font-size: 13px; color: var(--ink-2); line-height: 1.55; margin: 0 0 14px;">
+        {{ weeklog.summary|truncatewords:32 }}
+      </p>
     {% endif %}
 
-    <!-- Active priority items -->
     {% if priority_items %}
-      <div class="border-t border-black/5 dark:border-white/5 pt-4">
-        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-2">
-          Aktive opgaver
-        </h3>
-        <ul class="space-y-2">
+      <div style="border-top: 1px solid var(--hairline); padding-top: 12px;">
+        <div class="label-eyebrow" style="margin-bottom: 8px;">Aktive opgaver</div>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px;">
           {% for item in priority_items %}
-            <li class="flex items-center justify-between text-sm">
-              <span class="text-sand-700 dark:text-sand-300 truncate mr-2">{{ item.title }}</span>
-              <span class="flex-shrink-0 badge {% if item.status == 'blocked' %}badge-danger{% else %}badge-warning{% endif %}">
+            <li class="flex items-center justify-between gap-3" style="font-size: 13px;">
+              <span style="color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.title }}</span>
+              <span class="pill {% if item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}" style="flex: none;">
                 {{ item.get_status_display }}
               </span>
             </li>
@@ -40,40 +33,34 @@
       </div>
     {% endif %}
 
-    <!-- Absences -->
     {% if absences %}
-      <div class="border-t border-black/5 dark:border-white/5 pt-4 mt-4">
-        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-2">
-          Bemanding denne uge
-        </h3>
-        <ul class="space-y-1">
+      <div style="border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 12px;">
+        <div class="label-eyebrow" style="margin-bottom: 8px;">Bemanding</div>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;">
           {% for absence in absences %}
-            <li class="text-sm text-sand-600 dark:text-sand-400">
-              <span class="font-medium text-sand-700 dark:text-sand-300">{{ absence.staff_name }}</span>
-              - {{ absence.get_absence_type_display }}, {{ absence.weekday_range }}
+            <li style="color: var(--ink-3);">
+              <strong style="color: var(--ink-1); font-weight: 500;">{{ absence.staff_name }}</strong>
+              <span class="num">· {{ absence.weekday_range }}</span>
+              <span style="color: var(--ink-4);">· {{ absence.get_absence_type_display }}</span>
             </li>
           {% endfor %}
         </ul>
       </div>
     {% endif %}
-
   {% else %}
-    <!-- No weeklog for current week -->
-    <div class="flex flex-col items-center justify-center h-full text-center py-8">
-      <svg class="w-12 h-12 text-sand-300 dark:text-sand-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    <div class="flex flex-col items-center justify-center text-center" style="padding: 24px 0;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5); margin-bottom: 12px;">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+        <path d="M14 2v6h6"/>
       </svg>
-      <h3 class="text-lg font-medium text-sand-700 dark:text-sand-300 mb-1">
+      <h3 style="font-size: 14.5px; font-weight: 600; color: var(--ink-1); margin: 0 0 4px;">
         Ingen ugelog for uge {{ current_week }}
       </h3>
-      <p class="text-sand-500 dark:text-sand-400 mb-4">
-        Opret en ny ugelog for at komme i gang
+      <p style="font-size: 12.5px; color: var(--ink-3); margin: 0 0 14px;">
+        Opret en ny ugelog for at komme i gang.
       </p>
       {% if is_editor %}
-      <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary btn-sm">
-        Opret ugelog
-      </a>
+      <a href="{% url 'logbook:weeklog-create' %}" class="btn btn-primary btn-sm">Opret ugelog</a>
       {% endif %}
     </div>
   {% endif %}

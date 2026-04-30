@@ -1,62 +1,59 @@
-<div class="card h-full flex flex-col">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">
-      Seneste hændelser
-    </h2>
-    {% if unresolved_count > 0 %}
-      <span class="badge badge-danger">
-        {{ unresolved_count }} uløst{{ unresolved_count|pluralize:"e" }}
-      </span>
-    {% endif %}
+{# Incidents list — colored severity rail on the left, mono timestamp + system + owner. #}
+<div class="card overflow-hidden" style="padding: 0; height: 100%; display: flex; flex-direction: column;">
+  <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+    <div>
+      <div class="label-eyebrow">Hændelser</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+        Sidste 7 dage
+      </h2>
+    </div>
+    <div class="flex items-center gap-2">
+      {% if unresolved_count > 0 %}
+        <span class="pill pill-bad" data-incident-count><span class="num">{{ unresolved_count }}</span> uløst{{ unresolved_count|pluralize:"e" }}</span>
+      {% else %}
+        <span class="pill pill-good" data-incident-count><span class="pill-dot"></span>Alle løst</span>
+      {% endif %}
+    </div>
   </div>
 
   {% if incidents %}
-    <div class="flex-grow overflow-y-auto scrollbar-thin space-y-3">
+    <div class="flex-grow scrollbar-thin" style="overflow-y: auto;">
       {% for incident in incidents %}
-        <div class="p-3 rounded-lg bg-sand-50 dark:bg-sand-700 border border-sand-200 dark:border-sand-600
-                    {% if not incident.resolved %}border-l-4 border-l-terracotta-400{% endif %}">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex-grow min-w-0">
-              <h4 class="font-medium text-sand-800 dark:text-sand-100 truncate">
-                {{ incident.title }}
-              </h4>
-              <div class="flex items-center gap-2 mt-1 text-xs text-sand-500 dark:text-sand-400">
-                <span class="badge {% if incident.severity == 'critical' %}badge-danger{% elif incident.severity == 'high' %}badge-warning{% else %}badge-primary{% endif %}">
-                  {{ incident.get_severity_display }}
-                </span>
-                <span>{{ incident.occurred_at|date:"d. M" }}</span>
-              </div>
+        <a href="{% url 'logbook:weeklog-detail' incident.weeklog.pk %}#incident-{{ incident.pk }}"
+           class="grid items-stretch gap-3"
+           style="grid-template-columns: 6px 1fr auto; padding: 13px 24px; border-top: 1px solid var(--hairline); text-decoration: none; color: inherit; transition: background 0.12s;"
+           onmouseover="this.style.background='var(--surface-2)'"
+           onmouseout="this.style.background='transparent'">
+          <span style="border-radius: 99px; background: {% if incident.severity == 'critical' %}var(--bad){% elif incident.severity == 'high' %}var(--warn){% else %}var(--ink-4){% endif %};"></span>
+          <div style="min-width: 0;">
+            <div style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {{ incident.title }}
             </div>
-            {% if incident.resolved %}
-              <svg class="w-5 h-5 text-sage-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-            {% else %}
-              <svg class="w-5 h-5 text-terracotta-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-              </svg>
-            {% endif %}
+            <div class="flex flex-wrap" style="margin-top: 4px; gap: 10px; font-size: 11.5px; color: var(--ink-4);">
+              <span class="num">{{ incident.occurred_at|date:"D j. M · H:i" }}</span>
+              {% if incident.get_incident_type_display %}<span>{{ incident.get_incident_type_display }}</span>{% endif %}
+              {% if incident.resolved %}<span style="color: var(--good-ink);">· løst</span>{% endif %}
+            </div>
           </div>
-        </div>
+          <span class="pill {% if incident.severity == 'critical' %}pill-bad{% elif incident.severity == 'high' %}pill-warn{% else %}pill-neutral{% endif %}" style="align-self: center;">
+            {% if incident.severity == 'critical' %}P1{% elif incident.severity == 'high' %}P2{% else %}P3{% endif %}
+          </span>
+        </a>
       {% endfor %}
     </div>
-
-    <div class="mt-4 pt-4 border-t border-sand-200 dark:border-sand-700">
+    <div style="padding: 12px 24px; border-top: 1px solid var(--hairline);">
       <a href="{% url 'admin:logbook_incident_changelist' %}"
-         class="text-sm text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200">
-        Se alle hændelser &rarr;
+         style="font-size: 12.5px; color: var(--ink-3); text-decoration: none;"
+         onmouseover="this.style.color='var(--ink-1)'"
+         onmouseout="this.style.color='var(--ink-3)'">
+        Se alle hændelser →
       </a>
     </div>
-
   {% else %}
-    <div class="flex-grow flex items-center justify-center">
-      <div class="text-center py-8">
-        <svg class="w-12 h-12 text-sage-300 dark:text-sage-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <p class="text-sand-500 dark:text-sand-400">Ingen hændelser registreret</p>
+    <div class="flex-grow flex items-center justify-center" style="padding: 32px 24px;">
+      <div class="text-center">
+        <span class="pill pill-good" data-incident-count><span class="pill-dot"></span>0 hændelser denne uge</span>
+        <p style="font-size: 13px; color: var(--ink-3); margin: 12px 0 0;">Alt kører som det skal.</p>
       </div>
     </div>
   {% endif %}

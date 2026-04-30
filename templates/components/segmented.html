@@ -1,0 +1,15 @@
+{# Segmented control (pill tabs)
+   Params:
+     options — list of {value, label, active}
+     name    — for hx-get etc., not used directly here
+   Usage: pass options as a list of dicts in the view, or render manually.
+#}
+<div class="segmented">
+  {% for opt in options %}
+    <button type="button"
+            class="segmented-btn{% if opt.active %} segmented-btn-active{% endif %}"
+            {% if opt.hx_get %}hx-get="{{ opt.hx_get }}" hx-target="{{ opt.hx_target|default:'#tab-content' }}" hx-push-url="true"{% endif %}>
+      {{ opt.label }}
+    </button>
+  {% endfor %}
+</div>

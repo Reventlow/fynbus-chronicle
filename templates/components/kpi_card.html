@@ -1,0 +1,29 @@
+{% comment %}
+  KPI card — eyebrow + big number + delta pill + optional sub-label.
+  Params (via include "with"):
+    label       — eyebrow text
+    value       — main number (string)
+    delta       — signed integer; renders triangle + abs(delta). Pass empty/None to skip.
+    delta_tone  — good | warn | bad   (default good)
+    sublabel    — optional tertiary line below number
+{% endcomment %}
+<div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
+  <div class="flex items-start justify-between">
+    <div class="label-eyebrow">{{ label }}</div>
+    {% if delta is not None and delta != "" %}
+      <span class="pill-delta"
+            style="background: var(--{{ delta_tone|default:'good' }}-soft); color: var(--{{ delta_tone|default:'good' }}-ink);">
+        {% if delta > 0 %}▲{% elif delta < 0 %}▼{% else %}·{% endif %}{{ delta|stringformat:"d"|cut:"-" }}
+      </span>
+    {% endif %}
+  </div>
+
+  <div class="num"
+       style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
+    {{ value }}
+  </div>
+
+  {% if sublabel %}
+    <div style="font-size: 11.5px; color: var(--ink-3);">{{ sublabel }}</div>
+  {% endif %}
+</div>

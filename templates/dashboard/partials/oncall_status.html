@@ -1,22 +1,35 @@
-<div class="card flex flex-col justify-center p-5">
-  <div class="flex items-center justify-between">
-    <div>
-      <p class="text-xs font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-micro">Rådighedsvagt</p>
-      {% if oncall %}
-        <p class="text-lg font-semibold text-sand-800 dark:text-sand-100 mt-1">
-          {{ oncall.user.get_full_name|default:oncall.user.username }}
-        </p>
-      {% else %}
-        <p class="text-lg font-semibold text-sand-400 dark:text-sand-500 mt-1 italic">Ikke tildelt</p>
+{# Oncall card — gradient surface, gradient avatar, name + week, two buttons #}
+<div class="card" style="position: relative; overflow: hidden; background: linear-gradient(180deg, var(--surface-1) 0%, color-mix(in oklch, var(--accent-soft) 50%, var(--surface-1)) 100%);">
+  <div class="label-eyebrow">Rådighedsvagt</div>
+  {% if oncall %}
+    <div class="flex items-center gap-3" style="margin-top: 12px;">
+      <span class="avatar avatar-44 avatar-gradient" style="box-shadow: 0 4px 12px var(--accent-soft);">
+        {% with name=oncall.user.get_full_name|default:oncall.user.username %}{{ name|slice:":2"|upper }}{% endwith %}
+      </span>
+      <div>
+        <div data-oncall-name style="font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
+          Rådighedsvagt: <strong style="color: var(--ink-1); font-weight: 600;">{{ oncall.user.get_full_name|default:oncall.user.username }}</strong>
+        </div>
+        <div style="font-size: 12.5px; color: var(--ink-3); margin-top: 2px;">
+          {{ oncall.week_label }}
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2" style="margin-top: 16px;">
+      <a href="{% url 'oncall:calendar' %}" class="btn btn-sm flex-1" style="justify-content: center;">Se kalender</a>
+      {% if user.is_staff %}
+      <a href="{% url 'admin:oncall_oncallduty_change' oncall.pk %}" class="btn btn-sm flex-1" style="justify-content: center;">Skift</a>
       {% endif %}
     </div>
-    <a href="{% url 'oncall:calendar' %}"
-       class="text-sand-400 hover:text-sand-600 dark:text-sand-500 dark:hover:text-sand-300 transition-colors"
-       title="Se vagtplan">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-      </svg>
-    </a>
-  </div>
+  {% else %}
+    <div class="flex items-center gap-3" style="margin-top: 12px;">
+      <span class="avatar avatar-44" style="background: var(--surface-2); color: var(--ink-4);">—</span>
+      <div data-oncall-name style="font-size: 16px; font-weight: 500; color: var(--ink-3);">
+        Rådighedsvagt: <strong style="color: var(--ink-3); font-weight: 500;">Ikke tildelt</strong>
+      </div>
+    </div>
+    <div class="flex gap-2" style="margin-top: 16px;">
+      <a href="{% url 'oncall:calendar' %}" class="btn btn-sm flex-1" style="justify-content: center;">Se kalender</a>
+    </div>
+  {% endif %}
 </div>

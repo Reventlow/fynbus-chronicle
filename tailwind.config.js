@@ -8,7 +8,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Light mode earth tones - Scandinavian palette
+        // Light mode earth tones — kept for legacy components; new components use the
+        // semantic OKLCH tokens defined as CSS vars in static/src/input.css.
         sand: {
           50: '#FAF9F7',
           100: '#F0EDE8',
@@ -21,7 +22,6 @@ module.exports = {
           800: '#4A4540',
           900: '#2C2825',
         },
-        // Accent colors
         sage: {
           50: '#F4F6F3',
           100: '#E8EBE6',
@@ -58,28 +58,75 @@ module.exports = {
           800: '#725E38',
           900: '#5F4E31',
         },
+        // Bridge utility colors — map Tailwind class names to the semantic CSS vars
+        // so we can write `bg-paper`, `text-ink-1`, `border-hairline` etc.
+        paper:           'var(--paper)',
+        'surface-1':     'var(--surface-1)',
+        'surface-2':     'var(--surface-2)',
+        hairline:        'var(--hairline)',
+        'hairline-strong': 'var(--hairline-strong)',
+        'ink-1':         'var(--ink-1)',
+        'ink-2':         'var(--ink-2)',
+        'ink-3':         'var(--ink-3)',
+        'ink-4':         'var(--ink-4)',
+        'ink-5':         'var(--ink-5)',
+        accent:          'var(--accent)',
+        'accent-soft':   'var(--accent-soft)',
+        'accent-ink':    'var(--accent-ink)',
+        good:            'var(--good)',
+        'good-soft':     'var(--good-soft)',
+        'good-ink':      'var(--good-ink)',
+        warn:            'var(--warn)',
+        'warn-soft':     'var(--warn-soft)',
+        'warn-ink':      'var(--warn-ink)',
+        bad:             'var(--bad)',
+        'bad-soft':      'var(--bad-soft)',
+        'bad-ink':       'var(--bad-ink)',
+        info:            'var(--info)',
+        'info-soft':     'var(--info-soft)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans:    ['"Inter Tight"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['"Instrument Serif"', 'Georgia', 'serif'],
+        mono:    ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       letterSpacing: {
-        'display': '-0.04em',    // Headings 2xl+ (Notion/Linear-inspired)
-        'heading': '-0.025em',   // Headings lg-xl
-        'tight': '-0.015em',     // Sub-headings
-        'micro': '0.01em',       // Badges/labels (Notion positive tracking)
+        'display': '-0.04em',
+        'heading': '-0.025em',
+        'tight': '-0.015em',
+        'micro': '0.01em',
+        'eyebrow': '0.08em',
       },
       boxShadow: {
-        // Notion-inspired: 4-layer card shadow with sub-0.05 opacity per layer
-        'soft': 'rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2px 8px, rgba(0,0,0,0.02) 0px 0.8px 3px, rgba(0,0,0,0.01) 0px 0.2px 1px',
-        // Cal.com-inspired: ring + diffused + contact shadow for elevated cards
-        'soft-lg': 'rgba(0,0,0,0.06) 0px 0px 0px 1px, rgba(0,0,0,0.05) 0px 4px 8px, rgba(0,0,0,0.5) 0px 1px 5px -4px',
-        // Notion deep: 5-layer for modals and dropdowns
-        'deep': 'rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px',
-        // Cal.com inset highlight for active/pressed buttons
+        // Legacy Notion-inspired shadows (still used by some components)
+        'soft':     'rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2px 8px, rgba(0,0,0,0.02) 0px 0.8px 3px, rgba(0,0,0,0.01) 0px 0.2px 1px',
+        'soft-lg':  'rgba(0,0,0,0.06) 0px 0px 0px 1px, rgba(0,0,0,0.05) 0px 4px 8px, rgba(0,0,0,0.5) 0px 1px 5px -4px',
+        'deep':     'rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px',
         'inset-highlight': 'rgba(255,255,255,0.15) 0px 2px 0px inset',
+        // Token-driven shadows (point at the CSS vars, picks up dark-mode swap automatically)
+        'card':     'var(--shadow-card)',
+        'pop':      'var(--shadow-pop)',
       },
       borderRadius: {
-        '2xl': '1rem',   // Featured cards (Notion 16px)
+        '2xl': '1rem',
+        'card': '14px',
+        'pill': '999px',
+        'btn': '9px',
+        'btn-sm': '7px',
+      },
+      keyframes: {
+        slideIn: {
+          'from': { opacity: '0', transform: 'translateY(-4px)' },
+          'to':   { opacity: '1', transform: 'none' },
+        },
+        pulseGlow: {
+          '0%, 100%': { boxShadow: '0 0 0 0 var(--accent-soft)' },
+          '50%':      { boxShadow: '0 0 0 6px var(--accent-soft)' },
+        },
+      },
+      animation: {
+        'slide-in':  'slideIn 0.18s ease-out',
+        'pulse-glow':'pulseGlow 2s infinite',
       },
     },
   },

@@ -1,0 +1,17 @@
+{# Tabs (bottom-border indicator)
+   Params:
+     tabs         — list of {label, key, count, url} dicts
+     current_tab  — key of active tab
+   Each tab links via plain anchor; HTMX wiring can be added by passing url with hx attrs.
+#}
+<div class="tab-list">
+  {% for tab in tabs %}
+    <a href="{{ tab.url }}"
+       class="tab-link{% if tab.key == current_tab %} tab-link-active{% endif %}">
+      {{ tab.label }}
+      {% if tab.count is not None and tab.count != "" %}
+        <span class="tab-count num">{{ tab.count }}</span>
+      {% endif %}
+    </a>
+  {% endfor %}
+</div>

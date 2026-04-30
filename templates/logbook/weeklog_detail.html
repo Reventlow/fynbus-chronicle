@@ -1,201 +1,215 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ weeklog.week_label }} - FynBus Chronicle{% endblock %}
+{% block title %}{{ weeklog.week_label }} — FynBus Chronicle{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-  <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# === Breadcrumb ========================================================= #}
+  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
+    <a href="{% url 'logbook:weeklog-list' %}" style="color: inherit; text-decoration: none;"
+       onmouseover="this.style.color='var(--ink-2)'" onmouseout="this.style.color='var(--ink-4)'">
+      Ugelogs
+    </a>
+    <span style="color: var(--ink-5);">/</span>
+    <span class="num">{{ weeklog.year }}</span>
+    <span style="color: var(--ink-5);">/</span>
+    <span style="color: var(--ink-2);">Uge {{ weeklog.week_number }}</span>
+  </div>
+
+  {# === Editorial header — bottom-bordered band =========================== #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 24px;">
     <div>
-      <div class="flex items-center gap-2 text-sm text-sand-500 dark:text-sand-400 mb-1">
-        <a href="{% url 'logbook:weeklog-list' %}" class="hover:text-sand-700 dark:hover:text-sand-200">
-          Ugelogs
-        </a>
-        <span>/</span>
-        <span>{{ weeklog.week_label }}</span>
-      </div>
-      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">
-        {{ weeklog.week_label }}
+      <div class="label-eyebrow" style="margin-bottom: 12px;">Ugentlig rapport · IT-afdelingen</div>
+      <h1 class="display" style="margin: 0; font-size: 64px; line-height: 1; letter-spacing: -0.02em;">
+        Uge <span class="num">{{ weeklog.week_number }}</span>,
+        <span class="display-italic" style="color: var(--ink-3);">{{ weeklog.year }}</span>
       </h1>
+      <div class="flex flex-wrap items-center gap-3" style="margin-top: 14px; font-size: 13.5px; color: var(--ink-3);">
+        {% if weeklog.created_by %}
+          <span>Skrevet af <strong style="color: var(--ink-1); font-weight: 600;">{{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}</strong></span>
+          <span style="color: var(--ink-5);">·</span>
+        {% endif %}
+        <span>Sidst opdateret <span class="num" style="color: var(--ink-2);">{{ weeklog.updated_at|date:"j. M Y · H:i" }}</span></span>
+        <span class="pill pill-accent">Publiceret</span>
+      </div>
     </div>
     {% if is_editor %}
     <div class="flex flex-wrap gap-2">
-      <a href="{% url 'logbook:weeklog-edit' weeklog.pk %}" class="btn-secondary btn-sm">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      <a href="{% url 'logbook:weeklog-edit' weeklog.pk %}" class="btn btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
         Rediger
       </a>
       <div class="relative" x-data="{ open: false }">
-        <button @click="open = !open" class="btn-secondary btn-sm">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        <button @click="open = !open" class="btn btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
-          Eksporter
-          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          Eksportér
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/>
           </svg>
         </button>
-        <div x-show="open" @click.away="open = false"
-             x-transition
-             class="absolute right-0 mt-2 w-48 bg-white dark:bg-sand-800 rounded-xl shadow-deep py-1 z-50" style="border: 1px solid rgba(0,0,0,0.08)"
-          <a href="{% url 'logbook:export-pdf' weeklog.pk %}"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Download PDF
-          </a>
-          <a href="{% url 'logbook:export-markdown' weeklog.pk %}"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Download Markdown
-          </a>
-          <a href="{% url 'logbook:export-html' weeklog.pk %}"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Download HTML
-          </a>
-          <div class="border-t border-black/5 dark:border-white/5 my-1"></div>
-          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=html"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Email som HTML
-          </a>
-          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=pdf"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Email som PDF
-          </a>
-          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=both"
-             class="block px-4 py-2 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-700">
-            Email som HTML + PDF
-          </a>
+        <div x-show="open" @click.outside="open = false" x-cloak x-transition.opacity
+             class="absolute right-0 mt-2 z-50"
+             style="width: 220px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); padding: 6px;">
+          <a href="{% url 'logbook:export-pdf' weeklog.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download PDF</a>
+          <a href="{% url 'logbook:export-markdown' weeklog.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download Markdown</a>
+          <a href="{% url 'logbook:export-html' weeklog.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download HTML</a>
+          <hr class="hr-soft" style="margin: 4px 8px;">
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=html" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som HTML</a>
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=pdf" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som PDF</a>
+          <a href="{% url 'logbook:export-email' weeklog.pk %}?format=both" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som HTML + PDF</a>
         </div>
       </div>
     </div>
     {% endif %}
   </div>
 
-  <!-- Helpdesk stats — Notion metric card pattern -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-    <div class="card p-5 text-center">
-      <div class="text-xs font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-micro mb-1">Nye sager</div>
-      <div class="text-3xl font-bold text-gold-600 dark:text-gold-400 tracking-display">{{ weeklog.helpdesk_new }}</div>
+  {# === KPI strip — helpdesk stats ========================================= #}
+  <div class="grid grid-cols-2 lg:grid-cols-4" style="gap: var(--gutter);">
+    <div class="card flex flex-col gap-2">
+      <div class="label-eyebrow">Nye sager</div>
+      <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_new }}</div>
     </div>
-    <div class="card p-5 text-center">
-      <div class="text-xs font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-micro mb-1">Lukkede sager</div>
-      <div class="text-3xl font-bold text-sage-600 dark:text-sage-400 tracking-display">{{ weeklog.helpdesk_closed }}</div>
+    <div class="card flex flex-col gap-2">
+      <div class="label-eyebrow">Lukkede sager</div>
+      <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_closed }}</div>
     </div>
-    <div class="card p-5 text-center">
-      <div class="text-xs font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-micro mb-1">Åbne sager</div>
-      <div class="text-3xl font-bold text-sand-700 dark:text-sand-300 tracking-display">{{ weeklog.helpdesk_open }}</div>
+    <div class="card flex flex-col gap-2">
+      <div class="label-eyebrow">Åbne sager</div>
+      <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_open }}</div>
     </div>
-    <div class="card p-5 text-center">
-      <div class="text-xs font-semibold text-sand-400 dark:text-sand-500 uppercase tracking-micro mb-1">Netto ændring</div>
-      <div class="text-3xl font-bold tracking-display {% if weeklog.helpdesk_delta > 0 %}text-terracotta-500{% elif weeklog.helpdesk_delta < 0 %}text-sage-500{% else %}text-sand-500{% endif %}">
+    <div class="card flex flex-col gap-2">
+      <div class="flex items-start justify-between">
+        <div class="label-eyebrow">Netto ændring</div>
+        {% if weeklog.helpdesk_delta < 0 %}
+          <span class="pill-delta" style="background: var(--good-soft); color: var(--good-ink);">▼{{ weeklog.helpdesk_delta|stringformat:"d"|cut:"-" }}</span>
+        {% elif weeklog.helpdesk_delta > 0 %}
+          <span class="pill-delta" style="background: var(--bad-soft); color: var(--bad-ink);">▲{{ weeklog.helpdesk_delta }}</span>
+        {% else %}
+          <span class="pill-delta" style="background: var(--surface-2); color: var(--ink-4);">·0</span>
+        {% endif %}
+      </div>
+      <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; line-height: 1; color: {% if weeklog.helpdesk_delta > 0 %}var(--bad-ink){% elif weeklog.helpdesk_delta < 0 %}var(--good-ink){% else %}var(--ink-1){% endif %};">
         {% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}
       </div>
     </div>
   </div>
 
-  <!-- Summary -->
+  {# === Summary — pull-quote card ========================================= #}
   {% if weeklog.summary %}
-    <div class="card">
-      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-3">Ugeoversigt</h2>
-      <p class="text-sand-700 dark:text-sand-300 whitespace-pre-wrap">{{ weeklog.summary }}</p>
+    <div class="card" style="padding: 32px;">
+      <div class="label-eyebrow" style="margin-bottom: 14px;">Sammendrag</div>
+      <p class="display" style="font-size: 22px; line-height: 1.45; margin: 0; color: var(--ink-1); white-space: pre-wrap;">{{ weeklog.summary }}</p>
     </div>
   {% endif %}
 
-  <!-- Meeting minutes -->
+  {# === Meeting minutes ==================================================== #}
   {% include 'logbook/partials/meeting_minutes_card.html' %}
 
-  <!-- Priority items -->
-  <div class="card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Prioriterede opgaver</h2>
+  {# === Priority items ===================================================== #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Prioriterede opgaver</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">I gang denne uge</h2>
+      </div>
       {% if is_editor %}
       <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#priority-items-list"
               hx-swap="beforeend"
-              class="btn-secondary btn-sm">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              class="btn btn-sm btn-ghost">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
         </svg>
         Tilføj
       </button>
       {% endif %}
     </div>
 
-    <div id="priority-items-list" class="space-y-2">
+    <div id="priority-items-list">
       {% for item in weeklog.priority_items.all %}
         {% include 'logbook/partials/priority_item_row.html' %}
       {% empty %}
-        <p class="text-sand-500 dark:text-sand-400 text-center py-4" id="no-priority-items">
+        <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-priority-items">
           Ingen prioriterede opgaver tilføjet.
         </p>
       {% endfor %}
     </div>
   </div>
 
-  <!-- Absences -->
-  <div class="card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Bemanding</h2>
+  {# === Absences =========================================================== #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Bemanding</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Fravær og afløsning</h2>
+      </div>
       {% if is_editor %}
       <button hx-get="{% url 'logbook:absence-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#absences-list"
               hx-swap="beforeend"
-              class="btn-secondary btn-sm">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              class="btn btn-sm btn-ghost">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
         </svg>
         Tilføj
       </button>
       {% endif %}
     </div>
 
-    <div id="absences-list" class="space-y-2">
+    <div id="absences-list">
       {% for absence in weeklog.absences.all %}
         {% include 'logbook/partials/absence_row.html' %}
       {% empty %}
-        <p class="text-sand-500 dark:text-sand-400 text-center py-4" id="no-absences">
+        <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-absences">
           Ingen bemanding registreret.
         </p>
       {% endfor %}
     </div>
   </div>
 
-  <!-- Incidents -->
-  <div class="card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Hændelser</h2>
+  {# === Incidents ========================================================== #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Hændelser</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Registrerede hændelser</h2>
+      </div>
       {% if is_editor %}
       <button hx-get="{% url 'logbook:incident-create' %}?weeklog={{ weeklog.id }}"
               hx-target="#incidents-list"
               hx-swap="beforeend"
-              class="btn-secondary btn-sm">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              class="btn btn-sm btn-ghost">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
         </svg>
         Tilføj
       </button>
       {% endif %}
     </div>
 
-    <div id="incidents-list" class="space-y-3">
+    <div id="incidents-list">
       {% for incident in weeklog.incidents.all %}
         {% include 'logbook/partials/incident_row.html' %}
       {% empty %}
-        <p class="text-sand-500 dark:text-sand-400 text-center py-4" id="no-incidents">
+        <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-incidents">
           Ingen hændelser registreret.
         </p>
       {% endfor %}
     </div>
   </div>
 
-  <!-- Metadata -->
-  <div class="text-sm text-sand-500 dark:text-sand-400">
-    Oprettet {{ weeklog.created_at|date:"d. M Y H:i" }}
-    {% if weeklog.created_by %}af {{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}{% endif %}
-    &middot;
-    Sidst opdateret {{ weeklog.updated_at|date:"d. M Y H:i" }}
+  {# === Footer metadata ==================================================== #}
+  <div style="font-size: 12px; color: var(--ink-4); font-family: var(--font-mono); padding-top: 8px;">
+    Oprettet <span class="num">{{ weeklog.created_at|date:"j. M Y · H:i" }}</span>
+    {% if weeklog.created_by %} · af {{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}{% endif %}
   </div>
 </div>
 {% endblock %}

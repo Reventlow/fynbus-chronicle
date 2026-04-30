@@ -1,5 +1,18 @@
 <!DOCTYPE html>
-<html lang="da" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" :class="{ 'dark': darkMode }">
+<html lang="da"
+      x-data="{
+        darkMode:  localStorage.getItem('darkMode') === 'true',
+        density:   localStorage.getItem('density') || 'comfortable',
+        accent:    localStorage.getItem('accent')  || 'gold',
+        init() {
+          this.$watch('darkMode', v => localStorage.setItem('darkMode', v));
+          this.$watch('density',  v => localStorage.setItem('density', v));
+          this.$watch('accent',   v => localStorage.setItem('accent', v));
+        }
+      }"
+      :class="{ 'dark': darkMode }"
+      :data-density="density === 'compact' ? 'compact' : null"
+      :data-accent="accent === 'gold' ? null : accent">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +24,12 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
 
-  <!-- Styles — Inter variable font for precise weight control (Notion/Linear) -->
+  <!-- Fonts: Inter Tight (UI), Instrument Serif (display), JetBrains Mono (mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap" rel="stylesheet">
-  <link href="{% static 'css/output.css' %}?v=3" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link href="{% static 'css/output.css' %}?v=4" rel="stylesheet">
 
   {% block extra_css %}{% endblock %}
 
@@ -30,15 +44,15 @@
 
   {% block extra_js_head %}{% endblock %}
 </head>
-<body class="bg-sand-50 text-sand-900 dark:bg-sand-900 dark:text-sand-50
-             min-h-screen flex flex-col transition-colors duration-200"
+<body class="min-h-screen flex flex-col"
+      style="background: var(--paper); color: var(--ink-2);"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
   {% if user.is_authenticated %}
     {% include 'components/nav.html' %}
   {% endif %}
 
-  <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">
     {% block messages %}
       {% if messages %}
         <div class="space-y-2 mb-6">
