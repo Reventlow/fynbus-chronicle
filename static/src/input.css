@@ -65,45 +65,45 @@
 }
 
 html.dark {
-  --paper:           oklch(0.16 0.008 250);
-  --surface-1:       oklch(0.205 0.010 250);
-  --surface-2:       oklch(0.185 0.009 250);
-  --hairline:        oklch(0.40 0.010 250 / 0.45);
-  --hairline-strong: oklch(0.50 0.012 250 / 0.65);
+  --paper:           oklch(0.225 0.008 250);
+  --surface-1:       oklch(0.275 0.010 250);
+  --surface-2:       oklch(0.250 0.009 250);
+  --hairline:        oklch(0.46 0.010 250 / 0.40);
+  --hairline-strong: oklch(0.55 0.012 250 / 0.60);
 
-  --ink-1: oklch(0.97 0.005 80);
-  --ink-2: oklch(0.86 0.006 80);
+  --ink-1: oklch(0.93 0.006 80);
+  --ink-2: oklch(0.84 0.006 80);
   --ink-3: oklch(0.70 0.008 250);
-  --ink-4: oklch(0.58 0.010 250);
-  --ink-5: oklch(0.46 0.010 250);
+  --ink-4: oklch(0.60 0.010 250);
+  --ink-5: oklch(0.50 0.010 250);
 
-  --accent:      oklch(0.78 0.12 80);
-  --accent-soft: oklch(0.32 0.07 80);
-  --accent-ink:  oklch(0.85 0.10 80);
+  --accent:      oklch(0.80 0.11 80);
+  --accent-soft: oklch(0.36 0.06 80);
+  --accent-ink:  oklch(0.88 0.09 80);
 
   --good:      oklch(0.78 0.08 145);
-  --good-soft: oklch(0.30 0.05 145);
-  --good-ink:  oklch(0.85 0.07 145);
+  --good-soft: oklch(0.34 0.05 145);
+  --good-ink:  oklch(0.86 0.07 145);
 
   --warn:      oklch(0.82 0.12 75);
-  --warn-soft: oklch(0.32 0.07 75);
+  --warn-soft: oklch(0.36 0.06 75);
   --warn-ink:  oklch(0.88 0.10 75);
 
   --bad:      oklch(0.72 0.14 25);
-  --bad-soft: oklch(0.30 0.07 25);
-  --bad-ink:  oklch(0.85 0.10 25);
+  --bad-soft: oklch(0.34 0.06 25);
+  --bad-ink:  oklch(0.86 0.10 25);
 
   --info:      oklch(0.78 0.10 240);
-  --info-soft: oklch(0.30 0.06 245);
+  --info-soft: oklch(0.34 0.06 245);
 
   --shadow-card:
-    0 0 0 0.5px oklch(1 0 0 / 0.06),
-    0 1px 1px oklch(0 0 0 / 0.4),
-    0 4px 12px oklch(0 0 0 / 0.35);
+    0 0 0 0.5px oklch(1 0 0 / 0.05),
+    0 1px 1px oklch(0 0 0 / 0.25),
+    0 4px 10px oklch(0 0 0 / 0.22);
   --shadow-pop:
-    0 0 0 0.5px oklch(1 0 0 / 0.08),
-    0 4px 8px oklch(0 0 0 / 0.4),
-    0 16px 32px oklch(0 0 0 / 0.5);
+    0 0 0 0.5px oklch(1 0 0 / 0.07),
+    0 4px 8px oklch(0 0 0 / 0.30),
+    0 16px 32px oklch(0 0 0 / 0.38);
 }
 
 /* Accent themes (Tweaks panel) */

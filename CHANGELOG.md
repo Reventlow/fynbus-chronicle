@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.1.62 — 2026-04-30
+
+### Changed
+- Lighten dark-mode surface lightness so the new editorial palette is more comfortable: `--paper` 0.16 → 0.225, `--surface-1` 0.205 → 0.275, `--surface-2` 0.185 → 0.250 (still slate-cool, but in Linear/Notion territory rather than near-black)
+- Soften dark-mode `--ink-1` from 0.97 to 0.93 so headings no longer glare on the lighter bg, with matching nudges to `--ink-2/4/5` to preserve the contrast steps
+- Lift dark-mode chip `--*-soft` backgrounds (0.30–0.32 → 0.34–0.36) and `--*-ink` text (0.85 → 0.86–0.88) so pills read as elevated against the new paper
+- Reduce dark-mode card/popover shadow alphas (0.40/0.50 → 0.25/0.38) to suit the lighter surfaces
+
 ## 0.1.61 — 2026-04-30
 
 ### Changed
