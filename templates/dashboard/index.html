@@ -14,10 +14,11 @@
   <div class="flex flex-wrap items-end justify-between gap-6">
     <div>
       <div class="label-eyebrow" style="margin-bottom: 10px;">
-        {% now "\\U\\g\\e W · j N Y" %}
+        Uge {% now "W · j N Y" %}
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
-        Godmorgen, {{ user.first_name|default:user.get_short_name|default:user.username }}.
+        <span x-data x-text="(() => { const h = new Date().getHours(); return h < 11 ? 'Godmorgen' : h < 18 ? 'Goddag' : h < 23 ? 'Godaften' : 'Godnat'; })()">Goddag</span>,
+        {{ user.first_name|default:user.get_short_name|default:user.username }}.
         <span class="display-italic" style="color: var(--ink-3);">her er ugen.</span>
       </h1>
       <div style="margin-top: 12px; color: var(--ink-3); font-size: 14.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
