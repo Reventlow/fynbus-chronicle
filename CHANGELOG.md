@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.3 — 2026-04-30
+
+### Fixed
+- Helpdesk flow chart was rendering as black + dark-red lines instead of blue + sage. cssnano minifies `rgb(r, g, b)` declarations to `#rrggbb` during the Tailwind build, so the JS `rgbVar` helper that was looking only for decimal digits fell through to its `[0,0,0]` fallback. Updated to accept both `rgb()` and `#rrggbb` forms.
+- Multi-line `{# … #}` comment at the top of `helpdesk_flow_chart.html` was leaking onto the page as visible text — Django comments are single-line only. Switched to `{% comment %} … {% endcomment %}`.
+
 ## 0.2.2 — 2026-04-30
 
 ### Fixed

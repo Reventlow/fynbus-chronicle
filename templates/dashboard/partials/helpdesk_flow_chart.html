@@ -1,7 +1,9 @@
-{# Flow chart — new vs closed, parent provides card wrapper.
-   Uses a chart-specific RGB palette (higher chroma than the editorial soft
-   tokens) so the two series stay visually distinct, and a hardcoded
-   light/dark tooltip palette so contrast is reliable across browsers. #}
+{% comment %}
+Flow chart — new vs closed, parent provides card wrapper. Uses a
+chart-specific RGB palette (higher chroma than the editorial soft tokens)
+so the two series stay visually distinct, and a hardcoded light/dark
+tooltip palette so contrast is reliable across browsers.
+{% endcomment %}
 <div style="padding: 0 24px 16px;">
   <div class="relative" style="height: 240px;">
     <canvas id="helpdesk-flow-chart"></canvas>
@@ -23,12 +25,18 @@
       }
       const isDark = document.documentElement.classList.contains('dark');
       const cs = getComputedStyle(document.documentElement);
-      // Parse the RGB triplet out of a CSS custom property declared as
-      // `rgb(r, g, b)` in input.css.
+      // Parse a CSS custom property into [r,g,b]. Tailwind/cssnano may
+      // minify `rgb(r, g, b)` to `#rrggbb` so we accept both forms.
       const rgbVar = name => {
         const v = cs.getPropertyValue(name).trim();
-        const m = v.match(/-?\d+/g);
-        return m && m.length >= 3 ? [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])] : [0, 0, 0];
+        const rgbM = v.match(/rgb\s*\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+        if (rgbM) return [parseInt(rgbM[1]), parseInt(rgbM[2]), parseInt(rgbM[3])];
+        const hexM = v.match(/^#?([0-9a-f]{6})$/i);
+        if (hexM) {
+          const h = hexM[1];
+          return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        }
+        return [0, 0, 0];
       };
 
       // Charts use their own slightly hotter palette + neutral chrome that

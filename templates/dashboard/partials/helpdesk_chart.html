@@ -42,10 +42,18 @@
 
       const isDark = document.documentElement.classList.contains('dark');
       const cs = getComputedStyle(document.documentElement);
+      // Accept both `rgb(r, g, b)` and `#rrggbb` since cssnano minifies the
+      // former into the latter when running through Tailwind's build.
       const rgbVar = name => {
         const v = cs.getPropertyValue(name).trim();
-        const m = v.match(/-?\d+/g);
-        return m && m.length >= 3 ? [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])] : [0, 0, 0];
+        const rgbM = v.match(/rgb\s*\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+        if (rgbM) return [parseInt(rgbM[1]), parseInt(rgbM[2]), parseInt(rgbM[3])];
+        const hexM = v.match(/^#?([0-9a-f]{6})$/i);
+        if (hexM) {
+          const h = hexM[1];
+          return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        }
+        return [0, 0, 0];
       };
       const P = {
         accent: rgbVar('--chart-accent'),
