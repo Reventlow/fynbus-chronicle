@@ -2,6 +2,10 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.0 — 2026-04-30
+
+Editorial redesign milestone. Rolls up every change from the 0.1.61 → 0.1.64 series — new OKLCH design tokens, Inter Tight + Instrument Serif + JetBrains Mono fonts, sticky blurred nav with brand mark and tweaks panel, editorial dashboard and weeklog headers, restyled rows and pills, density/accent toggles, retuned dark mode, and Chart.js color compatibility fixes — under a single minor version bump to mark the new design system as the baseline.
+
 ## 0.1.64 — 2026-04-30
 
 ### Fixed
