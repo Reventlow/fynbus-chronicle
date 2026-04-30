@@ -15,7 +15,6 @@
     <nav class="hidden md:flex items-center gap-1 ml-3">
       {% url 'dashboard:index' as url_dashboard %}
       {% url 'logbook:weeklog-list' as url_weeklog %}
-      {% url 'tasks:task-list' as url_tasks %}
       {% url 'oncall:calendar' as url_oncall %}
       {% url 'dashboard:docs-index' as url_docs %}
 
@@ -36,14 +35,6 @@
           <path d="M4 4.5V21"/>
         </svg>
         Ugelog
-      </a>
-      <a href="{{ url_tasks }}"
-         class="nav-link {% if request.resolver_match.app_name == 'tasks' %}nav-link-active{% endif %}">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 11l3 3L22 4"/>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        Opgaver
       </a>
       <a href="{{ url_oncall }}"
          class="nav-link {% if request.resolver_match.app_name == 'oncall' %}nav-link-active{% endif %}">
@@ -190,7 +181,6 @@
     <div style="max-width: 1280px; margin: 0 auto; padding: 12px 28px; display: flex; flex-direction: column; gap: 4px;">
       <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
       <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelogs</a>
-      <a href="{% url 'tasks:task-list' %}" class="nav-link">Opgaver</a>
       <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
       <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
     </div>

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.4 — 2026-04-30
+
+### Removed
+- "Opgaver" entry pulled from the top nav and mobile menu. The `/tasks/` URLs and views remain reachable directly; only the navigation surface is gone.
+
 ## 0.2.3 — 2026-04-30
 
 ### Fixed
