@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.1.64 — 2026-04-30
+
+### Fixed
+- Dashboard header sub-line was showing the "Alle løst" pill from the incidents card instead of the intended "N hændelser denne uge" + on-call name; the broken `hx-select` indirection has been removed and `incident_count_week` + `oncall` are now rendered server-side from `DashboardView` context
+- Stop the helpdesk-chart card from stretching to the height of the (much taller) incidents card by adding `items-start` to their grid row
+
 ## 0.1.63 — 2026-04-30
 
 ### Fixed
