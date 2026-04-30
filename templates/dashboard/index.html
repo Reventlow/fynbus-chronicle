@@ -142,23 +142,44 @@
   {# === Tasks + incidents row ============================================= #}
   <div class="grid grid-cols-1 lg:grid-cols-2 items-start" style="gap: var(--gutter);">
 
-    {# Helpdesk open-tickets chart (kept) #}
-    <div class="card overflow-hidden" style="padding: 0;">
-      <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
-        <div>
-          <div class="label-eyebrow">Helpdesk</div>
-          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-            Åbne sager — udvikling
-          </h2>
+    {# Left column: helpdesk chart + latest changelog entry #}
+    <div class="flex flex-col" style="gap: var(--gutter);">
+      {# Helpdesk open-tickets chart (kept) #}
+      <div class="card overflow-hidden" style="padding: 0;">
+        <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+          <div>
+            <div class="label-eyebrow">Helpdesk</div>
+            <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+              Åbne sager — udvikling
+            </h2>
+          </div>
+        </div>
+        <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="animate-pulse" style="padding: 0 24px 20px;">
+            <div class="skeleton" style="height: 240px; width: 100%;"></div>
+          </div>
         </div>
       </div>
-      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="animate-pulse" style="padding: 0 24px 20px;">
-          <div class="skeleton" style="height: 240px; width: 100%;"></div>
+
+      {# Latest changelog entry #}
+      {% if latest_change %}
+      <div class="card overflow-hidden flex-grow" style="padding: 0;">
+        <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+          <div>
+            <div class="label-eyebrow">Seneste ændring</div>
+            <h2 class="num" style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+              {{ latest_change.title }}
+            </h2>
+          </div>
+          <a href="{% url 'dashboard:docs-page' 'changelog' %}" class="btn btn-sm btn-ghost">Se alle</a>
+        </div>
+        <div class="changelog-body" style="padding: 0 24px 20px; border-top: 1px solid var(--hairline); padding-top: 16px;">
+          {{ latest_change.body_html }}
         </div>
       </div>
+      {% endif %}
     </div>
 
     {# Incidents #}

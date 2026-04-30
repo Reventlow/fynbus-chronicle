@@ -5,6 +5,7 @@ Provides the main dashboard view, HTMX partials for
 dynamic content loading, and documentation pages.
 """
 
+import re
 from pathlib import Path
 
 import markdown
@@ -13,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, JsonResponse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from apps.logbook.models import Incident, WeekLog
@@ -60,7 +62,29 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["incident_count_week"] = (
             weeklog.incidents.count() if weeklog else 0
         )
+        context["latest_change"] = _read_latest_changelog_entry()
         return context
+
+
+def _read_latest_changelog_entry() -> dict | None:
+    """Parse CHANGELOG.md and return the most recent entry as {title, body_html}.
+
+    Splits on ``^## `` headers; the first such block becomes the entry. Returns
+    None if the file is missing or contains no entries.
+    """
+    if not CHANGELOG_FILE.exists():
+        return None
+    raw = CHANGELOG_FILE.read_text(encoding="utf-8")
+    sections = re.split(r"^## ", raw, flags=re.MULTILINE)
+    if len(sections) < 2:
+        return None
+    body = sections[1]
+    title, _, rest = body.partition("\n")
+    md = markdown.Markdown(extensions=["fenced_code"])
+    return {
+        "title": title.strip(),
+        "body_html": mark_safe(md.convert(rest.strip())),
+    }
 
 
 class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):

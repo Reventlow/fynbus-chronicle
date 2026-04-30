@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.6 — 2026-04-30
+
+### Added
+- "Seneste ændring" card on the dashboard pulls the most recent CHANGELOG.md entry and renders it under the helpdesk chart, so the previously empty space below "Åbne sager — udvikling" now shows what shipped most recently. Includes a "Se alle" link to the full changelog.
+
 ## 0.2.5 — 2026-04-30
 
 ### Removed
