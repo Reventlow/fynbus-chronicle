@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.2 — 2026-04-30
+
+### Fixed
+- Helpdesk flow chart's "Nye" and "Lukket" series rendered as nearly identical blue lines because the editorial `--good` token has very low chroma (0.06), so converted to RGB it sat next to `--info`. Charts now use a separate higher-chroma palette (`--chart-info`, `--chart-good`, `--chart-accent` defined in light/dark variants) and "Lukkede sager" gets a dashed line so the two series stay distinct even side-by-side. Legend swatches updated to match.
+- Chart tooltips were rendering as Chart.js's default near-black box because the `display:none` color probe sometimes returned an empty string and `rgba()` fell back to `rgba(0,0,0,1)`. Tooltip surface, ink, border, and grid colors are now picked from explicit per-mode palettes — no probe needed — so contrast is reliable in both light and dark mode.
+
+## 0.2.1 — 2026-04-30
+
+### Removed
+- Drop the non-functional "Søg ⌘K" search affordance from the top nav. It was a visual element from the design handoff with no backend behind it; pruned until a real search lands.
+
 ## 0.2.0 — 2026-04-30
 
 Editorial redesign milestone. Rolls up every change from the 0.1.61 → 0.1.64 series — new OKLCH design tokens, Inter Tight + Instrument Serif + JetBrains Mono fonts, sticky blurred nav with brand mark and tweaks panel, editorial dashboard and weeklog headers, restyled rows and pills, density/accent toggles, retuned dark mode, and Chart.js color compatibility fixes — under a single minor version bump to mark the new design system as the baseline.

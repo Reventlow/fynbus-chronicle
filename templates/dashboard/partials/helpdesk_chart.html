@@ -22,20 +22,6 @@
 
 <script>
 (function() {
-  // Probe a CSS color (any space — oklch, hsl, var(...)) into an [r,g,b] tuple.
-  // Canvas / Chart.js accept rgba() reliably across all browsers; oklch with
-  // alpha (`oklch(L C H / a)`) is parsed inconsistently by canvas color stops.
-  function probeRgb(css) {
-    const probe = document.createElement('span');
-    probe.style.color = css;
-    probe.style.display = 'none';
-    document.body.appendChild(probe);
-    const computed = getComputedStyle(probe).color;
-    document.body.removeChild(probe);
-    const m = computed.match(/-?\d+(?:\.\d+)?/g);
-    if (!m || m.length < 3) return [0, 0, 0];
-    return [parseFloat(m[0]), parseFloat(m[1]), parseFloat(m[2])];
-  }
   function rgba(rgb, a) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; }
 
   setTimeout(function() {
@@ -56,9 +42,20 @@
 
       const isDark = document.documentElement.classList.contains('dark');
       const cs = getComputedStyle(document.documentElement);
-      const accentRgb = probeRgb('var(--accent)');
-      const ink4 = rgba(probeRgb('var(--ink-4)'), 1);
-      const hairline = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      const rgbVar = name => {
+        const v = cs.getPropertyValue(name).trim();
+        const m = v.match(/-?\d+/g);
+        return m && m.length >= 3 ? [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])] : [0, 0, 0];
+      };
+      const P = {
+        accent: rgbVar('--chart-accent'),
+        ink:     isDark ? [240, 240, 240] : [25, 30, 38],
+        ink2:    isDark ? [205, 208, 214] : [60, 66, 76],
+        ink4:    isDark ? [150, 152, 158] : [110, 115, 124],
+        surface: isDark ? [44, 48, 56]    : [255, 255, 255],
+        border:  isDark ? [74, 80, 90]    : [218, 220, 226],
+        grid:    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+      };
 
       const ctx = document.getElementById('helpdesk-chart').getContext('2d');
       new Chart(ctx, {
@@ -68,40 +65,45 @@
           datasets: [{
             label: 'Åbne sager',
             data: openCases,
-            borderColor: rgba(accentRgb, 1),
-            borderWidth: 2,
+            borderColor: rgba(P.accent, 1),
+            borderWidth: 2.25,
             fill: true,
             tension: 0.3,
             pointRadius: 3,
             pointHoverRadius: 5,
-            pointBackgroundColor: rgba(accentRgb, 1),
+            pointBackgroundColor: rgba(P.accent, 1),
+            pointBorderColor: rgba(P.surface, 1),
+            pointBorderWidth: 1.5,
             backgroundColor: function(c) {
-              const g = c.chart.ctx.createLinearGradient(0,0,0,240);
-              g.addColorStop(0, rgba(accentRgb, 0.20));
-              g.addColorStop(1, rgba(accentRgb, 0));
+              const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
+              g.addColorStop(0, rgba(P.accent, 0.22));
+              g.addColorStop(1, rgba(P.accent, 0));
               return g;
             },
           }]
         },
         options: {
           responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: rgba(probeRgb('var(--surface-1)'), 1),
-              titleColor: rgba(probeRgb('var(--ink-1)'), 1),
-              bodyColor: rgba(probeRgb('var(--ink-2)'), 1),
-              borderColor: rgba(probeRgb('var(--hairline-strong)'), 1),
+              backgroundColor: rgba(P.surface, 0.98),
+              titleColor:      rgba(P.ink,  1),
+              bodyColor:       rgba(P.ink2, 1),
+              borderColor:     rgba(P.border, 1),
               borderWidth: 1,
               titleFont: { family: 'JetBrains Mono', size: 11 },
               bodyFont:  { family: 'Inter Tight', size: 12 },
               padding: 10,
+              cornerRadius: 8,
+              displayColors: false,
               callbacks: { label: c => 'Åbne sager: ' + c.parsed.y }
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: ink4, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
-            y: { beginAtZero: false, grid: { color: hairline, drawBorder: false }, ticks: { color: ink4, font: { family: 'JetBrains Mono', size: 10 } } }
+            x: { grid: { display: false }, ticks: { color: rgba(P.ink4, 1), font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+            y: { beginAtZero: false, grid: { color: P.grid, drawBorder: false }, ticks: { color: rgba(P.ink4, 1), font: { family: 'JetBrains Mono', size: 10 } } }
           }
         }
       });

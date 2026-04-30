@@ -1,4 +1,7 @@
-{# Flow chart — new vs closed, parent provides card wrapper. #}
+{# Flow chart — new vs closed, parent provides card wrapper.
+   Uses a chart-specific RGB palette (higher chroma than the editorial soft
+   tokens) so the two series stay visually distinct, and a hardcoded
+   light/dark tooltip palette so contrast is reliable across browsers. #}
 <div style="padding: 0 24px 16px;">
   <div class="relative" style="height: 240px;">
     <canvas id="helpdesk-flow-chart"></canvas>
@@ -7,20 +10,6 @@
 
 <script>
 (function() {
-  // Probe a CSS color (any space) into [r,g,b]. Canvas's color stop parser
-  // accepts rgba() reliably; modern color spaces like oklch with alpha are
-  // not consistently supported.
-  function probeRgb(css) {
-    const probe = document.createElement('span');
-    probe.style.color = css;
-    probe.style.display = 'none';
-    document.body.appendChild(probe);
-    const computed = getComputedStyle(probe).color;
-    document.body.removeChild(probe);
-    const m = computed.match(/-?\d+(?:\.\d+)?/g);
-    if (!m || m.length < 3) return [0, 0, 0];
-    return [parseFloat(m[0]), parseFloat(m[1]), parseFloat(m[2])];
-  }
   function rgba(rgb, a) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; }
 
   setTimeout(function() {
@@ -33,10 +22,28 @@
         return;
       }
       const isDark = document.documentElement.classList.contains('dark');
-      const infoRgb = probeRgb('var(--info)');
-      const goodRgb = probeRgb('var(--good)');
-      const ink4    = rgba(probeRgb('var(--ink-4)'), 1);
-      const hairline = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      const cs = getComputedStyle(document.documentElement);
+      // Parse the RGB triplet out of a CSS custom property declared as
+      // `rgb(r, g, b)` in input.css.
+      const rgbVar = name => {
+        const v = cs.getPropertyValue(name).trim();
+        const m = v.match(/-?\d+/g);
+        return m && m.length >= 3 ? [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])] : [0, 0, 0];
+      };
+
+      // Charts use their own slightly hotter palette + neutral chrome that
+      // doesn't depend on probing computed colours from a hidden element
+      // (which is unreliable across browsers for var() references).
+      const P = {
+        info: rgbVar('--chart-info'),
+        good: rgbVar('--chart-good'),
+        ink:     isDark ? [240, 240, 240] : [25, 30, 38],
+        ink2:    isDark ? [205, 208, 214] : [60, 66, 76],
+        ink4:    isDark ? [150, 152, 158] : [110, 115, 124],
+        surface: isDark ? [44, 48, 56]    : [255, 255, 255],
+        border:  isDark ? [74, 80, 90]    : [218, 220, 226],
+        grid:    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+      };
 
       const ctx = document.getElementById('helpdesk-flow-chart').getContext('2d');
       new Chart(ctx, {
@@ -47,49 +54,61 @@
             {
               label: 'Nye sager',
               data: data.weeks.map(w => w.new),
-              borderColor: rgba(infoRgb, 1),
+              borderColor: rgba(P.info, 1),
               backgroundColor: function(c) {
-                const g = c.chart.ctx.createLinearGradient(0,0,0,240);
-                g.addColorStop(0, rgba(infoRgb, 0.14));
-                g.addColorStop(1, rgba(infoRgb, 0));
+                const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
+                g.addColorStop(0, rgba(P.info, 0.18));
+                g.addColorStop(1, rgba(P.info, 0));
                 return g;
               },
-              borderWidth: 2, fill: true, tension: 0.3,
-              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: rgba(infoRgb, 1),
+              borderWidth: 2.25, fill: true, tension: 0.3,
+              pointRadius: 3, pointHoverRadius: 5,
+              pointBackgroundColor: rgba(P.info, 1),
+              pointBorderColor: rgba(P.surface, 1),
+              pointBorderWidth: 1.5,
             },
             {
               label: 'Lukkede sager',
               data: data.weeks.map(w => w.closed),
-              borderColor: rgba(goodRgb, 1),
+              borderColor: rgba(P.good, 1),
               backgroundColor: function(c) {
-                const g = c.chart.ctx.createLinearGradient(0,0,0,240);
-                g.addColorStop(0, rgba(goodRgb, 0.11));
-                g.addColorStop(1, rgba(goodRgb, 0));
+                const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
+                g.addColorStop(0, rgba(P.good, 0.14));
+                g.addColorStop(1, rgba(P.good, 0));
                 return g;
               },
-              borderWidth: 2, fill: true, tension: 0.3,
-              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: rgba(goodRgb, 1),
+              borderWidth: 2.25, fill: true, tension: 0.3,
+              borderDash: [6, 4],
+              pointRadius: 3, pointHoverRadius: 5,
+              pointBackgroundColor: rgba(P.good, 1),
+              pointBorderColor: rgba(P.surface, 1),
+              pointBorderWidth: 1.5,
             }
           ]
         },
         options: {
           responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: rgba(probeRgb('var(--surface-1)'), 1),
-              titleColor: rgba(probeRgb('var(--ink-1)'), 1),
-              bodyColor: rgba(probeRgb('var(--ink-2)'), 1),
-              borderColor: rgba(probeRgb('var(--hairline-strong)'), 1),
+              backgroundColor: rgba(P.surface, 0.98),
+              titleColor:      rgba(P.ink,  1),
+              bodyColor:       rgba(P.ink2, 1),
+              borderColor:     rgba(P.border, 1),
               borderWidth: 1,
               titleFont: { family: 'JetBrains Mono', size: 11 },
               bodyFont:  { family: 'Inter Tight', size: 12 },
               padding: 10,
+              cornerRadius: 8,
+              displayColors: true,
+              boxPadding: 4,
+              usePointStyle: true,
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: ink4, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
-            y: { beginAtZero: true, grid: { color: hairline, drawBorder: false, borderDash: [2,4] }, ticks: { color: ink4, font: { family: 'JetBrains Mono', size: 10 } } }
+            x: { grid: { display: false }, ticks: { color: rgba(P.ink4, 1), font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+            y: { beginAtZero: true, grid: { color: P.grid, drawBorder: false, borderDash: [2, 4] }, ticks: { color: rgba(P.ink4, 1), font: { family: 'JetBrains Mono', size: 10 } } }
           }
         }
       });

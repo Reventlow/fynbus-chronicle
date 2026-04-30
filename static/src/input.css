@@ -58,6 +58,13 @@
     0 4px 8px oklch(0.5 0 0 / 0.05),
     0 16px 32px oklch(0.5 0 0 / 0.10);
 
+  /* Chart-specific palette — higher chroma than the soft tokens above so
+     line series stay visually distinct on canvas. Used both by the JS chart
+     code and by the legend swatch classes below. */
+  --chart-info:   rgb(40, 110, 210);
+  --chart-good:   rgb(70, 142, 102);
+  --chart-accent: rgb(180, 132, 56);
+
   /* Density (driven by data-density on <html>) */
   --row-y:    14px;
   --card-pad: 24px;
@@ -104,6 +111,11 @@ html.dark {
     0 0 0 0.5px oklch(1 0 0 / 0.07),
     0 4px 8px oklch(0 0 0 / 0.30),
     0 16px 32px oklch(0 0 0 / 0.38);
+
+  /* Brighter chart palette for dark mode */
+  --chart-info:   rgb(122, 168, 235);
+  --chart-good:   rgb(134, 196, 162);
+  --chart-accent: rgb(212, 168, 86);
 }
 
 /* Accent themes (Tweaks panel) */
@@ -179,6 +191,27 @@ html[data-density="compact"] {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
+
+  /* =========================================================================
+     Chart legend swatches — match the chart palette used in helpdesk_*.html
+     ========================================================================= */
+  .chart-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 2px;
+    border-radius: 2px;
+    flex: none;
+  }
+  .chart-swatch-info { background: var(--chart-info); }
+  .chart-swatch-good {
+    background: repeating-linear-gradient(
+      to right,
+      var(--chart-good) 0 6px,
+      transparent      6px 10px
+    );
+    height: 3px;
+  }
+  .chart-swatch-accent { background: var(--chart-accent); }
 
   /* =========================================================================
      Cards / surfaces
