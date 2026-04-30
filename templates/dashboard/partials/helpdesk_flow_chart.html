@@ -7,6 +7,22 @@
 
 <script>
 (function() {
+  // Probe a CSS color (any space) into [r,g,b]. Canvas's color stop parser
+  // accepts rgba() reliably; modern color spaces like oklch with alpha are
+  // not consistently supported.
+  function probeRgb(css) {
+    const probe = document.createElement('span');
+    probe.style.color = css;
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    const computed = getComputedStyle(probe).color;
+    document.body.removeChild(probe);
+    const m = computed.match(/-?\d+(?:\.\d+)?/g);
+    if (!m || m.length < 3) return [0, 0, 0];
+    return [parseFloat(m[0]), parseFloat(m[1]), parseFloat(m[2])];
+  }
+  function rgba(rgb, a) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; }
+
   setTimeout(function() {
     fetch('{% url "dashboard:api-helpdesk-data" %}', { credentials: 'same-origin' })
     .then(r => r.json())
@@ -16,19 +32,11 @@
           '<p style="text-align:center; color:var(--ink-4); padding:32px 0;">Ingen data tilgængelig</p>';
         return;
       }
-      const cs = getComputedStyle(document.documentElement);
-      const info = cs.getPropertyValue('--info').trim();
-      const good = cs.getPropertyValue('--good').trim();
-      const ink4 = cs.getPropertyValue('--ink-4').trim();
       const isDark = document.documentElement.classList.contains('dark');
+      const infoRgb = probeRgb('var(--info)');
+      const goodRgb = probeRgb('var(--good)');
+      const ink4    = rgba(probeRgb('var(--ink-4)'), 1);
       const hairline = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-      // Inject alpha into an oklch(...) string (the function form does not accept
-      // hex-alpha suffixes the way #rrggbb does).
-      const fade = (c, a) => {
-        const m = c.match(/^oklch\(([^)]+)\)$/);
-        if (!m) return c;
-        return 'oklch(' + m[1].split('/')[0].trim() + ' / ' + a + ')';
-      };
 
       const ctx = document.getElementById('helpdesk-flow-chart').getContext('2d');
       new Chart(ctx, {
@@ -39,18 +47,28 @@
             {
               label: 'Nye sager',
               data: data.weeks.map(w => w.new),
-              borderColor: info,
-              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, fade(info, 0.14)); g.addColorStop(1, fade(info, 0)); return g; },
+              borderColor: rgba(infoRgb, 1),
+              backgroundColor: function(c) {
+                const g = c.chart.ctx.createLinearGradient(0,0,0,240);
+                g.addColorStop(0, rgba(infoRgb, 0.14));
+                g.addColorStop(1, rgba(infoRgb, 0));
+                return g;
+              },
               borderWidth: 2, fill: true, tension: 0.3,
-              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: info,
+              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: rgba(infoRgb, 1),
             },
             {
               label: 'Lukkede sager',
               data: data.weeks.map(w => w.closed),
-              borderColor: good,
-              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, fade(good, 0.11)); g.addColorStop(1, fade(good, 0)); return g; },
+              borderColor: rgba(goodRgb, 1),
+              backgroundColor: function(c) {
+                const g = c.chart.ctx.createLinearGradient(0,0,0,240);
+                g.addColorStop(0, rgba(goodRgb, 0.11));
+                g.addColorStop(1, rgba(goodRgb, 0));
+                return g;
+              },
               borderWidth: 2, fill: true, tension: 0.3,
-              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: good,
+              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: rgba(goodRgb, 1),
             }
           ]
         },
@@ -59,10 +77,10 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: cs.getPropertyValue('--surface-1').trim(),
-              titleColor: cs.getPropertyValue('--ink-1').trim(),
-              bodyColor: cs.getPropertyValue('--ink-2').trim(),
-              borderColor: cs.getPropertyValue('--hairline-strong').trim(),
+              backgroundColor: rgba(probeRgb('var(--surface-1)'), 1),
+              titleColor: rgba(probeRgb('var(--ink-1)'), 1),
+              bodyColor: rgba(probeRgb('var(--ink-2)'), 1),
+              borderColor: rgba(probeRgb('var(--hairline-strong)'), 1),
               borderWidth: 1,
               titleFont: { family: 'JetBrains Mono', size: 11 },
               bodyFont:  { family: 'Inter Tight', size: 12 },

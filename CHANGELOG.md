@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.1.63 — 2026-04-30
+
+### Fixed
+- Helpdesk and flow charts now render again. Edge's CanvasGradient color-stop parser doesn't accept `oklch(L C H / a)` either (after the previous fix removed the invalid `oklch(...)22` hex-alpha concatenation), so all chart colors are now probed through a hidden `<span>` to resolve them to RGB before being passed to `addColorStop` / borderColor / tooltip styles. This works in every browser that supports `getComputedStyle`.
+
+### Changed
+- Greeting in the dashboard editorial header now picks `Godmorgen` / `Goddag` / `Godaften` / `Godnat` from the local clock instead of being hardcoded to "Godmorgen".
+
+### Removed
+- Drop the leaky `\\U\\g\\e` escape pattern from the dashboard eyebrow `{% now %}` tag — Django template literals don't honor Python-style escaping, so the literal "Uge" now lives outside the format string.
+
 ## 0.1.62 — 2026-04-30
 
 ### Changed
