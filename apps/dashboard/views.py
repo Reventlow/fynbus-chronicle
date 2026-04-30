@@ -54,7 +54,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs) -> dict:
         """Add dashboard data to context."""
         context = super().get_context_data(**kwargs)
-        context["current_week"] = WeekLog.get_current_week()
+        weeklog = WeekLog.get_current_week()
+        context["current_week"] = weeklog
+        context["oncall"] = OnCallDuty.get_current()
+        context["incident_count_week"] = (
+            weeklog.incidents.count() if weeklog else 0
+        )
         return context
 
 

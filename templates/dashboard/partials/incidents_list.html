@@ -9,9 +9,9 @@
     </div>
     <div class="flex items-center gap-2">
       {% if unresolved_count > 0 %}
-        <span class="pill pill-bad" data-incident-count><span class="num">{{ unresolved_count }}</span> uløst{{ unresolved_count|pluralize:"e" }}</span>
+        <span class="pill pill-bad"><span class="num">{{ unresolved_count }}</span> uløst{{ unresolved_count|pluralize:"e" }}</span>
       {% else %}
-        <span class="pill pill-good" data-incident-count><span class="pill-dot"></span>Alle løst</span>
+        <span class="pill pill-good"><span class="pill-dot"></span>Alle løst</span>
       {% endif %}
     </div>
   </div>
@@ -52,7 +52,7 @@
   {% else %}
     <div class="flex-grow flex items-center justify-center" style="padding: 32px 24px;">
       <div class="text-center">
-        <span class="pill pill-good" data-incident-count><span class="pill-dot"></span>0 hændelser denne uge</span>
+        <span class="pill pill-good"><span class="pill-dot"></span>0 hændelser denne uge</span>
         <p style="font-size: 13px; color: var(--ink-3); margin: 12px 0 0;">Alt kører som det skal.</p>
       </div>
     </div>

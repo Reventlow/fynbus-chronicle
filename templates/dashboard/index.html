@@ -27,18 +27,13 @@
           Live · synkroniseret kl <span class="num">{% now "H:i" %}</span>
         </span>
         <span style="color: var(--ink-5);">·</span>
-        <span hx-get="{% url 'dashboard:partial-incidents' %}"
-              hx-trigger="load"
-              hx-select="[data-incident-count]"
-              hx-swap="innerHTML">
-          <span class="num">—</span> hændelser denne uge
-        </span>
+        <span><span class="num">{{ incident_count_week }}</span> hændelser denne uge</span>
         <span style="color: var(--ink-5);">·</span>
-        <span hx-get="{% url 'dashboard:partial-oncall' %}"
-              hx-trigger="load"
-              hx-select="[data-oncall-name]"
-              hx-swap="innerHTML">
-          Rådighedsvagt: <strong style="color: var(--ink-1); font-weight: 600;">…</strong>
+        <span>
+          Rådighedsvagt:
+          <strong style="color: var(--ink-1); font-weight: 600;">
+            {% if oncall %}{{ oncall.user.get_full_name|default:oncall.user.username }}{% else %}Ikke tildelt{% endif %}
+          </strong>
         </span>
       </div>
     </div>

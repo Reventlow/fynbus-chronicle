@@ -7,8 +7,8 @@
         {% with name=oncall.user.get_full_name|default:oncall.user.username %}{{ name|slice:":2"|upper }}{% endwith %}
       </span>
       <div>
-        <div data-oncall-name style="font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
-          Rådighedsvagt: <strong style="color: var(--ink-1); font-weight: 600;">{{ oncall.user.get_full_name|default:oncall.user.username }}</strong>
+        <div style="font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
+          {{ oncall.user.get_full_name|default:oncall.user.username }}
         </div>
         <div style="font-size: 12.5px; color: var(--ink-3); margin-top: 2px;">
           {{ oncall.week_label }}
@@ -24,8 +24,8 @@
   {% else %}
     <div class="flex items-center gap-3" style="margin-top: 12px;">
       <span class="avatar avatar-44" style="background: var(--surface-2); color: var(--ink-4);">—</span>
-      <div data-oncall-name style="font-size: 16px; font-weight: 500; color: var(--ink-3);">
-        Rådighedsvagt: <strong style="color: var(--ink-3); font-weight: 500;">Ikke tildelt</strong>
+      <div style="font-size: 16px; font-weight: 500; color: var(--ink-3);">
+        Ikke tildelt
       </div>
     </div>
     <div class="flex gap-2" style="margin-top: 16px;">
