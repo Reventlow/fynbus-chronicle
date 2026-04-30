@@ -43,6 +43,13 @@
       const accent = cs.getPropertyValue('--accent').trim() || '#C4A35A';
       const ink4 = cs.getPropertyValue('--ink-4').trim() || '#6B635B';
       const hairline = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      // Inject alpha into an oklch(...) string. Works for both `oklch(L C H)`
+      // and `oklch(L C H / a)` — older alpha is dropped in favor of the new one.
+      const fade = (c, a) => {
+        const m = c.match(/^oklch\(([^)]+)\)$/);
+        if (!m) return c;
+        return 'oklch(' + m[1].split('/')[0].trim() + ' / ' + a + ')';
+      };
 
       const ctx = document.getElementById('helpdesk-chart').getContext('2d');
       new Chart(ctx, {
@@ -62,7 +69,7 @@
             pointBackgroundColor: accent,
             backgroundColor: function(ctx) {
               const c = ctx.chart.ctx; const g = c.createLinearGradient(0,0,0,240);
-              g.addColorStop(0, accent + '33'); g.addColorStop(1, accent + '00'); return g;
+              g.addColorStop(0, fade(accent, 0.20)); g.addColorStop(1, fade(accent, 0)); return g;
             },
           }]
         },

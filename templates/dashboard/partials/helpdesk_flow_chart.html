@@ -22,6 +22,13 @@
       const ink4 = cs.getPropertyValue('--ink-4').trim();
       const isDark = document.documentElement.classList.contains('dark');
       const hairline = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      // Inject alpha into an oklch(...) string (the function form does not accept
+      // hex-alpha suffixes the way #rrggbb does).
+      const fade = (c, a) => {
+        const m = c.match(/^oklch\(([^)]+)\)$/);
+        if (!m) return c;
+        return 'oklch(' + m[1].split('/')[0].trim() + ' / ' + a + ')';
+      };
 
       const ctx = document.getElementById('helpdesk-flow-chart').getContext('2d');
       new Chart(ctx, {
@@ -33,7 +40,7 @@
               label: 'Nye sager',
               data: data.weeks.map(w => w.new),
               borderColor: info,
-              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, info + '22'); g.addColorStop(1, info + '00'); return g; },
+              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, fade(info, 0.14)); g.addColorStop(1, fade(info, 0)); return g; },
               borderWidth: 2, fill: true, tension: 0.3,
               pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: info,
             },
@@ -41,7 +48,7 @@
               label: 'Lukkede sager',
               data: data.weeks.map(w => w.closed),
               borderColor: good,
-              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, good + '1c'); g.addColorStop(1, good + '00'); return g; },
+              backgroundColor: function(c) { const g = c.chart.ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, fade(good, 0.11)); g.addColorStop(1, fade(good, 0)); return g; },
               borderWidth: 2, fill: true, tension: 0.3,
               pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: good,
             }
