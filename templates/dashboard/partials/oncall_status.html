@@ -1,6 +1,7 @@
 {# Oncall card — gradient surface, gradient avatar, name + week, two buttons #}
+{% load star_wars %}
 <div class="card" style="position: relative; overflow: hidden; background: linear-gradient(180deg, var(--surface-1) 0%, color-mix(in oklch, var(--accent-soft) 50%, var(--surface-1)) 100%);">
-  <div class="label-eyebrow">Rådighedsvagt</div>
+  <div class="label-eyebrow">{% sw_phrase "Rådighedsvagt" "Jedi på vagt" "Inkvisitor på vagt" %}</div>
   {% if oncall %}
     <div class="flex items-center gap-3" style="margin-top: 12px;">
       <span class="avatar avatar-44 avatar-gradient" style="box-shadow: 0 4px 12px var(--accent-soft);">

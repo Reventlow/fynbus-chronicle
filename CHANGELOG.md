@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.3.1 — 2026-05-01
+
+### Added
+- Star Wars Day phrase swaps. New `{% sw_phrase %}` template tag (`apps/dashboard/templatetags/star_wars.py`) renders three nested spans (default/rebel/sith); CSS shows the right one based on `data-event` + `.dark`. Wired into the dashboard's chart titles + eyebrows, the four KPI eyebrows, the on-call card, the current-week card's section eyebrows, the incidents card, and the live/synkroniseret line.
+  - Light/Rebel examples: "Lukkede sager → Fuldførte missioner", "Hændelser → Indsatser", "Rådighedsvagt → Jedi på vagt", "Live → Holocron"
+  - Dark/Sith examples: "Lukkede sager → Rebel agents fanget", "Netto → Imperial kontrol", "Hændelser → Sith-aktioner", "Rådighedsvagt → Inkvisitor på vagt", "Aktive opgaver → Imperial direktiver"
+
 ## 0.3.0 — 2026-05-01
 
 ### Added

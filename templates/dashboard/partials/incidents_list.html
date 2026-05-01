@@ -1,10 +1,11 @@
 {# Incidents list — colored severity rail on the left, mono timestamp + system + owner. #}
+{% load star_wars %}
 <div class="card overflow-hidden" style="padding: 0; height: 100%; display: flex; flex-direction: column;">
   <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
     <div>
-      <div class="label-eyebrow">Hændelser</div>
+      <div class="label-eyebrow">{% sw_phrase "Hændelser" "Indsatser" "Sith-aktioner" %}</div>
       <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-        Sidste 7 dage
+        {% sw_phrase "Sidste 7 dage" "Sidste 7 dage" "Sidste 7 cyklusser" %}
       </h2>
     </div>
     <div class="flex items-center gap-2">

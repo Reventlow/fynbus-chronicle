@@ -1,9 +1,10 @@
 {# 4-card KPI strip — Åbne / Nye / Lukkede / Netto #}
 {% load static %}
+{% load star_wars %}
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
-    <div class="label-eyebrow">Åbne sager</div>
+    <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" %}</div>
     <button hx-post="{% url 'dashboard:sync-servicedesk' %}"
             hx-target="#helpdesk-stats-container"
             hx-swap="innerHTML"
@@ -32,7 +33,7 @@
 </div>
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
-  <div class="label-eyebrow">Nye sager (uge)</div>
+  <div class="label-eyebrow">{% sw_phrase "Nye sager (uge)" "Nye missioner (uge)" "Nye oprørere (uge)" %}</div>
   <div class="num"
        style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_new|default:"—" }}
@@ -41,7 +42,7 @@
 </div>
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
-  <div class="label-eyebrow">Lukkede sager</div>
+  <div class="label-eyebrow">{% sw_phrase "Lukkede sager" "Fuldførte missioner" "Rebel agents fanget" %}</div>
   <div class="num"
        style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_closed|default:"—" }}
@@ -51,7 +52,7 @@
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
-    <div class="label-eyebrow">Netto</div>
+    <div class="label-eyebrow">{% sw_phrase "Netto" "Alliance-balance" "Imperial kontrol" %}</div>
     {% if weeklog %}
       {% if weeklog.helpdesk_delta < 0 %}
         <span class="pill-delta" style="background: var(--good-soft); color: var(--good-ink);">▼{{ weeklog.helpdesk_delta|stringformat:"d"|cut:"-" }}</span>
