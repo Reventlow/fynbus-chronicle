@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.8 — 2026-04-30
+
+### Changed
+- Re-balance the dashboard main row from `1.7fr / 1fr` to `1.25fr / 1fr`. The Rådighedsvagt + Aktuel ugelog rail was much narrower than the helpdesk flow chart, which had room to spare; the rail cards now have noticeably more breathing room while the chart still gets the wider half.
+
 ## 0.2.7 — 2026-04-30
 
 ### Added
