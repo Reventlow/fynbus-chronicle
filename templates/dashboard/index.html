@@ -15,6 +15,10 @@
     <div>
       <div class="label-eyebrow" style="margin-bottom: 10px;">
         Uge {% now "W · j N Y" %}
+        {% if APP_VERSION %}
+          <span style="color: var(--ink-5); margin: 0 6px;">·</span>
+          <span style="color: var(--ink-4);">v{{ APP_VERSION }}</span>
+        {% endif %}
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
         <span x-data x-text="(() => { const h = new Date().getHours(); return h < 11 ? 'Godmorgen' : h < 18 ? 'Goddag' : h < 23 ? 'Godaften' : 'Godnat'; })()">Goddag</span>,

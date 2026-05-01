@@ -17,9 +17,21 @@
       </p>
     {% endif %}
 
-    {% if priority_items %}
-      <div style="border-top: 1px solid var(--hairline); padding-top: 12px;">
-        <div class="label-eyebrow" style="margin-bottom: 8px;">Aktive opgaver</div>
+    <div style="border-top: 1px solid var(--hairline); padding-top: 12px;">
+      <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+        <div class="label-eyebrow">Aktive opgaver</div>
+        {% if is_editor %}
+        <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}#priority-items-list"
+           class="btn btn-sm btn-ghost"
+           style="padding: 3px 8px; font-size: 11.5px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Tilføj
+        </a>
+        {% endif %}
+      </div>
+      {% if priority_items %}
         <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px;">
           {% for item in priority_items %}
             <li class="flex items-center justify-between gap-3" style="font-size: 13px;">
@@ -30,8 +42,11 @@
             </li>
           {% endfor %}
         </ul>
-      </div>
-    {% endif %}
+      {% else %}
+        <p style="font-size: 12.5px; color: var(--ink-4); margin: 0;">Ingen aktive opgaver.</p>
+      {% endif %}
+    </div>
+
 
     {% if absences %}
       <div style="border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 12px;">

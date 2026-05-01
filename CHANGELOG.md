@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.7 — 2026-04-30
+
+### Added
+- "Tilføj" link in the "Aktive opgaver" section of the dashboard's current-week card. Clicking it routes to the weeklog detail page anchored on `#priority-items-list` so the user lands directly on the priorities section to add a new one. The button only appears for editors.
+- App version (`v0.2.7`) appended to the dashboard editorial header eyebrow next to the date, so it's always visible at a glance.
+
+### Changed
+- "Aktive opgaver" section now always renders on the current-week card (with an "Ingen aktive opgaver." placeholder when empty), so the "Tilføj" button is reachable even when there are no priorities yet.
+
 ## 0.2.6 — 2026-04-30
 
 ### Added
