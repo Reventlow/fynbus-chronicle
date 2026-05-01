@@ -1,14 +1,35 @@
+{% load star_wars %}
 {% comment %}
   Star Wars Day banner — only rendered when IS_STAR_WARS_DAY is true (May 4
-  in Europe/Copenhagen, or via ?force-star-wars=1). Sticky strip directly
-  under the nav. Styling lives in input.css under `.sw-banner`.
+  in Europe/Copenhagen, or via ?force-star-wars=1).
+
+  Cycles through ~100 quippy FynBus + Star Wars mash-up messages, swapping
+  every 2 minutes. Initial pick is random so reloads feel fresh; the dot
+  fades during the swap so the change is noticeable without being jumpy.
+  Styling lives in input.css under `.sw-banner`.
 {% endcomment %}
-<div class="sw-banner" role="note" aria-label="Star Wars Day">
+<div class="sw-banner" role="note" aria-label="Star Wars Day"
+     x-data="{
+       msgs: {% sw_messages_json %},
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
   <div class="sw-banner-inner">
     <span class="sw-banner-glyph" aria-hidden="true">⚔</span>
     <span class="sw-banner-date">4. maj</span>
     <span class="sw-banner-sep" aria-hidden="true">·</span>
-    <span class="sw-banner-da">Må Kraften være med dig.</span>
-    <span class="sw-banner-en">May the 4th be with you.</span>
+    <span class="sw-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Må Kraften være med dig.</span>
   </div>
 </div>

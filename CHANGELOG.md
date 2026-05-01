@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.3.2 — 2026-05-01
+
+### Added
+- Rotating banner messages on Star Wars Day. The "4. maj" strip now picks from 106 FynBus × Star Wars one-liners and cycles every 2 minutes ("Servere på Alderaan offline", "Wookieer anmoder om fuld adgang til Docunote", "Passagerer på Tatooine-ruten siger det er for støvet", "FynBus kom kun på andenpladsen i Boonta Eve Podrace", "Greedo skød først — pull request afvist", …). Initial message is random so reloads feel fresh; messages crossfade with a 220 ms opacity transition. List lives in `apps/dashboard/templatetags/star_wars.py` (`SW_BANNER_MESSAGES`) — easy to extend for next year.
+
 ## 0.3.1 — 2026-05-01
 
 ### Added

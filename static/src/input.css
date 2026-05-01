@@ -224,14 +224,19 @@ html[data-event="star-wars"].dark .sw-banner {
   white-space: nowrap;
 }
 .sw-banner-sep { color: var(--accent); opacity: 0.5; }
-.sw-banner-da { font-weight: 600; color: var(--accent-ink); }
-.sw-banner-en {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
+.sw-banner-msg {
   color: var(--accent-ink);
-  opacity: 0.85;
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  /* Truncate gracefully on narrow viewports rather than wrapping the
+     banner two lines tall. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
+.sw-banner-msg.is-fading { opacity: 0; }
 
 /* Tiny mono Easter egg in the footer. */
 .sw-footer-egg {
