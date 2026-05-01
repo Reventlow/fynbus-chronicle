@@ -82,10 +82,24 @@
             Ny vs. lukket — flow over tid
           </h2>
         </div>
-        <div class="segmented">
-          <button type="button" class="segmented-btn segmented-btn-active">12U</button>
-          <button type="button" class="segmented-btn">26U</button>
-          <button type="button" class="segmented-btn">12M</button>
+        <div class="segmented"
+             x-data="{
+               win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
+               set(n) {
+                 this.win = n;
+                 localStorage.setItem('flowChartWindow', String(n));
+                 window.dispatchEvent(new CustomEvent('flow-chart-window', { detail: n }));
+               }
+             }">
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 12 }"
+                  @click="set(12)">12U</button>
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 26 }"
+                  @click="set(26)">26U</button>
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 52 }"
+                  @click="set(52)">12M</button>
         </div>
       </div>
 

@@ -53,15 +53,24 @@ tooltip palette so contrast is reliable across browsers.
         grid:    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
       };
 
+      // Slice the dataset to the active window (12 / 26 / 52 weeks). The
+      // window is shared with the segmented control via localStorage so a
+      // page-level Alpine handler can update it from outside the partial.
+      const fullWeeks = data.weeks;
+      const getWindow = () => parseInt(localStorage.getItem('flowChartWindow') || '12');
+      const slice = w => fullWeeks.slice(-Math.min(w, fullWeeks.length));
+
+      let sliced = slice(getWindow());
+
       const ctx = document.getElementById('helpdesk-flow-chart').getContext('2d');
-      new Chart(ctx, {
+      const chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: data.weeks.map(w => w.label),
+          labels: sliced.map(w => w.label),
           datasets: [
             {
               label: 'Nye sager',
-              data: data.weeks.map(w => w.new),
+              data: sliced.map(w => w.new),
               borderColor: rgba(P.info, 1),
               backgroundColor: function(c) {
                 const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
@@ -77,7 +86,7 @@ tooltip palette so contrast is reliable across browsers.
             },
             {
               label: 'Lukkede sager',
-              data: data.weeks.map(w => w.closed),
+              data: sliced.map(w => w.closed),
               borderColor: rgba(P.good, 1),
               backgroundColor: function(c) {
                 const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
@@ -120,6 +129,26 @@ tooltip palette so contrast is reliable across browsers.
           }
         }
       });
+
+      // Reference the latest chart + dataset on `window` so the segmented
+      // control's event handler updates whichever chart is currently mounted
+      // (HTMX swaps the partial every 60s; the handler always finds the
+      // freshest instance instead of holding a reference to a dead canvas).
+      window._helpdeskFlowChart = chart;
+      window._helpdeskFlowData  = fullWeeks;
+      if (!window._helpdeskFlowListenerBound) {
+        window._helpdeskFlowListenerBound = true;
+        window.addEventListener('flow-chart-window', e => {
+          const c = window._helpdeskFlowChart;
+          const f = window._helpdeskFlowData;
+          if (!c || !f) return;
+          const s = f.slice(-Math.min(e.detail, f.length));
+          c.data.labels = s.map(w => w.label);
+          c.data.datasets[0].data = s.map(w => w.new);
+          c.data.datasets[1].data = s.map(w => w.closed);
+          c.update();
+        });
+      }
     })
     .catch(err => {
       console.error('helpdesk-flow-chart:', err);

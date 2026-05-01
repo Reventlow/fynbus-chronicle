@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.11 — 2026-05-01
+
+### Added
+- 12U / 26U / 12M segmented control on the helpdesk flow chart now actually changes the visible window (last 12 / 26 / 52 weeks). Selection persists in `localStorage` and survives the chart's 60-second HTMX refresh — the active partial subscribes via a `flow-chart-window` custom event so the chart updates in place instead of re-fetching.
+
 ## 0.2.10 — 2026-05-01
 
 ### Removed
