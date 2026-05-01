@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.19 — 2026-05-01
+
+### Fixed
+- Three multi-line `{# … #}` comments (one in `nav.html`'s tweaks dropdown, two in `dashboard/index.html`) leaked onto the rendered page as visible text — Django's `{# … #}` syntax is single-line only. Switched to `{% comment %} … {% endcomment %}` for all three. The "Three modes: …" block above the density segmented control and the row-level hook documentation in the dashboard are no longer visible.
+
 ## 0.2.18 — 2026-05-01
 
 ### Changed

@@ -73,8 +73,10 @@
   </div>
 
   {# === Main grid: chart (1.25fr) + side rail (1fr) ========================= #}
-  {# js-dashboard-flow-row: collapsed to a single column in Dashboard mode
-     (where the rail is hidden) so the flow chart spans full width. #}
+  {% comment %}
+    js-dashboard-flow-row: collapsed to a single column in Dashboard mode
+    (where the rail is hidden) so the flow chart spans full width.
+  {% endcomment %}
   <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-flow-row"
        style="gap: var(--gutter);">
 
@@ -159,10 +161,12 @@
   </div>
 
   {# === Tasks + incidents row ============================================= #}
-  {# js-dashboard-tasks-row: container row that holds graph (left) + extras
-     (changelog under graph, incidents on right). The row itself is kept;
-     individual children carry the js-dashboard-graphs / js-dashboard-extras
-     hooks so each density mode hides the right pieces. #}
+  {% comment %}
+    js-dashboard-tasks-row: container row that holds graph (left) + extras
+    (changelog under graph, incidents on right). The row itself is kept;
+    individual children carry the js-dashboard-graphs / js-dashboard-extras
+    hooks so each density mode hides the right pieces.
+  {% endcomment %}
   <div class="grid grid-cols-1 lg:grid-cols-2 items-start js-dashboard-tasks-row" style="gap: var(--gutter);">
 
     {# Left column: helpdesk chart + latest changelog entry #}

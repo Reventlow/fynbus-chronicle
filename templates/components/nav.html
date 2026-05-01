@@ -85,10 +85,12 @@
              class="absolute right-0 mt-2 z-50"
              style="width: 240px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); padding: 14px;">
           <div class="label-eyebrow" style="margin-bottom: 8px;">Densitet</div>
-          {# Three modes:
-             - Komfort: comfortable spacing, all sections visible (default)
-             - Kompakt: denser spacing, charts hidden
-             - Dashboard: comfortable spacing, only header + KPIs + charts #}
+          {% comment %}
+            Three modes:
+            - Komfort: comfortable spacing, all sections visible (default)
+            - Kompakt: denser spacing, charts hidden
+            - Dashboard: comfortable spacing, only header + KPIs + charts
+          {% endcomment %}
           <div class="segmented" style="display: flex; width: 100%;">
             <button class="segmented-btn flex-1"
                     :class="{ 'segmented-btn-active': density === 'comfortable' }"
