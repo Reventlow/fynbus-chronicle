@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.15 — 2026-05-01
+
+### Changed
+- Flow chart's "Nye sager" area fill now tracks the tweaks-panel accent (the wash under the curve subtly retints with gold/sage/terracotta/ink). Line colours remain `--chart-info` blue and `--chart-good` dashed-sage so the two series stay distinct — only the gradient fill picks up `--accent`. Hooked into the existing `accent-change` event so the tint updates instantly.
+
 ## 0.2.14 — 2026-05-01
 
 ### Changed

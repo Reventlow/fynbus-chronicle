@@ -38,20 +38,36 @@ tooltip palette so contrast is reliable across browsers.
         }
         return [0, 0, 0];
       };
+      // Probe an oklch / var() colour through a hidden element so the
+      // browser resolves it to rgb() — getComputedStyle on a custom
+      // property would just return the literal "oklch(...)" string.
+      const probeRgb = css => {
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;color:' + css;
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+        const m = computed.match(/-?\d+(?:\.\d+)?/g);
+        if (!m || m.length < 3) return [0, 0, 0];
+        return [Math.round(parseFloat(m[0])), Math.round(parseFloat(m[1])), Math.round(parseFloat(m[2]))];
+      };
 
-      // Charts use their own slightly hotter palette + neutral chrome that
-      // doesn't depend on probing computed colours from a hidden element
-      // (which is unreliable across browsers for var() references).
-      const P = {
-        info: rgbVar('--chart-info'),
-        good: rgbVar('--chart-good'),
+      // Multi-series chart — keep distinct line colours so the two series
+      // stay visually separable (UI-expert guardrail). Only the area fill
+      // under "Nye sager" picks up --accent so the editorial accent still
+      // washes through the chart when the user changes the tweak.
+      const buildPalette = () => ({
+        info:    rgbVar('--chart-info'),
+        good:    rgbVar('--chart-good'),
+        accent:  probeRgb('var(--accent)'),
         ink:     isDark ? [240, 240, 240] : [25, 30, 38],
         ink2:    isDark ? [205, 208, 214] : [60, 66, 76],
         ink4:    isDark ? [150, 152, 158] : [110, 115, 124],
         surface: isDark ? [44, 48, 56]    : [255, 255, 255],
         border:  isDark ? [74, 80, 90]    : [218, 220, 226],
         grid:    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-      };
+      });
+      let P = buildPalette();
 
       // Slice the dataset to the active window (12 / 26 / 52 weeks). The
       // window is shared with the segmented control via localStorage so a
@@ -73,9 +89,11 @@ tooltip palette so contrast is reliable across browsers.
               data: sliced.map(w => w.new),
               borderColor: rgba(P.info, 1),
               backgroundColor: function(c) {
+                // Area fill picks up the tweaks-panel accent — line colour
+                // stays --chart-info so the two series remain distinct.
                 const g = c.chart.ctx.createLinearGradient(0, 0, 0, 240);
-                g.addColorStop(0, rgba(P.info, 0.18));
-                g.addColorStop(1, rgba(P.info, 0));
+                g.addColorStop(0, rgba(P.accent, 0.20));
+                g.addColorStop(1, rgba(P.accent, 0));
                 return g;
               },
               borderWidth: 2.25, fill: true, tension: 0.3,
@@ -146,6 +164,21 @@ tooltip palette so contrast is reliable across browsers.
           c.data.labels = s.map(w => w.label);
           c.data.datasets[0].data = s.map(w => w.new);
           c.data.datasets[1].data = s.map(w => w.closed);
+          c.update();
+        });
+        // Re-tint the "Nye sager" area fill when the tweaks-panel accent
+        // (or dark mode) changes. Lines stay on --chart-info / --chart-good
+        // so the two series remain distinct regardless of accent.
+        window.addEventListener('accent-change', () => {
+          const c = window._helpdeskFlowChart;
+          if (!c) return;
+          const np = buildPalette();
+          c.data.datasets[0].backgroundColor = function(ctx) {
+            const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 240);
+            g.addColorStop(0, rgba(np.accent, 0.20));
+            g.addColorStop(1, rgba(np.accent, 0));
+            return g;
+          };
           c.update();
         });
       }
