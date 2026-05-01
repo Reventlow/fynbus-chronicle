@@ -1,0 +1,14 @@
+{% comment %}
+  Star Wars Day banner — only rendered when IS_STAR_WARS_DAY is true (May 4
+  in Europe/Copenhagen, or via ?force-star-wars=1). Sticky strip directly
+  under the nav. Styling lives in input.css under `.sw-banner`.
+{% endcomment %}
+<div class="sw-banner" role="note" aria-label="Star Wars Day">
+  <div class="sw-banner-inner">
+    <span class="sw-banner-glyph" aria-hidden="true">⚔</span>
+    <span class="sw-banner-date">4. maj</span>
+    <span class="sw-banner-sep" aria-hidden="true">·</span>
+    <span class="sw-banner-da">Må Kraften være med dig.</span>
+    <span class="sw-banner-en">May the 4th be with you.</span>
+  </div>
+</div>

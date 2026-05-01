@@ -17,7 +17,8 @@
       }"
       :class="{ 'dark': darkMode }"
       :data-density="density === 'comfortable' ? null : density"
-      :data-accent="accent === 'gold' ? null : accent">
+      :data-accent="accent === 'gold' ? null : accent"
+      {% if IS_STAR_WARS_DAY %}data-event="star-wars"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,6 +56,10 @@
 
   {% if user.is_authenticated %}
     {% include 'components/nav.html' %}
+  {% endif %}
+
+  {% if IS_STAR_WARS_DAY %}
+    {% include 'components/star_wars_banner.html' %}
   {% endif %}
 
   <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">

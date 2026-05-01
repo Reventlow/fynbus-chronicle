@@ -72,6 +72,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "chronicle.context_processors.version",
+                "chronicle.context_processors.star_wars_day",
                 "apps.accounts.context_processors.editor_context",
             ],
         },

@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.3.0 — 2026-05-01
+
+### Added
+- May 4th Star Wars Day skin. On 2026-05-04 (Europe/Copenhagen), the dashboard layers a one-day theme over the editorial design system: Rebel-orange accent in light mode, Sith-red accent in dark mode, a thin sticky banner ("⚔ 4. maj · Må Kraften være med dig.") under the nav, a faint starfield behind the page, a brand-mark glyph swap (✦ Rebel / ⌖ Imperial), and a small mono Easter egg in the footer. Implemented as a single `IS_STAR_WARS_DAY` context processor that flips `data-event="star-wars"` on `<html>`; the skin reuses the existing accent token plumbing so pills, focus rings, the on-call avatar, and the open-tickets chart line all retint automatically.
+- Preview hatch: `?force-star-wars=1` on any URL turns the skin on for the current request, useful for screenshots and pre-flight checks. The skin disappears on its own at midnight on May 5th — no cleanup PR needed.
+
 ## 0.2.22 — 2026-05-01
 
 ### Fixed

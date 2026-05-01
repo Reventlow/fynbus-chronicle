@@ -127,6 +127,122 @@ html[data-accent="ink"]      { --accent: oklch(0.30 0.015 250); --accent-soft: o
 html[data-accent="ink"].dark { --accent: oklch(0.92 0.005 80); --accent-soft: oklch(0.30 0.010 250); --accent-ink: oklch(0.97 0.005 80); }
 
 /* =============================================================================
+   May 4th — Star Wars Day skin (date-gated via context processor)
+   Light mode = Rebel Alliance (warm orange), dark = Sith (saber red).
+   Layered on top of any user-selected accent so it always wins on the day.
+   ============================================================================= */
+html[data-event="star-wars"] {
+  --accent:      oklch(0.68 0.17 55);   /* Rebel orange */
+  --accent-soft: oklch(0.96 0.06 70);   /* warm cream */
+  --accent-ink:  oklch(0.45 0.17 50);   /* deep amber */
+  --chart-accent: rgb(217, 119, 41);    /* matches the orange — chart probes --accent so this is just a fallback */
+}
+html[data-event="star-wars"].dark {
+  --accent:      oklch(0.62 0.20 25);   /* lightsaber red */
+  --accent-soft: oklch(0.30 0.10 25);
+  --accent-ink:  oklch(0.86 0.13 25);
+  --chart-accent: rgb(216, 60, 50);
+}
+
+/* Faint starfield behind the page — fixed-position so it doesn't scroll. */
+html[data-event="star-wars"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, var(--ink-1) 1px, transparent 1.5px),
+    radial-gradient(circle at 70% 60%, var(--ink-1) 1px, transparent 1.5px),
+    radial-gradient(circle at 40% 80%, var(--ink-1) 0.8px, transparent 1.2px);
+  background-size: 80px 80px, 110px 110px, 65px 65px;
+  background-position: 0 0, 30px 50px, 60px 20px;
+  opacity: 0.06;
+}
+html[data-event="star-wars"].dark body::before { opacity: 0.10; }
+/* Keep page content above the starfield. */
+html[data-event="star-wars"] body > * { position: relative; z-index: 1; }
+
+/* Brand mark glyph swap — Rebel ✦ on light, Imperial ⌖ on dark.
+   Hide the literal "C" by zeroing its font-size on the parent, then render
+   the new glyph via ::before so we don't have to touch the template. */
+html[data-event="star-wars"] .brand-mark {
+  font-size: 0;
+}
+html[data-event="star-wars"] .brand-mark::before {
+  content: "✦";
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-style: normal;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+html[data-event="star-wars"].dark .brand-mark::before {
+  content: "⌖";
+  font-size: 19px;
+}
+
+/* Sticky banner under the nav. Single line on desktop, wraps on narrow. */
+.sw-banner {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 70%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+html[data-event="star-wars"].dark .sw-banner {
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 100%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 60%, transparent) 100%);
+}
+.sw-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sw-banner-glyph {
+  font-size: 14px;
+  color: var(--accent);
+}
+.sw-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.sw-banner-sep { color: var(--accent); opacity: 0.5; }
+.sw-banner-da { font-weight: 600; color: var(--accent-ink); }
+.sw-banner-en {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* Tiny mono Easter egg in the footer. */
+.sw-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+/* =============================================================================
    Density modes (driven by data-density on <html>)
    - comfortable (default, no attribute): full layout, comfortable spacing
    - compact:    denser spacing AND graphs hidden

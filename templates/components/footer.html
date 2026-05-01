@@ -5,6 +5,10 @@
         &copy; {% now "Y" %} FynBus IT.
       </div>
       <div class="flex items-center space-x-4 text-sm text-sand-500 dark:text-sand-400">
+        {% if IS_STAR_WARS_DAY %}
+          <span class="sw-footer-egg" aria-label="Star Wars Day Easter egg">⚔ DJEDLOMI · 04 · 05 · 26 ⚔</span>
+          <span>&middot;</span>
+        {% endif %}
         <a href="{% url 'admin:index' %}" class="hover:text-sand-700 dark:hover:text-sand-200">
           Administration
         </a>
