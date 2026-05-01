@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.20 — 2026-05-01
+
+### Changed
+- Kompakt density mode now hides the "Seneste ændring" changelog card too (previously only Dashboard mode hid it). The card carries a new `js-dashboard-changelog` hook so it's distinct from the incidents card, which still shows in Kompakt.
+- Kompakt mode also collapses both two-column grid rows to a single column (matching what Dashboard mode already does). The rail and the incidents card now span full width instead of sitting next to an empty column where the chart used to live, so incidents lands visually higher up the page.
+
 ## 0.2.19 — 2026-05-01
 
 ### Fixed

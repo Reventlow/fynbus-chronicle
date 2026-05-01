@@ -140,11 +140,20 @@ html[data-density="compact"] {
   --gutter:   14px;
 }
 
-/* Kompakt — hide every graph card on the dashboard.
-   The container grids stay in place; an empty column is acceptable here
-   because the side rail / changelog / incidents fill the visible space. */
-html[data-density="compact"] .js-dashboard-graphs {
+/* Kompakt — hide every graph card and the changelog card. */
+html[data-density="compact"] .js-dashboard-graphs,
+html[data-density="compact"] .js-dashboard-changelog {
   display: none !important;
+}
+
+/* Kompakt — collapse the two-column grids to a single column so the rail
+   and the incidents card span full width instead of sitting next to an
+   empty column where the chart used to live. Effect: incidents moves
+   visually higher (no empty gap in front of it) and the rail isn't
+   crammed into a narrow side column. */
+html[data-density="compact"] .js-dashboard-flow-row,
+html[data-density="compact"] .js-dashboard-tasks-row {
+  grid-template-columns: minmax(0, 1fr) !important;
 }
 
 /* Dashboard mode — hide the side rail, the changelog card, and the incidents
