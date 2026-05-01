@@ -2,7 +2,11 @@
 <html lang="da"
       x-data="{
         darkMode:  localStorage.getItem('darkMode') === 'true',
-        density:   localStorage.getItem('density') || 'comfortable',
+        // Density now has three modes: 'comfortable' (default), 'compact' (denser
+        // spacing AND graphs hidden), and 'dashboard' (only header/KPIs/graphs).
+        // Any legacy value other than these three is coerced back to comfortable.
+        density:   ['comfortable','compact','dashboard'].includes(localStorage.getItem('density'))
+                     ? localStorage.getItem('density') : 'comfortable',
         accent:    localStorage.getItem('accent')  || 'gold',
         init() {
           const fire = () => window.dispatchEvent(new CustomEvent('accent-change'));
@@ -12,7 +16,7 @@
         }
       }"
       :class="{ 'dark': darkMode }"
-      :data-density="density === 'compact' ? 'compact' : null"
+      :data-density="density === 'comfortable' ? null : density"
       :data-accent="accent === 'gold' ? null : accent">
 <head>
   <meta charset="UTF-8">

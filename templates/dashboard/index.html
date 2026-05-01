@@ -73,11 +73,14 @@
   </div>
 
   {# === Main grid: chart (1.25fr) + side rail (1fr) ========================= #}
-  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)]"
+  {# js-dashboard-flow-row: collapsed to a single column in Dashboard mode
+     (where the rail is hidden) so the flow chart spans full width. #}
+  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-flow-row"
        style="gap: var(--gutter);">
 
     {# === Flow chart card === #}
-    <div class="card overflow-hidden" style="padding: 0;"
+    {# js-dashboard-graphs: hidden in Kompakt mode (charts off) #}
+    <div class="card overflow-hidden js-dashboard-graphs" style="padding: 0;"
          x-data="{
            win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
            set(n) {
@@ -131,8 +134,9 @@
       </div>
     </div>
 
-    {# === Right rail: on-call + system status === #}
-    <div class="flex flex-col" style="gap: var(--gutter);">
+    {# === Right rail: on-call + current week === #}
+    {# js-dashboard-rail: hidden in Dashboard mode (extras off) #}
+    <div class="flex flex-col js-dashboard-rail" style="gap: var(--gutter);">
       <div hx-get="{% url 'dashboard:partial-oncall' %}"
            hx-trigger="load, every 60s"
            hx-swap="innerHTML">
@@ -155,12 +159,17 @@
   </div>
 
   {# === Tasks + incidents row ============================================= #}
-  <div class="grid grid-cols-1 lg:grid-cols-2 items-start" style="gap: var(--gutter);">
+  {# js-dashboard-tasks-row: container row that holds graph (left) + extras
+     (changelog under graph, incidents on right). The row itself is kept;
+     individual children carry the js-dashboard-graphs / js-dashboard-extras
+     hooks so each density mode hides the right pieces. #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 items-start js-dashboard-tasks-row" style="gap: var(--gutter);">
 
     {# Left column: helpdesk chart + latest changelog entry #}
     <div class="flex flex-col" style="gap: var(--gutter);">
       {# Helpdesk open-tickets chart (kept) #}
-      <div class="card overflow-hidden" style="padding: 0;"
+      {# js-dashboard-graphs: hidden in Kompakt mode #}
+      <div class="card overflow-hidden js-dashboard-graphs" style="padding: 0;"
            x-data="{
              win: parseInt(localStorage.getItem('openChartWindow') || '12'),
              set(n) {
@@ -199,8 +208,9 @@
       </div>
 
       {# Latest changelog entry #}
+      {# js-dashboard-extras: hidden in Dashboard mode #}
       {% if latest_change %}
-      <div class="card overflow-hidden flex-grow" style="padding: 0;">
+      <div class="card overflow-hidden flex-grow js-dashboard-extras" style="padding: 0;">
         <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
           <div>
             <div class="label-eyebrow">Seneste ændring</div>
@@ -217,8 +227,9 @@
       {% endif %}
     </div>
 
-    {# Incidents #}
-    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+    {# Incidents — js-dashboard-extras: hidden in Dashboard mode #}
+    <div class="js-dashboard-extras"
+         hx-get="{% url 'dashboard:partial-incidents' %}"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
       <div class="card animate-pulse">

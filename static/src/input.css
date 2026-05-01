@@ -126,11 +126,40 @@ html[data-accent="terracotta"].dark { --accent: oklch(0.72 0.14 25); --accent-so
 html[data-accent="ink"]      { --accent: oklch(0.30 0.015 250); --accent-soft: oklch(0.95 0.008 250); --accent-ink: oklch(0.22 0.012 250); }
 html[data-accent="ink"].dark { --accent: oklch(0.92 0.005 80); --accent-soft: oklch(0.30 0.010 250); --accent-ink: oklch(0.97 0.005 80); }
 
-/* Density modifier */
+/* =============================================================================
+   Density modes (driven by data-density on <html>)
+   - comfortable (default, no attribute): full layout, comfortable spacing
+   - compact:    denser spacing AND graphs hidden
+   - dashboard:  comfortable spacing, only header + KPIs + graphs (extras hidden)
+   ============================================================================= */
+
+/* Kompakt — denser spacing tokens (legacy "compact" behaviour) */
 html[data-density="compact"] {
   --row-y:    8px;
   --card-pad: 18px;
   --gutter:   14px;
+}
+
+/* Kompakt — hide every graph card on the dashboard.
+   The container grids stay in place; an empty column is acceptable here
+   because the side rail / changelog / incidents fill the visible space. */
+html[data-density="compact"] .js-dashboard-graphs {
+  display: none !important;
+}
+
+/* Dashboard mode — hide the side rail, the changelog card, and the incidents
+   card. The KPI strip and both chart cards remain. */
+html[data-density="dashboard"] .js-dashboard-rail,
+html[data-density="dashboard"] .js-dashboard-extras {
+  display: none !important;
+}
+
+/* In Dashboard mode the two-column layouts have nothing in their right
+   column (rail / incidents are hidden), so collapse both grids to a single
+   column and let the remaining graph card take the full width. */
+html[data-density="dashboard"] .js-dashboard-flow-row,
+html[data-density="dashboard"] .js-dashboard-tasks-row {
+  grid-template-columns: minmax(0, 1fr) !important;
 }
 
 @layer base {

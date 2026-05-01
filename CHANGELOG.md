@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.18 — 2026-05-01
+
+### Changed
+- Density toggle in the tweaks panel is now a 3-mode segmented control: **Komfort** (default, all sections visible), **Kompakt** (denser spacing tokens *and* both chart cards hidden), and **Dashboard** (only the editorial header, KPI strip, and chart cards — side rail, changelog, and incidents are hidden).
+- Dashboard sections carry stable hook classes (`js-dashboard-graphs`, `js-dashboard-rail`, `js-dashboard-extras`, plus row-level `js-dashboard-flow-row` / `js-dashboard-tasks-row`) so each density mode hides the right pieces purely via CSS — no template branching, no HTMX refetches, instant toggle.
+- Density state migration: any legacy `localStorage.density` value other than the three known modes is coerced back to `comfortable` on load, and the `<html>` `data-density` binding now generalises to all three values.
+
 ## 0.2.17 — 2026-05-01
 
 ### Fixed
