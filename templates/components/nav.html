@@ -57,7 +57,7 @@
     <!-- Right cluster -->
     <div class="ml-auto flex items-center gap-1.5">
       <!-- Theme toggle -->
-      <button @click="darkMode = !darkMode"
+      <button @click="darkMode = !darkMode; window.dispatchEvent(new CustomEvent('accent-change'))"
               class="icon-btn"
               :aria-label="darkMode ? 'Skift til lyst tema' : 'Skift til mørkt tema'"
               :title="darkMode ? 'Skift til lyst tema' : 'Skift til mørkt tema'">
@@ -96,21 +96,21 @@
 
           <div class="label-eyebrow" style="margin: 14px 0 8px;">Accent</div>
           <div class="flex gap-2">
-            <button @click="accent = 'gold'"
+            <button @click="accent = 'gold'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
                     class="flex-1 flex items-center justify-center gap-1.5"
                     style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2);"
                     :style="accent === 'gold' && 'border-color: var(--ink-3);'">
               <span style="width: 10px; height: 10px; border-radius: 999px; background: oklch(0.62 0.10 75);"></span>
               Guld
             </button>
-            <button @click="accent = 'sage'"
+            <button @click="accent = 'sage'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
                     class="flex-1 flex items-center justify-center gap-1.5"
                     style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2);"
                     :style="accent === 'sage' && 'border-color: var(--ink-3);'">
               <span style="width: 10px; height: 10px; border-radius: 999px; background: oklch(0.55 0.06 145);"></span>
               Sage
             </button>
-            <button @click="accent = 'ink'"
+            <button @click="accent = 'ink'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
                     class="flex-1 flex items-center justify-center gap-1.5"
                     style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2);"
                     :style="accent === 'ink' && 'border-color: var(--ink-3);'">

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.16 — 2026-05-01
+
+### Fixed
+- Charts didn't actually retint when changing the accent in the tweaks panel. The accent buttons live inside a nested Alpine `x-data` scope so the html-level `$watch('accent', ...)` was unreliable. Each accent button (and the dark-mode toggle) now explicitly fires the `accent-change` CustomEvent on `window` after a `$nextTick`, so the chart listeners receive it regardless of whether the parent watcher picked up the inner-scope write.
+
 ## 0.2.15 — 2026-05-01
 
 ### Changed
