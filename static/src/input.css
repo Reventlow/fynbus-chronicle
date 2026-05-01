@@ -669,6 +669,12 @@ html[data-density="dashboard"] .js-dashboard-main {
     padding: 4px 10px;
     border-radius: 6px;
     transition: all 0.15s ease;
+    /* Allow flex children to shrink below their content width when the
+       segmented control sets `flex-1` so all buttons get equal width
+       regardless of label length (Komfort vs Dashboard). */
+    min-width: 0;
+    white-space: nowrap;
+    text-align: center;
   }
   .segmented-btn:hover { color: var(--ink-2); }
   .segmented-btn-active {

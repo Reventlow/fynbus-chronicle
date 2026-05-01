@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.22 — 2026-05-01
+
+### Fixed
+- Density segmented control's "Dashboard" button overflowed past the tweaks dropdown: flex items don't shrink below their content min-width by default, so the longest label dictated the button size. Added `min-width: 0`, `white-space: nowrap`, and `text-align: center` to `.segmented-btn` so `flex-1` distributes equal widths regardless of label, and bumped the dropdown from 240 px to 280 px to give the three-mode control room to breathe.
+
 ## 0.2.21 — 2026-05-01
 
 ### Changed
