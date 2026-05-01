@@ -165,10 +165,26 @@ html[data-density="dashboard"] .js-dashboard-extras {
 
 /* In Dashboard mode the two-column layouts have nothing in their right
    column (rail / incidents are hidden), so collapse both grids to a single
-   column and let the remaining graph card take the full width. */
+   column and let the remaining graph card take the full width inside its
+   own row. */
 html[data-density="dashboard"] .js-dashboard-flow-row,
 html[data-density="dashboard"] .js-dashboard-tasks-row {
   grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* Dashboard mode — put the two row-containers side by side so the flow
+   chart and the open-tickets chart sit in a 2-column layout. The rows'
+   own grid-template-columns is collapsed to 1fr above so each chart
+   spans the full width of its half. */
+html[data-density="dashboard"] .js-dashboard-main {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: var(--gutter) !important;
+}
+@media (max-width: 1024px) {
+  html[data-density="dashboard"] .js-dashboard-main {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 @layer base {

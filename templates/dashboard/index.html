@@ -72,6 +72,14 @@
     {% endfor %}
   </div>
 
+  {% comment %}
+    js-dashboard-main: wraps the flow row + tasks row so Dashboard mode
+    can flip both rows into a side-by-side 2-column grid (charts next to
+    each other). In Komfort / Kompakt this is just a passthrough flex
+    column with the same gutter as the page wrapper, so the existing
+    layout is unchanged.
+  {% endcomment %}
+  <div class="js-dashboard-main flex flex-col" style="gap: var(--gutter);">
   {# === Main grid: chart (1.25fr) + side rail (1fr) ========================= #}
   {% comment %}
     js-dashboard-flow-row: collapsed to a single column in Dashboard mode
@@ -244,6 +252,7 @@
       </div>
     </div>
   </div>
+  </div>{# /js-dashboard-main #}
 
 </div>
 {% endblock %}

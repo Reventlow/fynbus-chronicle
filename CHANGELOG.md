@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.21 — 2026-05-01
+
+### Changed
+- Dashboard density mode now puts the two charts side-by-side. Wrapped the flow row + tasks row in a new `.js-dashboard-main` container that flips to a 2-column grid only when `data-density="dashboard"` (passthrough flex column otherwise, so Komfort/Kompakt are unchanged). The flow chart sits left, the open-tickets chart sits right; below 1024 px width the layout falls back to a single column.
+
 ## 0.2.20 — 2026-05-01
 
 ### Changed
