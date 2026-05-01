@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.12 — 2026-05-01
+
+### Fixed
+- "+ Ny ugelog" button on `/logbook/` (and other legacy templates) was rendering as a tall narrow box with the icon stacked above the text. The standalone `.btn-primary`, `.btn-ghost`, and `.btn-danger` classes weren't inheriting the `inline-flex` layout from `.btn` the way `.btn-secondary` and `.btn-outline` already did. They now `@apply btn` so any legacy template using only the modifier class (e.g. `class="btn-primary"`) renders correctly.
+- Eyebrow above the helpdesk flow chart was hardcoded to `Helpdesk · 12 uger` even when 26U or 12M was selected. Lifted the segmented-control's Alpine state to the chart card and bound the eyebrow's window label to it; it now reads `12 uger`, `26 uger`, or `12 måneder` according to the active selection.
+
 ## 0.2.11 — 2026-05-01
 
 ### Added

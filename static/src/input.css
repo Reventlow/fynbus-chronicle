@@ -372,6 +372,7 @@ html[data-density="compact"] {
   .btn:focus  { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 
   .btn-primary {
+    @apply btn;
     background: var(--ink-1);
     color: var(--paper);
     border-color: transparent;
@@ -380,6 +381,7 @@ html[data-density="compact"] {
   .btn-primary:hover { background: var(--ink-2); color: var(--paper); }
 
   .btn-ghost {
+    @apply btn;
     background: transparent;
     border-color: transparent;
     box-shadow: none;
@@ -392,6 +394,7 @@ html[data-density="compact"] {
   .btn-icon { width: 30px; height: 30px; padding: 0; }
 
   .btn-danger {
+    @apply btn;
     background: var(--bad);
     color: var(--paper);
     border-color: transparent;
