@@ -48,20 +48,48 @@
       let sliced = slice(parseInt(localStorage.getItem('openChartWindow') || '12'));
       updateStats(sliced);
 
-      // Probe an OKLCH/var() colour through a hidden element so the
-      // browser resolves it to rgb() — getComputedStyle on a custom
-      // property would just return the literal "oklch(...)" string.
-      // The probe sits in the layout tree (visibility: hidden) so the
-      // computed colour is actually populated, unlike display: none.
+      // OKLCH → sRGB. Newer Chromium serialises authored oklch() colors
+      // back to `oklch(L C H)` from getComputedStyle().color, so we have
+      // to do the conversion ourselves rather than trusting a generic
+      // number-extraction regex.
+      const oklchToRgb = (L, C, H) => {
+        const a = C * Math.cos(H * Math.PI / 180);
+        const b = C * Math.sin(H * Math.PI / 180);
+        const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+        const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+        const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+        let r =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+        let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+        let bl = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+        const enc = x => x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+        const clamp = x => Math.max(0, Math.min(1, x));
+        return [
+          Math.round(clamp(enc(r))  * 255),
+          Math.round(clamp(enc(g))  * 255),
+          Math.round(clamp(enc(bl)) * 255),
+        ];
+      };
+      // Probe a CSS color (oklch / var()) through a hidden element. Tries
+      // rgb(), then oklch(), then #rrggbb in that order before giving up.
       const probeRgb = css => {
         const probe = document.createElement('span');
         probe.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;color:' + css;
         document.body.appendChild(probe);
         const computed = getComputedStyle(probe).color;
         document.body.removeChild(probe);
-        const m = computed.match(/-?\d+(?:\.\d+)?/g);
-        if (!m || m.length < 3) return [0, 0, 0];
-        return [Math.round(parseFloat(m[0])), Math.round(parseFloat(m[1])), Math.round(parseFloat(m[2]))];
+        const rgbM = computed.match(/rgba?\s*\(\s*(\d+(?:\.\d+)?)[\s,]+(\d+(?:\.\d+)?)[\s,]+(\d+(?:\.\d+)?)/i);
+        if (rgbM) return [Math.round(+rgbM[1]), Math.round(+rgbM[2]), Math.round(+rgbM[3])];
+        const oklM = computed.match(/oklch\s*\(\s*(\d*\.?\d+%?)\s+(\d*\.?\d+)\s+(\d*\.?\d+)/i);
+        if (oklM) {
+          const L = oklM[1].endsWith('%') ? parseFloat(oklM[1]) / 100 : parseFloat(oklM[1]);
+          return oklchToRgb(L, parseFloat(oklM[2]), parseFloat(oklM[3]));
+        }
+        const hexM = computed.match(/^#([0-9a-f]{6})$/i);
+        if (hexM) {
+          const h = hexM[1];
+          return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        }
+        return [0, 0, 0];
       };
 
       const isDark = document.documentElement.classList.contains('dark');

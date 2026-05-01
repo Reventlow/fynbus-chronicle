@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.17 — 2026-05-01
+
+### Fixed
+- Open-tickets chart line was rendering near-navy in dark mode (and similarly miscoloured in light mode for any non-default accent). Newer Chromium preserves the authored `oklch()` form when serialising `getComputedStyle().color`, and my probe was running a generic digit-extraction regex over the result — so for `oklch(0.80 0.11 80)` it picked up `H=80` as `B=80` and produced rgb(0,0,80). Replace the regex with an explicit OKLCH → sRGB converter that handles `rgb()`, `oklch()`, and `#rrggbb` outputs cleanly. Same fix applied to the flow chart's "Nye sager" area-fill probe.
+
 ## 0.2.16 — 2026-05-01
 
 ### Fixed
