@@ -5,9 +5,10 @@
         density:   localStorage.getItem('density') || 'comfortable',
         accent:    localStorage.getItem('accent')  || 'gold',
         init() {
-          this.$watch('darkMode', v => localStorage.setItem('darkMode', v));
+          const fire = () => window.dispatchEvent(new CustomEvent('accent-change'));
+          this.$watch('darkMode', v => { localStorage.setItem('darkMode', v); fire(); });
           this.$watch('density',  v => localStorage.setItem('density', v));
-          this.$watch('accent',   v => localStorage.setItem('accent', v));
+          this.$watch('accent',   v => { localStorage.setItem('accent', v);   fire(); });
         }
       }"
       :class="{ 'dark': darkMode }"

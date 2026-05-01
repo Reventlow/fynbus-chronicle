@@ -13,12 +13,15 @@
   {# === Editorial header band ============================================== #}
   <div class="flex flex-wrap items-end justify-between gap-6">
     <div>
-      <div class="label-eyebrow" style="margin-bottom: 10px;">
-        Uge {% now "W · j N Y" %}
-        {% if APP_VERSION %}
-          <span style="color: var(--ink-5); margin: 0 6px;">·</span>
-          <span style="color: var(--ink-4);">v{{ APP_VERSION }}</span>
-        {% endif %}
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>
+          Uge {% now "W · j N Y" %}
+          {% if APP_VERSION %}
+            <span style="color: var(--ink-5); margin: 0 6px;">·</span>
+            <span style="color: var(--ink-4);">v{{ APP_VERSION }}</span>
+          {% endif %}
+        </span>
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
         <span x-data x-text="(() => { const h = new Date().getHours(); return h < 11 ? 'Godmorgen' : h < 18 ? 'Goddag' : h < 23 ? 'Godaften' : 'Godnat'; })()">Goddag</span>,

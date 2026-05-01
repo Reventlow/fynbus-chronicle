@@ -48,30 +48,35 @@
       let sliced = slice(parseInt(localStorage.getItem('openChartWindow') || '12'));
       updateStats(sliced);
 
-      const isDark = document.documentElement.classList.contains('dark');
-      const cs = getComputedStyle(document.documentElement);
-      // Accept both `rgb(r, g, b)` and `#rrggbb` since cssnano minifies the
-      // former into the latter when running through Tailwind's build.
-      const rgbVar = name => {
-        const v = cs.getPropertyValue(name).trim();
-        const rgbM = v.match(/rgb\s*\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
-        if (rgbM) return [parseInt(rgbM[1]), parseInt(rgbM[2]), parseInt(rgbM[3])];
-        const hexM = v.match(/^#?([0-9a-f]{6})$/i);
-        if (hexM) {
-          const h = hexM[1];
-          return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-        }
-        return [0, 0, 0];
+      // Probe an OKLCH/var() colour through a hidden element so the
+      // browser resolves it to rgb() — getComputedStyle on a custom
+      // property would just return the literal "oklch(...)" string.
+      // The probe sits in the layout tree (visibility: hidden) so the
+      // computed colour is actually populated, unlike display: none.
+      const probeRgb = css => {
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;color:' + css;
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+        const m = computed.match(/-?\d+(?:\.\d+)?/g);
+        if (!m || m.length < 3) return [0, 0, 0];
+        return [Math.round(parseFloat(m[0])), Math.round(parseFloat(m[1])), Math.round(parseFloat(m[2]))];
       };
-      const P = {
-        accent: rgbVar('--chart-accent'),
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const buildPalette = () => ({
+        // Single-series chart so we can use the editorial --accent directly:
+        // changing the tweaks-panel accent visibly retints the curve.
+        accent: probeRgb('var(--accent)'),
         ink:     isDark ? [240, 240, 240] : [25, 30, 38],
         ink2:    isDark ? [205, 208, 214] : [60, 66, 76],
         ink4:    isDark ? [150, 152, 158] : [110, 115, 124],
         surface: isDark ? [44, 48, 56]    : [255, 255, 255],
         border:  isDark ? [74, 80, 90]    : [218, 220, 226],
         grid:    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-      };
+      });
+      let P = buildPalette();
 
       const ctx = document.getElementById('helpdesk-chart').getContext('2d');
       const chart = new Chart(ctx, {
@@ -140,6 +145,24 @@
           c.data.datasets[0].data = s.map(w => w.open);
           c.update();
           updateStats(s);
+        });
+        // Re-probe --accent when the user toggles the tweaks panel's
+        // accent or dark mode, then refresh the chart's colour stops.
+        window.addEventListener('accent-change', () => {
+          const c = window._openChart;
+          if (!c) return;
+          const np = buildPalette();
+          const ds = c.data.datasets[0];
+          ds.borderColor = rgba(np.accent, 1);
+          ds.pointBackgroundColor = rgba(np.accent, 1);
+          ds.pointBorderColor = rgba(np.surface, 1);
+          ds.backgroundColor = function(ctx) {
+            const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 240);
+            g.addColorStop(0, rgba(np.accent, 0.22));
+            g.addColorStop(1, rgba(np.accent, 0));
+            return g;
+          };
+          c.update();
         });
       }
     })

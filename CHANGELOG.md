@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.14 — 2026-05-01
+
+### Changed
+- Broaden the reach of the tweaks-panel accent presets so changing gold → sage → terracotta → ink visibly retints the page. Three targeted moves per the UI-expert review (full Option 2 + bounded Option 1):
+  - Editorial header eyebrow now leads with a 24×2 px accent rule
+  - KPI netto card's neutral "·0" pill swaps to `--accent-soft / --accent-ink` (▲/▼ states stay green/red so the sign semantic is preserved)
+  - "Åbne sager — udvikling" chart (single series) now probes `--accent` for its line + gradient + point colours; multi-series flow chart keeps its independent `--chart-info / --chart-good` palette so legibility holds
+- Wire an `accent-change` custom event from the root `<html>` Alpine watcher (fires on accent or dark-mode change) so the open-tickets chart re-tints instantly without waiting for the 60 s HTMX refresh
+
 ## 0.2.13 — 2026-05-01
 
 ### Added
