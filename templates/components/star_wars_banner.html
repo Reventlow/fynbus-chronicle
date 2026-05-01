@@ -4,13 +4,15 @@
   in Europe/Copenhagen, or via ?force-star-wars=1).
 
   Cycles through ~100 quippy FynBus + Star Wars mash-up messages, swapping
-  every 2 minutes. Initial pick is random so reloads feel fresh; the dot
-  fades during the swap so the change is noticeable without being jumpy.
-  Styling lives in input.css under `.sw-banner`.
+  every 2 minutes. The message list is shipped as a JSON <script> tag so
+  the straight quotes inside the JSON don't terminate the x-data attribute
+  early; Alpine reads it via JSON.parse on init. Initial pick is random so
+  reloads feel fresh; messages crossfade with a 220 ms opacity transition.
 {% endcomment %}
+<script id="sw-banner-messages" type="application/json">{% sw_messages_json %}</script>
 <div class="sw-banner" role="note" aria-label="Star Wars Day"
      x-data="{
-       msgs: {% sw_messages_json %},
+       msgs: JSON.parse(document.getElementById('sw-banner-messages').textContent),
        idx: 0,
        fade: false,
        init() {

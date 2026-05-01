@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.3.3 — 2026-05-01
+
+### Fixed
+- Star Wars banner was leaking Alpine code as visible text under the nav. The 106-message JSON sat inside `x-data="..."`, and the first straight `"` character in any message terminated the HTML attribute early, dumping the rest of the Alpine initialiser into the document body. Moved the messages into a `<script type="application/json" id="sw-banner-messages">` tag and have Alpine read them via `JSON.parse(...textContent)` on init — quotes are no longer in attribute scope, so the leak is gone.
+
 ## 0.3.2 — 2026-05-01
 
 ### Added
