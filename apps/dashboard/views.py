@@ -58,7 +58,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         weeklog = WeekLog.get_current_week()
         context["current_week"] = weeklog
-        context["oncall"] = OnCallDuty.get_current()
         context["incident_count_week"] = (
             weeklog.incidents.count() if weeklog else 0
         )

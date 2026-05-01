@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.10 — 2026-05-01
+
+### Removed
+- "Rådighedsvagt: {name}" segment from the dashboard editorial header sub-line. The on-call name already appears in the dedicated card on the right rail, so the duplication was redundant. Also drops the now-unused `oncall` lookup from `DashboardView` — the on-call card pulls its own data via the partial view.
+
 ## 0.2.9 — 2026-04-30
 
 ### Changed

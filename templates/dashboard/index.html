@@ -32,13 +32,6 @@
         </span>
         <span style="color: var(--ink-5);">·</span>
         <span><span class="num">{{ incident_count_week }}</span> hændelser denne uge</span>
-        <span style="color: var(--ink-5);">·</span>
-        <span>
-          Rådighedsvagt:
-          <strong style="color: var(--ink-1); font-weight: 600;">
-            {% if oncall %}{{ oncall.user.get_full_name|default:oncall.user.username }}{% else %}Ikke tildelt{% endif %}
-          </strong>
-        </span>
       </div>
     </div>
     {% if is_editor %}
