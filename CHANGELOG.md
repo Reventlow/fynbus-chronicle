@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.9 — 2026-04-30
+
+### Changed
+- "Aktive opgaver" now sits at the bottom of the current-week card, after Bemanding, instead of just below the summary
+- "Aktive opgaver" lists every priority item regardless of status (was filtered to `ongoing`/`blocked` only). Completed items render struck-through with reduced opacity and a green status pill so they read as "done" context rather than active work; raised the cap from 5 to 8 rows.
+
 ## 0.2.8 — 2026-04-30
 
 ### Changed

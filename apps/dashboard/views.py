@@ -99,9 +99,10 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
 
         if weeklog:
             context["weeklog"] = weeklog
-            context["priority_items"] = weeklog.priority_items.filter(
-                status__in=["ongoing", "blocked"]
-            )[:5]
+            # Show every priority item regardless of status — done items render
+            # struck-through via the row template so they read as completed
+            # context, not active work.
+            context["priority_items"] = weeklog.priority_items.all()[:8]
             context["absences"] = weeklog.absences.all()[:5]
         else:
             now = timezone.now()
