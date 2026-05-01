@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.2.13 — 2026-05-01
+
+### Added
+- 12U / 26U / 12M segmented control on the "Åbne sager — udvikling" chart, mirroring the flow chart. Selection persists in `localStorage` (key: `openChartWindow`) and survives the 60 s HTMX refresh; the eyebrow ("Helpdesk · 12 uger") and the Laveste / Nuværende / Højeste stats below the chart all update to reflect the current window.
+
 ## 0.2.12 — 2026-05-01
 
 ### Fixed

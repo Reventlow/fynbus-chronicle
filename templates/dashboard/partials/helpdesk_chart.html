@@ -33,12 +33,20 @@
           '<p style="text-align:center; color:var(--ink-4); padding:32px 0;">Ingen data tilgængelig</p>';
         return;
       }
-      const openCases = data.weeks.map(w => w.open);
-      const minOpen = Math.min(...openCases), maxOpen = Math.max(...openCases);
-      const currentOpen = openCases[openCases.length - 1] || 0;
-      document.getElementById('stat-min-open').textContent = minOpen;
-      document.getElementById('stat-current-open').textContent = currentOpen;
-      document.getElementById('stat-max-open').textContent = maxOpen;
+      // Slice to active window — shared with the segmented control via
+      // localStorage (key: openChartWindow). Stats are computed on the
+      // sliced range so they reflect what's visible.
+      const fullWeeks = data.weeks;
+      const slice = w => fullWeeks.slice(-Math.min(w, fullWeeks.length));
+      const updateStats = sliced => {
+        const opens = sliced.map(w => w.open);
+        document.getElementById('stat-min-open').textContent = Math.min(...opens);
+        document.getElementById('stat-current-open').textContent = opens[opens.length - 1] || 0;
+        document.getElementById('stat-max-open').textContent = Math.max(...opens);
+      };
+
+      let sliced = slice(parseInt(localStorage.getItem('openChartWindow') || '12'));
+      updateStats(sliced);
 
       const isDark = document.documentElement.classList.contains('dark');
       const cs = getComputedStyle(document.documentElement);
@@ -66,13 +74,13 @@
       };
 
       const ctx = document.getElementById('helpdesk-chart').getContext('2d');
-      new Chart(ctx, {
+      const chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: data.weeks.map(w => w.label),
+          labels: sliced.map(w => w.label),
           datasets: [{
             label: 'Åbne sager',
-            data: openCases,
+            data: sliced.map(w => w.open),
             borderColor: rgba(P.accent, 1),
             borderWidth: 2.25,
             fill: true,
@@ -115,6 +123,25 @@
           }
         }
       });
+
+      // Expose the latest chart + dataset on window so the segmented
+      // control's event handler updates whichever chart is currently
+      // mounted (HTMX swaps the partial every 60s).
+      window._openChart = chart;
+      window._openChartData = fullWeeks;
+      if (!window._openChartListenerBound) {
+        window._openChartListenerBound = true;
+        window.addEventListener('open-chart-window', e => {
+          const c = window._openChart;
+          const f = window._openChartData;
+          if (!c || !f) return;
+          const s = f.slice(-Math.min(e.detail, f.length));
+          c.data.labels = s.map(w => w.label);
+          c.data.datasets[0].data = s.map(w => w.open);
+          c.update();
+          updateStats(s);
+        });
+      }
     })
     .catch(err => {
       console.error('helpdesk-chart:', err);

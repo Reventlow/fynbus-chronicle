@@ -157,13 +157,33 @@
     {# Left column: helpdesk chart + latest changelog entry #}
     <div class="flex flex-col" style="gap: var(--gutter);">
       {# Helpdesk open-tickets chart (kept) #}
-      <div class="card overflow-hidden" style="padding: 0;">
+      <div class="card overflow-hidden" style="padding: 0;"
+           x-data="{
+             win: parseInt(localStorage.getItem('openChartWindow') || '12'),
+             set(n) {
+               this.win = n;
+               localStorage.setItem('openChartWindow', String(n));
+               window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
+             },
+             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+           }">
         <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
           <div>
-            <div class="label-eyebrow">Helpdesk</div>
+            <div class="label-eyebrow">Helpdesk · <span x-text="label()">12 uger</span></div>
             <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
               Åbne sager — udvikling
             </h2>
+          </div>
+          <div class="segmented">
+            <button type="button" class="segmented-btn"
+                    :class="{ 'segmented-btn-active': win === 12 }"
+                    @click="set(12)">12U</button>
+            <button type="button" class="segmented-btn"
+                    :class="{ 'segmented-btn-active': win === 26 }"
+                    @click="set(26)">26U</button>
+            <button type="button" class="segmented-btn"
+                    :class="{ 'segmented-btn-active': win === 52 }"
+                    @click="set(52)">12M</button>
           </div>
         </div>
         <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
