@@ -125,6 +125,10 @@ html[data-accent="terracotta"]      { --accent: oklch(0.55 0.13 25); --accent-so
 html[data-accent="terracotta"].dark { --accent: oklch(0.72 0.14 25); --accent-soft: oklch(0.30 0.07 25); --accent-ink: oklch(0.85 0.10 25); }
 html[data-accent="ink"]      { --accent: oklch(0.30 0.015 250); --accent-soft: oklch(0.95 0.008 250); --accent-ink: oklch(0.22 0.012 250); }
 html[data-accent="ink"].dark { --accent: oklch(0.92 0.005 80); --accent-soft: oklch(0.30 0.010 250); --accent-ink: oklch(0.97 0.005 80); }
+/* Saber — saturated lightsaber red, derived from the Sith dark-mode skin
+   so it's available year-round (not just May 4th). */
+html[data-accent="saber"]      { --accent: oklch(0.55 0.18 25); --accent-soft: oklch(0.96 0.05 25); --accent-ink: oklch(0.40 0.18 25); }
+html[data-accent="saber"].dark { --accent: oklch(0.62 0.20 25); --accent-soft: oklch(0.30 0.10 25); --accent-ink: oklch(0.86 0.13 25); }
 
 /* =============================================================================
    May 4th — Star Wars Day skin (date-gated via context processor)

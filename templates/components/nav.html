@@ -126,6 +126,13 @@
               <span style="width: 10px; height: 10px; border-radius: 999px; background: var(--ink-1);"></span>
               Blæk
             </button>
+            <button @click="accent = 'saber'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
+                    class="flex-1 flex items-center justify-center gap-1.5"
+                    style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2);"
+                    :style="accent === 'saber' && 'border-color: var(--ink-3);'">
+              <span style="width: 10px; height: 10px; border-radius: 999px; background: oklch(0.62 0.20 25);"></span>
+              Saber
+            </button>
           </div>
         </div>
       </div>

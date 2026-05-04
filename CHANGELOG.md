@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.3.4 — 2026-05-01
+
+### Added
+- New "Saber" accent in the tweaks panel — saturated lightsaber red, derived from the May 4th Sith dark-mode skin so it's available year-round. Light mode picks `oklch(0.55 0.18 25)`, dark mode keeps the brighter Sith `oklch(0.62 0.20 25)`. Sits as the fourth pill in the accent picker after Guld / Sage / Blæk.
+
 ## 0.3.3 — 2026-05-01
 
 ### Fixed
