@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.4 — 2026-05-07
+
+### Added
+- Merge action available from the search page too. Each open task now shows a small merge icon-button in its row (next to the priority/status pills). Click → same modal as on the weeklog detail (pick a winner, confirm). Closed tasks don't show the button — only open tasks can be merged.
+
 ## 0.5.3 — 2026-05-07
 
 ### Added
