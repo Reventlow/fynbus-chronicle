@@ -96,13 +96,13 @@
           {% else %}
             <span></span>
           {% endif %}
-          {% if is_editor and item.is_active %}
+          {% if is_editor %}
             <button hx-get="{% url 'logbook:priority-item-merge' item.pk %}"
                     hx-target="#merge-dialog"
                     hx-swap="innerHTML"
                     class="icon-btn"
                     style="width: 28px; height: 28px;"
-                    title="Flet ind i en anden åben opgave">
+                    title="{% if item.is_active %}Flet ind i en anden åben opgave{% else %}Flet (genåbn) ind i en åben opgave{% endif %}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 6V3M16 6V3M8 21l4-4M16 21l-4-4M8 6c0 4 4 5 4 8M16 6c0 4-4 5-4 8"/>
               </svg>

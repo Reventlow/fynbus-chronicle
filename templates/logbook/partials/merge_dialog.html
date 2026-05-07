@@ -16,13 +16,17 @@
 
     <div class="flex items-start justify-between" style="padding: 20px 24px 14px; border-bottom: 1px solid var(--hairline);">
       <div>
-        <div class="label-eyebrow">Flet opgaver</div>
+        <div class="label-eyebrow">{% if loser.is_active %}Flet opgaver{% else %}Flet lukket opgave ind i åben{% endif %}</div>
         <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
           ”{{ loser.title }}” fletes ind i …
         </h2>
         <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.5;">
           Vælg modtager-opgaven. Modtagerens titel, prioritet og status bevares.
-          Beskrivelser, noter og tidligere uger overføres. ”{{ loser.title }}” slettes.
+          Beskrivelser, noter og tidligere uger overføres.
+          {% if not loser.is_active %}
+            Den lukkede opgave bevares som del af modtagerens historik.
+          {% endif %}
+          ”{{ loser.title }}” slettes.
         </p>
       </div>
       <button type="button" class="icon-btn"

@@ -352,8 +352,11 @@ class PriorityItem(models.Model):
     def merge_into(self, winner: "PriorityItem") -> None:
         """Fold this task into ``winner`` and delete it.
 
-        Both tasks must currently be active (``status != COMPLETED``).
-        After the merge:
+        The **winner** must be active (you can't fold work into a task
+        that's already declared done). The **loser** can be anything —
+        merging a closed task into an active one is supported as a way
+        to revive prematurely-closed work into a live task without
+        manually reopening it first. After the merge:
 
         * Every appearance of ``self`` moves to ``winner``. If ``winner``
           already has an appearance on the same weeklog, the two
@@ -374,8 +377,10 @@ class PriorityItem(models.Model):
 
         if self.pk == winner.pk:
             raise ValueError("Cannot merge a task into itself.")
-        if not self.is_active or not winner.is_active:
-            raise ValueError("Both tasks must be active to merge.")
+        if not winner.is_active:
+            raise ValueError(
+                "Winner task must be active — you can't merge into a closed task."
+            )
 
         sep = "\n\n— flettet —\n"
 

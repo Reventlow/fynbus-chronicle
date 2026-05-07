@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.5 — 2026-05-07
+
+### Changed
+- Closed → open merges are now allowed. The merge rule loosened from "both must be active" to "winner must be active" — folding a closed task into an open one is supported as a way to revive prematurely-closed work without manually reopening it first. Open → closed and closed → closed still refuse with a clear error. The merge button now appears on every priority row in the search page (open or closed); the dialog header notes when the loser is closed.
+
 ## 0.5.4 — 2026-05-07
 
 ### Added

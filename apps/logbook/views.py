@@ -401,10 +401,6 @@ def priority_item_merge_dialog(request: HttpRequest, pk: int) -> HttpResponse:
     filterable by ``?q=`` text. The dialog POSTs to ``priority-item-merge-post``.
     """
     loser = get_object_or_404(PriorityItem, pk=pk)
-    if not loser.is_active:
-        messages.error(request, "Kun aktive opgaver kan flettes.")
-        return redirect("logbook:weeklog-list")
-
     q = (request.GET.get("q") or "").strip()
     qs = (
         PriorityItem.objects.exclude(pk=loser.pk)
