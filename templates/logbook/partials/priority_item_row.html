@@ -40,12 +40,29 @@
   </span>
 
   <div style="min-width: 0;">
-    <div class="flex items-center gap-2" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; letter-spacing: -0.005em; {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
-      <a href="{% url 'logbook:priority-item-history' item.pk %}"
-         style="color: inherit; text-decoration: none;"
-         onmouseover="this.style.textDecoration='underline'"
-         onmouseout="this.style.textDecoration='none'"
-         title="Se historik på tværs af uger">{{ item.title }}</a>
+    <div class="flex items-center gap-2 flex-wrap" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; letter-spacing: -0.005em; {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
+      <span>{{ item.title }}</span>
+      {% if item.has_history %}
+        <a href="{% url 'logbook:priority-item-history' item.pk %}"
+           class="inline-flex items-center"
+           style="gap: 4px;
+                  font-size: 11px;
+                  font-weight: 500;
+                  letter-spacing: -0.005em;
+                  color: var(--accent-ink);
+                  background: var(--accent-soft);
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  text-decoration: none;
+                  white-space: nowrap;"
+           title="Se ugehistorik for denne opgave">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Se historik
+        </a>
+      {% endif %}
       {% if item.auto_closed %}
         <span class="pill pill-neutral" title="Auto-lukket efter 6 uger uden aktivitet" style="font-size: 10px;">auto</span>
       {% endif %}

@@ -324,6 +324,17 @@ class PriorityItem(models.Model):
         """True for any status that's not 'completed'."""
         return self.status != self.Status.COMPLETED
 
+    @property
+    def has_history(self) -> bool:
+        """True if this task has appeared on more than one weeklog —
+        i.e. there's something worth showing on the history page.
+
+        Used by the row template to conditionally render the "Se historik"
+        link. Issues one COUNT query per call; cheap for the scale of
+        a single weeklog's priority list (~10 items).
+        """
+        return self.appearances.count() > 1
+
     def touch(self, *, save: bool = True) -> None:
         """Bump last_active_at to mark a real user-driven change."""
         self.last_active_at = timezone.now()

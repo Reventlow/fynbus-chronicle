@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.2 — 2026-05-07
+
+### Added
+- "Se historik" pill next to the task title in every priority row that has appeared on more than one weeklog. Links straight to the history page; uses the accent palette so it picks up the user's tweak. Tasks that only exist on their origin week (i.e. no real history yet) still don't show the pill.
+
 ## 0.5.1 — 2026-05-07
 
 ### Fixed
