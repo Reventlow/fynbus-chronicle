@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.1 — 2026-05-07
+
+### Fixed
+- Multi-line `{# … #}` comment at the top of `priority_item_row.html` was leaking onto the weeklog detail page once for every priority appearance. Switched to `{% comment %} … {% endcomment %}`. (This is the *fifth* time this exact bug has surfaced in this codebase — already saved as a memory note, will keep watching.)
+
 ## 0.5.0 — 2026-05-07
 
 ### Added
