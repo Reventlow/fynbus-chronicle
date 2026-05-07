@@ -2,7 +2,7 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
-## 0.6.0 — 2026-05-07
+## 0.5.3 — 2026-05-07
 
 ### Added
 - **Merge two open priority tasks.** A new icon-button on every active priority row opens a dialog listing all *other* active tasks (filterable). Pick one and confirm — the loser's appearances move to the winner (descriptions concatenated with a `— flettet —` separator on same-week conflicts), the loser's notes append to the winner under a `— flettet fra: <title> —` header, the winner's `origin_weeklog` shifts to the earlier of the two so the history page starts from the real beginning, and the loser is deleted. Winner keeps its title, priority, status, and the current week's row as-is.
