@@ -106,6 +106,7 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
             # read as completed context.
             context["priority_appearances"] = (
                 weeklog.priority_appearances.select_related("priority_item")
+                .filter(priority_item__deleted_at__isnull=True)
                 .order_by("order", "id")[:8]
             )
             context["absences"] = weeklog.absences.all()[:5]

@@ -20,18 +20,62 @@
       <span>
         Opstod {{ item.origin_weeklog.week_label }} · sidst aktiv {{ item.last_active_at|date:"j. M Y · H:i" }}
         {% if item.auto_closed %}· <span style="color: var(--accent-ink);">auto-lukket</span>{% endif %}
+        {% if item.is_deleted %}· <span style="color: var(--bad-ink);">slettet {{ item.deleted_at|date:"j. M Y" }}</span>{% endif %}
       </span>
     </div>
-    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">{{ item.title }}</h1>
+    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1; {% if item.is_deleted %}color: var(--ink-3); text-decoration: line-through;{% endif %}">{{ item.title }}</h1>
+
+    {% if item.is_merged and item.merged_into %}
+      <div class="card" style="margin-top: 16px; background: var(--info-soft); border: 1px solid color-mix(in oklch, var(--info) 40%, transparent); padding: 14px 18px;">
+        <div class="label-eyebrow" style="margin-bottom: 4px;">Flettet</div>
+        <p style="margin: 0; font-size: 13.5px; color: var(--ink-2);">
+          Denne opgave er flettet ind i
+          <a href="{% url 'logbook:priority-item-history' item.merged_into.pk %}"
+             style="color: var(--ink-1); font-weight: 600;">{{ item.merged_into.title }}</a>.
+          Beskrivelser, noter og uger er flyttet derover.
+        </p>
+      </div>
+    {% endif %}
+
     <div class="flex items-center flex-wrap gap-3" style="margin-top: 14px;">
       <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
         {{ item.get_priority_display }}
       </span>
-      <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
-        {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
-        {{ item.get_status_display }}
-      </span>
+      {% if item.is_deleted %}
+        <span class="pill pill-bad">slettet</span>
+      {% else %}
+        <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
+          {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
+          {{ item.get_status_display }}
+        </span>
+      {% endif %}
       <span style="font-size: 12.5px; color: var(--ink-4);" class="num">{{ appearances|length }} uge{{ appearances|length|pluralize:"r" }} i alt</span>
+
+      {% if is_editor %}
+        <span style="flex: 1;"></span>
+        {% if item.is_deleted %}
+          <form method="post" action="{% url 'logbook:priority-item-restore' item.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+              </svg>
+              Gendan
+            </button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'logbook:priority-item-soft-delete' item.pk %}" style="margin: 0;"
+                onsubmit="return confirm('Slet denne opgave helt? Den forsvinder fra ugevisninger og søgning, men kan gendannes via søgning på &quot;Slettede&quot;.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm" style="color: var(--bad-ink); border-color: color-mix(in oklch, var(--bad) 40%, transparent);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+              Slet helt
+            </button>
+          </form>
+        {% endif %}
+      {% endif %}
     </div>
     {% if item.notes %}
       <p style="margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap;">{{ item.notes }}</p>

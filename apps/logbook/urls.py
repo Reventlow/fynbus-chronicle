@@ -64,6 +64,16 @@ urlpatterns = [
         name="priority-item-history",
     ),
     path(
+        "priorities/<int:pk>/soft-delete/",
+        views.priority_item_soft_delete,
+        name="priority-item-soft-delete",
+    ),
+    path(
+        "priorities/<int:pk>/restore/",
+        views.priority_item_restore,
+        name="priority-item-restore",
+    ),
+    path(
         "<int:pk>/add-existing/",
         views.weeklog_add_existing_dialog,
         name="weeklog-add-existing",

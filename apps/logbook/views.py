@@ -96,6 +96,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["incident_form"] = IncidentForm()
         context["priority_appearances"] = (
             self.object.priority_appearances.select_related("priority_item")
+            .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
         )
         return context
@@ -301,7 +302,10 @@ def priorities_search(request: HttpRequest) -> HttpResponse:
     Filters: ``q`` (text in title/notes/appearance descriptions),
     ``status`` ('open' / 'closed' / 'all', default 'all'), ``year``.
     """
-    qs = PriorityItem.objects.select_related("origin_weeklog").prefetch_related("appearances")
+    qs = (
+        PriorityItem.objects.select_related("origin_weeklog", "merged_into")
+        .prefetch_related("appearances")
+    )
     q = (request.GET.get("q") or "").strip()
     status_filter = request.GET.get("status") or "all"
     year = request.GET.get("year")
@@ -312,10 +316,24 @@ def priorities_search(request: HttpRequest) -> HttpResponse:
             | db_models.Q(notes__icontains=q)
             | db_models.Q(appearances__description__icontains=q)
         ).distinct()
+
+    # Status now also covers tombstones (deleted / merged). The default
+    # "all" still hides tombstones — they only show when explicitly
+    # requested or when the user picks "deleted" or "merged".
     if status_filter == "open":
-        qs = qs.exclude(status=PriorityItem.Status.COMPLETED)
+        qs = qs.active().exclude(status=PriorityItem.Status.COMPLETED)
     elif status_filter == "closed":
-        qs = qs.filter(status=PriorityItem.Status.COMPLETED)
+        qs = qs.active().filter(status=PriorityItem.Status.COMPLETED)
+    elif status_filter == "deleted":
+        qs = qs.deleted()
+    elif status_filter == "merged":
+        qs = qs.merged()
+    elif status_filter == "all_with_tombstones":
+        pass  # show everything
+    else:
+        # "all" — live tasks (open + closed), no tombstones
+        qs = qs.active()
+
     if year and year.isdigit():
         qs = qs.filter(origin_weeklog__year=int(year))
 
@@ -343,9 +361,13 @@ def priorities_search(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def priority_item_history(request: HttpRequest, pk: int) -> HttpResponse:
-    """All appearances of a single task across weeks (the history view)."""
+    """All appearances of a single task across weeks (the history view).
+
+    Includes soft-deleted tasks too so the user can review tombstones
+    and optionally restore them.
+    """
     item = get_object_or_404(
-        PriorityItem.objects.select_related("origin_weeklog"), pk=pk
+        PriorityItem.objects.select_related("origin_weeklog", "merged_into"), pk=pk
     )
     appearances = (
         item.appearances.select_related("weeklog")
@@ -362,6 +384,32 @@ def priority_item_history(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
+@require_POST
+def priority_item_soft_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    """Soft-delete the entire task (sets deleted_at)."""
+    item = get_object_or_404(PriorityItem, pk=pk)
+    item.soft_delete()
+    messages.success(
+        request,
+        f"”{item.title}” slettet. Du kan finde den igen i søgningen under "
+        f"”Slettede” og gendanne den.",
+    )
+    return redirect("logbook:priority-item-history", pk=item.pk)
+
+
+@login_required
+@editor_required
+@require_POST
+def priority_item_restore(request: HttpRequest, pk: int) -> HttpResponse:
+    """Undo a soft-delete (clears deleted_at and merged_into)."""
+    item = get_object_or_404(PriorityItem, pk=pk)
+    item.restore()
+    messages.success(request, f"”{item.title}” gendannet.")
+    return redirect("logbook:priority-item-history", pk=item.pk)
+
+
+@login_required
+@editor_required
 def weeklog_add_existing_dialog(request: HttpRequest, pk: int) -> HttpResponse:
     """Render the 'pick open tasks to bring forward' dialog for a weeklog.
 
@@ -373,7 +421,8 @@ def weeklog_add_existing_dialog(request: HttpRequest, pk: int) -> HttpResponse:
     q = (request.GET.get("q") or "").strip()
     already = weeklog.priority_appearances.values_list("priority_item_id", flat=True)
     qs = (
-        PriorityItem.objects.exclude(status=PriorityItem.Status.COMPLETED)
+        PriorityItem.objects.active()
+        .exclude(status=PriorityItem.Status.COMPLETED)
         .exclude(pk__in=already)
         .select_related("origin_weeklog")
         .order_by("-last_active_at")
@@ -403,7 +452,8 @@ def priority_item_merge_dialog(request: HttpRequest, pk: int) -> HttpResponse:
     loser = get_object_or_404(PriorityItem, pk=pk)
     q = (request.GET.get("q") or "").strip()
     qs = (
-        PriorityItem.objects.exclude(pk=loser.pk)
+        PriorityItem.objects.active()
+        .exclude(pk=loser.pk)
         .exclude(status=PriorityItem.Status.COMPLETED)
         .select_related("origin_weeklog")
         .order_by("-last_active_at")

@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.7 — 2026-05-07
+
+### Added
+- **Soft-delete for priority tasks.** Both manual deletion and the merge-loser path now stamp `deleted_at` instead of nuking the row, so nothing is lost. Merged losers also get a `merged_into` FK pointing at the winner.
+- New "Slet helt" button on the history page (editor-only) — soft-deletes the entire task. Companion "Gendan" button on the same page restores it.
+- Search page status filter expands with **Slettede**, **Flettede**, and **Alt inkl. slettede & flettede** options. Tombstones render struck-through with a `slettet` or `flettet` pill in place of the status pill; merged ones expose a link to the winner via the title's history page.
+- New `PriorityItemQuerySet` helpers: `.active()`, `.deleted()`, `.merged()`, `.tombstones()`. Default queryset still returns everything so reverse relations and admin behave normally.
+
+### Changed
+- Weeklog detail, current-week dashboard card, "Fra åbne" dialog, merge-candidate list, and the auto-close pass all filter to active items only — soft-deleted tasks disappear from week views immediately. The API's `weeklog.priority_items` payload likewise hides deleted tasks. New `deleted_at` and `merged_into_id` fields are exposed on the priority item serializer for tooling.
+- The history page header surfaces tombstone state (deleted date, "Flettet ind i …" pointer) so the audit trail is obvious.
+
 ## 0.5.6 — 2026-05-07
 
 ### Changed

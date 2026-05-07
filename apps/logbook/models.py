@@ -196,9 +196,9 @@ class WeekLog(models.Model):
             weeks=PriorityItem.AUTO_CLOSE_AFTER_WEEKS
         )
         stale = list(
-            PriorityItem.objects.filter(last_active_at__lt=cutoff).exclude(
-                status=PriorityItem.Status.COMPLETED
-            )
+            PriorityItem.objects.active()
+            .filter(last_active_at__lt=cutoff)
+            .exclude(status=PriorityItem.Status.COMPLETED)
         )
         for item in stale:
             item.auto_close()
@@ -222,7 +222,7 @@ class WeekLog(models.Model):
             ).values_list("priority_item_id", flat=True)
         )
         added = 0
-        for item in PriorityItem.objects.filter(pk__in=item_ids):
+        for item in PriorityItem.objects.active().filter(pk__in=item_ids):
             if item.pk in existing:
                 continue
             PriorityItemAppearance.objects.create(
@@ -234,6 +234,31 @@ class WeekLog(models.Model):
             added += 1
             item.touch()
         return added
+
+
+class PriorityItemQuerySet(models.QuerySet):
+    """Custom queryset with explicit active / tombstone filters.
+
+    Soft-delete pattern — we never auto-filter; callers say what they
+    want. Keeps reverse relations (``weeklog.priority_appearances``)
+    and the admin doing what you'd expect.
+    """
+
+    def active(self):
+        """Live tasks (not soft-deleted, not merged into something else)."""
+        return self.filter(deleted_at__isnull=True)
+
+    def deleted(self):
+        """Soft-deleted tasks (manual delete only — not merge tombstones)."""
+        return self.filter(deleted_at__isnull=False, merged_into__isnull=True)
+
+    def merged(self):
+        """Merge tombstones — soft-deleted with a merged_into pointer."""
+        return self.filter(deleted_at__isnull=False, merged_into__isnull=False)
+
+    def tombstones(self):
+        """Anything soft-deleted (merge or manual)."""
+        return self.filter(deleted_at__isnull=False)
 
 
 class PriorityItem(models.Model):
@@ -305,8 +330,28 @@ class PriorityItem(models.Model):
         blank=True,
     )
 
+    # Soft-delete machinery: ``deleted_at`` set when the task is removed
+    # (by a manual "Slet helt" or as the loser of a merge). ``merged_into``
+    # only set on merge — points at the winner so the search/history UI
+    # can show "Flettet ind i …" and link through.
+    deleted_at = models.DateTimeField(
+        verbose_name="Slettet",
+        null=True,
+        blank=True,
+    )
+    merged_into = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="merged_from",
+        null=True,
+        blank=True,
+        verbose_name="Flettet ind i",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = PriorityItemQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Prioriteret opgave"
@@ -314,6 +359,7 @@ class PriorityItem(models.Model):
         ordering = ["-last_active_at", "-priority", "title"]
         indexes = [
             models.Index(fields=["status", "last_active_at"]),
+            models.Index(fields=["deleted_at"]),
         ]
 
     def __str__(self) -> str:
@@ -323,6 +369,27 @@ class PriorityItem(models.Model):
     def is_active(self) -> bool:
         """True for any status that's not 'completed'."""
         return self.status != self.Status.COMPLETED
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+
+    @property
+    def is_merged(self) -> bool:
+        return self.merged_into_id is not None
+
+    def soft_delete(self) -> None:
+        """Manual soft-delete (no merge target). Idempotent."""
+        if self.deleted_at is None:
+            self.deleted_at = timezone.now()
+            self.save(update_fields=["deleted_at", "updated_at"])
+
+    def restore(self) -> None:
+        """Undo a soft-delete. Clears merged_into too if present."""
+        if self.deleted_at is not None:
+            self.deleted_at = None
+            self.merged_into = None
+            self.save(update_fields=["deleted_at", "merged_into", "updated_at"])
 
     @property
     def has_history(self) -> bool:
@@ -377,6 +444,10 @@ class PriorityItem(models.Model):
 
         if self.pk == winner.pk:
             raise ValueError("Cannot merge a task into itself.")
+        if self.is_deleted or winner.is_deleted:
+            raise ValueError(
+                "Cannot merge a deleted task — restore it first."
+            )
         if not winner.is_active:
             raise ValueError(
                 "Winner task must be active — you can't merge into a closed task."
@@ -432,7 +503,12 @@ class PriorityItem(models.Model):
                     "updated_at",
                 ]
             )
-            self.delete()
+            # Soft-delete the loser instead of nuking it. The tombstone
+            # keeps a pointer to the winner so search/history can show
+            # "Flettet ind i …" and link through.
+            self.merged_into = winner
+            self.deleted_at = timezone.now()
+            self.save(update_fields=["merged_into", "deleted_at", "updated_at"])
 
     def reopen(self, *, into_weeklog: WeekLog | None = None) -> None:
         """Flip the item back to ongoing and bump last_active_at.

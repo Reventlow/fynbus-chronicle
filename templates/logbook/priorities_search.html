@@ -30,9 +30,12 @@
       <div>
         <label for="id_status" class="input-label">Status</label>
         <select id="id_status" name="status" class="select-field">
-          <option value="all" {% if status_filter == "all" %}selected{% endif %}>Alle</option>
+          <option value="all" {% if status_filter == "all" %}selected{% endif %}>Alle (åbne + lukkede)</option>
           <option value="open" {% if status_filter == "open" %}selected{% endif %}>Åbne</option>
           <option value="closed" {% if status_filter == "closed" %}selected{% endif %}>Lukkede</option>
+          <option value="deleted" {% if status_filter == "deleted" %}selected{% endif %}>Slettede</option>
+          <option value="merged" {% if status_filter == "merged" %}selected{% endif %}>Flettede</option>
+          <option value="all_with_tombstones" {% if status_filter == "all_with_tombstones" %}selected{% endif %}>Alt inkl. slettede &amp; flettede</option>
         </select>
       </div>
       <div>
@@ -63,7 +66,7 @@
                     padding: 12px 24px;
                     border-top: 1px solid var(--hairline);
                     transition: background 0.12s;
-                    {% if item.status == 'completed' %}opacity: 0.65;{% endif %}"
+                    {% if item.is_deleted %}opacity: 0.55;{% elif item.status == 'completed' %}opacity: 0.65;{% endif %}"
              onmouseover="this.style.background='var(--surface-2)'"
              onmouseout="this.style.background='transparent'">
           <span class="check {% if item.status == 'completed' %}is-checked{% endif %}" aria-hidden="true">
@@ -73,30 +76,43 @@
           </span>
           <a href="{% url 'logbook:priority-item-history' item.pk %}"
              style="text-decoration: none; color: inherit; min-width: 0;">
-            <div style="font-size: 13.5px; font-weight: 500; color: var(--ink-1); {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
+            <div style="font-size: 13.5px; font-weight: 500; color: var(--ink-1); {% if item.is_deleted %}text-decoration: line-through; color: var(--ink-4);{% elif item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
               {{ item.title }}
             </div>
             <div class="flex flex-wrap" style="gap: 8px; font-size: 11.5px; color: var(--ink-4); margin-top: 3px;">
               <span class="num">Oprettet: {{ item.origin_weeklog.week_label }}</span>
               <span>·</span>
               <span class="num">{{ item.appearances.count }} uge{{ item.appearances.count|pluralize:"r" }}</span>
-              <span>·</span>
-              <span class="num">Sidst aktiv {{ item.last_active_at|date:"j. M Y · H:i" }}</span>
+              {% if item.is_deleted %}
+                <span>·</span>
+                <span class="num" style="color: var(--bad-ink);">Slettet {{ item.deleted_at|date:"j. M Y" }}</span>
+              {% else %}
+                <span>·</span>
+                <span class="num">Sidst aktiv {{ item.last_active_at|date:"j. M Y · H:i" }}</span>
+              {% endif %}
             </div>
           </a>
           <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
             {{ item.get_priority_display }}
           </span>
-          <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
-            {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
-            {{ item.get_status_display }}
-          </span>
-          {% if item.auto_closed %}
+          {% if item.is_merged %}
+            <span class="pill pill-info" title="Flettet ind i en anden opgave">
+              flettet
+            </span>
+          {% elif item.is_deleted %}
+            <span class="pill pill-bad">slettet</span>
+          {% else %}
+            <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
+              {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
+              {{ item.get_status_display }}
+            </span>
+          {% endif %}
+          {% if item.auto_closed and not item.is_deleted %}
             <span class="pill pill-neutral" title="Auto-lukket efter 6 uger" style="font-size: 10px;">auto</span>
           {% else %}
             <span></span>
           {% endif %}
-          {% if is_editor %}
+          {% if is_editor and not item.is_deleted %}
             <button hx-get="{% url 'logbook:priority-item-merge' item.pk %}"
                     hx-target="#merge-dialog"
                     hx-swap="innerHTML"

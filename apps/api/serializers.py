@@ -28,6 +28,8 @@ def serialize_priority_item(item: PriorityItem) -> dict[str, Any]:
         "notes": item.notes,
         "auto_closed": item.auto_closed,
         "closed_at": item.closed_at.isoformat() if item.closed_at else None,
+        "deleted_at": item.deleted_at.isoformat() if item.deleted_at else None,
+        "merged_into_id": item.merged_into_id,
         "last_active_at": (
             item.last_active_at.isoformat() if item.last_active_at else None
         ),
@@ -116,6 +118,7 @@ def serialize_weeklog(weeklog: WeekLog, *, full: bool = False) -> dict[str, Any]
         data["priority_items"] = [
             serialize_priority_appearance(a)
             for a in weeklog.priority_appearances.select_related("priority_item")
+            .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
         ]
         data["absences"] = [serialize_absence(a) for a in weeklog.absences.all()]
