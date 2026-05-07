@@ -349,6 +349,86 @@ class PriorityItem(models.Model):
         self.closed_at = now
         self.save(update_fields=["status", "auto_closed", "closed_at", "updated_at"])
 
+    def merge_into(self, winner: "PriorityItem") -> None:
+        """Fold this task into ``winner`` and delete it.
+
+        Both tasks must currently be active (``status != COMPLETED``).
+        After the merge:
+
+        * Every appearance of ``self`` moves to ``winner``. If ``winner``
+          already has an appearance on the same weeklog, the two
+          descriptions are concatenated with a ``— flettet —`` separator
+          and the loser appearance is dropped.
+        * ``winner.notes`` gets the loser's notes appended with a
+          ``— flettet fra: <title> —`` header so context isn't lost.
+        * ``winner.origin_weeklog`` becomes the earlier of the two
+          origins so the history page starts from the real beginning.
+        * ``winner.last_active_at`` becomes the max of both.
+        * ``winner``'s title, priority, and status are kept as-is.
+        * ``self`` is deleted at the end.
+
+        Raises ``ValueError`` for self-merge or when either task is
+        already completed.
+        """
+        from django.db import transaction
+
+        if self.pk == winner.pk:
+            raise ValueError("Cannot merge a task into itself.")
+        if not self.is_active or not winner.is_active:
+            raise ValueError("Both tasks must be active to merge.")
+
+        sep = "\n\n— flettet —\n"
+
+        with transaction.atomic():
+            # Move / merge appearances
+            for la in list(self.appearances.select_related("weeklog")):
+                wa = winner.appearances.filter(weeklog=la.weeklog).first()
+                if wa is None:
+                    la.priority_item = winner
+                    la.save(update_fields=["priority_item"])
+                else:
+                    if la.description and la.description.strip() != wa.description.strip():
+                        wa.description = (
+                            (wa.description + sep + la.description).strip()
+                            if wa.description
+                            else la.description
+                        )
+                        wa.save(update_fields=["description", "updated_at"])
+                    la.delete()
+
+            # Combine notes
+            if self.notes and self.notes.strip():
+                header = f"\n\n— flettet fra: {self.title} —\n"
+                winner.notes = (
+                    (winner.notes + header + self.notes).strip()
+                    if winner.notes
+                    else self.notes
+                )
+
+            # Pick earlier origin
+            if (
+                self.origin_weeklog.year,
+                self.origin_weeklog.week_number,
+            ) < (
+                winner.origin_weeklog.year,
+                winner.origin_weeklog.week_number,
+            ):
+                winner.origin_weeklog = self.origin_weeklog
+
+            # Max of last_active_at
+            if self.last_active_at > winner.last_active_at:
+                winner.last_active_at = self.last_active_at
+
+            winner.save(
+                update_fields=[
+                    "notes",
+                    "origin_weeklog",
+                    "last_active_at",
+                    "updated_at",
+                ]
+            )
+            self.delete()
+
     def reopen(self, *, into_weeklog: WeekLog | None = None) -> None:
         """Flip the item back to ongoing and bump last_active_at.
 

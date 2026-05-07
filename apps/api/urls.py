@@ -40,6 +40,11 @@ urlpatterns = [
         name="weeklog-carry-priorities",
     ),
     path(
+        "priority-items/<int:loser_id>/merge-into/<int:winner_id>/",
+        views.priority_item_merge,
+        name="priority-item-merge",
+    ),
+    path(
         "weeklogs/<int:year>/<int:week>/incidents/",
         views.incident_create,
         name="incident-create",

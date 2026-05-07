@@ -1,0 +1,96 @@
+{% comment %}
+  Merge dialog — pick a winner to fold `loser` into.
+  Loaded via HTMX into #merge-dialog. Submits a regular POST so the
+  redirect can carry a flash message back to the user.
+{% endcomment %}
+<div role="dialog" aria-modal="true"
+     x-data="{ open: true, picked: null }"
+     x-show="open"
+     x-init="$nextTick(() => document.querySelector('#merge-dialog input[type=text]')?.focus())"
+     style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: oklch(0 0 0 / 0.45);"
+     @click.self="open = false; $nextTick(() => document.getElementById('merge-dialog').innerHTML = '')"
+     @keydown.escape="open = false; $nextTick(() => document.getElementById('merge-dialog').innerHTML = '')">
+  <div class="card"
+       style="max-width: 720px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; padding: 0;"
+       @click.stop>
+
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px; border-bottom: 1px solid var(--hairline);">
+      <div>
+        <div class="label-eyebrow">Flet opgaver</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+          ”{{ loser.title }}” fletes ind i …
+        </h2>
+        <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.5;">
+          Vælg modtager-opgaven. Modtagerens titel, prioritet og status bevares.
+          Beskrivelser, noter og tidligere uger overføres. ”{{ loser.title }}” slettes.
+        </p>
+      </div>
+      <button type="button" class="icon-btn"
+              @click="open = false; $nextTick(() => document.getElementById('merge-dialog').innerHTML = '')"
+              aria-label="Luk dialog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding: 14px 24px 8px; border-bottom: 1px solid var(--hairline);">
+      <input type="text" name="q" value="{{ q }}" class="field"
+             placeholder="Filtrer på titel eller noter..."
+             hx-get="{% url 'logbook:priority-item-merge' loser.pk %}"
+             hx-trigger="keyup changed delay:200ms"
+             hx-target="#merge-dialog"
+             hx-swap="innerHTML">
+    </div>
+
+    <div style="flex: 1 1 auto; overflow-y: auto;">
+      {% if candidates %}
+        {% for cand in candidates %}
+          <label class="grid items-center gap-3"
+                 style="grid-template-columns: auto 1fr auto;
+                        padding: 12px 24px;
+                        border-bottom: 1px solid var(--hairline);
+                        cursor: pointer;
+                        transition: background 0.12s;"
+                 onmouseover="this.style.background='var(--surface-2)'"
+                 onmouseout="this.style.background='transparent'">
+            <input type="radio" name="winner_pk" value="{{ cand.pk }}"
+                   x-model="picked"
+                   class="radio-field">
+            <div>
+              <div style="font-size: 13.5px; color: var(--ink-1); font-weight: 500;">{{ cand.title }}</div>
+              <div class="flex flex-wrap gap-2" style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
+                <span class="num">Oprettet: {{ cand.origin_weeklog.week_label }}</span>
+                <span>·</span>
+                <span class="num">{{ cand.appearances.count }} uge{{ cand.appearances.count|pluralize:"r" }}</span>
+                <span>·</span>
+                <span>{{ cand.get_status_display }}</span>
+              </div>
+            </div>
+            <span class="pill {% if cand.priority == 'high' %}pill-bad{% elif cand.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+              {{ cand.get_priority_display }}
+            </span>
+          </label>
+        {% endfor %}
+      {% else %}
+        <p style="text-align: center; color: var(--ink-4); padding: 32px;">
+          Ingen andre åbne opgaver matcher.
+        </p>
+      {% endif %}
+    </div>
+
+    <form method="post" :action="`{% url 'logbook:priority-item-merge-post' loser.pk 0 %}`.replace('/0/', '/' + picked + '/')"
+          x-show="picked"
+          @submit="if (!confirm(`Flet ”{{ loser.title|escapejs }}” ind i den valgte modtager? Det kan ikke fortrydes.`)) $event.preventDefault()"
+          style="padding: 14px 24px; border-top: 1px solid var(--hairline); display: flex; justify-content: flex-end; gap: 8px;">
+      {% csrf_token %}
+      <button type="button" class="btn btn-sm"
+              @click="open = false; $nextTick(() => document.getElementById('merge-dialog').innerHTML = '')">
+        Annullér
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        Flet
+      </button>
+    </form>
+  </div>
+</div>

@@ -204,6 +204,29 @@ def priority_item_update(request: HttpRequest, item_id: int) -> JsonResponse:
     return JsonResponse({"priority_item": serialize_priority_item(item)})
 
 
+@require_POST
+@api_auth(scope="write")
+def priority_item_merge(
+    request: HttpRequest, loser_id: int, winner_id: int
+) -> JsonResponse:
+    """Merge ``loser_id`` into ``winner_id``.
+
+    Both tasks must be active. Returns the winner's serialized state
+    after the merge. The loser is gone — its appearances live on
+    ``winner.appearances`` now, with same-week conflicts merged.
+    """
+    loser = get_object_or_404(PriorityItem, pk=loser_id)
+    winner = get_object_or_404(PriorityItem, pk=winner_id)
+    try:
+        loser.merge_into(winner)
+    except ValueError as exc:
+        return JsonResponse(
+            {"error": "merge_refused", "detail": str(exc)}, status=400
+        )
+    winner.refresh_from_db()
+    return JsonResponse({"priority_item": serialize_priority_item(winner)})
+
+
 @require_GET
 @api_auth(scope="read")
 def priority_item_history(request: HttpRequest, item_id: int) -> JsonResponse:

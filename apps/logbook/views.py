@@ -394,6 +394,71 @@ def weeklog_add_existing_dialog(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
+def priority_item_merge_dialog(request: HttpRequest, pk: int) -> HttpResponse:
+    """Render the merge dialog: pick another active task to fold ``pk`` into.
+
+    GET only. Lists every active priority item except the loser itself,
+    filterable by ``?q=`` text. The dialog POSTs to ``priority-item-merge-post``.
+    """
+    loser = get_object_or_404(PriorityItem, pk=pk)
+    if not loser.is_active:
+        messages.error(request, "Kun aktive opgaver kan flettes.")
+        return redirect("logbook:weeklog-list")
+
+    q = (request.GET.get("q") or "").strip()
+    qs = (
+        PriorityItem.objects.exclude(pk=loser.pk)
+        .exclude(status=PriorityItem.Status.COMPLETED)
+        .select_related("origin_weeklog")
+        .order_by("-last_active_at")
+    )
+    if q:
+        qs = qs.filter(
+            db_models.Q(title__icontains=q) | db_models.Q(notes__icontains=q)
+        )
+    qs = qs[:50]
+
+    from django.shortcuts import render
+
+    return render(
+        request,
+        "logbook/partials/merge_dialog.html",
+        {"loser": loser, "candidates": qs, "q": q},
+    )
+
+
+@login_required
+@editor_required
+@require_POST
+def priority_item_merge_post(
+    request: HttpRequest, loser_pk: int, winner_pk: int
+) -> HttpResponse:
+    """Execute the merge and redirect to the winner's most recent weeklog."""
+    loser = get_object_or_404(PriorityItem, pk=loser_pk)
+    winner = get_object_or_404(PriorityItem, pk=winner_pk)
+    try:
+        loser_title = loser.title  # snapshot before deletion
+        loser.merge_into(winner)
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("logbook:priority-item-history", pk=winner.pk)
+
+    messages.success(
+        request,
+        f"”{loser_title}” flettet ind i ”{winner.title}”.",
+    )
+    # Send the user to the winner's most recent weeklog so they can see
+    # the merged history land on familiar ground.
+    target_appearance = winner.appearances.order_by(
+        "-weeklog__year", "-weeklog__week_number"
+    ).first()
+    if target_appearance is not None:
+        return redirect("logbook:weeklog-detail", pk=target_appearance.weeklog.pk)
+    return redirect("logbook:priority-item-history", pk=winner.pk)
+
+
+@login_required
+@editor_required
 @require_POST
 def weeklog_add_existing_post(request: HttpRequest, pk: int) -> HttpResponse:
     """Carry the chosen open tasks into ``weeklog`` as new appearances."""

@@ -73,6 +73,16 @@ urlpatterns = [
         views.weeklog_add_existing_post,
         name="weeklog-add-existing-post",
     ),
+    path(
+        "priorities/<int:pk>/merge/",
+        views.priority_item_merge_dialog,
+        name="priority-item-merge",
+    ),
+    path(
+        "priorities/<int:loser_pk>/merge/<int:winner_pk>/",
+        views.priority_item_merge_post,
+        name="priority-item-merge-post",
+    ),
     # HTMX partials for absences
     path("absence/new/", views.AbsenceCreateView.as_view(), name="absence-create"),
     path(
