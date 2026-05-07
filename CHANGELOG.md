@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.6 — 2026-05-07
+
+### Changed
+- Footer now uses the editorial design tokens (paper / hairline / ink scale) instead of the legacy sand palette, and picks up the user's accent: a 64×2 px rule sits over the top border in `--accent`, and the version number renders as a small `--accent-soft / --accent-ink` pill (matching the "Se historik" pill on priority rows). Switching the tweaks-panel accent now retints the footer immediately. Admin link stays as a plain text link in `--ink-3 → --ink-1` on hover.
+
+### Removed
+- "Sidste 7 dage" subheading from the dashboard incidents card — it wasn't accurate (the list is the most recent N incidents regardless of age) and the eyebrow alone is enough.
+
 ## 0.5.5 — 2026-05-07
 
 ### Changed

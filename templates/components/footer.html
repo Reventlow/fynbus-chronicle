@@ -1,24 +1,26 @@
-<footer class="bg-white dark:bg-sand-800 py-6 mt-auto" style="border-top: 1px solid rgba(0,0,0,0.08)">
-  <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-      <div class="text-sm text-sand-500 dark:text-sand-400">
-        &copy; {% now "Y" %} FynBus IT.
-      </div>
-      <div class="flex items-center space-x-4 text-sm text-sand-500 dark:text-sand-400">
-        {% if IS_STAR_WARS_DAY %}
-          <span class="sw-footer-egg" aria-label="Star Wars Day Easter egg">⚔ DJEDLOMI · 04 · 05 · 26 ⚔</span>
-          <span>&middot;</span>
-        {% endif %}
-        <a href="{% url 'admin:index' %}" class="hover:text-sand-700 dark:hover:text-sand-200">
-          Administration
-        </a>
-        <span>&middot;</span>
-        <a href="{% url 'dashboard:docs-page' slug='changelog' %}"
-           class="hover:text-sand-700 dark:hover:text-sand-200"
-           hx-get="{% url 'dashboard:partial-footer-version' %}"
-           hx-trigger="load, every 300s"
-           hx-swap="innerHTML">v{{ APP_VERSION }}</a>
-      </div>
+{% comment %}
+  Footer — picks up the editorial tokens and the user's accent. The thin
+  rule below the top border + the version link both use --accent so the
+  footer subtly retints when the tweaks-panel accent changes.
+{% endcomment %}
+<footer class="footer-shell" style="margin-top: auto;">
+  <div class="footer-rule" aria-hidden="true"></div>
+  <div class="footer-inner">
+    <div class="footer-copyright">
+      <span class="num">© {% now "Y" %}</span> FynBus IT.
+    </div>
+    <div class="footer-links">
+      {% if IS_STAR_WARS_DAY %}
+        <span class="sw-footer-egg" aria-label="Star Wars Day Easter egg">⚔ DJEDLOMI · 04 · 05 · 26 ⚔</span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+      {% endif %}
+      <a href="{% url 'admin:index' %}" class="footer-link">Administration</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+      <a href="{% url 'dashboard:docs-page' slug='changelog' %}"
+         class="footer-version"
+         hx-get="{% url 'dashboard:partial-footer-version' %}"
+         hx-trigger="load, every 300s"
+         hx-swap="innerHTML">v{{ APP_VERSION }}</a>
     </div>
   </div>
 </footer>

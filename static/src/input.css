@@ -939,6 +939,73 @@ html[data-density="dashboard"] .js-dashboard-main {
   }
 
   /* =========================================================================
+     Footer — editorial tokens, accent rule + accent-tinted version link
+     ========================================================================= */
+  .footer-shell {
+    background: var(--paper);
+    border-top: 1px solid var(--hairline);
+    color: var(--ink-3);
+    position: relative;
+  }
+  /* Thin accent bar over the top border — same trick as the editorial
+     header eyebrow rule so the footer "frames" the page in the user's
+     selected accent. */
+  .footer-rule {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+  }
+  @media (min-width: 768px) {
+    .footer-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 16px;
+    }
+  }
+  .footer-copyright { color: var(--ink-4); }
+  .footer-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .footer-sep { color: var(--ink-5); }
+  .footer-link {
+    color: var(--ink-3);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-link:hover { color: var(--ink-1); }
+  .footer-version {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: filter 0.15s ease;
+  }
+  .footer-version:hover { filter: brightness(0.95); }
+
+  /* =========================================================================
      Brand mark
      ========================================================================= */
   .brand-mark {
