@@ -1,0 +1,90 @@
+{% comment %}
+  "Tilføj fra åbne opgaver" dialog — rendered via HTMX into #add-existing-dialog.
+  Shows open priority items NOT already on this weeklog. User picks any number
+  with checkboxes and submits to carry them forward.
+{% endcomment %}
+<div role="dialog" aria-modal="true"
+     x-data="{ open: true }"
+     x-show="open"
+     x-init="$nextTick(() => document.querySelector('#add-existing-dialog input[type=text]')?.focus())"
+     style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: oklch(0 0 0 / 0.45);"
+     @click.self="open = false; $nextTick(() => document.getElementById('add-existing-dialog').innerHTML = '')"
+     @keydown.escape="open = false; $nextTick(() => document.getElementById('add-existing-dialog').innerHTML = '')">
+  <div class="card"
+       style="max-width: 720px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; padding: 0;"
+       @click.stop>
+
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px; border-bottom: 1px solid var(--hairline);">
+      <div>
+        <div class="label-eyebrow">{{ weeklog.week_label }}</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+          Tilføj åbne opgaver fra tidligere uger
+        </h2>
+        <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--ink-3);">
+          Vælg de opgaver, du vil have med på denne uges log. Tomme uger på
+          opgaverne tæller ikke — kun beskrivelser bumper auto-luk-uret.
+        </p>
+      </div>
+      <button type="button" class="icon-btn"
+              @click="open = false; $nextTick(() => document.getElementById('add-existing-dialog').innerHTML = '')"
+              aria-label="Luk dialog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding: 14px 24px 8px; border-bottom: 1px solid var(--hairline);">
+      <input type="text" name="q" value="{{ q }}" class="field"
+             placeholder="Filtrer på titel eller noter..."
+             hx-get="{% url 'logbook:weeklog-add-existing' weeklog.pk %}"
+             hx-trigger="keyup changed delay:200ms"
+             hx-target="#add-existing-dialog"
+             hx-swap="innerHTML">
+    </div>
+
+    <form method="post" action="{% url 'logbook:weeklog-add-existing-post' weeklog.pk %}"
+          style="flex: 1 1 auto; overflow-y: auto;">
+      {% csrf_token %}
+      {% if items %}
+        {% for item in items %}
+          <label class="grid items-center gap-3"
+                 style="grid-template-columns: auto 1fr auto;
+                        padding: 12px 24px;
+                        border-bottom: 1px solid var(--hairline);
+                        cursor: pointer;
+                        transition: background 0.12s;"
+                 onmouseover="this.style.background='var(--surface-2)'"
+                 onmouseout="this.style.background='transparent'">
+            <input type="checkbox" name="item_ids" value="{{ item.pk }}" class="checkbox-field">
+            <div>
+              <div style="font-size: 13.5px; color: var(--ink-1); font-weight: 500;">{{ item.title }}</div>
+              <div class="flex flex-wrap gap-2" style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
+                <span class="num">{{ item.origin_weeklog.week_label }}</span>
+                <span>·</span>
+                <span class="num">sidst aktiv {{ item.last_active_at|date:"j. M Y" }}</span>
+              </div>
+            </div>
+            <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+              {{ item.get_priority_display }}
+            </span>
+          </label>
+        {% endfor %}
+      {% else %}
+        <p style="text-align: center; color: var(--ink-4); padding: 32px;">
+          Ingen åbne opgaver matcher.
+        </p>
+      {% endif %}
+
+      <div class="flex justify-end gap-2" style="padding: 14px 24px; border-top: 1px solid var(--hairline);">
+        <button type="button" class="btn btn-sm"
+                @click="open = false; $nextTick(() => document.getElementById('add-existing-dialog').innerHTML = '')">
+          Annullér
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm">
+          Tilføj valgte
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

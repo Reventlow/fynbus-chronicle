@@ -97,11 +97,17 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
         weeklog = WeekLog.get_current_week()
 
         if weeklog:
+            # Auto-close stale items (>6 weeks since last_active_at) before
+            # we read the appearance list — keeps the dashboard tidy.
+            weeklog.auto_close_stale_priorities()
             context["weeklog"] = weeklog
-            # Show every priority item regardless of status — done items render
-            # struck-through via the row template so they read as completed
-            # context, not active work.
-            context["priority_items"] = weeklog.priority_items.all()[:8]
+            # Show every appearance for the week, including completed tasks —
+            # done items render struck-through via the row template so they
+            # read as completed context.
+            context["priority_appearances"] = (
+                weeklog.priority_appearances.select_related("priority_item")
+                .order_by("order", "id")[:8]
+            )
             context["absences"] = weeklog.absences.all()[:5]
         else:
             now = timezone.now()

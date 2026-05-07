@@ -181,14 +181,73 @@ class WeekLog(models.Model):
             "avg_closed": round(result["avg_closed"] or 0, 1),
         }
 
+    def auto_close_stale_priorities(self) -> int:
+        """Auto-close every active priority item whose ``last_active_at`` is
+        older than ``PriorityItem.AUTO_CLOSE_AFTER_WEEKS`` weeks.
+
+        Cheap and idempotent — safe to call on every view of the current
+        week. Returns the number of items closed. Carry-over is *not*
+        automatic — the user picks which open tasks to bring forward via
+        the "Tilføj eksisterende opgave" dialog.
+        """
+        from datetime import timedelta
+
+        cutoff = timezone.now() - timedelta(
+            weeks=PriorityItem.AUTO_CLOSE_AFTER_WEEKS
+        )
+        stale = list(
+            PriorityItem.objects.filter(last_active_at__lt=cutoff).exclude(
+                status=PriorityItem.Status.COMPLETED
+            )
+        )
+        for item in stale:
+            item.auto_close()
+        return len(stale)
+
+    def add_existing_priority_items(self, item_ids) -> int:
+        """Carry the given priority items into this weeklog by creating
+        appearance rows for any that aren't already present. Bumps each
+        item's ``last_active_at`` so the auto-close clock resets.
+
+        Returns the number of appearances actually created.
+        """
+        if not item_ids:
+            return 0
+        next_order = (
+            self.priority_appearances.aggregate(m=models.Max("order"))["m"] or -1
+        ) + 1
+        existing = set(
+            self.priority_appearances.filter(
+                priority_item_id__in=item_ids
+            ).values_list("priority_item_id", flat=True)
+        )
+        added = 0
+        for item in PriorityItem.objects.filter(pk__in=item_ids):
+            if item.pk in existing:
+                continue
+            PriorityItemAppearance.objects.create(
+                priority_item=item,
+                weeklog=self,
+                order=next_order,
+            )
+            next_order += 1
+            added += 1
+            item.touch()
+        return added
+
 
 class PriorityItem(models.Model):
     """
-    Represents a priority task or project being tracked.
+    A long-lived priority task that may span many weekly logs.
 
-    Priority items can span multiple weeks and track status
-    from 'not started' through 'completed'.
+    The task itself carries title/priority/status/notes and remembers
+    when it was first created (``origin_weeklog``) and the last time a
+    user actively touched it (``last_active_at`` — drives the auto-close
+    rule). Per-week details (description, ordering) live on the related
+    ``PriorityItemAppearance`` rows, one per week the task was visible.
     """
+
+    AUTO_CLOSE_AFTER_WEEKS = 6
 
     class Priority(models.TextChoices):
         HIGH = "high", "Høj"
@@ -201,21 +260,14 @@ class PriorityItem(models.Model):
         BLOCKED = "blocked", "Blokeret"
         COMPLETED = "completed", "Afsluttet"
 
-    weeklog = models.ForeignKey(
+    origin_weeklog = models.ForeignKey(
         WeekLog,
         on_delete=models.CASCADE,
-        related_name="priority_items",
-        verbose_name="Ugelog",
+        related_name="originated_priority_items",
+        verbose_name="Oprindelig ugelog",
+        help_text="Den uge opgaven først blev oprettet i.",
     )
-    title = models.CharField(
-        verbose_name="Titel",
-        max_length=200,
-    )
-    description = models.TextField(
-        verbose_name="Beskrivelse",
-        blank=True,
-        help_text="Detaljeret beskrivelse af opgaven",
-    )
+    title = models.CharField(verbose_name="Titel", max_length=200)
     priority = models.CharField(
         verbose_name="Prioritet",
         max_length=10,
@@ -231,7 +283,109 @@ class PriorityItem(models.Model):
     notes = models.TextField(
         verbose_name="Noter",
         blank=True,
-        help_text="Eventuelle noter eller opdateringer",
+        help_text="Generelle noter, der gælder hele opgavens livscyklus",
+    )
+
+    # Auto-close machinery
+    last_active_at = models.DateTimeField(
+        verbose_name="Sidst aktiv",
+        default=timezone.now,
+        help_text=(
+            "Bumpes ved bruger-handling (statusskift, redigering, ny "
+            "uge-beskrivelse). Drevet af 6-ugers auto-luk-reglen."
+        ),
+    )
+    auto_closed = models.BooleanField(
+        verbose_name="Auto-lukket",
+        default=False,
+    )
+    closed_at = models.DateTimeField(
+        verbose_name="Lukket",
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Prioriteret opgave"
+        verbose_name_plural = "Prioriterede opgaver"
+        ordering = ["-last_active_at", "-priority", "title"]
+        indexes = [
+            models.Index(fields=["status", "last_active_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.title
+
+    @property
+    def is_active(self) -> bool:
+        """True for any status that's not 'completed'."""
+        return self.status != self.Status.COMPLETED
+
+    def touch(self, *, save: bool = True) -> None:
+        """Bump last_active_at to mark a real user-driven change."""
+        self.last_active_at = timezone.now()
+        if save:
+            self.save(update_fields=["last_active_at", "updated_at"])
+
+    def auto_close(self) -> None:
+        """Close this item due to the 6-week-since-last-active rule."""
+        now = timezone.now()
+        self.status = self.Status.COMPLETED
+        self.auto_closed = True
+        self.closed_at = now
+        self.save(update_fields=["status", "auto_closed", "closed_at", "updated_at"])
+
+    def reopen(self, *, into_weeklog: WeekLog | None = None) -> None:
+        """Flip the item back to ongoing and bump last_active_at.
+
+        If ``into_weeklog`` is supplied, an appearance for that week is
+        created (if it doesn't already exist) so the item shows up there
+        immediately. Used by the "toggle open" UX which automatically
+        adds reopened tasks to the current week.
+        """
+        self.status = self.Status.ONGOING
+        self.auto_closed = False
+        self.closed_at = None
+        self.last_active_at = timezone.now()
+        self.save(update_fields=[
+            "status", "auto_closed", "closed_at", "last_active_at", "updated_at",
+        ])
+        if into_weeklog is not None:
+            PriorityItemAppearance.objects.get_or_create(
+                priority_item=self,
+                weeklog=into_weeklog,
+            )
+
+
+class PriorityItemAppearance(models.Model):
+    """A priority task's appearance in a single weekly log.
+
+    Carries the per-week description and the per-week display order.
+    One row per (task, weeklog) pair. Auto-created by the carry-over
+    flow when a current weeklog is opened, or explicitly by the user
+    when they add a task on a given week.
+    """
+
+    priority_item = models.ForeignKey(
+        PriorityItem,
+        on_delete=models.CASCADE,
+        related_name="appearances",
+        verbose_name="Opgave",
+    )
+    weeklog = models.ForeignKey(
+        WeekLog,
+        on_delete=models.CASCADE,
+        related_name="priority_appearances",
+        verbose_name="Ugelog",
+    )
+    description = models.TextField(
+        verbose_name="Beskrivelse",
+        blank=True,
+        default="",
+        help_text="Hvad skete der med opgaven i denne uge?",
     )
     order = models.PositiveIntegerField(
         verbose_name="Rækkefølge",
@@ -241,17 +395,16 @@ class PriorityItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Prioriteret opgave"
-        verbose_name_plural = "Prioriterede opgaver"
-        ordering = ["order", "-priority", "title"]
+        verbose_name = "Opgave-tilknytning"
+        verbose_name_plural = "Opgave-tilknytninger"
+        ordering = ["order", "created_at"]
+        unique_together = [("priority_item", "weeklog")]
+        indexes = [
+            models.Index(fields=["weeklog", "order"]),
+        ]
 
     def __str__(self) -> str:
-        return self.title
-
-    @property
-    def is_active(self) -> bool:
-        """Check if item is still active (not completed)."""
-        return self.status != self.Status.COMPLETED
+        return f"{self.priority_item.title} @ {self.weeklog.week_label}"
 
 
 class Absence(models.Model):

@@ -30,7 +30,7 @@ from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
 from .forms import AbsenceForm, IncidentForm, MeetingMinutesForm, PriorityItemForm, WeekLogForm
-from .models import Absence, Incident, PriorityItem, WeekLog
+from .models import Absence, Incident, PriorityItem, PriorityItemAppearance, WeekLog
 
 
 # =============================================================================
@@ -77,12 +77,27 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
     template_name = "logbook/weeklog_detail.html"
     context_object_name = "weeklog"
 
+    def get_object(self, queryset=None):
+        weeklog = super().get_object(queryset)
+        # If we're looking at the current ISO-week weeklog, run the
+        # auto-close pass so anything older than 6 weeks is tidied up
+        # before we render. Carry-over is intentionally NOT automatic —
+        # users pick open tasks via the "Tilføj eksisterende" dialog.
+        current = WeekLog.get_current_week()
+        if current is not None and current.pk == weeklog.pk:
+            weeklog.auto_close_stale_priorities()
+        return weeklog
+
     def get_context_data(self, **kwargs) -> dict:
-        """Add forms for inline item creation."""
+        """Add forms for inline item creation + appearances queryset."""
         context = super().get_context_data(**kwargs)
         context["priority_form"] = PriorityItemForm()
         context["absence_form"] = AbsenceForm()
         context["incident_form"] = IncidentForm()
+        context["priority_appearances"] = (
+            self.object.priority_appearances.select_related("priority_item")
+            .order_by("order", "id")
+        )
         return context
 
 
@@ -129,76 +144,130 @@ class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
 
 
 class PriorityItemCreateView(EditorRequiredMixin, CreateView):
-    """HTMX view for creating priority items inline."""
+    """HTMX view: create a new priority task on a given weeklog.
+
+    Creates both the long-lived ``PriorityItem`` and its first
+    ``PriorityItemAppearance`` for the weeklog the form was opened on.
+    """
 
     model = PriorityItem
     form_class = PriorityItemForm
     template_name = "logbook/partials/priority_item_form.html"
 
     def form_valid(self, form) -> HttpResponse:
-        """Set weeklog from query param and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
-        form.instance.weeklog_id = weeklog_id
-        # Append new items at the end by setting order to max + 1
-        max_order = PriorityItem.objects.filter(
-            weeklog_id=weeklog_id
-        ).aggregate(db_models.Max("order"))["order__max"]
-        form.instance.order = (max_order or 0) + 1
-        self.object = form.save()
+        weeklog = get_object_or_404(WeekLog, pk=weeklog_id)
+        form.instance.origin_weeklog = weeklog
+        item = form.save()
+
+        # Create the matching appearance for this weeklog with the
+        # description carried in the form.
+        max_order = (
+            weeklog.priority_appearances.aggregate(m=db_models.Max("order"))["m"]
+            or 0
+        )
+        appearance = PriorityItemAppearance.objects.create(
+            priority_item=item,
+            weeklog=weeklog,
+            description=form.cleaned_data.get("description", "") or "",
+            order=max_order + 1,
+        )
 
         from django.template.loader import render_to_string
 
-        # Render the new row
         row_html = render_to_string(
             "logbook/partials/priority_item_row.html",
-            {"item": self.object},
+            {"appearance": appearance, "item": item},
             request=self.request,
         )
-        # Add OOB swap to delete the form
         oob_html = '<div id="priority-item-form-container" hx-swap-oob="delete"></div>'
-
         return HttpResponse(row_html + oob_html)
 
     def form_invalid(self, form) -> HttpResponse:
-        """Return form with errors."""
         response = super().form_invalid(form)
         response["HX-Retarget"] = "#priority-item-form-container"
         return response
 
     def get_context_data(self, **kwargs) -> dict:
-        """Add weeklog ID to context."""
         context = super().get_context_data(**kwargs)
         context["weeklog_id"] = self.request.GET.get("weeklog")
         return context
 
 
 class PriorityItemUpdateView(EditorRequiredMixin, UpdateView):
-    """HTMX view for updating priority items inline."""
+    """HTMX view: edit a priority appearance row.
+
+    The URL pk refers to ``PriorityItemAppearance`` — the row in the
+    weeklog UI. Form-saved fields update the underlying long-lived
+    ``PriorityItem``; the ``description`` field updates this week's
+    appearance only. Toggling the status from completed → active
+    triggers ``reopen()`` and auto-adds the task to the current week.
+    """
 
     model = PriorityItem
     form_class = PriorityItemForm
     template_name = "logbook/partials/priority_item_form.html"
 
+    def get_object(self, queryset=None):  # type: ignore[override]
+        appearance = get_object_or_404(
+            PriorityItemAppearance.objects.select_related("priority_item", "weeklog"),
+            pk=self.kwargs["pk"],
+        )
+        self._appearance = appearance
+        return appearance.priority_item
+
+    def get_initial(self) -> dict:
+        initial = super().get_initial()
+        initial["description"] = self._appearance.description
+        return initial
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["appearance"] = self._appearance
+        return context
+
     def form_valid(self, form) -> HttpResponse:
-        """Save and return updated row."""
-        self.object = form.save()
+        item = form.save(commit=False)
+        # Was the item completed before this save?
+        was_completed = (
+            self.model.objects.filter(pk=item.pk)
+            .values_list("status", flat=True)
+            .first()
+            == self.model.Status.COMPLETED
+        )
+        item.touch(save=False)
+        item.save()
+
+        # Update this week's appearance description.
+        self._appearance.description = form.cleaned_data.get("description", "") or ""
+        self._appearance.save(update_fields=["description", "updated_at"])
+
+        # Reopen flow: completed → active auto-adds to the current ISO week.
+        if was_completed and item.status != self.model.Status.COMPLETED:
+            current = WeekLog.get_current_week()
+            if current is not None:
+                item.reopen(into_weeklog=current)
 
         from django.template.response import TemplateResponse
 
         return TemplateResponse(
             self.request,
             "logbook/partials/priority_item_row.html",
-            {"item": self.object},
+            {"appearance": self._appearance, "item": item},
         )
 
 
 class PriorityItemDeleteView(EditorRequiredMixin, DeleteView):
-    """HTMX view for deleting priority items."""
+    """HTMX view: remove a task from a single week (deletes the appearance).
 
-    model = PriorityItem
+    The long-lived PriorityItem stays intact and may still be visible
+    on other weeks. Use the admin or the search page to delete a task
+    entirely.
+    """
+
+    model = PriorityItemAppearance
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Delete and return empty response for HTMX."""
         self.object = self.get_object()
         self.object.delete()
         return HttpResponse("")
@@ -208,17 +277,141 @@ class PriorityItemDeleteView(EditorRequiredMixin, DeleteView):
 @editor_required
 @require_POST
 def reorder_priority_items(request: HttpRequest) -> HttpResponse:
-    """Reorder priority items via drag-and-drop."""
+    """Reorder appearances within a week via drag-and-drop."""
     try:
         data = json.loads(request.body)
         order_ids = data.get("order", [])
     except (json.JSONDecodeError, AttributeError):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    for position, item_id in enumerate(order_ids):
-        PriorityItem.objects.filter(pk=item_id).update(order=position)
-
+    for position, appearance_id in enumerate(order_ids):
+        PriorityItemAppearance.objects.filter(pk=appearance_id).update(order=position)
     return HttpResponse(status=204)
+
+
+# ---------------------------------------------------------------------------
+# Priority search + carry-from-open dialog + history
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def priorities_search(request: HttpRequest) -> HttpResponse:
+    """Search across all priority tasks (open + closed).
+
+    Filters: ``q`` (text in title/notes/appearance descriptions),
+    ``status`` ('open' / 'closed' / 'all', default 'all'), ``year``.
+    """
+    qs = PriorityItem.objects.select_related("origin_weeklog").prefetch_related("appearances")
+    q = (request.GET.get("q") or "").strip()
+    status_filter = request.GET.get("status") or "all"
+    year = request.GET.get("year")
+
+    if q:
+        qs = qs.filter(
+            db_models.Q(title__icontains=q)
+            | db_models.Q(notes__icontains=q)
+            | db_models.Q(appearances__description__icontains=q)
+        ).distinct()
+    if status_filter == "open":
+        qs = qs.exclude(status=PriorityItem.Status.COMPLETED)
+    elif status_filter == "closed":
+        qs = qs.filter(status=PriorityItem.Status.COMPLETED)
+    if year and year.isdigit():
+        qs = qs.filter(origin_weeklog__year=int(year))
+
+    qs = qs.order_by("-last_active_at")[:100]
+    years = (
+        WeekLog.objects.values_list("year", flat=True)
+        .distinct()
+        .order_by("-year")
+    )
+
+    from django.shortcuts import render
+
+    return render(
+        request,
+        "logbook/priorities_search.html",
+        {
+            "items": qs,
+            "q": q,
+            "status_filter": status_filter,
+            "year": year,
+            "years": years,
+        },
+    )
+
+
+@login_required
+def priority_item_history(request: HttpRequest, pk: int) -> HttpResponse:
+    """All appearances of a single task across weeks (the history view)."""
+    item = get_object_or_404(
+        PriorityItem.objects.select_related("origin_weeklog"), pk=pk
+    )
+    appearances = (
+        item.appearances.select_related("weeklog")
+        .order_by("-weeklog__year", "-weeklog__week_number")
+    )
+    from django.shortcuts import render
+
+    return render(
+        request,
+        "logbook/priority_item_history.html",
+        {"item": item, "appearances": appearances},
+    )
+
+
+@login_required
+@editor_required
+def weeklog_add_existing_dialog(request: HttpRequest, pk: int) -> HttpResponse:
+    """Render the 'pick open tasks to bring forward' dialog for a weeklog.
+
+    GET → returns the dialog body (HTMX swap target). Lists priority
+    items that are still active and don't already have an appearance
+    on this weeklog. Optional ``?q=`` text filter.
+    """
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    q = (request.GET.get("q") or "").strip()
+    already = weeklog.priority_appearances.values_list("priority_item_id", flat=True)
+    qs = (
+        PriorityItem.objects.exclude(status=PriorityItem.Status.COMPLETED)
+        .exclude(pk__in=already)
+        .select_related("origin_weeklog")
+        .order_by("-last_active_at")
+    )
+    if q:
+        qs = qs.filter(
+            db_models.Q(title__icontains=q) | db_models.Q(notes__icontains=q)
+        )
+    qs = qs[:50]
+    from django.shortcuts import render
+
+    return render(
+        request,
+        "logbook/partials/add_existing_dialog.html",
+        {"weeklog": weeklog, "items": qs, "q": q},
+    )
+
+
+@login_required
+@editor_required
+@require_POST
+def weeklog_add_existing_post(request: HttpRequest, pk: int) -> HttpResponse:
+    """Carry the chosen open tasks into ``weeklog`` as new appearances."""
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    item_ids = request.POST.getlist("item_ids")
+    try:
+        ids = [int(i) for i in item_ids]
+    except ValueError:
+        ids = []
+    added = weeklog.add_existing_priority_items(ids)
+    if added:
+        messages.success(
+            request,
+            f"{added} {'opgave' if added == 1 else 'opgaver'} tilføjet til {weeklog.week_label}.",
+        )
+    else:
+        messages.info(request, "Ingen opgaver tilføjet.")
+    return redirect("logbook:weeklog-detail", pk=weeklog.pk)
 
 
 # =============================================================================
@@ -413,12 +606,17 @@ def meeting_minutes_card(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 def priority_item_row(request: HttpRequest, pk: int) -> HttpResponse:
-    """Return just the priority item row partial (for cancel)."""
+    """Return just the priority appearance row partial (for cancel/refresh)."""
     from django.template.response import TemplateResponse
 
-    item = get_object_or_404(PriorityItem, pk=pk)
+    appearance = get_object_or_404(
+        PriorityItemAppearance.objects.select_related("priority_item", "weeklog"),
+        pk=pk,
+    )
     return TemplateResponse(
-        request, "logbook/partials/priority_item_row.html", {"item": item}
+        request,
+        "logbook/partials/priority_item_row.html",
+        {"appearance": appearance, "item": appearance.priority_item},
     )
 
 

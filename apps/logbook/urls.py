@@ -24,6 +24,9 @@ urlpatterns = [
         name="meeting-minutes-card",
     ),
     # HTMX partials for priority items
+    # NOTE: pk on edit/delete/row refers to PriorityItemAppearance (the row
+    # in the weeklog UI). The long-lived PriorityItem can outlive any single
+    # appearance and is only deleted via the admin or the search page.
     path(
         "priority-item/new/",
         views.PriorityItemCreateView.as_view(),
@@ -48,6 +51,27 @@ urlpatterns = [
         "priority-item/reorder/",
         views.reorder_priority_items,
         name="priority-item-reorder",
+    ),
+    # Search + carry-from-open dialog + history (operate on PriorityItem pk)
+    path(
+        "priorities/search/",
+        views.priorities_search,
+        name="priorities-search",
+    ),
+    path(
+        "priorities/<int:pk>/history/",
+        views.priority_item_history,
+        name="priority-item-history",
+    ),
+    path(
+        "<int:pk>/add-existing/",
+        views.weeklog_add_existing_dialog,
+        name="weeklog-add-existing",
+    ),
+    path(
+        "<int:pk>/add-existing/post/",
+        views.weeklog_add_existing_post,
+        name="weeklog-add-existing-post",
     ),
     # HTMX partials for absences
     path("absence/new/", views.AbsenceCreateView.as_view(), name="absence-create"),

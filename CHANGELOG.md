@@ -2,6 +2,22 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.0 — 2026-05-07
+
+### Added
+- **Multi-week priority tasks.** Schema split into long-lived `PriorityItem` (title, priority, status, notes, origin_weeklog, last_active_at, auto_closed) plus a new `PriorityItemAppearance` row per (task, week) carrying the per-week **description** + display order. Each week's description is preserved separately so a task accumulates a true history. Existing items are backfilled: every old `PriorityItem.description` is moved to an appearance for that item's origin week.
+- **Manual carry-over** via a "Fra åbne" dialog on each weeklog's priority section. The dialog lists every active task that isn't already on this week (filterable by text), and the user picks any number to bring forward. No automatic carry-over — staying in control was the point.
+- **Auto-close after 6 weeks of silence.** When a current weeklog is opened, items whose `last_active_at` is older than `PriorityItem.AUTO_CLOSE_AFTER_WEEKS` (=6 weeks) are auto-closed (`status=completed, auto_closed=True`). Touching an item (status, fields, or a description edit on any of its appearances) bumps `last_active_at` and resets the clock.
+- **Reopen → auto-add to current week.** Toggling a completed task back to `ongoing` (via UI or API PATCH) automatically creates an appearance on the current ISO week and resets the auto-close clock.
+- **Search page** at `/logbook/priorities/search/` (linked from each weeklog's priority section as "Søg") with text + status + year filters across all tasks, open or closed.
+- **History page** at `/logbook/priorities/{id}/history/` showing every weekly appearance of one task with its description — one-click from the row title.
+
+### Changed
+- Priority row URLs (`priority-item-edit/delete/row/reorder`) now key on `PriorityItemAppearance.pk` (the row in the weeklog UI) instead of `PriorityItem.pk`. Editing updates the long-lived task's title/priority/status/notes plus the current row's description; deleting only removes the row from the week (the task lives on).
+- Dashboard's current-week card now lists priority appearances (with per-week description) instead of bare priority items.
+- API: `weeklog.priority_items` now returns appearances with nested `priority_item` plus per-week `description`. New endpoints: `GET /api/v1/priority-items/{id}/history/` and `POST /api/v1/weeklogs/{year}/{week}/priority-items/carry/`. Reopening via PATCH automatically adds the task to the current week.
+- Admin: `PriorityItem` admin shows `last_active_at`, `auto_closed`, and the appearance count. New `PriorityItemAppearance` admin for spot-checking history. The weeklog inline shows appearances now (not raw items).
+
 ## 0.4.0 — 2026-05-01
 
 ### Added

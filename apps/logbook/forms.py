@@ -77,40 +77,61 @@ class WeekLogForm(forms.ModelForm):
 
 
 class PriorityItemForm(forms.ModelForm):
-    """Form for creating and editing priority items."""
+    """Form for the long-lived priority task itself.
+
+    The per-week description lives on PriorityItemAppearance and is
+    edited via PriorityItemAppearanceForm, but for convenience this
+    form *also* accepts a ``description`` text and the view that
+    instantiates it is responsible for routing that string into the
+    matching appearance.
+    """
+
+    description = forms.CharField(
+        label="Beskrivelse (denne uge)",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "textarea-field",
+                "rows": 3,
+                "placeholder": "Hvad skete der med opgaven i denne uge?",
+            }
+        ),
+        help_text="Bliver gemt på ugens visning af opgaven, så du kan se historikken senere.",
+    )
 
     class Meta:
         model = PriorityItem
-        fields = ["title", "priority", "status", "description", "notes"]
+        fields = ["title", "priority", "status", "notes"]
         widgets = {
             "title": forms.TextInput(
-                attrs={
-                    "class": "input-field",
-                    "placeholder": "Opgavens titel",
-                }
+                attrs={"class": "input-field", "placeholder": "Opgavens titel"}
             ),
-            "priority": forms.Select(
-                attrs={
-                    "class": "select-field",
-                }
-            ),
-            "status": forms.Select(
-                attrs={
-                    "class": "select-field",
-                }
-            ),
-            "description": forms.Textarea(
-                attrs={
-                    "class": "textarea-field",
-                    "rows": 3,
-                    "placeholder": "Beskrivelse af opgaven...",
-                }
-            ),
+            "priority": forms.Select(attrs={"class": "select-field"}),
+            "status": forms.Select(attrs={"class": "select-field"}),
             "notes": forms.Textarea(
                 attrs={
                     "class": "textarea-field",
                     "rows": 2,
-                    "placeholder": "Eventuelle noter...",
+                    "placeholder": "Generelle noter, der gælder hele opgaven...",
+                }
+            ),
+        }
+
+
+class PriorityItemAppearanceForm(forms.ModelForm):
+    """Edit only the per-week description (and optionally re-order)."""
+
+    class Meta:
+        from .models import PriorityItemAppearance
+
+        model = PriorityItemAppearance
+        fields = ["description"]
+        widgets = {
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea-field",
+                    "rows": 3,
+                    "placeholder": "Hvad skete der med opgaven i denne uge?",
                 }
             ),
         }

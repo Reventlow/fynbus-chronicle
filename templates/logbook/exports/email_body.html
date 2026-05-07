@@ -180,10 +180,10 @@
   {% for item in priority_items %}
   <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;">
     <div>
-      <strong style="color: #4A4540;">{{ item.title }}</strong>
-      <span class="badge badge-{{ item.priority }}">{{ item.get_priority_display }}</span>
-      <span class="badge {% if item.status == 'completed' %}badge-resolved{% elif item.status == 'blocked' %}badge-unresolved{% else %}badge-medium{% endif %}">
-        {{ item.get_status_display }}
+      <strong style="color: #4A4540;">{{ item.priority_item.title }}</strong>
+      <span class="badge badge-{{ item.priority_item.priority }}">{{ item.priority_item.get_priority_display }}</span>
+      <span class="badge {% if item.priority_item.status == 'completed' %}badge-resolved{% elif item.priority_item.status == 'blocked' %}badge-unresolved{% else %}badge-medium{% endif %}">
+        {{ item.priority_item.get_status_display }}
       </span>
     </div>
     {% if item.description %}

@@ -78,16 +78,18 @@ def generate_markdown(weeklog: WeekLog) -> str:
             lines.append(weeklog.meeting_minutes)
             lines.append("")
 
-    # Priority items
-    priority_items = weeklog.priority_items.all()
-    if priority_items:
+    # Priority items — iterate appearances so we get this week's description.
+    appearances = list(
+        weeklog.priority_appearances.select_related("priority_item").order_by("order", "id")
+    )
+    if appearances:
         lines.append("## Prioriterede Opgaver")
         lines.append("")
         lines.append("| Opgave | Prioritet | Status | Beskrivelse |")
         lines.append("|--------|-----------|--------|-------------|")
-        for item in priority_items:
-            desc = item.description or "-"
-            # Replace newlines with spaces for table cell compatibility
+        for a in appearances:
+            item = a.priority_item
+            desc = a.description or "-"
             desc = desc.replace("\n", " ").replace("\r", "")
             lines.append(
                 f"| {item.title} | {item.get_priority_display()} | "
@@ -95,8 +97,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
             )
         lines.append("")
 
-        # Add notes for items that have them
-        items_with_notes = [item for item in priority_items if item.notes]
+        items_with_notes = [a.priority_item for a in appearances if a.priority_item.notes]
         if items_with_notes:
             lines.append("### Noter")
             lines.append("")

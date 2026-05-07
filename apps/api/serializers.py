@@ -7,7 +7,13 @@ tight and the contract obvious.
 
 from typing import Any
 
-from apps.logbook.models import Absence, Incident, PriorityItem, WeekLog
+from apps.logbook.models import (
+    Absence,
+    Incident,
+    PriorityItem,
+    PriorityItemAppearance,
+    WeekLog,
+)
 from apps.oncall.models import OnCallDuty
 
 
@@ -20,10 +26,46 @@ def serialize_priority_item(item: PriorityItem) -> dict[str, Any]:
         "status": item.status,
         "status_display": item.get_status_display(),
         "notes": item.notes,
-        "order": item.order,
+        "auto_closed": item.auto_closed,
+        "closed_at": item.closed_at.isoformat() if item.closed_at else None,
+        "last_active_at": (
+            item.last_active_at.isoformat() if item.last_active_at else None
+        ),
+        "origin_weeklog": (
+            {"year": item.origin_weeklog.year, "week": item.origin_weeklog.week_number}
+            if item.origin_weeklog_id
+            else None
+        ),
         "created_at": item.created_at.isoformat() if item.created_at else None,
         "updated_at": item.updated_at.isoformat() if item.updated_at else None,
     }
+
+
+def serialize_priority_appearance(
+    appearance: PriorityItemAppearance,
+    *,
+    include_item: bool = True,
+) -> dict[str, Any]:
+    """Serialize one (task, week) appearance row.
+
+    Includes the per-week ``description`` and ``order``. By default the
+    nested long-lived task is included so callers don't need a second
+    request to know what the row represents.
+    """
+    data: dict[str, Any] = {
+        "id": appearance.id,
+        "weeklog": {
+            "year": appearance.weeklog.year,
+            "week": appearance.weeklog.week_number,
+        },
+        "description": appearance.description,
+        "order": appearance.order,
+        "created_at": appearance.created_at.isoformat() if appearance.created_at else None,
+        "updated_at": appearance.updated_at.isoformat() if appearance.updated_at else None,
+    }
+    if include_item:
+        data["priority_item"] = serialize_priority_item(appearance.priority_item)
+    return data
 
 
 def serialize_absence(absence: Absence) -> dict[str, Any]:
@@ -71,7 +113,11 @@ def serialize_weeklog(weeklog: WeekLog, *, full: bool = False) -> dict[str, Any]
         "updated_at": weeklog.updated_at.isoformat() if weeklog.updated_at else None,
     }
     if full:
-        data["priority_items"] = [serialize_priority_item(p) for p in weeklog.priority_items.all()]
+        data["priority_items"] = [
+            serialize_priority_appearance(a)
+            for a in weeklog.priority_appearances.select_related("priority_item")
+            .order_by("order", "id")
+        ]
         data["absences"] = [serialize_absence(a) for a in weeklog.absences.all()]
         data["incidents"] = [serialize_incident(i, include_weeklog=False) for i in weeklog.incidents.all()]
         data["meeting_skipped"] = weeklog.meeting_skipped

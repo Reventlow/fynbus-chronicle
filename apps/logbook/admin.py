@@ -13,20 +13,20 @@ from django.utils.html import format_html
 from .exports.email import send_weeklog_email
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
-from .models import Absence, Incident, PriorityItem, WeekLog
+from .models import Absence, Incident, PriorityItem, PriorityItemAppearance, WeekLog
 
 
-class PriorityItemInline(admin.TabularInline):
-    """Inline admin for priority items within a week log."""
+class PriorityItemAppearanceInline(admin.TabularInline):
+    """Inline admin for priority appearances on a weeklog (per-week descriptions)."""
 
-    model = PriorityItem
-    extra = 1
-    fields = ["title", "priority", "status", "description", "notes"]
+    model = PriorityItemAppearance
+    extra = 0
+    fields = ["priority_item", "description", "order"]
     classes = ["collapse"]
+    autocomplete_fields = ["priority_item"]
 
     def get_queryset(self, request: HttpRequest):
-        """Order by manual order, then priority descending, then title."""
-        return super().get_queryset(request).order_by("order", "-priority", "title")
+        return super().get_queryset(request).select_related("priority_item").order_by("order", "id")
 
 
 class AbsenceInline(admin.TabularInline):
@@ -76,7 +76,7 @@ class WeekLogAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     ordering = ["-year", "-week_number"]
     readonly_fields = ["created_at", "updated_at", "created_by"]
-    inlines = [PriorityItemInline, AbsenceInline, IncidentInline]
+    inlines = [PriorityItemAppearanceInline, AbsenceInline, IncidentInline]
     actions = ["export_pdf", "export_markdown", "send_email"]
 
     fieldsets = [
@@ -154,8 +154,8 @@ class WeekLogAdmin(admin.ModelAdmin):
     helpdesk_stats_display.short_description = "Helpdesk"
 
     def priority_count(self, obj: WeekLog) -> int:
-        """Count of priority items."""
-        return obj.priority_items.count()
+        """Count of priority appearances visible on this weeklog."""
+        return obj.priority_appearances.count()
 
     priority_count.short_description = "Opgaver"
 
@@ -224,13 +224,38 @@ class WeekLogAdmin(admin.ModelAdmin):
 
 @admin.register(PriorityItem)
 class PriorityItemAdmin(admin.ModelAdmin):
-    """Admin for viewing all priority items across weeks."""
+    """Admin for viewing all priority items (long-lived tasks)."""
 
-    list_display = ["title", "weeklog", "priority", "status", "updated_at"]
-    list_filter = ["priority", "status", "weeklog__year"]
-    search_fields = ["title", "description"]
+    list_display = [
+        "title",
+        "origin_weeklog",
+        "priority",
+        "status",
+        "auto_closed",
+        "last_active_at",
+        "appearance_count",
+    ]
+    list_filter = ["priority", "status", "auto_closed", "origin_weeklog__year"]
+    search_fields = ["title", "notes", "appearances__description"]
     list_editable = ["priority", "status"]
-    ordering = ["-weeklog__year", "-weeklog__week_number", "-priority"]
+    ordering = ["-last_active_at", "-priority"]
+    readonly_fields = ["last_active_at", "auto_closed", "closed_at", "created_at", "updated_at"]
+
+    def appearance_count(self, obj: PriorityItem) -> int:
+        return obj.appearances.count()
+
+    appearance_count.short_description = "Uger vist"
+
+
+@admin.register(PriorityItemAppearance)
+class PriorityItemAppearanceAdmin(admin.ModelAdmin):
+    """Per-week appearance rows — useful for spot-checking history."""
+
+    list_display = ["priority_item", "weeklog", "order", "updated_at"]
+    list_filter = ["weeklog__year"]
+    search_fields = ["priority_item__title", "description"]
+    ordering = ["-weeklog__year", "-weeklog__week_number", "order"]
+    autocomplete_fields = ["priority_item", "weeklog"]
 
 
 @admin.register(Absence)

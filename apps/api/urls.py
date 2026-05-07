@@ -30,6 +30,16 @@ urlpatterns = [
         name="priority-item-update",
     ),
     path(
+        "priority-items/<int:item_id>/history/",
+        views.priority_item_history,
+        name="priority-item-history",
+    ),
+    path(
+        "weeklogs/<int:year>/<int:week>/priority-items/carry/",
+        views.weeklog_carry_priorities,
+        name="weeklog-carry-priorities",
+    ),
+    path(
         "weeklogs/<int:year>/<int:week>/incidents/",
         views.incident_create,
         name="incident-create",

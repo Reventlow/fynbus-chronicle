@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.title }} — historik · FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+
+  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
+    <a href="{% url 'logbook:weeklog-list' %}" style="color: inherit; text-decoration: none;">Ugelogs</a>
+    <span style="color: var(--ink-5);">/</span>
+    <a href="{% url 'logbook:priorities-search' %}" style="color: inherit; text-decoration: none;">Opgavesøgning</a>
+    <span style="color: var(--ink-5);">/</span>
+    <span style="color: var(--ink-2);">Historik</span>
+  </div>
+
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>
+        Opstod {{ item.origin_weeklog.week_label }} · sidst aktiv {{ item.last_active_at|date:"j. M Y · H:i" }}
+        {% if item.auto_closed %}· <span style="color: var(--accent-ink);">auto-lukket</span>{% endif %}
+      </span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">{{ item.title }}</h1>
+    <div class="flex items-center flex-wrap gap-3" style="margin-top: 14px;">
+      <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+        {{ item.get_priority_display }}
+      </span>
+      <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
+        {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
+        {{ item.get_status_display }}
+      </span>
+      <span style="font-size: 12.5px; color: var(--ink-4);" class="num">{{ appearances|length }} uge{{ appearances|length|pluralize:"r" }} i alt</span>
+    </div>
+    {% if item.notes %}
+      <p style="margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap;">{{ item.notes }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Tidslinje</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Uge for uge</h2>
+      </div>
+    </div>
+    {% if appearances %}
+      {% for a in appearances %}
+        <div class="grid gap-3"
+             style="grid-template-columns: 140px 1fr;
+                    padding: 16px 24px;
+                    border-top: 1px solid var(--hairline);">
+          <div>
+            <a href="{% url 'logbook:weeklog-detail' a.weeklog.pk %}"
+               class="num" style="color: var(--ink-1); text-decoration: none; font-weight: 600; font-size: 13px;">
+              {{ a.weeklog.week_label }}
+            </a>
+            <div class="num" style="color: var(--ink-4); font-size: 11.5px; margin-top: 2px;">
+              {{ a.created_at|date:"j. M · H:i" }}
+            </div>
+          </div>
+          <div>
+            {% if a.description %}
+              <p style="margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap;">{{ a.description }}</p>
+            {% else %}
+              <p style="margin: 0; font-size: 13px; color: var(--ink-5); font-style: italic;">Ingen ugebeskrivelse.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p style="text-align: center; color: var(--ink-4); padding: 32px;">Ingen historik endnu.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

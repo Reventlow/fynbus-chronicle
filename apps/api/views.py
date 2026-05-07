@@ -18,13 +18,20 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from apps.accounts.api_auth import api_auth
-from apps.logbook.models import Absence, Incident, PriorityItem, WeekLog
+from apps.logbook.models import (
+    Absence,
+    Incident,
+    PriorityItem,
+    PriorityItemAppearance,
+    WeekLog,
+)
 from apps.oncall.models import OnCallDuty
 
 from .serializers import (
     serialize_absence,
     serialize_incident,
     serialize_oncall,
+    serialize_priority_appearance,
     serialize_priority_item,
     serialize_weeklog,
 )
@@ -143,7 +150,7 @@ def changelog_latest(request: HttpRequest) -> JsonResponse:
 @require_POST
 @api_auth(scope="write")
 def priority_item_create(request: HttpRequest, year: int, week: int) -> JsonResponse:
-    """Append a new priority item to the given weeklog."""
+    """Create a new priority task and an appearance on the given weeklog."""
     weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
     try:
         data = _parse_json_body(request)
@@ -153,11 +160,16 @@ def priority_item_create(request: HttpRequest, year: int, week: int) -> JsonResp
     if not title:
         return JsonResponse({"error": "missing_field", "detail": "title is required"}, status=400)
     item = PriorityItem.objects.create(
-        weeklog=weeklog,
+        origin_weeklog=weeklog,
         title=title[:200],
         priority=data.get("priority", PriorityItem.Priority.MEDIUM),
         status=data.get("status", PriorityItem.Status.NOT_STARTED),
         notes=(data.get("notes") or "")[:2000],
+    )
+    PriorityItemAppearance.objects.create(
+        priority_item=item,
+        weeklog=weeklog,
+        description=(data.get("description") or "")[:5000],
     )
     return JsonResponse({"priority_item": serialize_priority_item(item)}, status=201)
 
@@ -165,19 +177,73 @@ def priority_item_create(request: HttpRequest, year: int, week: int) -> JsonResp
 @require_http_methods(["PATCH"])
 @api_auth(scope="write")
 def priority_item_update(request: HttpRequest, item_id: int) -> JsonResponse:
+    """Patch the long-lived priority item.
+
+    Updating title/priority/status/notes touches the task itself.
+    Reopening (status going from completed to anything else) auto-adds
+    the task to the current ISO-week weeklog and resets last_active_at.
+    """
     item = get_object_or_404(PriorityItem, pk=item_id)
     try:
         data = _parse_json_body(request)
     except ValueError as exc:
         return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    was_completed = item.status == PriorityItem.Status.COMPLETED
     for field in ("title", "priority", "status", "notes"):
         if field in data:
             value = data[field]
             if field in {"title", "notes"} and isinstance(value, str):
                 value = value.strip()[: 200 if field == "title" else 2000]
             setattr(item, field, value)
+    item.touch(save=False)
     item.save()
+    if was_completed and item.status != PriorityItem.Status.COMPLETED:
+        current = WeekLog.get_current_week()
+        if current is not None:
+            item.reopen(into_weeklog=current)
     return JsonResponse({"priority_item": serialize_priority_item(item)})
+
+
+@require_GET
+@api_auth(scope="read")
+def priority_item_history(request: HttpRequest, item_id: int) -> JsonResponse:
+    """All appearances of a single priority task across weeks."""
+    item = get_object_or_404(PriorityItem, pk=item_id)
+    appearances = (
+        item.appearances.select_related("weeklog")
+        .order_by("-weeklog__year", "-weeklog__week_number")
+    )
+    return JsonResponse(
+        {
+            "priority_item": serialize_priority_item(item),
+            "appearances": [
+                serialize_priority_appearance(a, include_item=False)
+                for a in appearances
+            ],
+        }
+    )
+
+
+@require_POST
+@api_auth(scope="write")
+def weeklog_carry_priorities(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Carry one or more open priority tasks into the given weeklog.
+
+    Body: ``{"item_ids": [1, 2, 3]}``. Returns the created appearances.
+    """
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    item_ids = data.get("item_ids") or []
+    if not isinstance(item_ids, list) or not all(isinstance(i, int) for i in item_ids):
+        return JsonResponse(
+            {"error": "invalid_field", "detail": "item_ids must be a list of integers"},
+            status=400,
+        )
+    added = weeklog.add_existing_priority_items(item_ids)
+    return JsonResponse({"added": added}, status=201 if added else 200)
 
 
 @require_POST

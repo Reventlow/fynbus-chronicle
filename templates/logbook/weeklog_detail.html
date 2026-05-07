@@ -115,34 +115,58 @@
 
   {# === Priority items ===================================================== #}
   <div class="card overflow-hidden" style="padding: 0;">
-    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+    <div class="flex items-start justify-between gap-3" style="padding: 20px 24px 14px;">
       <div>
         <div class="label-eyebrow">Prioriterede opgaver</div>
         <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">I gang denne uge</h2>
       </div>
       {% if is_editor %}
-      <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
-              hx-target="#priority-items-list"
-              hx-swap="beforeend"
-              class="btn btn-sm btn-ghost">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        Tilføj
-      </button>
+      <div class="flex gap-2">
+        <a href="{% url 'logbook:priorities-search' %}?status=open" class="btn btn-sm btn-ghost"
+           title="Søg på tværs af alle uger">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          Søg
+        </a>
+        <button hx-get="{% url 'logbook:weeklog-add-existing' weeklog.pk %}"
+                hx-target="#add-existing-dialog"
+                hx-swap="innerHTML"
+                class="btn btn-sm btn-ghost"
+                title="Tilføj en åben opgave fra tidligere uger">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+            <path d="M12 8v8M8 12h8"/>
+          </svg>
+          Fra åbne
+        </button>
+        <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
+                hx-target="#priority-items-list"
+                hx-swap="beforeend"
+                class="btn btn-sm btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Tilføj ny
+        </button>
+      </div>
       {% endif %}
     </div>
 
     <div id="priority-items-list">
-      {% for item in weeklog.priority_items.all %}
-        {% include 'logbook/partials/priority_item_row.html' %}
+      {% for appearance in priority_appearances %}
+        {% include 'logbook/partials/priority_item_row.html' with item=appearance.priority_item %}
       {% empty %}
         <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-priority-items">
-          Ingen prioriterede opgaver tilføjet.
+          Ingen prioriterede opgaver på denne uge.
         </p>
       {% endfor %}
     </div>
   </div>
+
+  {# Modal target for the "Fra åbne" dialog (HTMX swaps inner content). #}
+  <div id="add-existing-dialog"></div>
 
   {# === Absences =========================================================== #}
   <div class="card overflow-hidden" style="padding: 0;">

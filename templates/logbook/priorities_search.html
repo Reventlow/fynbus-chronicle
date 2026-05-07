@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Opgavesøgning — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
+    <a href="{% url 'logbook:weeklog-list' %}" style="color: inherit; text-decoration: none;">Ugelogs</a>
+    <span style="color: var(--ink-5);">/</span>
+    <span style="color: var(--ink-2);">Opgavesøgning</span>
+  </div>
+
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>Prioriterede opgaver — fuld historik</span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 38px; line-height: 1.05;">Opgavesøgning.</h1>
+  </div>
+
+  <form method="get" class="card">
+    <div class="grid items-end gap-3" style="grid-template-columns: 1fr 160px 140px auto;">
+      <div>
+        <label for="id_q" class="input-label">Tekstsøgning</label>
+        <input type="text" id="id_q" name="q" value="{{ q }}" class="field"
+               placeholder="Titel, noter, ugebeskrivelse...">
+      </div>
+      <div>
+        <label for="id_status" class="input-label">Status</label>
+        <select id="id_status" name="status" class="select-field">
+          <option value="all" {% if status_filter == "all" %}selected{% endif %}>Alle</option>
+          <option value="open" {% if status_filter == "open" %}selected{% endif %}>Åbne</option>
+          <option value="closed" {% if status_filter == "closed" %}selected{% endif %}>Lukkede</option>
+        </select>
+      </div>
+      <div>
+        <label for="id_year" class="input-label">År</label>
+        <select id="id_year" name="year" class="select-field">
+          <option value="">Alle</option>
+          {% for y in years %}
+            <option value="{{ y }}" {% if year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Søg</button>
+    </div>
+  </form>
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">{{ items|length }} resultat{{ items|length|pluralize:"er" }}</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Opgaver</h2>
+      </div>
+    </div>
+
+    {% if items %}
+      {% for item in items %}
+        <a href="{% url 'logbook:priority-item-history' item.pk %}"
+           class="grid items-center gap-3"
+           style="grid-template-columns: auto 1fr auto auto auto auto;
+                  padding: 12px 24px;
+                  border-top: 1px solid var(--hairline);
+                  text-decoration: none; color: inherit;
+                  transition: background 0.12s;
+                  {% if item.status == 'completed' %}opacity: 0.65;{% endif %}"
+           onmouseover="this.style.background='var(--surface-2)'"
+           onmouseout="this.style.background='transparent'">
+          <span class="check {% if item.status == 'completed' %}is-checked{% endif %}" aria-hidden="true">
+            {% if item.status == 'completed' %}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            {% endif %}
+          </span>
+          <div>
+            <div style="font-size: 13.5px; font-weight: 500; color: var(--ink-1); {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
+              {{ item.title }}
+            </div>
+            <div class="flex flex-wrap" style="gap: 8px; font-size: 11.5px; color: var(--ink-4); margin-top: 3px;">
+              <span class="num">Oprettet: {{ item.origin_weeklog.week_label }}</span>
+              <span>·</span>
+              <span class="num">{{ item.appearances.count }} uge{{ item.appearances.count|pluralize:"r" }}</span>
+              <span>·</span>
+              <span class="num">Sidst aktiv {{ item.last_active_at|date:"j. M Y · H:i" }}</span>
+            </div>
+          </div>
+          <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+            {{ item.get_priority_display }}
+          </span>
+          <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
+            {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
+            {{ item.get_status_display }}
+          </span>
+          {% if item.auto_closed %}
+            <span class="pill pill-neutral" title="Auto-lukket efter 6 uger" style="font-size: 10px;">auto</span>
+          {% else %}
+            <span></span>
+          {% endif %}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-4);">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </a>
+      {% endfor %}
+    {% else %}
+      <p style="text-align: center; color: var(--ink-4); padding: 32px;">Ingen opgaver matcher.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
