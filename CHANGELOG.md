@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.4.0 — 2026-05-01
+
+### Added
+- **API keys + JSON API.** Per-user API keys with two scopes (`read`, `write`). New `apps.accounts.APIKey` model stores SHA-256 hashes only — raw keys (`fbc_R_…` / `fbc_W_…`) are shown exactly once at creation/reroll, then never again. Bearer-token auth via the new `@api_auth(scope=...)` decorator (`apps/accounts/api_auth.py`).
+- **`apps.api`** — new app at `/api/v1/` with read endpoints (`weeklogs/`, `weeklogs/current/`, `weeklogs/{year}/{week}/`, `incidents/`, `oncall/current/`, `helpdesk/data/`, `changelog/latest/`) and write endpoints (`weeklogs/{year}/{week}/priority-items/`, `priority-items/{id}/`, `weeklogs/{year}/{week}/incidents/`).
+- **Self-service UI** at `/accounts/api-keys/` (linked from the user dropdown) — list, generate, reroll, revoke. New keys show in a one-time copy-to-clipboard reveal.
+- **Admin** registration of `APIKey` with scope/last-used columns, bulk-revoke action, and read-only hash. Adding via admin is disabled — must be minted through the self-service page or the new `manage.py mint_api_key <username> --scope=read --label=...` command.
+
 ## 0.3.4 — 2026-05-01
 
 ### Added

@@ -169,6 +169,7 @@
             <div style="font-size: 13px; font-weight: 500; color: var(--ink-1);">{{ user.username }}</div>
             <div style="font-size: 11.5px; color: var(--ink-4); font-family: var(--font-mono);">{{ user.email }}</div>
           </div>
+          <a href="{% url 'accounts:api-keys' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">API-nøgler</a>
           {% if user.is_staff %}
           <a href="{% url 'admin:index' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Admin</a>
           {% endif %}

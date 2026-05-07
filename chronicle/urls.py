@@ -24,6 +24,7 @@ urlpatterns = [
     path("logbook/", include("apps.logbook.urls")),
     path("oncall/", include("apps.oncall.urls")),
     path("tasks/", include("apps.tasks.urls")),
+    path("api/v1/", include("apps.api.urls")),
     path("allauth/", include("allauth.urls")),
 ]
 

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}API-nøgler — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+
+  {# Breadcrumb #}
+  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
+    <a href="{% url 'dashboard:index' %}" style="color: inherit; text-decoration: none;"
+       onmouseover="this.style.color='var(--ink-2)'" onmouseout="this.style.color='var(--ink-4)'">
+      Kontrolpanel
+    </a>
+    <span style="color: var(--ink-5);">/</span>
+    <span style="color: var(--ink-2);">API-nøgler</span>
+  </div>
+
+  {# Header #}
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>{{ user.username }} · adgangsnøgler</span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 38px; line-height: 1.05;">
+      API-nøgler.
+    </h1>
+    <p style="margin-top: 12px; color: var(--ink-3); font-size: 14.5px; max-width: 640px; line-height: 1.55;">
+      Brug nøglerne til at læse eller skrive Chronicle-data fra eksterne klienter
+      (Claude MCP, scripts, integrationer). Læs-nøgler kan kun hente data; læs+skriv-nøgler
+      kan også oprette ugelogs, opgaver og hændelser.
+    </p>
+  </div>
+
+  {% if messages %}
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# One-time raw-key reveal — only present right after create/reroll #}
+  {% if new_key %}
+    <div class="card" style="border: 1px solid color-mix(in oklch, var(--accent) 50%, transparent); background: var(--accent-soft); color: var(--accent-ink);">
+      <div class="label-eyebrow" style="color: var(--accent-ink); margin-bottom: 8px;">Ny nøgle — kopiér den nu</div>
+      <p style="margin: 0 0 12px; font-size: 13px; color: var(--accent-ink); line-height: 1.55;">
+        Dette er den eneste gang den fulde nøgle vises. Vi gemmer kun en hash, så
+        hvis du mister den, må du oprette en ny.
+      </p>
+      <div class="flex items-center gap-2"
+           x-data="{ copied: false, copy() { navigator.clipboard.writeText('{{ new_key.raw }}'); this.copied = true; setTimeout(() => this.copied = false, 2000); } }">
+        <code class="num"
+              style="flex: 1; padding: 10px 14px; background: var(--surface-1); border: 1px solid var(--hairline-strong); border-radius: 8px; font-size: 13px; color: var(--ink-1); user-select: all; word-break: break-all;">{{ new_key.raw }}</code>
+        <button @click="copy()" class="btn btn-sm" style="white-space: nowrap;">
+          <span x-show="!copied">Kopiér</span>
+          <span x-show="copied" x-cloak>Kopieret ✓</span>
+        </button>
+      </div>
+      <div style="margin-top: 12px; font-size: 11.5px; color: var(--accent-ink); display: flex; gap: 12px;">
+        <span><strong>Adgang:</strong> {% if new_key.scope == 'write' %}Læs+skriv{% else %}Læs{% endif %}</span>
+        {% if new_key.label %}<span><strong>Etiket:</strong> {{ new_key.label }}</span>{% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# Existing keys #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Aktive nøgler</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+          Dine udstedte adgangsnøgler
+        </h2>
+      </div>
+    </div>
+
+    {% if api_keys %}
+      <div style="border-top: 1px solid var(--hairline);">
+        {% for key in api_keys %}
+          <div class="grid items-center gap-3"
+               style="grid-template-columns: 1fr auto auto auto auto; padding: 14px 24px; border-bottom: 1px solid var(--hairline); {% if not key.is_active %}opacity: 0.55;{% endif %}">
+            <div style="min-width: 0;">
+              <div style="font-size: 13.5px; color: var(--ink-1); font-weight: 500;">
+                {{ key.label|default:"(uden etiket)" }}
+              </div>
+              <div class="num" style="font-size: 11.5px; color: var(--ink-4); font-family: var(--font-mono); margin-top: 2px;">
+                {{ key.prefix }}…{% if not key.is_active %} · tilbagekaldt {{ key.revoked_at|date:"j. M Y" }}{% endif %}
+              </div>
+            </div>
+
+            <span class="pill {% if key.scope == 'write' %}pill-warn{% else %}pill-info{% endif %}">
+              {{ key.get_scope_display }}
+            </span>
+
+            <span class="num" style="font-size: 12px; color: var(--ink-4); min-width: 130px; text-align: right;">
+              {% if key.last_used_at %}
+                Sidst brugt {{ key.last_used_at|date:"j. M · H:i" }}
+              {% else %}
+                <span style="color: var(--ink-5);">Aldrig brugt</span>
+              {% endif %}
+            </span>
+
+            {% if key.is_active %}
+              <form method="post" action="{% url 'accounts:api-keys-reroll' key.pk %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-ghost"
+                        onclick="return confirm('Erstat denne nøgle? Den gamle bliver ugyldig med det samme.');">
+                  Reroll
+                </button>
+              </form>
+              <form method="post" action="{% url 'accounts:api-keys-revoke' key.pk %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm"
+                        style="color: var(--bad-ink);"
+                        onclick="return confirm('Tilbagekald denne nøgle? Klienter, der bruger den, mister adgang.');">
+                  Tilbagekald
+                </button>
+              </form>
+            {% else %}
+              <span></span>
+              <span class="pill pill-neutral">Inaktiv</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="padding: 32px 24px; text-align: center; color: var(--ink-4); font-size: 13px; border-top: 1px solid var(--hairline);">
+        Du har ingen API-nøgler endnu. Opret en nedenfor.
+      </div>
+    {% endif %}
+  </div>
+
+  {# Create new #}
+  <div class="card">
+    <div class="label-eyebrow" style="margin-bottom: 10px;">Opret ny nøgle</div>
+    <h2 style="margin: 0 0 16px; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+      Generér adgangsnøgle
+    </h2>
+    <form method="post" action="{% url 'accounts:api-keys-create' %}" class="grid items-end gap-3"
+          style="grid-template-columns: 1fr 200px auto;">
+      {% csrf_token %}
+      <div>
+        <label for="id_label" class="input-label">Etiket</label>
+        <input type="text" id="id_label" name="label" maxlength="80"
+               class="field" placeholder="fx Claude MCP – laptop">
+      </div>
+      <div>
+        <label for="id_scope" class="input-label">Adgang</label>
+        <select id="id_scope" name="scope" class="select-field">
+          {% for value, label in scopes %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Opret nøgle
+      </button>
+    </form>
+    <p style="margin: 16px 0 0; font-size: 12px; color: var(--ink-4); line-height: 1.55;">
+      Den fulde nøgle vises kun denne ene gang efter oprettelse — kopiér den til en
+      adgangskode-manager eller direkte ind i din klients konfiguration.
+    </p>
+  </div>
+</div>
+{% endblock %}
