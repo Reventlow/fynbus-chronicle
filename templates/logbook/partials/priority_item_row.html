@@ -68,9 +68,9 @@
       {% endif %}
     </div>
     {% if appearance.description %}
-      <p style="margin: 4px 0 0; font-size: 12px; color: var(--ink-3); white-space: pre-wrap;">{{ appearance.description }}</p>
+      <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-3); white-space: pre-wrap;">{{ appearance.description|urlize }}</p>
     {% elif item.notes %}
-      <p style="margin: 4px 0 0; font-size: 12px; color: var(--ink-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.notes }}</p>
+      <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.notes|urlize }}</p>
     {% endif %}
   </div>
 

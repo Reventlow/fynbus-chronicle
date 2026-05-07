@@ -64,10 +64,10 @@
   <div x-show="open" x-cloak x-transition.opacity
        style="padding: 14px 24px 18px; background: var(--surface-2); border-top: 1px solid var(--hairline);">
     <div class="label-eyebrow" style="margin-bottom: 8px;">Sammendrag</div>
-    <p style="font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin: 0; white-space: pre-wrap;">{{ incident.description }}</p>
+    <p class="linkified" style="font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin: 0; white-space: pre-wrap;">{{ incident.description|urlize }}</p>
     {% if incident.resolution %}
       <div class="label-eyebrow" style="margin: 16px 0 8px;">Løsning</div>
-      <p style="font-size: 13.5px; color: var(--good-ink); line-height: 1.55; margin: 0; white-space: pre-wrap;">{{ incident.resolution }}</p>
+      <p class="linkified" style="font-size: 13.5px; color: var(--good-ink); line-height: 1.55; margin: 0; white-space: pre-wrap;">{{ incident.resolution|urlize }}</p>
     {% endif %}
   </div>
 </div>

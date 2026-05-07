@@ -106,7 +106,7 @@
   {% if weeklog.summary %}
     <div class="card" style="padding: 32px;">
       <div class="label-eyebrow" style="margin-bottom: 14px;">Sammendrag</div>
-      <p class="display" style="font-size: 22px; line-height: 1.45; margin: 0; color: var(--ink-1); white-space: pre-wrap;">{{ weeklog.summary }}</p>
+      <p class="display linkified" style="font-size: 22px; line-height: 1.45; margin: 0; color: var(--ink-1); white-space: pre-wrap;">{{ weeklog.summary|urlize }}</p>
     </div>
   {% endif %}
 

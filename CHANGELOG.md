@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.5.8 — 2026-05-07
+
+### Changed
+- URLs in description / notes / summary fields now render as clickable links. Applied via Django's built-in `|urlize` filter to: priority appearance descriptions (in weeklog rows + history timeline), priority task notes, incident description and resolution, weeklog summary, and absence notes. Links pick up the user's accent for colour and underline. So pasting `https://github.com/foo/bar/pull/42` into a per-week description now lights up as a real link without escaping HTML elsewhere.
+
 ## 0.5.7 — 2026-05-07
 
 ### Added

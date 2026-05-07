@@ -939,6 +939,25 @@ html[data-density="dashboard"] .js-dashboard-main {
   }
 
   /* =========================================================================
+     Auto-linked text (Django {{ ...|urlize }}) — picks up the accent so
+     URLs in priority descriptions, notes, incident bodies, etc. are
+     visibly clickable but not loud.
+     ========================================================================= */
+  .linkified a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--accent) 60%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    transition: text-decoration-thickness 0.15s ease;
+    word-break: break-word;
+  }
+  .linkified a:hover {
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--accent);
+  }
+
+  /* =========================================================================
      Footer — editorial tokens, accent rule + accent-tinted version link
      ========================================================================= */
   .footer-shell {
