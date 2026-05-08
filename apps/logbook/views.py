@@ -813,3 +813,62 @@ def export_email(request: HttpRequest, pk: int) -> HttpResponse:
         messages.error(request, message)
 
     return redirect("logbook:weeklog-detail", pk=pk)
+
+
+# ---------------------------------------------------------------------------
+# Priority-item history exports — same shape as the weeklog ones above,
+# but scoped to a single PriorityItem.
+# ---------------------------------------------------------------------------
+
+
+def _priority_export_response(content, content_type: str, filename: str) -> HttpResponse:
+    response = HttpResponse(content, content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+@editor_required
+def priority_export_pdf(request: HttpRequest, pk: int) -> HttpResponse:
+    from .exports.priority import generate_priority_pdf, slug_for_filename
+    item = get_object_or_404(PriorityItem, pk=pk)
+    return _priority_export_response(
+        generate_priority_pdf(item),
+        "application/pdf",
+        f"{slug_for_filename(item)}.pdf",
+    )
+
+
+@login_required
+@editor_required
+def priority_export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
+    from .exports.priority import generate_priority_markdown, slug_for_filename
+    item = get_object_or_404(PriorityItem, pk=pk)
+    return _priority_export_response(
+        generate_priority_markdown(item),
+        "text/markdown; charset=utf-8",
+        f"{slug_for_filename(item)}.md",
+    )
+
+
+@login_required
+@editor_required
+def priority_export_html(request: HttpRequest, pk: int) -> HttpResponse:
+    from .exports.priority import generate_priority_html, slug_for_filename
+    item = get_object_or_404(PriorityItem, pk=pk)
+    return _priority_export_response(
+        generate_priority_html(item),
+        "text/html; charset=utf-8",
+        f"{slug_for_filename(item)}.html",
+    )
+
+
+@login_required
+@editor_required
+def priority_export_email(request: HttpRequest, pk: int) -> HttpResponse:
+    from .exports.priority import send_priority_email
+    item = get_object_or_404(PriorityItem, pk=pk)
+    fmt = request.GET.get("format", "both")
+    success, msg = send_priority_email(item, format=fmt, from_email=request.user.email)
+    (messages.success if success else messages.error)(request, msg)
+    return redirect("logbook:priority-item-history", pk=pk)

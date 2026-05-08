@@ -63,6 +63,10 @@ urlpatterns = [
         views.priority_item_history,
         name="priority-item-history",
     ),
+    path("priorities/<int:pk>/export/pdf/", views.priority_export_pdf, name="priority-export-pdf"),
+    path("priorities/<int:pk>/export/markdown/", views.priority_export_markdown, name="priority-export-markdown"),
+    path("priorities/<int:pk>/export/html/", views.priority_export_html, name="priority-export-html"),
+    path("priorities/<int:pk>/export/email/", views.priority_export_email, name="priority-export-email"),
     path(
         "priorities/<int:pk>/soft-delete/",
         views.priority_item_soft_delete,

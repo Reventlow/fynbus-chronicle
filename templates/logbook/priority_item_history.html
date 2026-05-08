@@ -53,6 +53,28 @@
 
       {% if is_editor %}
         <span style="flex: 1;"></span>
+        <div class="relative" x-data="{ open: false }">
+          <button @click="open = !open" class="btn btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Eksportér
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          <div x-show="open" @click.outside="open = false" x-cloak x-transition.opacity
+               class="absolute right-0 mt-2 z-50"
+               style="width: 220px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); padding: 6px;">
+            <a href="{% url 'logbook:priority-export-pdf' item.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download PDF</a>
+            <a href="{% url 'logbook:priority-export-markdown' item.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download Markdown</a>
+            <a href="{% url 'logbook:priority-export-html' item.pk %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download HTML</a>
+            <hr class="hr-soft" style="margin: 4px 8px;">
+            <a href="{% url 'logbook:priority-export-email' item.pk %}?format=html" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som HTML</a>
+            <a href="{% url 'logbook:priority-export-email' item.pk %}?format=pdf" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som PDF</a>
+            <a href="{% url 'logbook:priority-export-email' item.pk %}?format=both" class="nav-link" style="width: 100%; padding: 8px 10px;">Email som HTML + PDF</a>
+          </div>
+        </div>
         {% if item.is_deleted %}
           <form method="post" action="{% url 'logbook:priority-item-restore' item.pk %}" style="margin: 0;">
             {% csrf_token %}

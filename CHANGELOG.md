@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.11 — 2026-05-08
+
+### Added
+- **Export priority-item history** (FR #3). The priority history page (`/logbook/priorities/<pk>/history/`) now has the same 6-option Eksportér dropdown as the weeklog detail page: Download PDF, Download Markdown, Download HTML, Email som HTML, Email som PDF, Email som HTML + PDF. Mirrors the weeklog export plumbing (WeasyPrint for PDF, shared `pdf_styles.css`, Django email through the same `CHRONICLE_EMAIL_RECIPIENTS` list). New `apps.logbook.exports.priority` module + `templates/logbook/exports/priority_report.html`. Filenames are `opgavelog_<pk>_<title-slug>.<ext>`.
+
 ## 0.7.10 — 2026-05-08
 
 ### Added
