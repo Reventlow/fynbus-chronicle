@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.4 — 2026-05-08
+
+### Added
+- **Dedicated theme management page** at `/themes/` (editor-only). Lists every active theme with its existing schedules and an inline form per theme to add new date ranges. Replaces the previous admin-only workflow — FR #1 originally asked for a real page, and digging into Django admin to plan next year's Star Wars Day was friction. Themes themselves are still created in admin (each new theme needs CSS work) but date-driven scheduling now lives in the app proper.
+- "Administrér skeduler" link in the tweaks panel under the Tema picker, visible only to editors.
+
 ## 0.7.3 — 2026-05-08
 
 ### Fixed

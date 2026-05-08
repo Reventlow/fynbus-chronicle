@@ -183,6 +183,18 @@
             <p style="margin: 6px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.45;">
               Vælg ”Auto” for at lade datoer styre temaet, eller vælg et tema for altid at få det vist (når intet skedule er aktivt).
             </p>
+            {% if request.user.is_authenticated and is_editor %}
+              <a href="{% url 'themes:manage' %}"
+                 style="display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 11.5px; color: var(--accent-ink); text-decoration: none;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Administrér skeduler
+              </a>
+            {% endif %}
           {% endif %}
         </div>
       </div>
