@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.14 — 2026-05-08
+
+### Fixed
+- **Multi-line `{# … #}` comment leaking on the dashboard above the Seneste ændring card.** Same recurring bug that has bitten this codebase seven times now — the `{# … #}` form is single-line only. Fixed the dashboard one and swept the codebase: five additional component templates (`pill.html`, `tabs.html`, `avatar.html`, `section_head.html`, `segmented.html`) had the same defect lurking — all converted to `{% comment %} … {% endcomment %}`. Verified zero remaining unclosed `{#` blocks.
+
 ## 0.7.13 — 2026-05-08
 
 ### Fixed

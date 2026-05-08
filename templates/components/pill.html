@@ -1,11 +1,12 @@
-{# Pill component
-   Params (via include "with"):
-     tone   — neutral | accent | good | warn | bad | info  (default neutral)
-     dot    — truthy to render a leading colored dot
-     label  — text content
-   Example:
-     {% include 'components/pill.html' with tone='good' dot=1 label='3 / 4 OK' %}
-#}
+{% comment %}
+  Pill component.
+  Params (via include "with"):
+    tone   — neutral | accent | good | warn | bad | info  (default neutral)
+    dot    — truthy to render a leading colored dot
+    label  — text content
+  Example:
+    {% include 'components/pill.html' with tone='good' dot=1 label='3 / 4 OK' %}
+{% endcomment %}
 <span class="pill pill-{{ tone|default:'neutral' }}">
   {% if dot %}<span class="pill-dot"></span>{% endif %}
   {{ label }}

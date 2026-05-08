@@ -1,9 +1,10 @@
-{# Segmented control (pill tabs)
-   Params:
-     options — list of {value, label, active}
-     name    — for hx-get etc., not used directly here
-   Usage: pass options as a list of dicts in the view, or render manually.
-#}
+{% comment %}
+  Segmented control (pill tabs).
+  Params:
+    options — list of {value, label, active}
+    name    — for hx-get etc., not used directly here
+  Usage: pass options as a list of dicts in the view, or render manually.
+{% endcomment %}
 <div class="segmented">
   {% for opt in options %}
     <button type="button"

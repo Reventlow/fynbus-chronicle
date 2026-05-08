@@ -1,9 +1,10 @@
-{# Avatar component
-   Params:
-     initials  — 1–2 chars
-     size      — 24 | 32 | 44  (default 32)
-     gradient  — truthy to render the gold gradient variant
-#}
+{% comment %}
+  Avatar component.
+  Params:
+    initials  — 1–2 chars
+    size      — 24 | 32 | 44  (default 32)
+    gradient  — truthy to render the gold gradient variant
+{% endcomment %}
 <span class="avatar avatar-{{ size|default:'32' }}{% if gradient %} avatar-gradient{% endif %}">
   {{ initials }}
 </span>

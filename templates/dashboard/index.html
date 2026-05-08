@@ -223,9 +223,11 @@
         </div>
       </div>
 
-      {# Latest changelog entry — polled every 300s.
-         js-dashboard-extras: hidden in Dashboard mode.
-         js-dashboard-changelog: also hidden in Kompakt. #}
+      {% comment %}
+        Latest changelog entry — polled every 300s.
+        js-dashboard-extras: hidden in Dashboard mode.
+        js-dashboard-changelog: also hidden in Kompakt.
+      {% endcomment %}
       <div class="card overflow-hidden flex-grow js-dashboard-extras js-dashboard-changelog"
            style="padding: 0;"
            hx-get="{% url 'dashboard:partial-latest-change' %}"

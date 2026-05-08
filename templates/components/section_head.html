@@ -1,11 +1,12 @@
-{# Section header (used inside cards)
-   Params (via include "with"):
-     eyebrow  — small mono uppercase label above title
-     title    — H2 string
-     sub      — optional subtitle line
-   Slot via context: pass `actions_html` if you need buttons (use a custom block include instead).
-   Recommended: include this directly and add buttons in the surrounding template.
-#}
+{% comment %}
+  Section header (used inside cards).
+  Params (via include "with"):
+    eyebrow  — small mono uppercase label above title
+    title    — H2 string
+    sub      — optional subtitle line
+  Slot via context: pass `actions_html` if you need buttons (use a custom block include instead).
+  Recommended: include this directly and add buttons in the surrounding template.
+{% endcomment %}
 <div class="flex items-start justify-between gap-4" style="padding: 20px 24px 14px;">
   <div>
     {% if eyebrow %}<div class="label-eyebrow">{{ eyebrow }}</div>{% endif %}
