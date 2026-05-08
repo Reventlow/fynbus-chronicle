@@ -78,6 +78,7 @@ TEMPLATES = [
                 "chronicle.context_processors.active_theme",
                 "chronicle.context_processors.star_wars_day",
                 "apps.accounts.context_processors.editor_context",
+                "apps.feedback.context_processors.feedback_badge",
             ],
         },
     },

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.8 — 2026-05-08
+
+### Added
+- **Notification badge on "Forslag"** in the global nav. Shows the count of feature requests with status `open` or `in_progress`, hides at zero. Mono pill styled with `--accent` so it picks up the active theme/accent for free. New `apps.feedback.context_processors.feedback_badge` exposes `OPEN_FEEDBACK_COUNT` to every template; nav link reads it.
+
 ## 0.7.7 — 2026-05-08
 
 ### Changed
