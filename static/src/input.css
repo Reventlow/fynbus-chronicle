@@ -270,6 +270,142 @@ html[data-event="star-wars"].dark      .sw-default  { display: none; }
 html[data-event="star-wars"].dark      .sw-sith     { display: inline; }
 
 /* =============================================================================
+   19. sep / 1. okt — Pirate Day skin (Talk Like a Pirate Day + Hack Day)
+   Light = parchment + rum-bottle teal. Dark = stormy navy + brass gold.
+   Same plumbing as Star Wars: data-event="pirate" overrides accent tokens,
+   swaps the brand-mark glyph, paints a faint compass-rose page background,
+   and shows the sticky banner.
+   ============================================================================= */
+html[data-event="pirate"] {
+  --accent:      oklch(0.50 0.10 200);   /* rum-bottle teal */
+  --accent-soft: oklch(0.95 0.04 90);    /* parchment cream */
+  --accent-ink:  oklch(0.32 0.12 200);   /* deep teal ink */
+  --chart-accent: rgb(40, 110, 130);     /* matches the teal — chart probes --accent so this is just a fallback */
+}
+html[data-event="pirate"].dark {
+  --accent:      oklch(0.72 0.13 85);    /* brass gold */
+  --accent-soft: oklch(0.30 0.10 85);    /* dark amber */
+  --accent-ink:  oklch(0.85 0.13 85);    /* pale gold */
+  --chart-accent: rgb(220, 170, 80);
+}
+
+/* Faint compass-rose / treasure-map dot pattern behind the page. Same
+   fixed-position approach as the starfield so it doesn't scroll with
+   content. Slightly larger/sparser than the Star Wars stars to feel
+   more like map markings than a night sky. */
+html[data-event="pirate"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 25% 35%, var(--ink-1) 1.2px, transparent 2px),
+    radial-gradient(circle at 75% 65%, var(--ink-1) 1.2px, transparent 2px),
+    radial-gradient(circle at 50% 15%, var(--ink-1) 0.9px, transparent 1.4px);
+  background-size: 140px 140px, 180px 180px, 100px 100px;
+  background-position: 0 0, 50px 70px, 90px 30px;
+  opacity: 0.05;
+}
+html[data-event="pirate"].dark body::before { opacity: 0.09; }
+/* Keep page content above the pattern. */
+html[data-event="pirate"] body > * { position: relative; z-index: 1; }
+/* Same nav-shell stacking fix as Star Wars (see 0.7.3 changelog). */
+html[data-event="pirate"] body > .nav-shell { z-index: 50; }
+
+/* Brand mark glyph swap — anchor on light, Jolly Roger on dark. */
+html[data-event="pirate"] .brand-mark {
+  font-size: 0;
+}
+html[data-event="pirate"] .brand-mark::before {
+  content: "⚓";
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-style: normal;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+html[data-event="pirate"].dark .brand-mark::before {
+  content: "☠";
+  font-size: 18px;
+}
+
+/* Banner — same shape as .sw-banner, separate class to keep visuals
+   independent (different glyph, date prefix, copy). */
+.pirate-banner { display: none; }
+html[data-event="pirate"] .pirate-banner {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 70%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+html[data-event="pirate"].dark .pirate-banner {
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 100%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 60%, transparent) 100%);
+}
+.pirate-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pirate-banner-glyph {
+  font-size: 14px;
+  color: var(--accent);
+}
+.pirate-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.pirate-banner-sep { color: var(--accent); opacity: 0.5; }
+.pirate-banner-msg {
+  color: var(--accent-ink);
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pirate-banner-msg.is-fading { opacity: 0; }
+
+/* Tiny mono Easter egg in the footer (pirate-day variant). */
+.pirate-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+/* Phrase-swap helper for {% pirate_phrase %}. Default Danish always wins
+   except when the pirate theme is active — then the alt phrasing shows.
+   Single alt (no light/dark split): pirate sprog reads the same in both
+   modes; only the visuals change. */
+.pirate-phrase { display: contents; }
+.pirate-alt { display: none; }
+html[data-event="pirate"] .pirate-default { display: none; }
+html[data-event="pirate"] .pirate-alt     { display: inline; }
+
+/* =============================================================================
    Density modes (driven by data-density on <html>)
    - comfortable (default, no attribute): full layout, comfortable spacing
    - compact:    denser spacing AND graphs hidden

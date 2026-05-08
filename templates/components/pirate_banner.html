@@ -1,0 +1,36 @@
+{% load pirate %}
+{% comment %}
+  Pirate Day banner — only shown when ACTIVE_THEME == "pirate" (19. sep.,
+  1. okt., user-pick via tweaks panel, or ?force-theme=pirate preview).
+  CSS hides it for any other theme so it can render unconditionally.
+
+  Mirrors the Star Wars banner: ~80 quippy messages cycle every 2 minutes,
+  initial pick is random, JSON list ships in a separate <script> tag so
+  straight-quotes in messages don't terminate the x-data attribute early.
+{% endcomment %}
+<script id="pirate-banner-messages" type="application/json">{% pirate_messages_json %}</script>
+<div class="pirate-banner" role="note" aria-label="Pirate Day"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('pirate-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="pirate-banner-inner">
+    <span class="pirate-banner-glyph" aria-hidden="true">☠</span>
+    <span class="pirate-banner-date">19. sep · 1. okt</span>
+    <span class="pirate-banner-sep" aria-hidden="true">·</span>
+    <span class="pirate-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Yarr! Må vinden være med dig, matros.</span>
+  </div>
+</div>

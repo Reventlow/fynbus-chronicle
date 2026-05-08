@@ -14,6 +14,10 @@
         <span class="sw-footer-egg" aria-label="Star Wars Day Easter egg">⚔ DJEDLOMI · 04 · 05 · 26 ⚔</span>
         <span class="footer-sep" aria-hidden="true">·</span>
       {% endif %}
+      {% if ACTIVE_THEME == "pirate" %}
+        <span class="pirate-footer-egg" aria-label="Pirate Day Easter egg">☠ X MARKER STEDET · 19/9 · 1/10 ☠</span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+      {% endif %}
       <a href="{% url 'admin:index' %}" class="footer-link">Administration</a>
       <span class="footer-sep" aria-hidden="true">·</span>
       <a href="{% url 'dashboard:docs-page' slug='changelog' %}"

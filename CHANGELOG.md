@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.5 — 2026-05-08
+
+### Added
+- **Pirate Day theme** (FR #2). New `pirate` theme + two seeded schedules: **19. september** (Talk Like a Pirate Day) and **1. oktober** (International Hack Day — pirates ≈ hackers). Light mode = parchment cream + rum-bottle teal accent, anchor brand glyph; dark mode = stormy navy + brass-gold accent, Jolly Roger ☠ glyph. Sticky banner with ~80 rotating quips mixing pirate sprog, FynBus operations, and cyber-pirate Hack Day jokes. Faint compass-rose dot pattern as page background. Footer Easter egg: `☠ X MARKER STEDET · 19/9 · 1/10 ☠`. New `{% pirate_phrase default pirate %}` template tag mirrors `{% sw_phrase %}` for pirate-sprog label swaps.
+- Selectable from the tweaks panel year-round (same plumbing as Star Wars Day); schedules always win over user picks. Preview anytime via `?force-theme=pirate`.
+
 ## 0.7.4 — 2026-05-08
 
 ### Added
