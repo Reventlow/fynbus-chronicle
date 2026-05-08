@@ -8,7 +8,7 @@ from .models import Theme, ThemeBannerMessage, ThemeSchedule
 class ThemeScheduleInline(admin.TabularInline):
     model = ThemeSchedule
     extra = 1
-    fields = ["start_date", "end_date", "label"]
+    fields = ["start_date", "end_date", "recurs_annually", "label"]
 
 
 class ThemeBannerMessageInline(admin.TabularInline):
@@ -40,10 +40,11 @@ class ThemeAdmin(admin.ModelAdmin):
 
 @admin.register(ThemeSchedule)
 class ThemeScheduleAdmin(admin.ModelAdmin):
-    list_display = ("theme", "start_date", "end_date", "label")
-    list_filter = ("theme",)
+    list_display = ("theme", "start_date", "end_date", "recurs_annually", "label")
+    list_filter = ("theme", "recurs_annually")
     date_hierarchy = "start_date"
     autocomplete_fields = ["theme"]
+    list_editable = ("recurs_annually",)
 
 
 @admin.register(ThemeBannerMessage)

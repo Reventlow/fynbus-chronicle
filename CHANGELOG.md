@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.10 — 2026-05-08
+
+### Added
+- **Annual recurrence on theme schedules.** `ThemeSchedule.recurs_annually` (default off in admin, default on in the `/themes/` page form since most theme dates are holidays). When set, the schedule fires every year on the same month/day and the year column is just an anchor — Star Wars Day, Pirate Day and Hack Day all roll forward to 2027/2028/… without needing new rows. Year-spanning ranges (e.g. 27 dec → 3 jan) are supported. The three seeded schedules are backfilled to recurring via data migration; existing one-shot schedules are left untouched.
+- New `ThemeSchedule.covers(today)` method encapsulates the date logic; `Theme.scheduled_for_today()` filters one-shots in SQL and evaluates annual matches in Python (the (month, day) match doesn't translate cleanly to SQL across year boundaries).
+
+### Changed
+- `/themes/` page lists recurring schedules without a year and tags them with an "årligt" pill; one-shot schedules continue to show full dates.
+
 ## 0.7.9 — 2026-05-08
 
 ### Changed

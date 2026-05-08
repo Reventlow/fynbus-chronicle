@@ -65,10 +65,18 @@ class Theme(models.Model):
     @classmethod
     def scheduled_for_today(cls) -> "Theme | None":
         """Return the active theme for today (Europe/Copenhagen), if any
-        schedule covers it. Earliest start_date wins on overlap."""
+        schedule covers it.
+
+        One-shot schedules are filtered cheaply at the DB level; annual
+        schedules are checked in Python via ``ThemeSchedule.covers()``
+        because their (month, day) match doesn't translate cleanly to
+        SQL across year boundaries. Earliest start_date wins on overlap.
+        """
         today = timezone.localdate()
-        schedule = (
+        # One-shot match — filter in SQL.
+        one_shot = (
             ThemeSchedule.objects.filter(
+                recurs_annually=False,
                 start_date__lte=today,
                 end_date__gte=today,
                 theme__is_active=True,
@@ -77,11 +85,32 @@ class Theme(models.Model):
             .order_by("start_date")
             .first()
         )
-        return schedule.theme if schedule else None
+        if one_shot:
+            return one_shot.theme
+
+        # Annual match — small set, evaluated in Python.
+        annuals = (
+            ThemeSchedule.objects.filter(
+                recurs_annually=True,
+                theme__is_active=True,
+            )
+            .select_related("theme")
+            .order_by("start_date")
+        )
+        for sched in annuals:
+            if sched.covers(today):
+                return sched.theme
+        return None
 
 
 class ThemeSchedule(models.Model):
-    """A date range where ``theme`` overrides user preferences globally."""
+    """A date range where ``theme`` overrides user preferences globally.
+
+    If ``recurs_annually`` is true the year of ``start_date``/``end_date``
+    is ignored and the schedule fires every year on those month/day
+    coordinates (Star Wars Day, Pirate Day etc.). Year-spanning ranges
+    (e.g. 27 Dec → 3 Jan) are supported.
+    """
 
     theme = models.ForeignKey(
         Theme,
@@ -91,11 +120,20 @@ class ThemeSchedule(models.Model):
     )
     start_date = models.DateField(verbose_name="Start")
     end_date = models.DateField(verbose_name="Slut", help_text="Inklusiv.")
+    recurs_annually = models.BooleanField(
+        verbose_name="Gentages årligt",
+        default=False,
+        help_text=(
+            "Hvis sand: kun måned + dag betyder noget — temaet "
+            "aktiveres samme datoer hvert år. Året i felterne "
+            "ovenfor bruges kun som anker."
+        ),
+    )
     label = models.CharField(
         verbose_name="Etiket",
         max_length=120,
         blank=True,
-        help_text="Fri tekst — fx 'Star Wars Day 2026' eller 'Julestemning uge 51-52'.",
+        help_text="Fri tekst — fx 'Star Wars Day' eller 'Julestemning uge 51-52'.",
     )
 
     class Meta:
@@ -107,7 +145,30 @@ class ThemeSchedule(models.Model):
         ]
 
     def __str__(self) -> str:
+        if self.recurs_annually:
+            if self.start_date == self.end_date:
+                return f"{self.theme.name}: {self.start_date.strftime('%d. %b')} (årligt)"
+            return f"{self.theme.name}: {self.start_date.strftime('%d. %b')} – {self.end_date.strftime('%d. %b')} (årligt)"
         return f"{self.theme.name}: {self.start_date} – {self.end_date}"
+
+    def covers(self, today) -> bool:
+        """Return True if ``today`` falls within this schedule's range.
+
+        For one-shot schedules this is a plain date comparison. For
+        annual schedules it compares ``(month, day)`` and handles
+        ranges that wrap across a year boundary (e.g. 27 Dec → 3 Jan).
+        """
+        if not self.recurs_annually:
+            return self.start_date <= today <= self.end_date
+
+        today_md = (today.month, today.day)
+        start_md = (self.start_date.month, self.start_date.day)
+        end_md = (self.end_date.month, self.end_date.day)
+
+        if start_md <= end_md:
+            return start_md <= today_md <= end_md
+        # Year-spanning range — date is "in range" if it's >= start OR <= end.
+        return today_md >= start_md or today_md <= end_md
 
 
 class ThemeBannerMessage(models.Model):
