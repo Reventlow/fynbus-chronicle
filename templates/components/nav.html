@@ -152,15 +152,34 @@
               <span style="color: var(--accent-ink); font-weight: 500;" x-text="'Aktivt: ' + serverTheme"></span>
               <span> (skedule overruler dit valg).</span>
             </div>
-            <select x-model="userTheme"
-                    class="select-field"
-                    style="width: 100%;"
-                    :disabled="!!serverTheme">
-              <option value="auto">Auto (følg skedule)</option>
+            {% comment %}
+              Buttons (not a select) so writes propagate through the nested
+              x-data="{ open: false }" scope reliably. $nextTick + custom
+              event mirrors the accent-picker pattern that already works.
+            {% endcomment %}
+            <div class="flex flex-wrap gap-2">
+              <button type="button"
+                      @click="userTheme = 'auto'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
+                      class="flex-1 flex items-center justify-center gap-1.5"
+                      style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2); min-width: 0;"
+                      :disabled="!!serverTheme"
+                      :style="userTheme === 'auto' && 'border-color: var(--ink-3);'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
+                </svg>
+                Auto
+              </button>
               {% for theme in ACTIVE_THEMES %}
-                <option value="{{ theme.slug }}">{{ theme.name }}</option>
+                <button type="button"
+                        @click="userTheme = '{{ theme.slug|escapejs }}'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
+                        class="flex-1 flex items-center justify-center gap-1.5"
+                        style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2); min-width: 0;"
+                        :disabled="!!serverTheme"
+                        :style="userTheme === '{{ theme.slug|escapejs }}' && 'border-color: var(--ink-3);'">
+                  {{ theme.name }}
+                </button>
               {% endfor %}
-            </select>
+            </div>
             <p style="margin: 6px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.45;">
               Vælg ”Auto” for at lade datoer styre temaet, eller vælg et tema for altid at få det vist (når intet skedule er aktivt).
             </p>

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.2 — 2026-05-08
+
+### Fixed
+- Tema dropdown in the tweaks panel was a one-way trap — picking "Star Wars Day" applied the theme but selecting "Auto" afterward didn't deselect it. Caused by Alpine's `x-model` not propagating writes reliably from inside the nested `x-data="{ open: false }"` scope of the tweaks dropdown (same root cause as the accent-picker bug fix in 0.2.16). Replaced the `<select>` with a button row mirroring the accent picker; each button assigns `userTheme` directly and dispatches the existing `accent-change` event after `$nextTick`. Auto / Star Wars Day toggle cleanly in both directions now.
+
 ## 0.7.1 — 2026-05-08
 
 ### Fixed
