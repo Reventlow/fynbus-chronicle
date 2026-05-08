@@ -49,4 +49,10 @@ urlpatterns = [
         views.incident_create,
         name="incident-create",
     ),
+    # Feature requests
+    path("feature-requests/", views.feature_requests_list, name="feature-requests-list"),
+    path("feature-requests/create/", views.feature_request_create, name="feature-request-create"),
+    path("feature-requests/<int:pk>/", views.feature_request_detail, name="feature-request-detail"),
+    path("feature-requests/<int:pk>/update/", views.feature_request_update, name="feature-request-update"),
+    path("feature-requests/<int:pk>/solve/", views.feature_request_solve, name="feature-request-solve"),
 ]

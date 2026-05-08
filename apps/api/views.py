@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from apps.accounts.api_auth import api_auth
+from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Absence,
     Incident,
@@ -29,6 +30,7 @@ from apps.oncall.models import OnCallDuty
 
 from .serializers import (
     serialize_absence,
+    serialize_feature_request,
     serialize_incident,
     serialize_oncall,
     serialize_priority_appearance,
@@ -306,3 +308,103 @@ def incident_create(request: HttpRequest, year: int, week: int) -> JsonResponse:
         resolution=(data.get("resolution") or "").strip(),
     )
     return JsonResponse({"incident": serialize_incident(incident)}, status=201)
+
+
+# -------------------------------------------------------------------------
+# Feature requests / development pipeline
+# -------------------------------------------------------------------------
+
+
+@require_GET
+@api_auth(scope="read")
+def feature_requests_list(request: HttpRequest) -> JsonResponse:
+    """List feature requests, grouped by status. Supports `?status=`,
+    `?category=`, `?importance=`, `?q=` filters."""
+    qs = FeatureRequest.objects.select_related("submitted_by", "solved_by")
+    for field in ("status", "category", "importance"):
+        val = request.GET.get(field)
+        if val:
+            qs = qs.filter(**{field: val})
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        from django.db.models import Q
+
+        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+    qs = qs.order_by("status", "order", "-created_at")[:200]
+    return JsonResponse(
+        {"feature_requests": [serialize_feature_request(o) for o in qs]}
+    )
+
+
+@require_GET
+@api_auth(scope="read")
+def feature_request_detail(request: HttpRequest, pk: int) -> JsonResponse:
+    obj = get_object_or_404(FeatureRequest, pk=pk)
+    return JsonResponse({"feature_request": serialize_feature_request(obj)})
+
+
+@require_POST
+@api_auth(scope="write")
+def feature_request_create(request: HttpRequest) -> JsonResponse:
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    title = (data.get("title") or "").strip()
+    if not title:
+        return JsonResponse({"error": "missing_field", "detail": "title is required"}, status=400)
+    obj = FeatureRequest.objects.create(
+        title=title[:200],
+        description=(data.get("description") or "").strip(),
+        category=data.get("category", FeatureRequest.Category.OTHER),
+        importance=data.get("importance", FeatureRequest.Importance.MEDIUM),
+        triggers_version_bump=bool(data.get("triggers_version_bump", False)),
+        submitted_by=getattr(request, "api_user", None),
+    )
+    return JsonResponse({"feature_request": serialize_feature_request(obj)}, status=201)
+
+
+@require_http_methods(["PATCH"])
+@api_auth(scope="write")
+def feature_request_update(request: HttpRequest, pk: int) -> JsonResponse:
+    obj = get_object_or_404(FeatureRequest, pk=pk)
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    was_solved = obj.status == FeatureRequest.Status.SOLVED
+    for field in (
+        "title",
+        "description",
+        "category",
+        "importance",
+        "status",
+        "triggers_version_bump",
+        "resolution_notes",
+    ):
+        if field in data:
+            value = data[field]
+            if isinstance(value, str):
+                value = value.strip()
+            if field == "title":
+                value = value[:200] if isinstance(value, str) else value
+            setattr(obj, field, value)
+    obj.save()
+    # Stamp solved_at / solved_by on transition into solved
+    if obj.status == FeatureRequest.Status.SOLVED and not was_solved:
+        obj.solved_at = timezone.now()
+        obj.solved_by = getattr(request, "api_user", None)
+        obj.save(update_fields=["solved_at", "solved_by"])
+    elif obj.status != FeatureRequest.Status.SOLVED and was_solved:
+        obj.solved_at = None
+        obj.solved_by = None
+        obj.save(update_fields=["solved_at", "solved_by"])
+    return JsonResponse({"feature_request": serialize_feature_request(obj)})
+
+
+@require_POST
+@api_auth(scope="write")
+def feature_request_solve(request: HttpRequest, pk: int) -> JsonResponse:
+    obj = get_object_or_404(FeatureRequest, pk=pk)
+    obj.mark_solved(by=getattr(request, "api_user", None))
+    return JsonResponse({"feature_request": serialize_feature_request(obj)})

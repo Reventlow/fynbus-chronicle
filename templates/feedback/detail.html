@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ request_obj.title }} — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+
+  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
+    <a href="{% url 'feedback:board' %}" style="color: inherit; text-decoration: none;">Forslag</a>
+    <span style="color: var(--ink-5);">/</span>
+    <span style="color: var(--ink-2);">{{ request_obj.title }}</span>
+  </div>
+
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>
+        Indsendt {{ request_obj.created_at|date:"j. M Y · H:i" }}
+        {% if request_obj.submitted_by %}af {{ request_obj.submitted_by.get_full_name|default:request_obj.submitted_by.username }}{% endif %}
+      </span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1; {% if request_obj.is_solved %}color: var(--ink-3); text-decoration: line-through;{% endif %}">
+      {{ request_obj.title }}
+    </h1>
+    <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
+      <span class="pill pill-{% if request_obj.category == 'bug' %}bad{% elif request_obj.category == 'ui' %}info{% elif request_obj.category == 'integration' %}accent{% else %}neutral{% endif %}">
+        {{ request_obj.get_category_display }}
+      </span>
+      <span class="pill {% if request_obj.importance == 'critical' %}pill-bad{% elif request_obj.importance == 'high' %}pill-warn{% else %}pill-neutral{% endif %}">
+        {{ request_obj.get_importance_display }}
+      </span>
+      <span class="pill {% if request_obj.is_solved %}pill-good{% elif request_obj.is_in_progress %}pill-accent{% else %}pill-info{% endif %}">
+        {% if not request_obj.is_solved %}<span class="pill-dot"></span>{% endif %}
+        {{ request_obj.get_status_display }}
+      </span>
+      {% if request_obj.triggers_version_bump %}
+        <span class="pill pill-accent" title="Udløser et minor- eller major-bump af version">
+          v++
+        </span>
+      {% endif %}
+
+      {% if is_editor %}
+        <span style="flex: 1;"></span>
+        <a href="{% url 'feedback:edit' request_obj.pk %}" class="btn btn-sm">Rediger</a>
+        {% if request_obj.is_solved %}
+          <form method="post" action="{% url 'feedback:reopen' request_obj.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm">Genåbn</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'feedback:solve' request_obj.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm">Markér som løst</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if request_obj.description %}
+    <div class="card">
+      <div class="label-eyebrow" style="margin-bottom: 8px;">Beskrivelse</div>
+      <p class="linkified" style="margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; white-space: pre-wrap;">{{ request_obj.description|urlize }}</p>
+    </div>
+  {% endif %}
+
+  {% if request_obj.is_solved %}
+    <div class="card" style="background: var(--good-soft); border: 1px solid color-mix(in oklch, var(--good) 30%, transparent);">
+      <div class="label-eyebrow" style="margin-bottom: 8px; color: var(--good-ink);">Løsning</div>
+      {% if request_obj.solved_at %}
+        <p style="margin: 0 0 10px; font-size: 12.5px; color: var(--good-ink); font-family: var(--font-mono);">
+          Løst {{ request_obj.solved_at|date:"j. M Y · H:i" }}
+          {% if request_obj.solved_by %}af {{ request_obj.solved_by.get_full_name|default:request_obj.solved_by.username }}{% endif %}
+        </p>
+      {% endif %}
+      {% if request_obj.resolution_notes %}
+        <p class="linkified" style="margin: 0; font-size: 14px; color: var(--good-ink); line-height: 1.55; white-space: pre-wrap;">{{ request_obj.resolution_notes|urlize }}</p>
+      {% else %}
+        <p style="margin: 0; font-size: 13px; color: var(--good-ink); font-style: italic;">Ingen løsningsnoter.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

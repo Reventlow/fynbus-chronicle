@@ -16,6 +16,7 @@
       {% url 'dashboard:index' as url_dashboard %}
       {% url 'logbook:weeklog-list' as url_weeklog %}
       {% url 'oncall:calendar' as url_oncall %}
+      {% url 'feedback:board' as url_feedback %}
       {% url 'dashboard:docs-index' as url_docs %}
 
       <a href="{{ url_dashboard }}"
@@ -43,6 +44,14 @@
           <path d="M3 10h18M8 2v4M16 2v4"/>
         </svg>
         Rådighedsvagt
+      </a>
+      <a href="{{ url_feedback }}"
+         class="nav-link {% if request.resolver_match.app_name == 'feedback' %}nav-link-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3"/>
+          <path d="M12 16V3M9 6l3-3 3 3"/>
+        </svg>
+        Forslag
       </a>
       <a href="{{ url_docs }}"
          class="nav-link {% if 'docs' in request.resolver_match.url_name %}nav-link-active{% endif %}">
@@ -199,6 +208,7 @@
       <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
       <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelogs</a>
       <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
+      <a href="{% url 'feedback:board' %}" class="nav-link">Forslag</a>
       <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
     </div>
   </div>

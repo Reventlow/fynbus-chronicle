@@ -1,0 +1,74 @@
+{% comment %}
+  Single feature-request card for the board view. Drag-handle on the left
+  (editor only), tap-to-detail on the body. The data-id is what the
+  reorder POST uses to identify the row.
+{% endcomment %}
+<div class="feedback-card"
+     data-id="{{ obj.id }}"
+     data-status="{{ obj.status }}"
+     style="background: var(--surface-1);
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+            {% if obj.is_solved %}opacity: 0.78;{% endif %}"
+     onclick="if (event.target.closest('.feedback-drag-handle, button, a')) return; window.location='{% url 'feedback:detail' obj.pk %}'">
+
+  <div class="flex items-start gap-2">
+    {% if is_editor and not obj.is_solved %}
+      <span class="feedback-drag-handle"
+            style="cursor: grab; color: var(--ink-5); padding-top: 2px;"
+            title="Træk for at omarrangere eller skifte kolonne">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="6" r="0.7" fill="currentColor"/>
+          <circle cx="9" cy="12" r="0.7" fill="currentColor"/>
+          <circle cx="9" cy="18" r="0.7" fill="currentColor"/>
+          <circle cx="15" cy="6" r="0.7" fill="currentColor"/>
+          <circle cx="15" cy="12" r="0.7" fill="currentColor"/>
+          <circle cx="15" cy="18" r="0.7" fill="currentColor"/>
+        </svg>
+      </span>
+    {% endif %}
+    <div style="flex: 1; min-width: 0;">
+      <div style="font-size: 13.5px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.005em; {% if obj.is_solved %}text-decoration: line-through; color: var(--ink-3);{% endif %}">
+        {{ obj.title }}
+      </div>
+      {% if obj.description %}
+        <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-3); line-height: 1.45; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ obj.description|urlize }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="flex items-center flex-wrap gap-2">
+    <span class="pill pill-{% if obj.category == 'bug' %}bad{% elif obj.category == 'ui' %}info{% elif obj.category == 'integration' %}accent{% elif obj.category == 'technical' %}neutral{% else %}neutral{% endif %}"
+          style="font-size: 10.5px;">
+      {{ obj.get_category_display }}
+    </span>
+    <span class="pill {% if obj.importance == 'critical' %}pill-bad{% elif obj.importance == 'high' %}pill-warn{% elif obj.importance == 'medium' %}pill-neutral{% else %}pill-neutral{% endif %}"
+          style="font-size: 10.5px;">
+      {{ obj.get_importance_display }}
+    </span>
+    {% if obj.triggers_version_bump %}
+      <span class="pill pill-accent" style="font-size: 10.5px;" title="Udløser et minor- eller major-bump af version">
+        v++
+      </span>
+    {% endif %}
+    <span style="flex: 1;"></span>
+    {% if obj.submitted_by %}
+      <span class="avatar avatar-24" title="Indsendt af {{ obj.submitted_by.get_full_name|default:obj.submitted_by.username }}">
+        {% with name=obj.submitted_by.get_short_name|default:obj.submitted_by.username %}{{ name|slice:":1"|upper }}{% endwith %}
+      </span>
+    {% endif %}
+  </div>
+
+  {% if obj.is_solved %}
+    <div style="font-size: 10.5px; color: var(--ink-4); font-family: var(--font-mono);">
+      Løst {% if obj.solved_at %}{{ obj.solved_at|date:"j. M Y" }}{% endif %}
+      {% if obj.solved_by %}af {{ obj.solved_by.get_short_name|default:obj.solved_by.username }}{% endif %}
+    </div>
+  {% endif %}
+</div>

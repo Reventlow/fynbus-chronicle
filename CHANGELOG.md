@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.6.0 — 2026-05-08
+
+### Added
+- **Feature requests / development pipeline.** New app `apps.feedback` with a Kanban-style board at `/feedback/` (linked from the top nav as "Forslag"). Three columns: **Åbne**, **I gang**, **Løst**. Anyone authenticated can submit; editors drag-reorder within columns and across columns to change status, mark as solved (stamps `solved_by` / `solved_at`), or reopen.
+- **`FeatureRequest`** model fields: title, description (urlize-aware), category (Teknisk / UI / Integration / Fejl / Andet), importance (Lav / Medium / Høj / Kritisk), status (open / in_progress / solved), `order`, `triggers_version_bump` (checkbox — flag forslag der kræver minor- eller major-bump, ikke kun patch), resolution_notes, submitted_by, solved_by, solved_at.
+- **Filters on the board:** free-text query, category, and importance — combinable.
+- **Detail page** with editor actions (Rediger / Markér som løst / Genåbn) and a green "Løsning" card once solved.
+- **Admin** view with status / importance badges and a `v++` boolean column.
+- **API** endpoints under `/api/v1/feature-requests/` — list (with filters), detail, create, PATCH, solve. `triggers_version_bump` is exposed in the serializer.
+- **MCP** (mcp-chronicle 0.3.0): `chronicle_list_feature_requests`, `chronicle_submit_feature_request`, `chronicle_update_feature_request`, `chronicle_solve_feature_request` — so I can submit/track requests from a Claude Code session.
+
 ## 0.5.8 — 2026-05-07
 
 ### Changed

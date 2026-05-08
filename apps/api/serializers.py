@@ -7,6 +7,7 @@ tight and the contract obvious.
 
 from typing import Any
 
+from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Absence,
     Incident,
@@ -15,6 +16,28 @@ from apps.logbook.models import (
     WeekLog,
 )
 from apps.oncall.models import OnCallDuty
+
+
+def serialize_feature_request(obj: FeatureRequest) -> dict[str, Any]:
+    return {
+        "id": obj.id,
+        "title": obj.title,
+        "description": obj.description,
+        "category": obj.category,
+        "category_display": obj.get_category_display(),
+        "importance": obj.importance,
+        "importance_display": obj.get_importance_display(),
+        "status": obj.status,
+        "status_display": obj.get_status_display(),
+        "order": obj.order,
+        "triggers_version_bump": obj.triggers_version_bump,
+        "resolution_notes": obj.resolution_notes,
+        "submitted_by": obj.submitted_by.username if obj.submitted_by_id else None,
+        "solved_by": obj.solved_by.username if obj.solved_by_id else None,
+        "solved_at": obj.solved_at.isoformat() if obj.solved_at else None,
+        "created_at": obj.created_at.isoformat() if obj.created_at else None,
+        "updated_at": obj.updated_at.isoformat() if obj.updated_at else None,
+    }
 
 
 def serialize_priority_item(item: PriorityItem) -> dict[str, Any]:

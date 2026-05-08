@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Forslag — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>
+          {{ total_open }} åbne · {{ total_in_progress }} i gang · {{ total_solved }} løst
+        </span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Forslag &amp; <span class="display-italic" style="color: var(--ink-3);">udviklingskort.</span>
+      </h1>
+      <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
+        Indsend forslag til ny funktionalitet, UI-ændringer, integrationer eller fejl.
+        Træk dem rundt for at omprioritere, eller flyt dem på tværs af kolonner for at
+        skifte status.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'feedback:create' %}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nyt forslag
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# Filter row #}
+  <form method="get" class="card">
+    <div class="grid items-end gap-3" style="grid-template-columns: 1fr 180px 160px auto;">
+      <div>
+        <label for="id_q" class="input-label">Søg</label>
+        <input type="text" id="id_q" name="q" value="{{ q }}" class="field"
+               placeholder="Titel, beskrivelse, løsning...">
+      </div>
+      <div>
+        <label for="id_category" class="input-label">Kategori</label>
+        <select id="id_category" name="category" class="select-field">
+          <option value="">Alle</option>
+          {% for value, label in categories %}
+            <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="id_importance" class="input-label">Vigtighed</label>
+        <select id="id_importance" name="importance" class="select-field">
+          <option value="">Alle</option>
+          {% for value, label in importances %}
+            <option value="{{ value }}" {% if importance == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Filtrér</button>
+    </div>
+  </form>
+
+  {# Three-column board #}
+  <div class="feedback-board grid"
+       style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--gutter);">
+
+    {# Open #}
+    <div class="card" style="padding: 0; align-self: start;">
+      <div class="flex items-center justify-between" style="padding: 16px 18px; border-bottom: 1px solid var(--hairline);">
+        <div>
+          <div class="label-eyebrow">Åbne</div>
+          <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ open_items|length }}</div>
+        </div>
+        <span class="pill pill-info"><span class="pill-dot"></span>queue</span>
+      </div>
+      <div class="feedback-column"
+           data-status="open"
+           style="padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 80px;">
+        {% for obj in open_items %}
+          {% include 'feedback/partials/request_card.html' %}
+        {% empty %}
+          <p style="text-align: center; color: var(--ink-4); padding: 24px 12px; font-size: 12.5px;">
+            Ingen åbne forslag.
+          </p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# In progress #}
+    <div class="card" style="padding: 0; align-self: start;">
+      <div class="flex items-center justify-between" style="padding: 16px 18px; border-bottom: 1px solid var(--hairline);">
+        <div>
+          <div class="label-eyebrow">I gang</div>
+          <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ in_progress_items|length }}</div>
+        </div>
+        <span class="pill pill-accent"><span class="pill-dot"></span>aktiv</span>
+      </div>
+      <div class="feedback-column"
+           data-status="in_progress"
+           style="padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 80px;">
+        {% for obj in in_progress_items %}
+          {% include 'feedback/partials/request_card.html' %}
+        {% empty %}
+          <p style="text-align: center; color: var(--ink-4); padding: 24px 12px; font-size: 12.5px;">
+            Intet er i gang lige nu.
+          </p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Solved #}
+    <div class="card" style="padding: 0; align-self: start;">
+      <div class="flex items-center justify-between" style="padding: 16px 18px; border-bottom: 1px solid var(--hairline);">
+        <div>
+          <div class="label-eyebrow">Løst</div>
+          <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ total_solved }}</div>
+        </div>
+        <span class="pill pill-good"><span class="pill-dot"></span>færdige</span>
+      </div>
+      <div class="feedback-column"
+           data-status="solved"
+           style="padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 80px;">
+        {% for obj in solved_items %}
+          {% include 'feedback/partials/request_card.html' %}
+        {% empty %}
+          <p style="text-align: center; color: var(--ink-4); padding: 24px 12px; font-size: 12.5px;">
+            Ingen løste endnu.
+          </p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if is_editor %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const csrf = document.querySelector('[hx-headers]')?.getAttribute('hx-headers');
+  const csrfToken = csrf ? JSON.parse(csrf)['X-CSRFToken'] : '';
+
+  function payloadFromBoard() {
+    const out = {};
+    document.querySelectorAll('.feedback-column').forEach(col => {
+      const status = col.dataset.status;
+      const ids = Array.from(col.querySelectorAll('[data-id]')).map(el => parseInt(el.dataset.id));
+      out[status] = ids;
+    });
+    return out;
+  }
+
+  function pushOrder() {
+    fetch('{% url "feedback:reorder" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+      body: JSON.stringify(payloadFromBoard()),
+    });
+  }
+
+  document.querySelectorAll('.feedback-column').forEach(col => {
+    Sortable.create(col, {
+      group: 'feedback',
+      handle: '.feedback-drag-handle',
+      animation: 150,
+      ghostClass: 'opacity-30',
+      onEnd: pushOrder,
+    });
+  });
+});
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}

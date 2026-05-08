@@ -43,6 +43,7 @@ LOCAL_APPS = [
     "apps.oncall",
     "apps.tasks",
     "apps.api",
+    "apps.feedback",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
