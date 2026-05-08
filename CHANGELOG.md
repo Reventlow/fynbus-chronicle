@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.6 — 2026-05-08
+
+### Added
+- **Pirate phrase swaps** for the dashboard text. The Star Wars theme already morphed labels via `{% sw_phrase %}` (Rådighedsvagt → Jedi på vagt, Åbne sager → Aktive missioner, etc.); the pirate theme now does the same, e.g. **Rådighedsvagt → Kaptajn på vagt**, **Åbne sager → Åbne kapringer**, **Lukkede sager → Skat hjembragt**, **Netto → Skattekiste-balance**, **Helpdesk → Skibslog-rapport**, **Bemanding → Skibsmandskab**, **Aktive opgaver → Pligter på dækket**.
+
+### Changed
+- `{% sw_phrase %}` (in the `star_wars` template-tag library, name kept for backwards compat) now takes a 4th optional `pirate` argument so all theme phrasings live in a single tag rather than a parallel `{% pirate_phrase %}`. Output adds a `<span class="sw-pirate">` that CSS reveals when `data-event="pirate"` is set.
+
 ## 0.7.5 — 2026-05-08
 
 ### Added

@@ -1,37 +1,15 @@
 """Template tags for the Pirate Day skin (19. sep. / 1. okt.).
 
-Two helpers, mirroring the Star Wars setup:
-
-* ``{% pirate_phrase default pirate %}`` — emits both phrasings as nested
-  ``<span>``s; CSS picks the right one based on ``data-event="pirate"``.
-* ``{% pirate_messages_json %}`` — returns the rotating-banner message
-  list as a JSON literal (Alpine reads it directly from the attribute).
+Phrase-swap (``{% sw_phrase ... pirate=... %}``) lives in the shared
+``star_wars`` library; this module just ships the rotating banner copy.
 """
 
 import json
 
 from django import template
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 register = template.Library()
-
-
-@register.simple_tag
-def pirate_phrase(default: str, pirate: str = "") -> str:
-    """Render the default phrase plus an optional pirate variant.
-
-    Same shape as ``sw_phrase`` but with a single alternate (pirate sprog
-    is the same in both light and dark mode — only the visuals differ).
-    """
-    return format_html(
-        '<span class="pirate-phrase">'
-        '<span class="pirate-default">{}</span>'
-        '<span class="pirate-alt" aria-hidden="true">{}</span>'
-        "</span>",
-        default,
-        pirate or default,
-    )
 
 
 # ~80 quippy banner messages mixing FynBus operations + pirate sprog +

@@ -1,12 +1,17 @@
-"""Template tags for the May 4th Star Wars Day skin.
+"""Template tags for the editorial theme overlays.
+
+Despite the historical ``star_wars`` filename, this library now powers
+the phrase-swap mechanism for every theme that re-skins page text
+(currently Star Wars + Pirate). Kept under this name so existing
+templates with ``{% load star_wars %}`` keep working without churn.
 
 Two helpers:
 
-* ``{% sw_phrase default rebel sith %}`` — emits all three phrasings of a
-  label as nested ``<span>``s; the existing CSS picks the right one based
-  on ``data-event`` + ``.dark``.
-* ``{% sw_messages_json %}`` — returns the rotating-banner message list
-  as a JSON literal (Alpine reads it directly from the attribute).
+* ``{% sw_phrase default rebel sith pirate %}`` — emits each phrasing
+  as nested ``<span>``s; CSS picks the right one based on
+  ``data-event`` (+ ``.dark`` for the Star Wars rebel/sith split).
+* ``{% sw_messages_json %}`` — returns the rotating Star Wars banner
+  message list as a JSON literal (Alpine reads it from the attribute).
 """
 
 import json
@@ -19,17 +24,24 @@ register = template.Library()
 
 
 @register.simple_tag
-def sw_phrase(default: str, rebel: str = "", sith: str = "") -> str:
-    """Render the default phrase plus optional rebel/sith variants."""
+def sw_phrase(default: str, rebel: str = "", sith: str = "", pirate: str = "") -> str:
+    """Render the default phrase plus optional theme-specific variants.
+
+    All four spans always render; CSS in ``input.css`` toggles which one
+    is visible. Variants that aren't supplied fall back to ``default``,
+    so callers only fill in the themes they want to skin.
+    """
     return format_html(
         '<span class="sw-phrase">'
         '<span class="sw-default">{}</span>'
         '<span class="sw-rebel" aria-hidden="true">{}</span>'
         '<span class="sw-sith" aria-hidden="true">{}</span>'
+        '<span class="sw-pirate" aria-hidden="true">{}</span>'
         "</span>",
         default,
         rebel or default,
         sith or default,
+        pirate or default,
     )
 
 
