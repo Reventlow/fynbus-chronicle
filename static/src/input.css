@@ -166,6 +166,11 @@ html[data-event="star-wars"] body::before {
 html[data-event="star-wars"].dark body::before { opacity: 0.10; }
 /* Keep page content above the starfield. */
 html[data-event="star-wars"] body > * { position: relative; z-index: 1; }
+/* …but keep the nav-shell on top so its tweaks dropdown can overlay main
+   content. The body > * rule above has specificity (0,1,1) and would
+   otherwise collapse the nav-shell from z-40 down to z-1, putting it at
+   the same level as <main> (and losing the source-order tiebreak). */
+html[data-event="star-wars"] body > .nav-shell { z-index: 50; }
 
 /* Brand mark glyph swap — Rebel ✦ on light, Imperial ⌖ on dark.
    Hide the literal "C" by zeroing its font-size on the parent, then render

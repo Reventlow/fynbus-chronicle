@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.3 — 2026-05-08
+
+### Fixed
+- Editorial header buttons (Eksportér / Ny ugelog) overlapped the tweaks dropdown when the Star Wars theme was active. Caused by the starfield rule `html[data-event="star-wars"] body > * { z-index: 1 }`, whose `(0,1,1)` specificity beat `.nav-shell { z-index: 40 }`'s `(0,1,0)`, dropping the nav-shell to z-1 (same as `<main>`) and letting source order win. Added a more-specific `body > .nav-shell { z-index: 50 }` rule so the nav stays on top and its dropdown can overlay main content properly.
+
 ## 0.7.2 — 2026-05-08
 
 ### Fixed
