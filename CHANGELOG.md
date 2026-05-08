@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.7 — 2026-05-08
+
+### Changed
+- **Banner messages now live in the database.** The Star Wars (106) and Pirate (84) rotating banner copy used to be hardcoded Python lists in two separate templatetag modules. Moved to a new `ThemeBannerMessage` model (FK to Theme + text + is_active + order + notes) so editors can curate copy without a code change/redeploy. Admin: inline editor on the Theme page, plus a standalone `ThemeBannerMessage` list with `list_editable` on `is_active` and `order`. Data migration freezes the original lists into the DB on first apply.
+- New shared `{% theme_messages_json "<slug>" %}` template tag in `apps.themes.templatetags.theme_messages` replaces the per-theme `sw_messages_json` / `pirate_messages_json` tags. Both banners read from it.
+- Dropped `apps/dashboard/templatetags/pirate.py` (now empty after the message list moved to the DB) and the hardcoded `SW_BANNER_MESSAGES` list from `star_wars.py`. The phrase-swap `{% sw_phrase %}` tag stays put — it's the only thing that module still ships.
+
 ## 0.7.6 — 2026-05-08
 
 ### Added

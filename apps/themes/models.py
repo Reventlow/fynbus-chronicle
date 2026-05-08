@@ -108,3 +108,53 @@ class ThemeSchedule(models.Model):
 
     def __str__(self) -> str:
         return f"{self.theme.name}: {self.start_date} – {self.end_date}"
+
+
+class ThemeBannerMessage(models.Model):
+    """One rotating message for a theme's sticky banner.
+
+    Was previously a hardcoded Python list per theme (152 Star Wars +
+    80 pirate). Lives in the DB now so editors can curate copy without
+    a code change/redeploy and without needing a per-theme Python file.
+    """
+
+    theme = models.ForeignKey(
+        Theme,
+        on_delete=models.CASCADE,
+        related_name="banner_messages",
+        verbose_name="Tema",
+    )
+    text = models.TextField(
+        verbose_name="Tekst",
+        help_text="En enkelt linje der dukker op i banneret. Holdes kort — banneret afkorter med ellipsis.",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Aktiv",
+        default=True,
+        help_text="Inaktive beskeder ekskluderes fra rotationen uden at slette dem.",
+    )
+    order = models.PositiveIntegerField(
+        verbose_name="Sortering",
+        default=0,
+        help_text="Rækkefølge i admin. Påvirker ikke rotationen (den er tilfældig).",
+    )
+    notes = models.CharField(
+        verbose_name="Internt notat",
+        max_length=200,
+        blank=True,
+        help_text="Editor-private kontekst (kilde, intern joke-forklaring osv.). Vises ikke i banneret.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Banner-besked"
+        verbose_name_plural = "Banner-beskeder"
+        ordering = ["theme", "order", "id"]
+        indexes = [
+            models.Index(fields=["theme", "is_active"]),
+        ]
+
+    def __str__(self) -> str:
+        preview = self.text[:60] + ("…" if len(self.text) > 60 else "")
+        return f"{self.theme.slug}: {preview}"

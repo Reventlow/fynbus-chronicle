@@ -1,14 +1,14 @@
-{% load pirate %}
+{% load theme_messages %}
 {% comment %}
   Pirate Day banner — only shown when ACTIVE_THEME == "pirate" (19. sep.,
   1. okt., user-pick via tweaks panel, or ?force-theme=pirate preview).
   CSS hides it for any other theme so it can render unconditionally.
 
-  Mirrors the Star Wars banner: ~80 quippy messages cycle every 2 minutes,
-  initial pick is random, JSON list ships in a separate <script> tag so
-  straight-quotes in messages don't terminate the x-data attribute early.
+  Mirrors the Star Wars banner: ~80 DB-backed messages (curated in admin)
+  cycle every 2 minutes, initial pick is random, JSON list ships in a
+  separate <script> tag so straight-quotes don't terminate x-data early.
 {% endcomment %}
-<script id="pirate-banner-messages" type="application/json">{% pirate_messages_json %}</script>
+<script id="pirate-banner-messages" type="application/json">{% theme_messages_json "pirate" %}</script>
 <div class="pirate-banner" role="note" aria-label="Pirate Day"
      x-data="{
        msgs: JSON.parse(document.getElementById('pirate-banner-messages').textContent),

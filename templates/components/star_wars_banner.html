@@ -1,15 +1,15 @@
-{% load star_wars %}
+{% load theme_messages %}
 {% comment %}
-  Star Wars Day banner — only rendered when IS_STAR_WARS_DAY is true (May 4
-  in Europe/Copenhagen, or via ?force-star-wars=1).
+  Star Wars Day banner — only rendered when ACTIVE_THEME == "star-wars"
+  (May 4 schedule, ?force-theme=star-wars preview, or user pick).
 
-  Cycles through ~100 quippy FynBus + Star Wars mash-up messages, swapping
-  every 2 minutes. The message list is shipped as a JSON <script> tag so
-  the straight quotes inside the JSON don't terminate the x-data attribute
-  early; Alpine reads it via JSON.parse on init. Initial pick is random so
-  reloads feel fresh; messages crossfade with a 220 ms opacity transition.
+  Cycles through DB-backed banner messages (curated in admin under the
+  star-wars theme) every 2 minutes. The message list ships as a JSON
+  <script> tag so straight quotes don't terminate the x-data attribute
+  early; Alpine reads it via JSON.parse on init. Initial pick is random
+  so reloads feel fresh; messages crossfade with a 220 ms opacity transition.
 {% endcomment %}
-<script id="sw-banner-messages" type="application/json">{% sw_messages_json %}</script>
+<script id="sw-banner-messages" type="application/json">{% theme_messages_json "star-wars" %}</script>
 <div class="sw-banner" role="note" aria-label="Star Wars Day"
      x-data="{
        msgs: JSON.parse(document.getElementById('sw-banner-messages').textContent),
