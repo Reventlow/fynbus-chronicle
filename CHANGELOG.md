@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.6.2 — 2026-05-08
+
+### Fixed
+- Multi-line `{# … #}` comment above the banner include in `base.html` was leaking onto every page as visible text. Switched to `{% comment %} … {% endcomment %}`. (Sixth occurrence — already in MEMORY; clearly the fail mode is "I write comments while also writing other code and forget".) Tightening my own discipline.
+
 ## 0.6.1 — 2026-05-08
 
 ### Added

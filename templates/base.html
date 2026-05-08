@@ -63,9 +63,11 @@
     {% include 'components/nav.html' %}
   {% endif %}
 
-  {# Banner always renders; CSS hides it unless data-event="star-wars" is
-     active (whether from a schedule, ?force-theme= preview, or the user's
-     localStorage pick). #}
+  {% comment %}
+    Banner always renders; CSS hides it unless data-event="star-wars" is
+    active (whether from a schedule, ?force-theme= preview, or the user's
+    localStorage pick).
+  {% endcomment %}
   {% include 'components/star_wars_banner.html' %}
 
   <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">
