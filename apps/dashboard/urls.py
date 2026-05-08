@@ -44,6 +44,11 @@ urlpatterns = [
         views.FooterVersionPartialView.as_view(),
         name="partial-footer-version",
     ),
+    path(
+        "partials/latest-change/",
+        views.LatestChangePartialView.as_view(),
+        name="partial-latest-change",
+    ),
     # Task timeline
     path(
         "partials/task-timeline/",

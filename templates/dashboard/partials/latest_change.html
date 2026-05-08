@@ -1,0 +1,20 @@
+{% comment %}
+  Inner content of the "Seneste ændring" card. Polled every 300s by the
+  dashboard so newly-deployed changelog entries appear without a reload.
+  The wrapper card with classes lives in dashboard/index.html — this
+  partial is swapped into it via hx-swap="innerHTML".
+{% endcomment %}
+{% if latest_change %}
+  <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+    <div>
+      <div class="label-eyebrow">Seneste ændring</div>
+      <h2 class="num" style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+        {{ latest_change.title }}
+      </h2>
+    </div>
+    <a href="{% url 'dashboard:docs-page' 'changelog' %}" class="btn btn-sm btn-ghost">Se alle</a>
+  </div>
+  <div class="changelog-body" style="padding: 0 24px 20px; border-top: 1px solid var(--hairline); padding-top: 16px;">
+    {{ latest_change.body_html }}
+  </div>
+{% endif %}

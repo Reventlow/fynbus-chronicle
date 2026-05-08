@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.12 — 2026-05-08
+
+### Changed
+- **Header version + Seneste ændring card auto-update** via HTMX polling. Both poll every 300s — the header's `v0.7.x` reuses the existing footer-version partial endpoint, and the dashboard's "Seneste ændring" card got a new `partial-latest-change` endpoint that re-reads `CHANGELOG.md` on each tick. Same cadence as the footer link, so all three version-aware spots refresh in sync after a deploy without anyone having to reload.
+
 ## 0.7.11 — 2026-05-08
 
 ### Added

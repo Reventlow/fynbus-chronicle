@@ -20,7 +20,10 @@
           Uge {% now "W · j N Y" %}
           {% if APP_VERSION %}
             <span style="color: var(--ink-5); margin: 0 6px;">·</span>
-            <span style="color: var(--ink-4);">v{{ APP_VERSION }}</span>
+            <span style="color: var(--ink-4);"
+                  hx-get="{% url 'dashboard:partial-footer-version' %}"
+                  hx-trigger="every 300s"
+                  hx-swap="innerHTML">v{{ APP_VERSION }}</span>
           {% endif %}
         </span>
       </div>
@@ -220,24 +223,16 @@
         </div>
       </div>
 
-      {# Latest changelog entry #}
-      {# js-dashboard-extras: hidden in Dashboard mode. js-dashboard-changelog: also hidden in Kompakt. #}
-      {% if latest_change %}
-      <div class="card overflow-hidden flex-grow js-dashboard-extras js-dashboard-changelog" style="padding: 0;">
-        <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
-          <div>
-            <div class="label-eyebrow">Seneste ændring</div>
-            <h2 class="num" style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-              {{ latest_change.title }}
-            </h2>
-          </div>
-          <a href="{% url 'dashboard:docs-page' 'changelog' %}" class="btn btn-sm btn-ghost">Se alle</a>
-        </div>
-        <div class="changelog-body" style="padding: 0 24px 20px; border-top: 1px solid var(--hairline); padding-top: 16px;">
-          {{ latest_change.body_html }}
-        </div>
+      {# Latest changelog entry — polled every 300s.
+         js-dashboard-extras: hidden in Dashboard mode.
+         js-dashboard-changelog: also hidden in Kompakt. #}
+      <div class="card overflow-hidden flex-grow js-dashboard-extras js-dashboard-changelog"
+           style="padding: 0;"
+           hx-get="{% url 'dashboard:partial-latest-change' %}"
+           hx-trigger="load, every 300s"
+           hx-swap="innerHTML">
+        {% include 'dashboard/partials/latest_change.html' %}
       </div>
-      {% endif %}
     </div>
 
     {# Incidents — js-dashboard-extras: hidden in Dashboard mode #}

@@ -180,6 +180,21 @@ class FooterVersionPartialView(LoginRequiredMixin, TemplateView):
     template_name = "components/partials/footer_version.html"
 
 
+class LatestChangePartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial for the dashboard's "Seneste ændring" card.
+
+    Reads the top entry from CHANGELOG.md and re-emits it. Polled every
+    300s so newly-deployed changes show up without a page reload.
+    """
+
+    template_name = "dashboard/partials/latest_change.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["latest_change"] = _read_latest_changelog_entry()
+        return context
+
+
 @login_required
 def sync_servicedesk_stats(request):
     """HTMX endpoint to manually trigger ServiceDesk sync and return updated stats."""
