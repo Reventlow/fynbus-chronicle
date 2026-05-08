@@ -14,4 +14,5 @@ urlpatterns = [
     path("<int:pk>/solve/", views.mark_solved, name="solve"),
     path("<int:pk>/reopen/", views.reopen, name="reopen"),
     path("reorder/", views.reorder, name="reorder"),
+    path("partials/nav-badge/", views.nav_badge, name="partial-nav-badge"),
 ]

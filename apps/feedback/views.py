@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models as db_models
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -16,6 +17,22 @@ from apps.accounts.permissions import EditorRequiredMixin, editor_required
 
 from .forms import FeatureRequestEditForm, FeatureRequestForm
 from .models import FeatureRequest
+
+
+@login_required
+def nav_badge(request: HttpRequest) -> HttpResponse:
+    """Tiny partial — just the notification pill (or empty span if zero).
+
+    Polled by the global nav every 60s so the badge updates when feature
+    requests are submitted, marked in-progress, or solved without forcing
+    a full page reload. Returns the same `<span>` shape as nav.html so an
+    `outerHTML` swap leaves the polling loop intact.
+    """
+    count = FeatureRequest.objects.filter(
+        Q(status=FeatureRequest.Status.OPEN)
+        | Q(status=FeatureRequest.Status.IN_PROGRESS)
+    ).count()
+    return render(request, "feedback/_nav_badge.html", {"OPEN_FEEDBACK_COUNT": count})
 
 
 @login_required

@@ -52,13 +52,7 @@
           <path d="M12 16V3M9 6l3-3 3 3"/>
         </svg>
         Forslag
-        {% if OPEN_FEEDBACK_COUNT %}
-          <span class="nav-badge"
-                aria-label="{{ OPEN_FEEDBACK_COUNT }} åbne eller igangværende forslag"
-                title="{{ OPEN_FEEDBACK_COUNT }} åbne eller igangværende">
-            {{ OPEN_FEEDBACK_COUNT }}
-          </span>
-        {% endif %}
+        {% include 'feedback/_nav_badge.html' %}
       </a>
       <a href="{{ url_docs }}"
          class="nav-link {% if 'docs' in request.resolver_match.url_name %}nav-link-active{% endif %}">

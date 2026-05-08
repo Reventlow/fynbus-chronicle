@@ -1,0 +1,18 @@
+{% comment %}
+  Self-polling notification pill for the "Forslag" nav link. Swapped via
+  outerHTML every 60s so the badge updates when feature requests change
+  state without a page reload. Span renders even at zero (just empty +
+  zero width) so HTMX always has a valid swap target.
+{% endcomment %}
+<span hx-get="{% url 'feedback:partial-nav-badge' %}"
+      hx-trigger="every 60s"
+      hx-swap="outerHTML"
+      class="nav-badge-slot">
+  {% if OPEN_FEEDBACK_COUNT %}
+    <span class="nav-badge"
+          aria-label="{{ OPEN_FEEDBACK_COUNT }} åbne eller igangværende forslag"
+          title="{{ OPEN_FEEDBACK_COUNT }} åbne eller igangværende">
+      {{ OPEN_FEEDBACK_COUNT }}
+    </span>
+  {% endif %}
+</span>

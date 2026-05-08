@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.9 — 2026-05-08
+
+### Changed
+- **Forslag badge auto-updates** without a page reload. New partial endpoint at `/feedback/partials/nav-badge/` returns the badge as a self-polling `<span>` (`hx-get` + `hx-trigger="every 60s"` + `hx-swap="outerHTML"`); the global nav `{% include %}`s it. Same pattern as the oncall card and footer version. Wrapper stays in the DOM even at zero count so the polling loop survives transitions in either direction (open → solved or solved → reopened).
+
 ## 0.7.8 — 2026-05-08
 
 ### Added
