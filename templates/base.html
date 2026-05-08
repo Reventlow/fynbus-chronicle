@@ -2,23 +2,28 @@
 <html lang="da"
       x-data="{
         darkMode:  localStorage.getItem('darkMode') === 'true',
-        // Density now has three modes: 'comfortable' (default), 'compact' (denser
-        // spacing AND graphs hidden), and 'dashboard' (only header/KPIs/graphs).
-        // Any legacy value other than these three is coerced back to comfortable.
+        // Density: 'comfortable' (default), 'compact' (denser + graphs hidden),
+        // or 'dashboard' (only header/KPIs/graphs). Coerce unknown values.
         density:   ['comfortable','compact','dashboard'].includes(localStorage.getItem('density'))
                      ? localStorage.getItem('density') : 'comfortable',
         accent:    localStorage.getItem('accent')  || 'gold',
+        // Theme system. SERVER_THEME (rendered below) wins when set —
+        // means a schedule or ?force-theme= is overriding user prefs.
+        // Otherwise, the user's localStorage pick applies. 'auto' = no theme.
+        serverTheme: '{{ ACTIVE_THEME|escapejs }}',
+        userTheme:   localStorage.getItem('theme') || 'auto',
         init() {
           const fire = () => window.dispatchEvent(new CustomEvent('accent-change'));
           this.$watch('darkMode', v => { localStorage.setItem('darkMode', v); fire(); });
           this.$watch('density',  v => localStorage.setItem('density', v));
           this.$watch('accent',   v => { localStorage.setItem('accent', v);   fire(); });
+          this.$watch('userTheme', v => { localStorage.setItem('theme', v); fire(); });
         }
       }"
       :class="{ 'dark': darkMode }"
       :data-density="density === 'comfortable' ? null : density"
       :data-accent="accent === 'gold' ? null : accent"
-      {% if IS_STAR_WARS_DAY %}data-event="star-wars"{% endif %}>
+      :data-event="serverTheme || (userTheme && userTheme !== 'auto' ? userTheme : null)">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,9 +63,10 @@
     {% include 'components/nav.html' %}
   {% endif %}
 
-  {% if IS_STAR_WARS_DAY %}
-    {% include 'components/star_wars_banner.html' %}
-  {% endif %}
+  {# Banner always renders; CSS hides it unless data-event="star-wars" is
+     active (whether from a schedule, ?force-theme= preview, or the user's
+     localStorage pick). #}
+  {% include 'components/star_wars_banner.html' %}
 
   <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">
     {% block messages %}

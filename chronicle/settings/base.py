@@ -44,6 +44,7 @@ LOCAL_APPS = [
     "apps.tasks",
     "apps.api",
     "apps.feedback",
+    "apps.themes",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -74,6 +75,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "chronicle.context_processors.version",
+                "chronicle.context_processors.active_theme",
                 "chronicle.context_processors.star_wars_day",
                 "apps.accounts.context_processors.editor_context",
             ],

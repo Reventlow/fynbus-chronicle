@@ -31,14 +31,57 @@ def version(request):
 
 
 def star_wars_day(request):
+    """Compatibility shim. Use the ``active_theme`` processor instead.
+
+    Returns ``IS_STAR_WARS_DAY = True`` whenever ``ACTIVE_THEME`` resolves
+    to the ``star-wars`` slug — covers both the schedule-driven default
+    and the user/query-param override paths so existing template
+    references keep working.
     """
-    Expose IS_STAR_WARS_DAY = True on May 4 (Europe/Copenhagen), or when the
-    request carries ?force-star-wars=1 (preview hatch for screenshots and
-    pre-flight checks). The skin disappears automatically the next day —
-    no cleanup needed.
+    # Computed by active_theme(); avoid duplicating the lookup.
+    ctx = active_theme(request)
+    return {"IS_STAR_WARS_DAY": ctx.get("ACTIVE_THEME") == "star-wars"}
+
+
+def active_theme(request):
+    """Resolve the visual theme that should be applied to this response.
+
+    Order of precedence:
+
+    1. ``?force-theme=<slug>`` query param (preview hatch).
+    2. Any ``ThemeSchedule`` whose ``start_date <= today <= end_date``.
+       Earliest start_date wins on overlap. Schedule-based themes
+       override user preferences globally.
+    3. ``None`` server-side. The base.html Alpine layer applies the
+       user's localStorage pick if and only if the server didn't set
+       ``data-event``.
+
+    Exposes both ``ACTIVE_THEME`` (slug or empty) and ``ACTIVE_THEMES``
+    (the queryset of selectable themes for the tweaks panel dropdown).
     """
-    today = django_timezone.localdate()
-    is_sw_day = today.month == 5 and today.day == 4
-    if not is_sw_day and request is not None and request.GET.get("force-star-wars") == "1":
-        is_sw_day = True
-    return {"IS_STAR_WARS_DAY": is_sw_day}
+    # Avoid an import cycle at module load.
+    from apps.themes.models import Theme
+
+    slug = ""
+
+    if request is not None:
+        forced = (request.GET.get("force-theme") or "").strip().lower()
+        # Backward-compat with the old ?force-star-wars=1 query param.
+        if forced:
+            slug = forced
+        elif request.GET.get("force-star-wars") == "1":
+            slug = "star-wars"
+
+    if not slug:
+        scheduled = Theme.scheduled_for_today()
+        if scheduled is not None:
+            slug = scheduled.slug
+
+    selectable = (
+        Theme.objects.filter(is_active=True, user_selectable=True).order_by("name")
+    )
+
+    return {
+        "ACTIVE_THEME": slug,
+        "ACTIVE_THEMES": selectable,
+    }

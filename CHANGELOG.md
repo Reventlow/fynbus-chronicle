@@ -2,6 +2,21 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.6.1 — 2026-05-08
+
+### Added
+- **Generalised theme system.** New `apps.themes` app with `Theme` (slug, name, description, is_active, user_selectable) and `ThemeSchedule` (theme + start/end date + label) models. Themes are managed in Django admin; schedules define date ranges where a theme overrides user preferences globally. Seeded with the existing **Star Wars Day** theme (slug: `star-wars`) + its 2026-05-04 schedule, so the existing date-driven behaviour is preserved.
+- **User theme picker** in the tweaks panel — a "Tema" dropdown listing all `user_selectable` themes plus an "Auto" default. Saved to `localStorage`. Schedules always win; user pick applies on days when nothing is scheduled. The dropdown is disabled (and shows "Aktivt: <slug> (skedule overruler dit valg)") when a schedule is currently active.
+- New context processor `chronicle.context_processors.active_theme` exposes `ACTIVE_THEME` (slug) + `ACTIVE_THEMES` (selectable list). Resolution order: `?force-theme=<slug>` → `ThemeSchedule.scheduled_for_today()` → empty (lets the user's localStorage pick apply client-side).
+
+### Changed
+- `IS_STAR_WARS_DAY` is now a thin compatibility shim around `ACTIVE_THEME == "star-wars"` — covers both schedule and user-pick paths.
+- Star Wars banner now renders unconditionally; CSS hides it unless `html[data-event="star-wars"]` is set. So toggling Star Wars from the tweaks panel year-round shows the full skin (banner, accent, glyph, starfield, footer egg) the same way May 4th does.
+- Backward compat preserved: `?force-star-wars=1` still works as an alias for `?force-theme=star-wars`.
+
+### Solves
+- Feature request #1 ("Bring back Star Wars Theme"): Star Wars theme is now available year-round via the tweaks-panel "Tema" picker, with schedules overriding on May 4 (and any future date the admin adds).
+
 ## 0.6.0 — 2026-05-08
 
 ### Added

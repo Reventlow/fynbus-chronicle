@@ -187,8 +187,11 @@ html[data-event="star-wars"].dark .brand-mark::before {
   font-size: 19px;
 }
 
-/* Sticky banner under the nav. Single line on desktop, wraps on narrow. */
-.sw-banner {
+/* Banner — only visible when the Star Wars theme is active (whether by
+   schedule, ?force-theme= preview, or user pick). Sticky under the nav. */
+.sw-banner { display: none; }
+html[data-event="star-wars"] .sw-banner {
+  display: block;
   position: sticky;
   top: 0;
   z-index: 30;

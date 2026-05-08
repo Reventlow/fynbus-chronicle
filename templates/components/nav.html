@@ -143,6 +143,28 @@
               Saber
             </button>
           </div>
+
+          {% if ACTIVE_THEMES %}
+            <div class="label-eyebrow" style="margin: 14px 0 8px;">Tema</div>
+            <div style="font-size: 11.5px; color: var(--ink-4); margin-bottom: 6px;"
+                 x-show="serverTheme"
+                 x-cloak>
+              <span style="color: var(--accent-ink); font-weight: 500;" x-text="'Aktivt: ' + serverTheme"></span>
+              <span> (skedule overruler dit valg).</span>
+            </div>
+            <select x-model="userTheme"
+                    class="select-field"
+                    style="width: 100%;"
+                    :disabled="!!serverTheme">
+              <option value="auto">Auto (følg skedule)</option>
+              {% for theme in ACTIVE_THEMES %}
+                <option value="{{ theme.slug }}">{{ theme.name }}</option>
+              {% endfor %}
+            </select>
+            <p style="margin: 6px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.45;">
+              Vælg ”Auto” for at lade datoer styre temaet, eller vælg et tema for altid at få det vist (når intet skedule er aktivt).
+            </p>
+          {% endif %}
         </div>
       </div>
 
