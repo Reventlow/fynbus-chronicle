@@ -2,12 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
-## 0.6.2 — 2026-05-08
+## 0.7.1 — 2026-05-08
 
 ### Fixed
 - Multi-line `{# … #}` comment above the banner include in `base.html` was leaking onto every page as visible text. Switched to `{% comment %} … {% endcomment %}`. (Sixth occurrence — already in MEMORY; clearly the fail mode is "I write comments while also writing other code and forget".) Tightening my own discipline.
 
-## 0.6.1 — 2026-05-08
+## 0.7.0 — 2026-05-08
 
 ### Added
 - **Generalised theme system.** New `apps.themes` app with `Theme` (slug, name, description, is_active, user_selectable) and `ThemeSchedule` (theme + start/end date + label) models. Themes are managed in Django admin; schedules define date ranges where a theme overrides user preferences globally. Seeded with the existing **Star Wars Day** theme (slug: `star-wars`) + its 2026-05-04 schedule, so the existing date-driven behaviour is preserved.
@@ -20,7 +20,7 @@ All notable changes to FynBus Chronicle are documented here.
 - Backward compat preserved: `?force-star-wars=1` still works as an alias for `?force-theme=star-wars`.
 
 ### Solves
-- Feature request #1 ("Bring back Star Wars Theme"): Star Wars theme is now available year-round via the tweaks-panel "Tema" picker, with schedules overriding on May 4 (and any future date the admin adds).
+- Feature request #1 ("Bring back Star Wars Theme", marked **v++**): Star Wars theme is now available year-round via the tweaks-panel "Tema" picker, with schedules overriding on May 4 (and any future date the admin adds). Originally shipped as 0.6.1; re-versioned to 0.7.0 because solving a feature request with `triggers_version_bump=True` calls for a minor bump, not a patch.
 
 ## 0.6.0 — 2026-05-08
 
