@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.13 — 2026-05-08
+
+### Fixed
+- **Dashboard "+ Tilføj" on Aktive opgaver now opens the form.** Previously the link only scrolled to `#priority-items-list` on the weeklog detail page; the user still had to click "Tilføj ny" to open the form. Now the dashboard link carries `?action=add`, the detail page reads it on `DOMContentLoaded`, auto-clicks the (newly id'd) `#priority-add-new-btn`, and strips the param via `history.replaceState` so a refresh doesn't re-trigger.
+
 ## 0.7.12 — 2026-05-08
 
 ### Changed

@@ -141,7 +141,8 @@
           </svg>
           Fra åbne
         </button>
-        <button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
+        <button id="priority-add-new-btn"
+                hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
                 hx-target="#priority-items-list"
                 hx-swap="beforeend"
                 class="btn btn-sm btn-ghost">
@@ -243,6 +244,19 @@
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  // Auto-open the "Tilføj ny" form if the user arrived from the
+  // dashboard "+ Tilføj" shortcut (?action=add). Strip the param from
+  // the URL afterwards so a refresh doesn't re-trigger it.
+  if (new URLSearchParams(window.location.search).get("action") === "add") {
+    var addBtn = document.getElementById("priority-add-new-btn");
+    if (addBtn) {
+      addBtn.click();
+      var url = new URL(window.location);
+      url.searchParams.delete("action");
+      history.replaceState({}, "", url.toString());
+    }
+  }
+
   var el = document.getElementById("priority-items-list");
   if (!el) return;
 
