@@ -403,6 +403,129 @@ html[data-event="pirate"].dark .pirate-banner {
 /* (Pirate phrase-swap moved into the shared {% sw_phrase %} block above.) */
 
 /* =============================================================================
+   8. sep / 5. apr — Star Trek skin (Star Trek Day + First Contact Day)
+   Light = Federation/Starfleet command blue. Dark = Klingon Empire blood red.
+   Same plumbing as Star Wars/Pirate: data-event="star-trek" overrides accent
+   tokens, swaps the brand-mark glyph, paints a faint star-chart page
+   background, and shows the sticky banner.
+   ============================================================================= */
+html[data-event="star-trek"] {
+  --accent:      oklch(0.55 0.16 240);   /* Starfleet command blue */
+  --accent-soft: oklch(0.96 0.04 230);   /* pale sky */
+  --accent-ink:  oklch(0.32 0.16 240);   /* deeper command blue */
+  --chart-accent: rgb(50, 100, 200);
+}
+html[data-event="star-trek"].dark {
+  --accent:      oklch(0.55 0.20 20);    /* Klingon blood red */
+  --accent-soft: oklch(0.25 0.10 20);    /* dark crimson */
+  --accent-ink:  oklch(0.85 0.15 20);    /* pale crimson */
+  --chart-accent: rgb(190, 50, 50);
+}
+
+/* Faint star-chart dot pattern behind the page. Slightly more sparse
+   than the Star Wars night-sky — feels like a navigation chart. */
+html[data-event="star-trek"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 30% 25%, var(--ink-1) 1px, transparent 1.6px),
+    radial-gradient(circle at 65% 70%, var(--ink-1) 1px, transparent 1.4px),
+    radial-gradient(circle at 45% 90%, var(--ink-1) 0.9px, transparent 1.3px);
+  background-size: 120px 120px, 160px 160px, 90px 90px;
+  background-position: 0 0, 40px 60px, 70px 20px;
+  opacity: 0.05;
+}
+html[data-event="star-trek"].dark body::before { opacity: 0.10; }
+html[data-event="star-trek"] body > * { position: relative; z-index: 1; }
+html[data-event="star-trek"] body > .nav-shell { z-index: 50; }
+
+/* Brand-mark glyph swap — Starfleet command delta on light, Klingon
+   warrior emblem on dark. */
+html[data-event="star-trek"] .brand-mark {
+  font-size: 0;
+}
+html[data-event="star-trek"] .brand-mark::before {
+  content: "▲";
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+html[data-event="star-trek"].dark .brand-mark::before {
+  content: "⊛";
+  font-size: 18px;
+}
+
+/* Banner — same shape as the others, separate class for independence. */
+.star-trek-banner { display: none; }
+html[data-event="star-trek"] .star-trek-banner {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 70%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+html[data-event="star-trek"].dark .star-trek-banner {
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 100%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 60%, transparent) 100%);
+}
+.star-trek-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.star-trek-banner-glyph {
+  font-size: 14px;
+  color: var(--accent);
+}
+.star-trek-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.star-trek-banner-sep { color: var(--accent); opacity: 0.5; }
+.star-trek-banner-msg {
+  color: var(--accent-ink);
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.star-trek-banner-msg.is-fading { opacity: 0; }
+
+/* Tiny mono Easter egg in the footer (Star Trek variant). */
+.star-trek-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+/* =============================================================================
    Density modes (driven by data-density on <html>)
    - comfortable (default, no attribute): full layout, comfortable spacing
    - compact:    denser spacing AND graphs hidden

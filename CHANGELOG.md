@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.15 — 2026-05-08
+
+### Added
+- **Star Trek theme** (FR #4 — submitted in-app once the API came back). Light mode = Federation/Starfleet command blue with the ▲ command-delta brand glyph; dark mode = Klingon Empire blood-red with the ⊛ warrior emblem. 79 rotating banner messages mixing Starfleet operations, Klingon culture, Federation diplomacy, FynBus bus operations remixed as starship missions, and classic catchphrases ("Live long and prosper.", "Engage.", "Qapla'!", "Make it so."). Faint star-chart dot pattern as page background. Footer Easter egg: `▲ NCC-1701 · STARDATE 79023.5 ▲`.
+- Two annual schedules seeded: **8. september** (Star Trek Day — TOS premiere 1966) and **5. april** (First Contact Day — Cochrane's warp flight 2063).
+- Selectable from the tweaks panel year-round; schedules always win on the two real dates. Preview anytime via `?force-theme=star-trek`.
+
 ## 0.7.14 — 2026-05-08
 
 ### Fixed

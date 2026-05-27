@@ -1,0 +1,36 @@
+{% load theme_messages %}
+{% comment %}
+  Star Trek banner — only shown when ACTIVE_THEME == "star-trek" (Sep 8,
+  Apr 5, user pick via tweaks panel, or ?force-theme=star-trek preview).
+  CSS hides it for any other theme so it can render unconditionally.
+
+  Mirrors the Star Wars / Pirate banners: DB-backed messages cycle every
+  2 minutes, initial pick is random, JSON list ships in a separate
+  <script> tag so straight-quotes don't terminate x-data early.
+{% endcomment %}
+<script id="star-trek-banner-messages" type="application/json">{% theme_messages_json "star-trek" %}</script>
+<div class="star-trek-banner" role="note" aria-label="Star Trek"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('star-trek-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="star-trek-banner-inner">
+    <span class="star-trek-banner-glyph" aria-hidden="true">▲</span>
+    <span class="star-trek-banner-date">8. sep · 5. apr</span>
+    <span class="star-trek-banner-sep" aria-hidden="true">·</span>
+    <span class="star-trek-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Live long and prosper.</span>
+  </div>
+</div>

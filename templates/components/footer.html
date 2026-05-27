@@ -18,6 +18,10 @@
         <span class="pirate-footer-egg" aria-label="Pirate Day Easter egg">☠ X MARKER STEDET · 19/9 · 1/10 ☠</span>
         <span class="footer-sep" aria-hidden="true">·</span>
       {% endif %}
+      {% if ACTIVE_THEME == "star-trek" %}
+        <span class="star-trek-footer-egg" aria-label="Star Trek Easter egg">▲ NCC-1701 · STARDATE 79023.5 ▲</span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+      {% endif %}
       <a href="{% url 'admin:index' %}" class="footer-link">Administration</a>
       <span class="footer-sep" aria-hidden="true">·</span>
       <a href="{% url 'dashboard:docs-page' slug='changelog' %}"
