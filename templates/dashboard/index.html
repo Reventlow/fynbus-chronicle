@@ -28,7 +28,25 @@
         </span>
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
-        <span x-data x-text="(() => { const h = new Date().getHours(); return h < 11 ? 'Godmorgen' : h < 18 ? 'Goddag' : h < 23 ? 'Godaften' : 'Godnat'; })()">Goddag</span>,
+        <span x-data x-text="(() => {
+          const h = new Date().getHours();
+          const slot = h < 11 ? 'morning' : h < 18 ? 'day' : h < 23 ? 'evening' : 'night';
+          // Active theme: schedule/forced (server) wins over user pick.
+          const theme = serverTheme || (userTheme && userTheme !== 'auto' ? userTheme : '');
+          let variant = 'default';
+          if (theme === 'star-wars') variant = darkMode ? 'sith' : 'rebel';
+          else if (theme === 'pirate') variant = 'pirate';
+          else if (theme === 'star-trek') variant = darkMode ? 'klingon' : 'trek';
+          const g = {
+            default: { morning: 'Godmorgen',         day: 'Goddag',              evening: 'Godaften',        night: 'Godnat' },
+            rebel:   { morning: 'Morgenlys',         day: 'Hilsen',              evening: 'Aftenstjerne',    night: 'Sov i Kraften' },
+            sith:    { morning: 'Mørk morgen',       day: 'Imperial dag',        evening: 'Skygger falder',  night: 'Nattens magt' },
+            pirate:  { morning: 'Yarr',              day: 'Ahoj',                evening: 'Aftenro',         night: 'Godnat, matros' },
+            trek:    { morning: 'Morgen-shift',      day: 'Hilsen, kommandør',   evening: 'Aftenwatch',      night: 'Sov i fred' },
+            klingon: { morning: 'nuqneH',            day: 'Qapla',               evening: 'Krigsskumring',   night: 'Sov i ære' },
+          };
+          return g[variant][slot];
+        })()">Goddag</span>,
         {{ user.first_name|default:user.get_short_name|default:user.username }}.
         <span class="display-italic" style="color: var(--ink-3);">her er ugen.</span>
       </h1>

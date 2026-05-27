@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.17 — 2026-05-27
+
+### Added
+- **Themed top-of-page greeting.** The `Goddag, Gorm. her er ugen.` headline now picks a greeting based on time-of-day **and** the active theme + light/dark mode. Star Wars light → "Hilsen", Star Wars dark → "Imperial dag", Pirate → "Ahoj" / "Yarr", Star Trek Federation → "Hilsen, kommandør", Star Trek Klingon → "Qapla". Falls back to "Goddag" when no theme is active. All 24 variants (6 modes × 4 time slots — morning / day / evening / night) live in a small lookup table inside the existing Alpine `x-text` expression so it stays fully client-side and reactive to tweaks-panel changes.
+
 ## 0.7.16 — 2026-05-27
 
 ### Added
