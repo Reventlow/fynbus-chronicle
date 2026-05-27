@@ -2,7 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
-## 0.7.15 — 2026-05-08
+## 0.7.16 — 2026-05-27
+
+### Added
+- **Star Trek phrase swaps** for the dashboard, with separate Federation (light) and Klingon (dark) phrasings — mirrors the Star Wars rebel/sith split. `{% sw_phrase %}` extended with two new optional kwargs: `trek=` for Federation light mode and `klingon=` for Klingon dark mode (falls back to `trek` if omitted). Translations include Rådighedsvagt → Kommandør på vagt / Krigsleder på vagt, Lukkede sager → Fuldførte missioner / Æresfulde sejre, Bemanding → Bridge-mandskab / Krigerbande, Aktive opgaver → Aktive direktiver / Ordrer fra Kahless, Helpdesk → Stjerneflåde-rapport / Empire-rapport, Hændelser → Anomalier / Kampe, etc.
+
+## 0.7.15 — 2026-05-27
 
 ### Added
 - **Star Trek theme** (FR #4 — submitted in-app once the API came back). Light mode = Federation/Starfleet command blue with the ▲ command-delta brand glyph; dark mode = Klingon Empire blood-red with the ⊛ warrior emblem. 79 rotating banner messages mixing Starfleet operations, Klingon culture, Federation diplomacy, FynBus bus operations remixed as starship missions, and classic catchphrases ("Live long and prosper.", "Engage.", "Qapla'!", "Make it so."). Faint star-chart dot pattern as page background. Footer Easter egg: `▲ NCC-1701 · STARDATE 79023.5 ▲`.

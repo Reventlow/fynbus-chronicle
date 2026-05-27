@@ -259,11 +259,12 @@ html[data-event="star-wars"].dark .sw-banner {
   color: var(--accent);
 }
 
-/* Phrase-swap helper used by {% sw_phrase default rebel sith pirate %}.
-   Default Danish always wins; specific themes swap to their own phrasing.
-   Inline display so the spans don't break flex/grid. */
+/* Phrase-swap helper used by {% sw_phrase %} (positional default + kwargs
+   rebel/sith/pirate/trek/klingon). Default Danish always wins; specific
+   themes swap to their own phrasing. Inline display so the spans don't
+   break flex/grid. */
 .sw-phrase { display: contents; }
-.sw-rebel, .sw-sith, .sw-pirate { display: none; }
+.sw-rebel, .sw-sith, .sw-pirate, .sw-trek, .sw-klingon { display: none; }
 /* Star Wars: Rebel in light, Sith in dark. */
 html[data-event="star-wars"]:not(.dark) .sw-default { display: none; }
 html[data-event="star-wars"]:not(.dark) .sw-rebel   { display: inline; }
@@ -272,6 +273,11 @@ html[data-event="star-wars"].dark      .sw-sith     { display: inline; }
 /* Pirate: same phrasing in both modes (the visual changes, not the language). */
 html[data-event="pirate"] .sw-default { display: none; }
 html[data-event="pirate"] .sw-pirate  { display: inline; }
+/* Star Trek: Federation in light, Klingon in dark. */
+html[data-event="star-trek"]:not(.dark) .sw-default { display: none; }
+html[data-event="star-trek"]:not(.dark) .sw-trek    { display: inline; }
+html[data-event="star-trek"].dark      .sw-default  { display: none; }
+html[data-event="star-trek"].dark      .sw-klingon  { display: inline; }
 
 /* =============================================================================
    19. sep / 1. okt — Pirate Day skin (Talk Like a Pirate Day + Hack Day)

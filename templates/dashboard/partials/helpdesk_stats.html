@@ -4,7 +4,7 @@
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
-    <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" "Åbne kapringer" %}</div>
+    <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" "Åbne kapringer" trek="Aktive missioner" klingon="Aktive kampe" %}</div>
     <button hx-post="{% url 'dashboard:sync-servicedesk' %}"
             hx-target="#helpdesk-stats-container"
             hx-swap="innerHTML"
@@ -33,7 +33,7 @@
 </div>
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
-  <div class="label-eyebrow">{% sw_phrase "Nye sager (uge)" "Nye missioner (uge)" "Nye oprørere (uge)" "Nye kapringer (uge)" %}</div>
+  <div class="label-eyebrow">{% sw_phrase "Nye sager (uge)" "Nye missioner (uge)" "Nye oprørere (uge)" "Nye kapringer (uge)" trek="Nye missioner (uge)" klingon="Nye kampe (uge)" %}</div>
   <div class="num"
        style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_new|default:"—" }}
@@ -42,7 +42,7 @@
 </div>
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
-  <div class="label-eyebrow">{% sw_phrase "Lukkede sager" "Fuldførte missioner" "Rebel agents fanget" "Skat hjembragt" %}</div>
+  <div class="label-eyebrow">{% sw_phrase "Lukkede sager" "Fuldførte missioner" "Rebel agents fanget" "Skat hjembragt" trek="Fuldførte missioner" klingon="Æresfulde sejre" %}</div>
   <div class="num"
        style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_closed|default:"—" }}
@@ -52,7 +52,7 @@
 
 <div class="card flex flex-col gap-3" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
-    <div class="label-eyebrow">{% sw_phrase "Netto" "Alliance-balance" "Imperial kontrol" "Skattekiste-balance" %}</div>
+    <div class="label-eyebrow">{% sw_phrase "Netto" "Alliance-balance" "Imperial kontrol" "Skattekiste-balance" trek="Federation-balance" klingon="Empire-balance" %}</div>
     {% if weeklog %}
       {% if weeklog.helpdesk_delta < 0 %}
         <span class="pill-delta" style="background: var(--good-soft); color: var(--good-ink);">▼{{ weeklog.helpdesk_delta|stringformat:"d"|cut:"-" }}</span>

@@ -35,10 +35,10 @@
       <div style="margin-top: 12px; color: var(--ink-3); font-size: 14.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
         <span class="inline-flex items-center" style="gap: 6px;">
           <span class="pill-dot animate-pulse-glow" style="background: var(--good);"></span>
-          {% sw_phrase "Live" "Holocron" "Imperial holonet" "Skibslog" %} · synkroniseret kl <span class="num">{% now "H:i" %}</span>
+          {% sw_phrase "Live" "Holocron" "Imperial holonet" "Skibslog" trek="Stjerneflåde-net" klingon="Klingon kampnet" %} · synkroniseret kl <span class="num">{% now "H:i" %}</span>
         </span>
         <span style="color: var(--ink-5);">·</span>
-        <span><span class="num">{{ incident_count_week }}</span> {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" %} denne uge</span>
+        <span><span class="num">{{ incident_count_week }}</span> {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %} denne uge</span>
       </div>
     </div>
     {% if is_editor %}
@@ -106,9 +106,9 @@
          }">
       <div class="flex items-start justify-between" style="padding: 20px 24px 12px;">
         <div>
-          <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" %} · <span x-text="label()">12 uger</span></div>
+          <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
           <h2 style="margin: 6px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-            {% sw_phrase "Ny vs. lukket — flow over tid" "Nye vs. fuldførte missioner" "Oprørere vs. fanget — over tid" "Nye vs. hjembragte kapringer" %}
+            {% sw_phrase "Ny vs. lukket — flow over tid" "Nye vs. fuldførte missioner" "Oprørere vs. fanget — over tid" "Nye vs. hjembragte kapringer" trek="Nye vs. fuldførte missioner" klingon="Nye vs. vundne kampe" %}
           </h2>
         </div>
         <div class="segmented">
@@ -197,9 +197,9 @@
            }">
         <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
           <div>
-            <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" %} · <span x-text="label()">12 uger</span></div>
+            <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
             <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-              {% sw_phrase "Åbne sager — udvikling" "Aktive missioner — udvikling" "Aktive oprørere — udvikling" "Åbne kapringer — sø-trend" %}
+              {% sw_phrase "Åbne sager — udvikling" "Aktive missioner — udvikling" "Aktive oprørere — udvikling" "Åbne kapringer — sø-trend" trek="Aktive missioner — over tid" klingon="Aktive kampe — over tid" %}
             </h2>
           </div>
           <div class="segmented">

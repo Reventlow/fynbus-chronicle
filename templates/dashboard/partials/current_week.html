@@ -4,7 +4,7 @@
   {% if weeklog %}
     <div class="flex items-start justify-between" style="margin-bottom: 14px;">
       <div>
-        <div class="label-eyebrow">{% sw_phrase "Aktuel ugelog" "Mission-rapport" "Imperial rapport" "Skibslog: denne uge" %}</div>
+        <div class="label-eyebrow">{% sw_phrase "Aktuel ugelog" "Mission-rapport" "Imperial rapport" "Skibslog: denne uge" trek="Captain's log: denne uge" klingon="War-log: denne uge" %}</div>
         <h2 style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
           {{ weeklog.week_label }}
         </h2>
@@ -20,7 +20,7 @@
 
     {% if absences %}
       <div style="border-top: 1px solid var(--hairline); padding-top: 12px;">
-        <div class="label-eyebrow" style="margin-bottom: 8px;">{% sw_phrase "Bemanding" "Alliance-mandskab" "Imperial trop" "Skibsmandskab" %}</div>
+        <div class="label-eyebrow" style="margin-bottom: 8px;">{% sw_phrase "Bemanding" "Alliance-mandskab" "Imperial trop" "Skibsmandskab" trek="Bridge-mandskab" klingon="Krigerbande" %}</div>
         <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;">
           {% for absence in absences %}
             <li style="color: var(--ink-3);">
@@ -35,7 +35,7 @@
 
     <div style="border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 12px;">
       <div class="flex items-center justify-between" style="margin-bottom: 8px;">
-        <div class="label-eyebrow">{% sw_phrase "Aktive opgaver" "Aktive missioner" "Imperial direktiver" "Pligter på dækket" %}</div>
+        <div class="label-eyebrow">{% sw_phrase "Aktive opgaver" "Aktive missioner" "Imperial direktiver" "Pligter på dækket" trek="Aktive direktiver" klingon="Ordrer fra Kahless" %}</div>
         {% if is_editor %}
         <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}?action=add#priority-items-list"
            class="btn btn-sm btn-ghost"
