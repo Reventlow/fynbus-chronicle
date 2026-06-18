@@ -117,6 +117,9 @@ def serialize_incident(incident: Incident, *, include_weeklog: bool = True) -> d
         "occurred_at": incident.occurred_at.isoformat() if incident.occurred_at else None,
         "resolved": incident.resolved,
         "resolution": incident.resolution,
+        "created_at": incident.created_at.isoformat() if incident.created_at else None,
+        "updated_at": incident.updated_at.isoformat() if incident.updated_at else None,
+        "created_by": (incident.created_by.username if incident.created_by_id else None),
     }
     if include_weeklog and incident.weeklog_id:
         data["weeklog"] = {"year": incident.weeklog.year, "week": incident.weeklog.week_number}

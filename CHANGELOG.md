@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.7.18 — 2026-06-18
+
+### Added
+- **Incident audit trail.** `Incident.created_by` (FK to user, nullable, `SET_NULL` on user delete). Captured automatically in `IncidentCreateView` (`request.user`) and in the API `log_incident` endpoint (`request.api_user`). Existing 27 incidents get NULL — irrecoverable from the data, but every new one will show who logged it. Surfaced in the expanded incident row as "Logget af **{name}** · Oprettet {timestamp}" plus an updated-at stamp when it differs from created_at.
+- **API exposes `created_at` / `updated_at` / `created_by`** on every incident response (`serialize_incident`). MCP `chronicle_incidents` now returns these fields too — no MCP server change needed since it forwards whatever the API returns.
+
 ## 0.7.17 — 2026-05-27
 
 ### Added

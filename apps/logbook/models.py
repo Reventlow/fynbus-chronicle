@@ -8,6 +8,7 @@ These models track weekly IT activities including:
 - Security/system incidents
 """
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -710,6 +711,15 @@ class Incident(models.Model):
     resolved = models.BooleanField(
         verbose_name="Løst",
         default=False,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="incidents_logged",
+        verbose_name="Logget af",
+        help_text="Brugeren der oprettede hændelsen. NULL for rækker oprettet før 0.7.18.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -69,5 +69,16 @@
       <div class="label-eyebrow" style="margin: 16px 0 8px;">Løsning</div>
       <p class="linkified" style="font-size: 13.5px; color: var(--good-ink); line-height: 1.55; margin: 0; white-space: pre-wrap;">{{ incident.resolution|urlize }}</p>
     {% endif %}
+    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--hairline); font-size: 11px; color: var(--ink-4); display: flex; flex-wrap: wrap; gap: 12px;">
+      {% if incident.created_by %}
+        <span>Logget af <strong style="color: var(--ink-3); font-weight: 500;">{{ incident.created_by.get_full_name|default:incident.created_by.username }}</strong></span>
+        <span style="color: var(--ink-5);">·</span>
+      {% endif %}
+      <span class="num">Oprettet {{ incident.created_at|date:"j. M Y · H:i" }}</span>
+      {% if incident.updated_at and incident.updated_at != incident.created_at %}
+        <span style="color: var(--ink-5);">·</span>
+        <span class="num">Opdateret {{ incident.updated_at|date:"j. M Y · H:i" }}</span>
+      {% endif %}
+    </div>
   </div>
 </div>

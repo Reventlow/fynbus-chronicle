@@ -306,6 +306,7 @@ def incident_create(request: HttpRequest, year: int, week: int) -> JsonResponse:
         occurred_at=occurred_at,
         resolved=bool(data.get("resolved", False)),
         resolution=(data.get("resolution") or "").strip(),
+        created_by=request.api_user,
     )
     return JsonResponse({"incident": serialize_incident(incident)}, status=201)
 

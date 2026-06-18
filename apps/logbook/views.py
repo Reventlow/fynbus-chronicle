@@ -608,9 +608,10 @@ class IncidentCreateView(EditorRequiredMixin, CreateView):
     template_name = "logbook/partials/incident_form.html"
 
     def form_valid(self, form) -> HttpResponse:
-        """Set weeklog and return row partial plus OOB to close form."""
+        """Set weeklog + creating user and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
+        form.instance.created_by = self.request.user
         self.object = form.save()
 
         from django.template.loader import render_to_string
