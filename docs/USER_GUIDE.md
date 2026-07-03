@@ -219,6 +219,20 @@ En delt uge vises med én linje pr. periode, fx "Anna · ma–on" og "Bo · on 1
 
 > **Bemærk:** Vælger du en dato der allerede er passeret i indeværende uge, omskrives den registrerede dækning bagud. Ændringer kan ikke angives mere præcist end pr. minut.
 
+### Eksempel: Overtag vagten nu
+
+Peter har vagten i denne uge, og du overtager den fra nu af:
+
+1. Find kortet for **denne uge** i kalenderen og klik på **blyanten**.
+2. **Medarbejder**: Vælg dig selv.
+3. **Fra dato**: Dagens dato (udfyldt på forhånd).
+4. **Fra kl.**: Tidspunktet for overdragelsen, fx `13:50`. Lader du feltet stå tomt, gælder skiftet fra midnat — så tæller hele dagen som din.
+5. Klik **Gem**.
+
+Én handling klarer begge dele: Peters dækning afsluttes på tidspunktet, din begynder, og begge dele står i historikken ("Peter → Gorm · gældende fra fr 13:50").
+
+**Hvis ugen står som ledig** (ingen har taget den), findes Peters hidtidige dækning ikke i systemet. Registrér den i to trin: tildel først Peter fra **mandag** (hele ugen), og tildel derefter dig selv fra dags dato og klokkeslæt. Begge trin logges.
+
 ### Historik og audit-log
 
 Uger med ændringer viser et lille ur-ikon. Klik på det for at se panelet med:

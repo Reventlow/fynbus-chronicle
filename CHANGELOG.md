@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.8.1 — 2026-07-03
+
+### Changed
+- **Brugervejledning: konkret vagtoverdragelses-eksempel.** New "Eksempel: Overtag vagten nu" walkthrough in the Vagtkalender section — how to record "Peter havde vagten indtil nu, jeg har den fra nu" in one action, plus the two-step flow for retroactively recording the previous holder when the week was never claimed. Docs only, no code changes.
+
 ## 0.8.0 — 2026-07-03
 
 ### Added
