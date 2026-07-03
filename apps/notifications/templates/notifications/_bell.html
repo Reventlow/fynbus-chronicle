@@ -1,0 +1,31 @@
+{% comment %}
+  Notification bell for the global nav: Alpine dropdown (same shape as
+  the user menu) + HTMX-loaded panel. The panel is fetched via POST and
+  ONLY on the opening click (custom notif-open event) — a closing click
+  must never re-fetch, or notifications arriving while the panel was
+  open would be marked read without ever being seen.
+{% endcomment %}
+<div x-data="{ open: false }" class="relative">
+  <button @click="open = !open; if (open) $dispatch('notif-open')"
+          @click.outside="open = false"
+          class="icon-btn"
+          aria-label="Notifikationer"
+          style="position: relative;"
+          hx-post="{% url 'notifications:partial-panel' %}"
+          hx-trigger="notif-open"
+          hx-target="#notif-panel"
+          hx-swap="innerHTML">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+    </svg>
+    {% include 'notifications/_badge.html' with unread_count=UNREAD_NOTIFICATIONS_COUNT badge_oob=False %}
+  </button>
+  <div x-show="open" x-cloak x-transition.opacity
+       class="absolute right-0 mt-2 z-50"
+       style="width: 320px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); overflow: hidden;">
+    <div id="notif-panel">
+      <div style="padding: 18px 12px; font-size: 13px; color: var(--ink-4); text-align: center;">Henter…</div>
+    </div>
+  </div>
+</div>

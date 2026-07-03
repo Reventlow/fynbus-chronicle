@@ -9,8 +9,9 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 3. [Kontrolpanel](#kontrolpanel)
 4. [Ugelogs](#ugelogs)
 5. [Opgaver](#opgaver)
-6. [Eksporter rapporter](#eksporter-rapporter)
-7. [Mørk tilstand](#mørk-tilstand)
+6. [Vagtkalender](#vagtkalender)
+7. [Eksporter rapporter](#eksporter-rapporter)
+8. [Mørk tilstand](#mørk-tilstand)
 
 ---
 
@@ -43,7 +44,7 @@ Alle brugere er redaktører som standard og har fuld adgang til at:
 - Tilføje og administrere prioriterede opgaver, fravær og hændelser
 - Redigere mødereferater
 - Eksportere rapporter (PDF, Markdown, HTML, email)
-- Tage og frigive vagtuge i vagtkalenderen
+- Tage, frigive og omfordele vagter i vagtkalenderen (inkl. deling af en uge mellem flere personer)
 - Sortere prioriterede opgaver via træk-og-slip
 
 ### Læser (Viewer)
@@ -193,6 +194,47 @@ Opgaver-modulet bruges til at registrere og følge IT-opgaver og projekter.
 Kontrolpanelet viser en Gantt-lignende tidslinje over aktive opgaver med farvekodning efter status. Klik på en opgave i tidslinjen for at se detaljer.
 
 Se den fulde dokumentation under [Dokumentation > Opgaver](/dashboard/docs/tasks/).
+
+---
+
+## Vagtkalender
+
+Vagtkalenderen (Rådighedsvagt) viser hvem der har rådighedsvagt uge for uge.
+
+### Tag og frigiv en vagt
+
+- **Tag vagt**: Klik "Tag vagt" på en ledig uge for at tage den selv.
+- **Frigiv**: Klik "Frigiv" på din egen uge. Frigiver du midt i en uge, bevares dine allerede dækkede dage i historikken.
+
+### Skift vagt (dropdown)
+
+Klik på blyanten på et ugekort for at åbne vagtformularen:
+
+- **Medarbejder**: Vælg hvem der skal have vagten — eller "— Ledig —" for at frigive den.
+- **Fra dato**: Mandag betyder hele ugen. Vælg en senere dato for at dele ugen, fx hvis en kollega overtager fra torsdag.
+- **Fra kl.** (valgfrit): Angiv et klokkeslæt hvis overdragelsen sker midt på dagen, fx kl. 14:00.
+- **Noter**: Valgfri note der vises på ugekortet.
+
+En delt uge vises med én linje pr. periode, fx "Anna · ma–on" og "Bo · on 14:00–sø". Kontrolpanelet, API'et og eksporterede rapporter viser altid den person der dækker lige nu.
+
+> **Bemærk:** Vælger du en dato der allerede er passeret i indeværende uge, omskrives den registrerede dækning bagud. Ændringer kan ikke angives mere præcist end pr. minut.
+
+### Historik og audit-log
+
+Uger med ændringer viser et lille ur-ikon. Klik på det for at se panelet med:
+
+- **Dækning**: Hvem der havde ansvaret hvilke dage (og klokkeslæt).
+- **Ændringer**: Hvem der ændrede vagten, hvornår, og fra/til hvem.
+
+Ændringer før version 0.8.0 er ikke registreret.
+
+### Tidligere uger
+
+Brug "Tidligere"-knapperne øverst til at vise 4, 13 eller 26 afsluttede uger. Redaktører kan rette dækningen for en afsluttet uge via blyanten — rettelsen registreres i audit-loggen.
+
+### Notifikationer
+
+Sættes du på vagt af en kollega, får du besked via klokken øverst til højre. Det samme gælder hvis din vagt overtages eller frigives af andre. Notifikationer markeres som læst når du åbner klokken.
 
 ---
 

@@ -1,0 +1,61 @@
+{% comment %}
+  Per-week history panel (FR #5), loaded into #oncall-history-panel above
+  the calendar grid — outside every polling card so nothing wipes it.
+  Two blocks: Dækning (who was responsible for which days) and Ændringer
+  (the audit trail: who changed what, when). Changes before 0.8.0 were
+  never recorded, so older weeks only show coverage.
+{% endcomment %}
+<div class="card">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
+      Historik — Uge {{ week }}, {{ year }}
+      <span class="text-xs font-normal text-sand-500 dark:text-sand-400">({{ monday|date:"d/m" }} - {{ sunday|date:"d/m" }})</span>
+    </h3>
+    <button onclick="document.getElementById('oncall-history-panel').innerHTML=''"
+            class="icon-btn"
+            aria-label="Luk historik">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs font-semibold uppercase tracking-wide text-sand-500 dark:text-sand-400 mb-2">Dækning</div>
+      {% for segment in segments %}
+        <div class="flex items-center gap-2 text-sm text-sand-700 dark:text-sand-200 py-0.5">
+          <span class="text-xs text-sand-500 dark:text-sand-400" style="min-width: 88px;">{{ segment.range_label }}</span>
+          <span class="font-medium">{{ segment.user.get_full_name|default:segment.user.username }}</span>
+        </div>
+      {% empty %}
+        <p class="text-sm text-sand-400 dark:text-sand-500 italic">Ingen dækning registreret.</p>
+      {% endfor %}
+    </div>
+
+    <div>
+      <div class="text-xs font-semibold uppercase tracking-wide text-sand-500 dark:text-sand-400 mb-2">Ændringer</div>
+      {% for change in changes %}
+        <div class="text-sm text-sand-700 dark:text-sand-200 py-0.5">
+          {% if change.from_user and change.to_user %}
+            <span class="font-medium">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>
+            →
+            <span class="font-medium">{{ change.to_user.get_full_name|default:change.to_user.username }}</span>
+          {% elif change.to_user %}
+            <span class="font-medium">{{ change.to_user.get_full_name|default:change.to_user.username }}</span> tog vagten
+          {% else %}
+            Vagten frigivet{% if change.from_user %} fra <span class="font-medium">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>{% endif %}
+          {% endif %}
+          {% if not change.is_whole_week %}
+            <span class="text-xs text-sand-500 dark:text-sand-400">· gældende fra {{ change.effective_label }}</span>
+          {% endif %}
+          <div class="text-xs text-sand-500 dark:text-sand-400">
+            {{ change.changed_at|date:"j. M Y · H:i" }} · af {% if change.changed_by %}{{ change.changed_by.get_full_name|default:change.changed_by.username }}{% else %}ukendt{% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-sm text-sand-400 dark:text-sand-500 italic">Ingen registrerede ændringer.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>

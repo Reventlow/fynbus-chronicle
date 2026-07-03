@@ -45,6 +45,7 @@ LOCAL_APPS = [
     "apps.api",
     "apps.feedback",
     "apps.themes",
+    "apps.notifications",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -79,6 +80,7 @@ TEMPLATES = [
                 "chronicle.context_processors.star_wars_day",
                 "apps.accounts.context_processors.editor_context",
                 "apps.feedback.context_processors.feedback_badge",
+                "apps.notifications.context_processors.notifications_badge",
             ],
         },
     },

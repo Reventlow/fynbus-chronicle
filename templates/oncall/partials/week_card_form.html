@@ -1,0 +1,62 @@
+{% comment %}
+  Assign form replacing a week card (FR #5). Deliberately NO hx-trigger
+  poll on the root — the polling card is gone while editing, so nothing
+  can wipe the form. The form targets its OWN container id (never the
+  vanished card id); Gem returns the polling card from the server,
+  Annuller fetches it back via week-status.
+{% endcomment %}
+<div id="oncall-week-form-{{ week.year }}-{{ week.week }}"
+     class="card {% if week.is_current %}ring-2 ring-gold-400{% endif %}">
+  <div class="flex items-center justify-between mb-2">
+    <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
+      Uge {{ week.week }}, {{ week.year }}
+    </h3>
+    <span class="text-xs text-sand-500 dark:text-sand-400">Skift vagt</span>
+  </div>
+  <p class="text-xs text-sand-500 dark:text-sand-400 mb-3">
+    {{ week.monday|date:"d/m" }} - {{ week.sunday|date:"d/m" }}
+  </p>
+
+  <form hx-post="{% url 'oncall:assign' week.year week.week %}"
+        hx-target="#oncall-week-form-{{ week.year }}-{{ week.week }}"
+        hx-swap="outerHTML"
+        class="space-y-2">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="input-error-message">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+    <div>
+      <label for="{{ form.user.id_for_label }}" class="input-label">{{ form.user.label }}</label>
+      {{ form.user }}
+      {% if form.user.errors %}<div class="input-error-message">{{ form.user.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="flex gap-2">
+      <div class="flex-1">
+        <label for="{{ form.effective_date.id_for_label }}" class="input-label">{{ form.effective_date.label }}</label>
+        {{ form.effective_date }}
+        {% if form.effective_date.errors %}<div class="input-error-message">{{ form.effective_date.errors.0 }}</div>{% endif %}
+      </div>
+      <div style="width: 40%;">
+        <label for="{{ form.effective_time.id_for_label }}" class="input-label">{{ form.effective_time.label }}</label>
+        {{ form.effective_time }}
+        {% if form.effective_time.errors %}<div class="input-error-message">{{ form.effective_time.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+    <div>
+      <label for="{{ form.notes.id_for_label }}" class="input-label">{{ form.notes.label }}</label>
+      {{ form.notes }}
+      {% if form.notes.errors %}<div class="input-error-message">{{ form.notes.errors.0 }}</div>{% endif %}
+    </div>
+    <p class="input-help">Mandag = hele ugen. Vælg en senere dato (og evt. klokkeslæt) for at dele vagten. Datoer bagud i ugen omskriver den registrerede dækning.</p>
+    <div class="flex gap-2 justify-end" style="margin-top: 6px;">
+      <button type="button"
+              hx-get="{% url 'oncall:week-status' week.year week.week %}"
+              hx-target="#oncall-week-form-{{ week.year }}-{{ week.week }}"
+              hx-swap="outerHTML"
+              class="btn btn-ghost btn-sm">
+        Annuller
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+    </div>
+  </form>
+</div>

@@ -6,7 +6,7 @@ Uses WeasyPrint to generate PDF documents from HTML templates.
 
 from django.template.loader import render_to_string
 
-from apps.oncall.models import OnCallDuty
+from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
 from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
@@ -44,6 +44,7 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
+        "oncall_split": OnCallSegment.split_week_display(weeklog.year, weeklog.week_number),
         "chart_image": chart_image,
         "flow_chart_image": flow_chart_image,
         "avg_new": avgs["avg_new"],

@@ -1,0 +1,29 @@
+{% comment %}
+  Notification dropdown panel, loaded via HTMX when the bell is clicked.
+  Fetching this view marks everything read server-side; items that were
+  unread until this open are highlighted with an accent dot. Includes an
+  out-of-band badge swap (badge_oob=True from the view) clearing the count.
+{% endcomment %}
+<div style="padding: 10px 12px 8px; border-bottom: 1px solid var(--hairline);">
+  <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3);">Notifikationer</span>
+</div>
+{% if notifications %}
+  <div style="max-height: 340px; overflow-y: auto;">
+    {% for n in notifications %}
+      {% if n.url %}<a href="{{ n.url }}" class="block" style="text-decoration: none;">{% else %}<div>{% endif %}
+        <div class="flex items-start gap-2" style="padding: 9px 12px; {% if not forloop.last %}border-bottom: 1px solid var(--hairline);{% endif %}">
+          <span style="flex-shrink: 0; width: 6px; height: 6px; border-radius: 999px; margin-top: 6px; background: {% if n.was_unread %}var(--accent){% else %}transparent{% endif %};"></span>
+          <div style="min-width: 0;">
+            <div style="font-size: 13px; color: var(--ink-1); {% if n.was_unread %}font-weight: 550;{% endif %}">{{ n.message }}</div>
+            <div style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
+              {{ n.created_at|date:"j. M · H:i" }}{% if n.actor %} · {{ n.actor.get_full_name|default:n.actor.username }}{% endif %}
+            </div>
+          </div>
+        </div>
+      {% if n.url %}</a>{% else %}</div>{% endif %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div style="padding: 18px 12px; font-size: 13px; color: var(--ink-4); text-align: center;">Ingen notifikationer</div>
+{% endif %}
+{% include 'notifications/_badge.html' %}

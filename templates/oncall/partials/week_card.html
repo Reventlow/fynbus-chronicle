@@ -1,23 +1,83 @@
+{% comment %}
+  One week card in the on-call calendar. Polls every 5s with outerHTML
+  swap. The pencil swaps the whole card for the non-polling form partial
+  (week_card_form.html); the clock loads the week's history into the
+  shared #oncall-history-panel above the grid, outside all polling cards.
+{% endcomment %}
 <div id="oncall-week-{{ week.year }}-{{ week.week }}"
      hx-get="{% url 'oncall:week-status' week.year week.week %}"
      hx-trigger="every 5s"
      hx-swap="outerHTML"
-     class="card {% if week.is_current %}ring-2 ring-gold-400{% endif %}">
+     class="card {% if week.is_current %}ring-2 ring-gold-400{% endif %} {% if week.is_past %}opacity-75{% endif %}">
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
       Uge {{ week.week }}, {{ week.year }}
     </h3>
-    {% if week.is_current %}
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200">
-        Denne uge
-      </span>
-    {% endif %}
+    <div class="flex items-center gap-1">
+      {% if week.is_current %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200">
+          Denne uge
+        </span>
+      {% endif %}
+      {% if week.has_changes %}
+        <button hx-get="{% url 'oncall:history' week.year week.week %}"
+                hx-target="#oncall-history-panel"
+                hx-swap="innerHTML show:top"
+                class="icon-btn"
+                aria-label="Historik for uge {{ week.week }}"
+                title="Historik">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </button>
+      {% endif %}
+      {% if is_editor %}
+        <button hx-get="{% url 'oncall:assign-form' week.year week.week %}"
+                hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
+                hx-swap="outerHTML"
+                class="icon-btn"
+                aria-label="Skift vagt for uge {{ week.week }}"
+                title="Skift vagt">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+          </svg>
+        </button>
+      {% endif %}
+    </div>
   </div>
   <p class="text-xs text-sand-500 dark:text-sand-400 mb-3">
     {{ week.monday|date:"d/m" }} - {{ week.sunday|date:"d/m" }}
   </p>
 
-  {% if week.duty %}
+  {% if week.is_split %}
+    <div class="space-y-1 mb-1">
+      {% for segment in week.segments %}
+        <div class="flex items-center space-x-2">
+          <svg class="w-4 h-4 {% if segment.is_now %}text-green-500{% else %}text-sand-400 dark:text-sand-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span class="text-sm {% if segment.is_now %}font-semibold{% else %}font-medium{% endif %} text-sand-700 dark:text-sand-200">
+            {{ segment.user.get_full_name|default:segment.user.username }}
+          </span>
+          <span class="text-xs text-sand-500 dark:text-sand-400">{{ segment.range_label }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    {% if week.duty.notes %}
+      <p class="text-xs text-sand-500 dark:text-sand-400 italic mb-1">{{ week.duty.notes }}</p>
+    {% endif %}
+    {% if week.is_own and is_editor and not week.is_past %}
+      <div class="flex justify-end">
+        <button hx-post="{% url 'oncall:release' week.year week.week %}"
+                hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
+                hx-swap="outerHTML"
+                class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800 transition-colors">
+          Frigiv
+        </button>
+      </div>
+    {% endif %}
+  {% elif week.duty %}
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +87,7 @@
           {{ week.duty.user.get_full_name|default:week.duty.user.username }}
         </span>
       </div>
-      {% if week.is_own and is_editor %}
+      {% if week.is_own and is_editor and not week.is_past %}
         <button hx-post="{% url 'oncall:release' week.year week.week %}"
                 hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
                 hx-swap="outerHTML"
@@ -36,10 +96,29 @@
         </button>
       {% endif %}
     </div>
+    {% if week.duty.notes %}
+      <p class="text-xs text-sand-500 dark:text-sand-400 italic mt-1">{{ week.duty.notes }}</p>
+    {% endif %}
   {% else %}
+    {% if week.segments %}
+      {% comment %}Week freed mid-week: past coverage stays on record.{% endcomment %}
+      <div class="space-y-1 mb-2">
+        {% for segment in week.segments %}
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-sand-400 dark:text-sand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-sm font-medium text-sand-700 dark:text-sand-200">
+              {{ segment.user.get_full_name|default:segment.user.username }}
+            </span>
+            <span class="text-xs text-sand-500 dark:text-sand-400">{{ segment.range_label }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
     <div class="flex items-center justify-between">
       <span class="text-sm text-sand-400 dark:text-sand-500 italic">Ledig</span>
-      {% if is_editor %}
+      {% if is_editor and not week.is_past %}
       <button hx-post="{% url 'oncall:claim' week.year week.week %}"
               hx-target="#oncall-week-{{ week.year }}-{{ week.week }}"
               hx-swap="outerHTML"

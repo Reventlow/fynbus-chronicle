@@ -15,7 +15,7 @@ from apps.logbook.models import (
     PriorityItemAppearance,
     WeekLog,
 )
-from apps.oncall.models import OnCallDuty
+from apps.oncall.models import OnCallChange, OnCallDuty, OnCallSegment
 
 
 def serialize_feature_request(obj: FeatureRequest) -> dict[str, Any]:
@@ -156,17 +156,54 @@ def serialize_weeklog(weeklog: WeekLog, *, full: bool = False) -> dict[str, Any]
     return data
 
 
+def _serialize_oncall_user(user) -> dict[str, Any]:
+    return {
+        "username": user.username,
+        "full_name": user.get_full_name() or user.username,
+        "email": user.email,
+    }
+
+
 def serialize_oncall(duty: OnCallDuty | None) -> dict[str, Any] | None:
+    """On-call duty for one week.
+
+    Existing keys are contract-pinned (the MCP server passes this
+    through verbatim): ``user`` stays a single object — for the current
+    week ``get_current()`` resolves it to whoever covers *right now*.
+    ``segments``/``changes`` were added in 0.8.0 (FR #5) and cover
+    mid-week handovers and the audit trail.
+    """
     if duty is None:
         return None
+    segments = OnCallSegment.for_week(duty.year, duty.week_number)
+    changes = OnCallChange.objects.filter(
+        year=duty.year, week_number=duty.week_number
+    ).select_related("from_user", "to_user", "changed_by")[:10]
     return {
         "year": duty.year,
         "week": duty.week_number,
         "label": duty.week_label,
-        "user": {
-            "username": duty.user.username,
-            "full_name": duty.user.get_full_name() or duty.user.username,
-            "email": duty.user.email,
-        },
+        "user": _serialize_oncall_user(duty.user),
         "notes": duty.notes,
+        "segments": [
+            {
+                "start_at": s.start_at.isoformat(),
+                "end_at": s.end_at.isoformat(),
+                "weekdays": s.range_label,
+                "user": _serialize_oncall_user(s.user),
+            }
+            for s in segments
+        ],
+        "changes": [
+            {
+                "changed_at": c.changed_at.isoformat(),
+                "changed_by": c.changed_by.username if c.changed_by_id else None,
+                "from_user": c.from_user.username if c.from_user_id else None,
+                "to_user": c.to_user.username if c.to_user_id else None,
+                "effective_at": c.effective_at.isoformat(),
+            }
+            for c in changes
+        ],
+        "created_at": duty.created_at.isoformat() if duty.created_at else None,
+        "updated_at": duty.updated_at.isoformat() if duty.updated_at else None,
     }

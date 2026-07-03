@@ -1,0 +1,17 @@
+{% comment %}
+  Self-polling unread-count badge on the notification bell (same pattern
+  as feedback/_nav_badge.html). Rendered even at zero so HTMX always has
+  a swap target and polling survives. When returned inside the panel
+  response, badge_oob=True adds hx-swap-oob so the count clears the
+  moment the panel opens.
+{% endcomment %}
+<span id="notif-badge"
+      hx-get="{% url 'notifications:partial-badge' %}"
+      hx-trigger="every 60s"
+      hx-swap="outerHTML"
+      {% if badge_oob %}hx-swap-oob="outerHTML"{% endif %}
+      style="position: absolute; top: -4px; right: -4px; pointer-events: none;">
+  {% if unread_count %}
+    <span class="nav-badge" aria-label="{{ unread_count }} ulæste notifikationer">{{ unread_count }}</span>
+  {% endif %}
+</span>

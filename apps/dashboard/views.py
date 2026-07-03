@@ -18,7 +18,7 @@ from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from apps.logbook.models import Incident, WeekLog
-from apps.oncall.models import OnCallDuty
+from apps.oncall.models import OnCallDuty, OnCallSegment
 
 
 # Documentation configuration
@@ -170,7 +170,13 @@ class OnCallPartialView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
-        context["oncall"] = OnCallDuty.get_current()
+        oncall = OnCallDuty.get_current()
+        context["oncall"] = oncall
+        # Split weeks (mid-week handover, FR #5) get an extra coverage line.
+        segments = (
+            list(OnCallSegment.for_week(oncall.year, oncall.week_number)) if oncall else []
+        )
+        context["oncall_segments"] = segments if len(segments) > 1 else []
         return context
 
 

@@ -10,17 +10,37 @@
       <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Rådighedsvagt</h1>
       <p class="text-sand-500 dark:text-sand-400 mt-1">Planlæg hvem der har rådighedsvagt de kommende uger</p>
     </div>
-    <div class="flex gap-2">
-      <a href="?weeks=13"
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs text-sand-500 dark:text-sand-400">Tidligere:</span>
+      <a href="?weeks={{ num_weeks }}&past=0"
+         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 0 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
+        Ingen
+      </a>
+      <a href="?weeks={{ num_weeks }}&past=4"
+         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 4 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
+        4 uger
+      </a>
+      <a href="?weeks={{ num_weeks }}&past=13"
+         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 13 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
+        13 uger
+      </a>
+      <span class="text-xs text-sand-500 dark:text-sand-400" style="margin-left: 8px;">Fremad:</span>
+      <a href="?weeks=13&past={{ past_weeks }}"
          class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 13 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
         13 uger
       </a>
-      <a href="?weeks=56"
+      <a href="?weeks=56&past={{ past_weeks }}"
          class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 56 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
         56 uger
       </a>
     </div>
   </div>
+
+  {% comment %}
+    Shared target for the per-week history panels — lives OUTSIDE the
+    polling week cards, so the 5s card refresh can never wipe it.
+  {% endcomment %}
+  <div id="oncall-history-panel"></div>
 
   <!-- Calendar grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

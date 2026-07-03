@@ -2,6 +2,21 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.8.0 — 2026-07-03
+
+### Added
+- **Vagtskifte-dropdown på vagtkalenderen** (FR #5). Every week card gets a pencil that swaps in an assign form: pick any active user (or "— Ledig —" to free the week), a "Fra dato" and optional "Fra kl." for mid-week/intra-day handovers ("Bo overtager torsdag kl. 14:00"), and an optional note. Split weeks render one line per period ("Anna · ma–on 14:00 / Bo · on 14:00–sø") with today's holder highlighted.
+- **Per-day coverage record.** New `OnCallSegment` model (datetime-based, end-exclusive, no FK to the duty row so history survives releases). Every existing week was backfilled with one whole-week segment. Releasing mid-week keeps the already-covered days on record.
+- **Audit trail.** New `OnCallChange` model (TaskStateChange pattern): who changed the shift, when, from → til whom, effective from. Written exclusively inside the single service entry point `services.apply_assignment` — claim, release and assign all funnel through it. Changes before 0.8.0 were never recorded. Append-only in admin.
+- **Historik-panel.** Weeks with changes show a clock icon that loads a panel above the grid: "Dækning" (who had which days) + "Ændringer" (the audit trail). Viewers can read it; only editors can mutate.
+- **Tidligere uger.** The calendar can show 4/13/26 past weeks; editors can correct a closed week's coverage through the same audited form. Claim/release stay hidden on past weeks.
+- **Notifikationsklokke.** New `apps.notifications` app wires up the previously decorative bell: unread badge (60s poll + instant OOB clear), dropdown panel, and read-on-open semantics. First consumer: on-call changes notify the assignee and any displaced holder ("Du er sat på rådighedsvagt uge 29, 2026 fra to 14:00"); self-service claim/release stays silent.
+- **API additive fields** on `/api/v1/oncall/current/`: `segments`, `changes`, `created_at`, `updated_at`. Legacy keys are contract-pinned and unchanged; `user` now resolves to whoever covers *right now* during a split week (dashboard and MCP `chronicle_oncall_current` get this for free). Weekly-report exports show "Anna (ma–on), Bo (on 14:00–sø)" only when a week is actually split — single-holder output is byte-identical.
+
+### Fixed
+- **UTC seam in week resolution.** `get_current()` and the calendar grid used `timezone.now().isocalendar()` (UTC) — near midnight Sunday/Monday they could disagree with Copenhagen's ISO week. Both now use `timezone.localdate()`.
+- **Invalid year/week URLs** (e.g. `/oncall/2026/99/status/`) returned 500; now 404.
+
 ## 0.7.18 — 2026-06-18
 
 ### Added

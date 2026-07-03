@@ -26,6 +26,7 @@ urlpatterns = [
     path("tasks/", include("apps.tasks.urls")),
     path("feedback/", include("apps.feedback.urls")),
     path("themes/", include("apps.themes.urls")),
+    path("notifications/", include("apps.notifications.urls")),
     path("api/v1/", include("apps.api.urls")),
     path("allauth/", include("allauth.urls")),
 ]
