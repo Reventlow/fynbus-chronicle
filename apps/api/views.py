@@ -396,6 +396,7 @@ def feature_request_update(request: HttpRequest, pk: int) -> JsonResponse:
         obj.solved_at = timezone.now()
         obj.solved_by = getattr(request, "api_user", None)
         obj.save(update_fields=["solved_at", "solved_by"])
+        obj.notify_submitter_solved(actor=obj.solved_by)
     elif obj.status != FeatureRequest.Status.SOLVED and was_solved:
         obj.solved_at = None
         obj.solved_by = None

@@ -137,6 +137,7 @@ class FeatureRequestUpdateView(EditorRequiredMixin, UpdateView):
 
             self.object.solved_at = timezone.now()
             self.object.save(update_fields=["solved_by", "solved_at"])
+            self.object.notify_submitter_solved(actor=self.request.user)
         elif (
             self.object.status != FeatureRequest.Status.SOLVED
             and was_solved_before
@@ -209,4 +210,6 @@ def reorder(request: HttpRequest) -> JsonResponse:
                     updates["solved_at"] = None
                     updates["solved_by"] = None
             FeatureRequest.objects.filter(pk=item_id).update(**updates)
+            if "solved_by" in updates and updates["solved_by"] is not None:
+                obj.notify_submitter_solved(actor=request.user)
     return JsonResponse({"ok": True})

@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.8.2 — 2026-07-27
+
+### Changed
+- **Afsluttede opgaver nedtones ikke længere** (FR #6). Completed priority items kept full-strength text: the row `opacity` fade and the muted grey title colour are gone from the weeklog list, the dashboard "Denne uge" panel and the priority search. The checkmark, the strikethrough and the status pill still mark completion — the text just stays readable. Deleted items keep their dimming (different state, different cue).
+
+### Added
+- **Bell notification when a feature request is solved.** Marking a request "Løst" — via the board's solve button, the edit form, a drag into the solved column, or the API/MCP — now notifies the submitter ("Dit forslag ”…” er løst") with a link to the request. Self-solves and re-solves of an already-solved request stay silent.
+
 ## 0.8.1 — 2026-07-03
 
 ### Changed

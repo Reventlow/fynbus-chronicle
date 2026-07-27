@@ -125,10 +125,34 @@ class FeatureRequest(models.Model):
         return self.status == self.Status.SOLVED
 
     def mark_solved(self, *, by) -> None:
+        was_solved = self.is_solved
         self.status = self.Status.SOLVED
         self.solved_by = by
         self.solved_at = timezone.now()
         self.save(update_fields=["status", "solved_by", "solved_at", "updated_at"])
+        if not was_solved:
+            self.notify_submitter_solved(actor=by)
+
+    def notify_submitter_solved(self, *, actor=None) -> None:
+        """Bell-notify the submitter that their suggestion shipped.
+
+        ``Notification.notify`` already skips inactive users and the case
+        where the submitter solved their own request. Callers are
+        responsible for only invoking this on the open/in_progress →
+        solved transition so reopen/re-solve cycles don't spam.
+        """
+        from django.urls import reverse
+
+        from apps.notifications.models import Notification
+
+        if self.submitted_by is None:
+            return
+        Notification.notify(
+            recipient=self.submitted_by,
+            message=f"Dit forslag ”{self.title}” er løst",
+            url=reverse("feedback:detail", kwargs={"pk": self.pk}),
+            actor=actor,
+        )
 
     def reopen(self) -> None:
         self.status = self.Status.OPEN

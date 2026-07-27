@@ -7,8 +7,7 @@
      style="grid-template-columns: 14px auto 1fr auto auto auto;
             padding: 12px 24px;
             border-top: 1px solid var(--hairline);
-            transition: background 0.12s;
-            {% if item.status == 'completed' %}opacity: 0.55;{% endif %}"
+            transition: background 0.12s;"
      id="priority-item-{{ appearance.id }}"
      data-id="{{ appearance.id }}"
      hx-target="this"
@@ -40,7 +39,7 @@
   </span>
 
   <div style="min-width: 0;">
-    <div class="flex items-center gap-2 flex-wrap" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; letter-spacing: -0.005em; {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-4);{% endif %}">
+    <div class="flex items-center gap-2 flex-wrap" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; letter-spacing: -0.005em; {% if item.status == 'completed' %}text-decoration: line-through;{% endif %}">
       <span>{{ item.title }}</span>
       {% if item.has_history %}
         <a href="{% url 'logbook:priority-item-history' item.pk %}"

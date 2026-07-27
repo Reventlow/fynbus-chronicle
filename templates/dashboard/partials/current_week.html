@@ -53,8 +53,8 @@
           {% for appearance in priority_appearances %}
             {% with item=appearance.priority_item %}
             <li class="flex items-center justify-between gap-3"
-                style="font-size: 13px; {% if item.status == 'completed' %}opacity: 0.55;{% endif %}">
-              <span style="color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {% if item.status == 'completed' %}text-decoration: line-through; color: var(--ink-3);{% endif %}">
+                style="font-size: 13px;">
+              <span style="color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {% if item.status == 'completed' %}text-decoration: line-through;{% endif %}">
                 {{ item.title }}
               </span>
               <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}" style="flex: none;">
