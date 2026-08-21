@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.9.0 — 2026-08-21
+
+### Added
+- **Klarmelding på ugeloggen** (FR #7). Every weeklog gets a "Klarmelding" card: editors can mark "Jeg har ikke mere til denne uge", and whoever compiles/closes the week sees green pills with the names (hover shows the timestamp) of colleagues who are done contributing. The marker is per-user and toggleable ("Fortryd klarmelding" undoes it); viewers see the list but can't sign off, since they can't contribute content anyway. New `WeekLogSignoff` model (one row per weeklog × user), HTMX toggle endpoint, admin inline on the weeklog, and an additive `signoffs` list on the full weeklog API/MCP payload.
+
 ## 0.8.2 — 2026-07-27
 
 ### Changed

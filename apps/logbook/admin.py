@@ -13,7 +13,14 @@ from django.utils.html import format_html
 from .exports.email import send_weeklog_email
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
-from .models import Absence, Incident, PriorityItem, PriorityItemAppearance, WeekLog
+from .models import (
+    Absence,
+    Incident,
+    PriorityItem,
+    PriorityItemAppearance,
+    WeekLog,
+    WeekLogSignoff,
+)
 
 
 class PriorityItemAppearanceInline(admin.TabularInline):
@@ -52,6 +59,16 @@ class IncidentInline(admin.StackedInline):
     classes = ["collapse"]
 
 
+class WeekLogSignoffInline(admin.TabularInline):
+    """Inline admin for per-user "nothing more to add" markers (FR #7)."""
+
+    model = WeekLogSignoff
+    extra = 0
+    fields = ["user", "created_at"]
+    readonly_fields = ["created_at"]
+    classes = ["collapse"]
+
+
 @admin.register(WeekLog)
 class WeekLogAdmin(admin.ModelAdmin):
     """
@@ -76,7 +93,12 @@ class WeekLogAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     ordering = ["-year", "-week_number"]
     readonly_fields = ["created_at", "updated_at", "created_by"]
-    inlines = [PriorityItemAppearanceInline, AbsenceInline, IncidentInline]
+    inlines = [
+        PriorityItemAppearanceInline,
+        AbsenceInline,
+        IncidentInline,
+        WeekLogSignoffInline,
+    ]
     actions = ["export_pdf", "export_markdown", "send_email"]
 
     fieldsets = [

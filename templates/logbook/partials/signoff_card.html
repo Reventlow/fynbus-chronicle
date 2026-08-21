@@ -1,0 +1,44 @@
+{% comment %}
+Per-user "nothing more to add this week" sign-off card (FR #7).
+
+Rendered on the weeklog detail page and returned whole by the
+weeklog-signoff-toggle HTMX endpoint (hx-swap="outerHTML"), so the pill
+list and the button label always update together.
+
+Context: weeklog, signoffs (queryset, user preloaded), user_signed_off.
+is_editor comes from the accounts context processor.
+{% endcomment %}
+<div id="signoff-card" class="card" style="padding: 18px 24px;">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div style="min-width: 0;">
+      <div class="label-eyebrow">Klarmelding</div>
+      <div class="flex flex-wrap items-center gap-2" style="margin-top: 10px;">
+        {% for signoff in signoffs %}
+          <span class="pill pill-good" title="Meldt klar {{ signoff.created_at|date:'j. M Y · H:i' }}">
+            <span class="pill-dot"></span>
+            {{ signoff.user.get_full_name|default:signoff.user.username }}
+          </span>
+        {% empty %}
+          <span style="font-size: 13.5px; color: var(--ink-4);">
+            Ingen har meldt klar endnu — markér herunder, når du ikke har mere til denne uge.
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+    {% if is_editor %}
+    <button hx-post="{% url 'logbook:weeklog-signoff-toggle' weeklog.pk %}"
+            hx-target="#signoff-card"
+            hx-swap="outerHTML"
+            class="btn btn-sm{% if not user_signed_off %} btn-primary{% endif %}">
+      {% if user_signed_off %}
+        Fortryd klarmelding
+      {% else %}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+        Jeg har ikke mere til denne uge
+      {% endif %}
+    </button>
+    {% endif %}
+  </div>
+</div>

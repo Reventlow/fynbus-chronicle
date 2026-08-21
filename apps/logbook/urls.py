@@ -12,6 +12,12 @@ urlpatterns = [
     path("<int:pk>/", views.WeekLogDetailView.as_view(), name="weeklog-detail"),
     path("create/", views.WeekLogCreateView.as_view(), name="weeklog-create"),
     path("<int:pk>/edit/", views.WeekLogUpdateView.as_view(), name="weeklog-edit"),
+    # HTMX toggle for the per-user "nothing more to add" marker (FR #7)
+    path(
+        "<int:pk>/signoff/toggle/",
+        views.weeklog_signoff_toggle,
+        name="weeklog-signoff-toggle",
+    ),
     # HTMX partials for meeting minutes
     path(
         "<int:pk>/meeting/edit/",

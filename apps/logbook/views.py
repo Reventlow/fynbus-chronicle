@@ -30,7 +30,14 @@ from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
 from .forms import AbsenceForm, IncidentForm, MeetingMinutesForm, PriorityItemForm, WeekLogForm
-from .models import Absence, Incident, PriorityItem, PriorityItemAppearance, WeekLog
+from .models import (
+    Absence,
+    Incident,
+    PriorityItem,
+    PriorityItemAppearance,
+    WeekLog,
+    WeekLogSignoff,
+)
 
 
 # =============================================================================
@@ -99,6 +106,12 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
             .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
         )
+        context["signoffs"] = self.object.signoffs.select_related("user").order_by(
+            "created_at"
+        )
+        context["user_signed_off"] = self.object.signoffs.filter(
+            user=self.request.user
+        ).exists()
         return context
 
 
@@ -695,6 +708,36 @@ def meeting_minutes_edit(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         "logbook/partials/meeting_minutes_form.html",
         {"form": form, "weeklog": weeklog},
+    )
+
+
+@login_required
+@editor_required
+@require_POST
+def weeklog_signoff_toggle(request: HttpRequest, pk: int) -> HttpResponse:
+    """Toggle the current user's "nothing more to add this week" marker.
+
+    HTMX endpoint — returns the whole sign-off card so the pill list and
+    the button label swap in one round trip. Editor-gated: viewers can't
+    contribute to a weeklog, so a "done contributing" flag from them
+    would only mislead whoever closes the week.
+    """
+    from django.template.response import TemplateResponse
+
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    existing = weeklog.signoffs.filter(user=request.user).first()
+    if existing is not None:
+        existing.delete()
+    else:
+        WeekLogSignoff.objects.create(weeklog=weeklog, user=request.user)
+    return TemplateResponse(
+        request,
+        "logbook/partials/signoff_card.html",
+        {
+            "weeklog": weeklog,
+            "signoffs": weeklog.signoffs.select_related("user").order_by("created_at"),
+            "user_signed_off": existing is None,
+        },
     )
 
 

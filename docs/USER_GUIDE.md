@@ -126,6 +126,21 @@ Her kan du:
 - Registrere fravær
 - Dokumentere hændelser
 
+### Klarmelding — "ikke mere at tilføje"
+
+Når du er færdig med at skrive på ugens log, kan du melde klar, så den
+der afslutter ugen kan se, at du ikke har mere at tilføje.
+
+1. Åbn ugeloggen og find kortet **Klarmelding** (øverst, under
+   statistikken)
+2. Klik **"Jeg har ikke mere til denne uge"**
+3. Dit navn vises nu som en grøn markering på kortet — hold musen over
+   for at se tidspunktet
+
+Kommer du alligevel i tanke om mere, kan du klikke **"Fortryd
+klarmelding"**, tilføje dine punkter og melde klar igen. Klarmeldingen
+er personlig — den påvirker ikke dine kollegers markeringer.
+
 ### Prioriterede opgaver
 
 **Tilføj opgave**

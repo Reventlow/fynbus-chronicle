@@ -102,6 +102,9 @@
     </div>
   </div>
 
+  {# === Sign-off — who has nothing more to add this week (FR #7) ========== #}
+  {% include 'logbook/partials/signoff_card.html' %}
+
   {# === Summary — pull-quote card ========================================= #}
   {% if weeklog.summary %}
     <div class="card" style="padding: 32px;">

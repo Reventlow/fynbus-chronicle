@@ -580,6 +580,43 @@ class PriorityItemAppearance(models.Model):
         return f"{self.priority_item.title} @ {self.weeklog.week_label}"
 
 
+class WeekLogSignoff(models.Model):
+    """
+    A user's "nothing more to add this week" marker on a weekly log.
+
+    Team members flag a week as finished from their side so whoever
+    compiles and closes the week can see that colleagues are done
+    contributing. One row per (weeklog, user); toggled on/off from the
+    weeklog detail page.
+    """
+
+    weeklog = models.ForeignKey(
+        WeekLog,
+        on_delete=models.CASCADE,
+        related_name="signoffs",
+        verbose_name="Ugelog",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="weeklog_signoffs",
+        verbose_name="Bruger",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Meldt klar",
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = "Klarmelding"
+        verbose_name_plural = "Klarmeldinger"
+        ordering = ["created_at"]
+        unique_together = [("weeklog", "user")]
+
+    def __str__(self) -> str:
+        return f"{self.user.username} klar @ {self.weeklog.week_label}"
+
+
 class Absence(models.Model):
     """
     Tracks staff absences for IT planning purposes.

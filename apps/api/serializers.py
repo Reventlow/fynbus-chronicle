@@ -153,6 +153,16 @@ def serialize_weeklog(weeklog: WeekLog, *, full: bool = False) -> dict[str, Any]
         data["meeting_skipped_reason"] = weeklog.meeting_skipped_reason
         data["meeting_attendees"] = weeklog.meeting_attendees
         data["meeting_minutes"] = weeklog.meeting_minutes
+        # Additive since 0.9.0 (FR #7): who has marked "nothing more to
+        # add this week".
+        data["signoffs"] = [
+            {
+                "username": s.user.username,
+                "full_name": s.user.get_full_name() or s.user.username,
+                "created_at": s.created_at.isoformat(),
+            }
+            for s in weeklog.signoffs.select_related("user").order_by("created_at")
+        ]
     return data
 
 
