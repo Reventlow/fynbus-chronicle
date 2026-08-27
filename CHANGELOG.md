@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.0 — 2026-08-27
+
+### Added
+- **Åbne sager opdelt på liggetid** (FR #8). Every report now carries an "Åbne sager fordelt på liggetid" section: one bar per age group — 0–7, 8–30, 31–90 and over 90 dage — with the count, the share, and a summary line ("10 af 40 åbne sager har ligget i mere end 30 dage"). Rendered in the PDF, the HTML export, the email body and the Markdown export; the section is skipped for weeks that have no breakdown, so old weeklogs are untouched.
+- **Liggetid på kontrolpanelet.** The "Åbne sager" KPI card gets a slim stacked bar (hover a segment for its bucket and count) plus an "X over 30 dage" line, so the split is visible without opening a report.
+- **Automatisk opdeling fra ServiceDesk.** The sync pages through every open request, reads `created_time` and buckets the ages itself; the four new counts are stored on the weeklog as a snapshot, so a week keeps the numbers that were true when it was logged. A failed age query leaves the previous breakdown in place instead of zeroing it.
+- **Manuel indtastning.** The weeklog form (and the admin) expose the four buckets for weeks kept by hand. A partially filled breakdown that does not add up to "Åbne sager" is rejected; all-zero simply means "no breakdown".
+- **API additive fields**: `helpdesk_open_by_age` and `helpdesk_open_stale` on the weeklog payload, plus `open_by_age`/`open_stale` per week on `/api/v1/helpdesk/data/` and the dashboard chart endpoint. Existing keys are unchanged.
+
 ## 0.9.0 — 2026-08-21
 
 ### Added

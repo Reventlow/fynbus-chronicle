@@ -136,6 +136,37 @@
     {% endif %}
   </div>
 
+  {% comment %}
+    Liggetid — open tickets by age. Table + inline styles + bgcolor so the
+    bars survive mail clients that strip CSS.
+  {% endcomment %}
+  {% if weeklog.has_helpdesk_age_breakdown %}
+  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne sager fordelt på liggetid</h2>
+  <table class="age-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8;" bgcolor="#FAF9F7">
+    {% for bucket in weeklog.helpdesk_age_buckets %}
+    <tr>
+      <td width="110" style="width:110px; padding:6px 0 6px 14px; border:none; vertical-align:middle; font-size:13px; color:#4A4540; white-space:nowrap;">{{ bucket.label }}</td>
+      <td style="padding:6px 10px; border:none; vertical-align:middle;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; width:100%; margin:0;">
+          <tr>
+            {% if bucket.share %}
+            <td width="{{ bucket.share|floatformat:"0u" }}%" height="12" bgcolor="{% if bucket.tone == 'good' %}#7D8471{% elif bucket.tone == 'neutral' %}#8B7355{% elif bucket.tone == 'warn' %}#C4A35A{% else %}#A65D57{% endif %}" style="width:{{ bucket.share|floatformat:"1u" }}%; height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:{% if bucket.tone == 'good' %}#7D8471{% elif bucket.tone == 'neutral' %}#8B7355{% elif bucket.tone == 'warn' %}#C4A35A{% else %}#A65D57{% endif %};">&nbsp;</td>
+            {% endif %}
+            <td height="12" bgcolor="#EFEBE4" style="height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:#EFEBE4;">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+      <td width="104" align="right" style="width:104px; padding:6px 14px 6px 0; border:none; vertical-align:middle; font-size:13px; color:#4A4540; white-space:nowrap;">
+        <strong>{{ bucket.count }}</strong> <span style="color:#6B635B;">({{ bucket.share|floatformat:0 }}%)</span>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p style="margin:2px 0 0 0; font-size:12px; color:#6B635B;">
+    {{ weeklog.helpdesk_open_stale }} af {{ weeklog.helpdesk_open_bucketed }} åbne sager har ligget i mere end 30 dage.
+  </p>
+  {% endif %}
+
   {% if chart_image or flow_chart_image %}
   <div style="margin: 15px 0;">
     <table style="width:100%; max-width:600px; table-layout:fixed; border-collapse:separate; border-spacing:8px 0; border:none;"><tr>

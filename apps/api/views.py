@@ -123,6 +123,12 @@ def helpdesk_data(request: HttpRequest) -> JsonResponse:
                 "new": weeklog.helpdesk_new,
                 "closed": weeklog.helpdesk_closed,
                 "open": weeklog.helpdesk_open,
+                # Additive since 0.10.0 (FR #8): open tickets by age.
+                "open_by_age": {
+                    bucket["key"]: bucket["count"]
+                    for bucket in weeklog.helpdesk_age_buckets
+                },
+                "open_stale": weeklog.helpdesk_open_stale,
             }
         )
     return JsonResponse({"weeks": weeks_data})

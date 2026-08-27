@@ -85,7 +85,7 @@ Hvis ServiceDesk-integration er aktiveret, hentes helpdesk-tal automatisk fra Se
 **Helpdesk statistik**
 - Graf over de sidste 52 ugers sager
 - Gennemsnitlige nye og lukkede sager
-- Antal åbne sager lige nu
+- Antal åbne sager lige nu, med en farvet bjælke der viser hvor længe de har ligget
 - Opdateres automatisk hvis ServiceDesk-integration er aktiv
 
 **Seneste hændelser**
@@ -113,6 +113,7 @@ Gå til "Ugelogs" i navigationen for at se alle ugelogs.
 2. Udfyld:
    - **År og uge**: Udfyldes automatisk med aktuel uge
    - **Helpdesk statistik**: Nye, lukkede og åbne sager
+   - **Åbne sager fordelt på liggetid**: Hvor mange af de åbne sager der er 0-7, 8-30, 31-90 og over 90 dage gamle. Felterne udfyldes automatisk af ServiceDesk-synkroniseringen; udfylder du dem i hånden, skal de summe til antallet af åbne sager (eller stå på 0, hvis ugen ikke skal have en opdeling)
    - **Ugeoversigt**: Kort beskrivelse af ugens aktiviteter
 3. Klik "Opret ugelog"
 
@@ -268,6 +269,8 @@ Sættes du på vagt af en kollega, får du besked via klokken øverst til højre
 ---
 
 ## Eksporter rapporter
+
+Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: en bjælke pr. aldersgruppe (0-7, 8-30, 31-90 og over 90 dage) med antal og andel, samt en linje der opsummerer hvor mange af de åbne sager der har ligget i mere end 30 dage. Afsnittet vises kun for uger hvor opdelingen er registreret.
 
 ### PDF rapport
 

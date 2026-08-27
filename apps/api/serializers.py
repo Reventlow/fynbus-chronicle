@@ -135,6 +135,18 @@ def serialize_weeklog(weeklog: WeekLog, *, full: bool = False) -> dict[str, Any]
         "helpdesk_closed": weeklog.helpdesk_closed,
         "helpdesk_open": weeklog.helpdesk_open,
         "helpdesk_delta": weeklog.helpdesk_delta,
+        # Additive since 0.10.0 (FR #8): open tickets split by age
+        # ("liggetid"). All-zero buckets mean the week has no breakdown.
+        "helpdesk_open_by_age": [
+            {
+                "key": bucket["key"],
+                "label": bucket["label"],
+                "count": bucket["count"],
+                "share": bucket["share"],
+            }
+            for bucket in weeklog.helpdesk_age_buckets
+        ],
+        "helpdesk_open_stale": weeklog.helpdesk_open_stale,
         "summary": weeklog.summary,
         "created_by": weeklog.created_by.username if weeklog.created_by_id else None,
         "created_at": weeklog.created_at.isoformat() if weeklog.created_at else None,

@@ -25,6 +25,19 @@ class WeekLog(models.Model):
     and incidents.
     """
 
+    # Age ("liggetid") buckets for open helpdesk tickets, youngest first.
+    # Each entry: (field name, label, lower bound in days, upper bound in days
+    # or None for open-ended, tone used by templates for colour coding).
+    HELPDESK_AGE_BUCKETS: tuple[tuple[str, str, int, int | None, str], ...] = (
+        ("helpdesk_open_0_7", "0–7 dage", 0, 7, "good"),
+        ("helpdesk_open_8_30", "8–30 dage", 8, 30, "neutral"),
+        ("helpdesk_open_31_90", "31–90 dage", 31, 90, "warn"),
+        ("helpdesk_open_over_90", "Over 90 dage", 91, None, "bad"),
+    )
+
+    # Buckets counted as "long-lived" in the report highlight line.
+    HELPDESK_AGE_STALE_FIELDS = ("helpdesk_open_31_90", "helpdesk_open_over_90")
+
     year = models.PositiveIntegerField(
         verbose_name="År",
         validators=[MinValueValidator(2024), MaxValueValidator(2100)],
@@ -50,6 +63,30 @@ class WeekLog(models.Model):
         verbose_name="Åbne sager",
         default=0,
         help_text="Samlet antal åbne sager ved ugens slutning",
+    )
+
+    # Age ("liggetid") breakdown of the open tickets above — a snapshot taken
+    # at the same time as helpdesk_open, so old weeks keep the numbers that
+    # were true back then. Buckets are days since the ticket was created.
+    helpdesk_open_0_7 = models.PositiveIntegerField(
+        verbose_name="Åbne 0-7 dage",
+        default=0,
+        help_text="Åbne sager med en liggetid på 0-7 dage",
+    )
+    helpdesk_open_8_30 = models.PositiveIntegerField(
+        verbose_name="Åbne 8-30 dage",
+        default=0,
+        help_text="Åbne sager med en liggetid på 8-30 dage",
+    )
+    helpdesk_open_31_90 = models.PositiveIntegerField(
+        verbose_name="Åbne 31-90 dage",
+        default=0,
+        help_text="Åbne sager med en liggetid på 31-90 dage",
+    )
+    helpdesk_open_over_90 = models.PositiveIntegerField(
+        verbose_name="Åbne over 90 dage",
+        default=0,
+        help_text="Åbne sager med en liggetid på over 90 dage",
     )
 
     # Weekly summary
@@ -162,6 +199,72 @@ class WeekLog(models.Model):
     def helpdesk_delta(self) -> int:
         """Calculate net change in helpdesk tickets."""
         return self.helpdesk_new - self.helpdesk_closed
+
+    @property
+    def helpdesk_open_bucketed(self) -> int:
+        """Total number of open tickets that carry an age classification.
+
+        Normally equal to ``helpdesk_open``; it is 0 for weeks logged before
+        the breakdown existed (or synced from a ServiceDesk that did not
+        answer the age queries).
+        """
+        return sum(getattr(self, field) or 0 for field, *_ in self.HELPDESK_AGE_BUCKETS)
+
+    @property
+    def has_helpdesk_age_breakdown(self) -> bool:
+        """True when this week has an age breakdown worth rendering."""
+        return self.helpdesk_open_bucketed > 0
+
+    @property
+    def helpdesk_open_stale(self) -> int:
+        """Open tickets that have been lying around for more than 30 days."""
+        return sum(getattr(self, field) or 0 for field in self.HELPDESK_AGE_STALE_FIELDS)
+
+    @property
+    def helpdesk_age_buckets(self) -> list[dict[str, object]]:
+        """Age breakdown of the open tickets, ready for templates.
+
+        Returns:
+            One dict per bucket with ``key``, ``label``, ``count``, ``tone``
+            and ``share`` (percent of the bucketed total, one decimal).
+        """
+        total = self.helpdesk_open_bucketed
+        return [
+            {
+                "key": field,
+                "label": label,
+                "count": getattr(self, field) or 0,
+                "tone": tone,
+                "share": (
+                    round((getattr(self, field) or 0) * 100 / total, 1) if total else 0.0
+                ),
+            }
+            for field, label, _low, _high, tone in self.HELPDESK_AGE_BUCKETS
+        ]
+
+    def apply_helpdesk_stats(self, stats: dict) -> None:
+        """
+        Write a ServiceDesk stats snapshot onto this weeklog and save it.
+
+        Age buckets are only overwritten when the sync actually delivered
+        them — a failed age query leaves the previous breakdown in place
+        rather than zeroing it.
+
+        Args:
+            stats: A ``TicketStats`` mapping from ``ServiceDeskClient``.
+        """
+        self.helpdesk_new = stats["created"]
+        self.helpdesk_closed = stats["closed"]
+        self.helpdesk_open = stats["open"]
+        update_fields = ["helpdesk_new", "helpdesk_closed", "helpdesk_open", "updated_at"]
+
+        by_age = stats.get("open_by_age") or {}
+        if by_age:
+            for field, *_ in self.HELPDESK_AGE_BUCKETS:
+                setattr(self, field, by_age.get(field, 0))
+                update_fields.append(field)
+
+        self.save(update_fields=update_fields)
 
     @staticmethod
     def helpdesk_weekly_averages() -> dict[str, float]:

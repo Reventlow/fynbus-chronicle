@@ -57,6 +57,23 @@ def generate_markdown(weeklog: WeekLog) -> str:
     )
     lines.append("")
 
+    # Liggetid — open tickets by age, as a plain table
+    if weeklog.has_helpdesk_age_breakdown:
+        lines.append("### Åbne sager fordelt på liggetid")
+        lines.append("")
+        lines.append("| Liggetid | Antal | Andel |")
+        lines.append("| --- | ---: | ---: |")
+        for bucket in weeklog.helpdesk_age_buckets:
+            lines.append(
+                f"| {bucket['label']} | {bucket['count']} | {bucket['share']:.0f}% |"
+            )
+        lines.append("")
+        lines.append(
+            f"{weeklog.helpdesk_open_stale} af {weeklog.helpdesk_open_bucketed} "
+            "åbne sager har ligget i mere end 30 dage."
+        )
+        lines.append("")
+
     # Summary
     if weeklog.summary:
         lines.append("## Ugeoversigt")

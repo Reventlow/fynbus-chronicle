@@ -78,6 +78,46 @@
         </div>
       </div>
 
+      {% comment %}
+        Liggetid — age breakdown of the open tickets. Filled automatically by
+        the ServiceDesk sync; editable here for weeks that are kept by hand.
+        Leaving every field at 0 simply omits the section from the reports.
+      {% endcomment %}
+      <div>
+        <h3 class="text-md font-medium text-sand-700 dark:text-sand-300 mb-1">Åbne sager fordelt på liggetid</h3>
+        <p class="input-help mb-3">Skal summe til antallet af åbne sager — eller lad alle felter stå på 0.</p>
+        <div class="grid grid-cols-4 gap-4">
+          <div>
+            <label for="{{ form.helpdesk_open_0_7.id_for_label }}" class="input-label">0–7 dage</label>
+            {{ form.helpdesk_open_0_7 }}
+            {% if form.helpdesk_open_0_7.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_0_7.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_8_30.id_for_label }}" class="input-label">8–30 dage</label>
+            {{ form.helpdesk_open_8_30 }}
+            {% if form.helpdesk_open_8_30.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_8_30.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_31_90.id_for_label }}" class="input-label">31–90 dage</label>
+            {{ form.helpdesk_open_31_90 }}
+            {% if form.helpdesk_open_31_90.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_31_90.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_over_90.id_for_label }}" class="input-label">Over 90 dage</label>
+            {{ form.helpdesk_open_over_90 }}
+            {% if form.helpdesk_open_over_90.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_over_90.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
       <!-- Summary -->
       <div>
         <label for="{{ form.summary.id_for_label }}" class="input-label">Ugeoversigt</label>

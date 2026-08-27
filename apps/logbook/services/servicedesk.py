@@ -22,6 +22,9 @@ class TicketStats(TypedDict):
     created: int
     closed: int
     open: int
+    # Age ("liggetid") breakdown of the open tickets, keyed by WeekLog field
+    # name. Empty when the age queries could not be answered.
+    open_by_age: dict[str, int]
 
 
 class ServiceDeskClient:
@@ -167,6 +170,137 @@ class ServiceDeskClient:
 
         return total
 
+    # Max rows per page and a safety valve on the number of pages, so a
+    # misbehaving API can never turn the sync into an endless paging loop.
+    PAGE_SIZE = 100
+    MAX_PAGES = 20
+
+    def _fetch_open_created_times(self) -> list[int] | None:
+        """
+        Fetch the creation timestamp of every currently open request.
+
+        Pages through the request list once per open status, asking only for
+        ``created_time`` to keep the payloads small.
+
+        Returns:
+            List of creation timestamps in milliseconds, or None if any query
+            failed — a partial list would understate the age breakdown.
+        """
+        if not self.base_url or not self.api_key:
+            logger.warning("ServiceDesk URL or API key not configured")
+            return None
+
+        timestamps: list[int] = []
+
+        for status in self.OPEN_STATUSES:
+            start_index = 1
+
+            for _ in range(self.MAX_PAGES):
+                input_data = {
+                    "list_info": {
+                        "row_count": self.PAGE_SIZE,
+                        "start_index": start_index,
+                        "fields_required": ["created_time"],
+                        "search_criteria": [
+                            {
+                                "field": "status.name",
+                                "condition": "is",
+                                "value": status,
+                            }
+                        ],
+                    }
+                }
+
+                encoded_input = urllib.parse.quote(str(input_data).replace("'", '"'))
+                url = f"{self.base_url}/api/v3/requests?input_data={encoded_input}"
+
+                try:
+                    response = requests.get(
+                        url,
+                        headers={
+                            "authtoken": self.api_key,
+                            "Content-Type": "application/json",
+                        },
+                        timeout=30,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                except (requests.RequestException, ValueError) as e:
+                    logger.error(
+                        "ServiceDesk age query failed for status %s: %s", status, e
+                    )
+                    return None
+
+                if data.get("response_status", [{}])[0].get("status") != "success":
+                    logger.error(
+                        "ServiceDesk age query error for status %s: %s",
+                        status,
+                        data.get("response_status"),
+                    )
+                    return None
+
+                for request_row in data.get("requests", []) or []:
+                    created = request_row.get("created_time")
+                    # created_time comes back as {"value": "<epoch ms>", ...}
+                    raw = created.get("value") if isinstance(created, dict) else created
+                    try:
+                        timestamps.append(int(raw))
+                    except (TypeError, ValueError):
+                        logger.debug("Skipping request with unusable created_time: %r", created)
+
+                list_info = data.get("list_info", {}) or {}
+                if not list_info.get("has_more_rows"):
+                    break
+                start_index += self.PAGE_SIZE
+            else:
+                logger.warning(
+                    "ServiceDesk age query hit the %d page cap for status %s",
+                    self.MAX_PAGES,
+                    status,
+                )
+
+        return timestamps
+
+    @staticmethod
+    def bucket_by_age(created_times_ms: list[int], now_ms: int) -> dict[str, int]:
+        """
+        Group creation timestamps into WeekLog age ("liggetid") buckets.
+
+        Args:
+            created_times_ms: Creation timestamps in milliseconds.
+            now_ms: Reference "now" in milliseconds.
+
+        Returns:
+            Dict keyed by WeekLog field name with a count per bucket.
+        """
+        from ..models import WeekLog
+
+        buckets = {field: 0 for field, *_ in WeekLog.HELPDESK_AGE_BUCKETS}
+
+        for created_ms in created_times_ms:
+            age_days = max(0, (now_ms - created_ms) // 86_400_000)
+            for field, _label, _low, high, _tone in WeekLog.HELPDESK_AGE_BUCKETS:
+                if high is None or age_days <= high:
+                    buckets[field] += 1
+                    break
+
+        return buckets
+
+    def get_open_by_age(self) -> dict[str, int]:
+        """
+        Fetch the age breakdown of all currently open requests.
+
+        Returns:
+            Dict keyed by WeekLog field name, or an empty dict when the
+            breakdown could not be determined.
+        """
+        created_times = self._fetch_open_created_times()
+        if created_times is None:
+            return {}
+
+        now_ms = int(datetime.now().timestamp() * 1000)
+        return self.bucket_by_age(created_times, now_ms)
+
     def get_week_stats(self, year: int, week: int) -> TicketStats:
         """
         Fetch ticket counts for a specific ISO week.
@@ -180,21 +314,28 @@ class ServiceDeskClient:
         """
         if not self.enabled:
             logger.debug("ServiceDesk sync is disabled")
-            return TicketStats(created=0, closed=0, open=0)
+            return TicketStats(created=0, closed=0, open=0, open_by_age={})
 
         start_ms, end_ms = self._get_week_timestamps(year, week)
 
         created = self._query_count("created_time", start_ms, end_ms)
         closed = self._query_count("completed_time", start_ms, end_ms)
         open_count = self._query_open_count()
+        open_by_age = self.get_open_by_age()
 
         logger.info(
-            "ServiceDesk stats for week %d/%d: created=%d, closed=%d, open=%d",
+            "ServiceDesk stats for week %d/%d: created=%d, closed=%d, open=%d, by_age=%s",
             week,
             year,
             created,
             closed,
             open_count,
+            open_by_age or "n/a",
         )
 
-        return TicketStats(created=created, closed=closed, open=open_count)
+        return TicketStats(
+            created=created,
+            closed=closed,
+            open=open_count,
+            open_by_age=open_by_age,
+        )

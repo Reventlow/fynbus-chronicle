@@ -113,7 +113,17 @@ class WeekLogAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     ("helpdesk_new", "helpdesk_closed", "helpdesk_open"),
+                    (
+                        "helpdesk_open_0_7",
+                        "helpdesk_open_8_30",
+                        "helpdesk_open_31_90",
+                        "helpdesk_open_over_90",
+                    ),
                 ],
+                "description": (
+                    "Liggetid-felterne skal summe til «Åbne sager» "
+                    "— eller stå på 0, hvis ugen ikke har en opdeling."
+                ),
             },
         ),
         (

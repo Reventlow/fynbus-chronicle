@@ -231,14 +231,10 @@ def sync_servicedesk_stats(request):
     try:
         weeklog = WeekLog.get_or_create_current_week()
         stats = client.get_week_stats(weeklog.year, weeklog.week_number)
-        weeklog.helpdesk_new = stats["created"]
-        weeklog.helpdesk_closed = stats["closed"]
-        weeklog.helpdesk_open = stats["open"]
-        weeklog.save(
-            update_fields=["helpdesk_new", "helpdesk_closed", "helpdesk_open", "updated_at"]
-        )
-        logger.info("Manual sync: %s new=%d closed=%d open=%d",
-                     weeklog.week_label, stats["created"], stats["closed"], stats["open"])
+        weeklog.apply_helpdesk_stats(stats)
+        logger.info("Manual sync: %s new=%d closed=%d open=%d by_age=%s",
+                     weeklog.week_label, stats["created"], stats["closed"], stats["open"],
+                     stats.get("open_by_age") or "n/a")
     except Exception:
         logger.exception("Manual ServiceDesk sync failed")
         weeklog = WeekLog.get_current_week()
@@ -279,6 +275,12 @@ def helpdesk_chart_data(request) -> JsonResponse:
                 "new": weeklog.helpdesk_new,
                 "closed": weeklog.helpdesk_closed,
                 "open": weeklog.helpdesk_open,
+                # Additive since 0.10.0 (FR #8): open tickets by age.
+                "open_by_age": {
+                    bucket["key"]: bucket["count"]
+                    for bucket in weeklog.helpdesk_age_buckets
+                },
+                "open_stale": weeklog.helpdesk_open_stale,
             }
         )
 
