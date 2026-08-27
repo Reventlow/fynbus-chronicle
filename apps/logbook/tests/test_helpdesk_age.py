@@ -17,17 +17,20 @@ DAY_MS = 86_400_000
 
 @pytest.fixture
 def weeklog():
-    """A week whose 40 open cases are split across all four age buckets."""
+    """A week whose 40 open cases are split across all seven age buckets."""
     return WeekLog.objects.create(
         year=2026,
         week_number=35,
         helpdesk_new=12,
         helpdesk_closed=9,
         helpdesk_open=40,
-        helpdesk_open_0_7=20,
-        helpdesk_open_8_30=10,
+        helpdesk_open_0_7=14,
+        helpdesk_open_8_14=6,
+        helpdesk_open_15_30=8,
         helpdesk_open_31_90=6,
-        helpdesk_open_over_90=4,
+        helpdesk_open_91_180=2,
+        helpdesk_open_181_365=2,
+        helpdesk_open_over_365=2,
     )
 
 
@@ -38,21 +41,26 @@ def weeklog_without_breakdown():
 
 
 class TestModelProperties:
-    def test_buckets_carry_label_count_and_share(self, weeklog):
+    def test_buckets_carry_label_count_share_and_colour(self, weeklog):
         buckets = weeklog.helpdesk_age_buckets
 
-        assert [b["count"] for b in buckets] == [20, 10, 6, 4]
-        assert [b["share"] for b in buckets] == [50.0, 25.0, 15.0, 10.0]
+        assert [b["count"] for b in buckets] == [14, 6, 8, 6, 2, 2, 2]
+        assert [b["share"] for b in buckets] == [35.0, 15.0, 20.0, 15.0, 5.0, 5.0, 5.0]
         assert [b["label"] for b in buckets] == [
-            "0–7 dage",
-            "8–30 dage",
-            "31–90 dage",
-            "Over 90 dage",
+            "Under 1 uge",
+            "1–2 uger",
+            "2 uger – 1 måned",
+            "1–3 måneder",
+            "3–6 måneder",
+            "6–12 måneder",
+            "Over 12 måneder",
         ]
+        # Colours come from the model spec so every surface matches.
+        assert all(b["color"].startswith("#") for b in buckets)
 
     def test_totals(self, weeklog):
         assert weeklog.helpdesk_open_bucketed == 40
-        assert weeklog.helpdesk_open_stale == 10  # 31–90 plus over 90
+        assert weeklog.helpdesk_open_stale == 12  # everything older than a month
         assert weeklog.has_helpdesk_age_breakdown is True
 
     def test_week_without_breakdown_is_flagged(self, weeklog_without_breakdown):
@@ -71,9 +79,8 @@ class TestApplyHelpdeskStats:
                 "open": 7,
                 "open_by_age": {
                     "helpdesk_open_0_7": 4,
-                    "helpdesk_open_8_30": 2,
+                    "helpdesk_open_8_14": 2,
                     "helpdesk_open_31_90": 1,
-                    "helpdesk_open_over_90": 0,
                 },
             }
         )
@@ -92,33 +99,42 @@ class TestApplyHelpdeskStats:
         weeklog.refresh_from_db()
 
         assert weeklog.helpdesk_new == 1
-        assert weeklog.helpdesk_open_0_7 == 20
-        assert weeklog.helpdesk_open_over_90 == 4
+        assert weeklog.helpdesk_open_0_7 == 14
+        assert weeklog.helpdesk_open_over_365 == 2
 
 
 class TestBucketByAge:
     def test_boundaries(self):
-        now_ms = 1_000 * DAY_MS
+        now_ms = 2_000 * DAY_MS
         created = [
             now_ms,  # 0 days
-            now_ms - 7 * DAY_MS,  # 7 days — still the first bucket
+            now_ms - 7 * DAY_MS,  # 7 days — still "under 1 uge"
             now_ms - 8 * DAY_MS,  # 8 days
+            now_ms - 14 * DAY_MS,  # 14 days
+            now_ms - 15 * DAY_MS,  # 15 days
             now_ms - 30 * DAY_MS,  # 30 days
             now_ms - 31 * DAY_MS,  # 31 days
             now_ms - 90 * DAY_MS,  # 90 days
-            now_ms - 91 * DAY_MS,  # 91 days — open-ended bucket
-            now_ms - 400 * DAY_MS,
+            now_ms - 91 * DAY_MS,  # 91 days
+            now_ms - 180 * DAY_MS,  # 180 days
+            now_ms - 181 * DAY_MS,  # 181 days
+            now_ms - 365 * DAY_MS,  # 365 days
+            now_ms - 366 * DAY_MS,  # 366 days — open-ended bucket
+            now_ms - 1_200 * DAY_MS,
         ]
 
         assert ServiceDeskClient.bucket_by_age(created, now_ms) == {
             "helpdesk_open_0_7": 2,
-            "helpdesk_open_8_30": 2,
+            "helpdesk_open_8_14": 2,
+            "helpdesk_open_15_30": 2,
             "helpdesk_open_31_90": 2,
-            "helpdesk_open_over_90": 2,
+            "helpdesk_open_91_180": 2,
+            "helpdesk_open_181_365": 2,
+            "helpdesk_open_over_365": 2,
         }
 
     def test_future_timestamps_count_as_brand_new(self):
-        """Clock skew must not push a ticket into the "over 90 dage" bucket."""
+        """Clock skew must not push a ticket into the "over 12 måneder" bucket."""
         now_ms = 1_000 * DAY_MS
         buckets = ServiceDeskClient.bucket_by_age([now_ms + 5 * DAY_MS], now_ms)
 
@@ -137,9 +153,12 @@ class TestForm:
             "helpdesk_closed": 2,
             "helpdesk_open": 10,
             "helpdesk_open_0_7": 0,
-            "helpdesk_open_8_30": 0,
+            "helpdesk_open_8_14": 0,
+            "helpdesk_open_15_30": 0,
             "helpdesk_open_31_90": 0,
-            "helpdesk_open_over_90": 0,
+            "helpdesk_open_91_180": 0,
+            "helpdesk_open_181_365": 0,
+            "helpdesk_open_over_365": 0,
             "summary": "",
         }
         data.update(overrides)
@@ -168,8 +187,8 @@ class TestReportOutput:
         )
 
         assert "Åbne sager fordelt på liggetid" in html
-        assert "Over 90 dage" in html
-        assert "10 af 40 åbne sager har ligget i mere end 30 dage." in html
+        assert "Over 12 måneder" in html
+        assert "12 af 40 åbne sager har ligget i mere end 1 måned." in html
 
     def test_html_report_omits_the_section_without_data(self, weeklog_without_breakdown):
         html = render_to_string(
@@ -190,7 +209,7 @@ class TestReportOutput:
             week_number=38,
             helpdesk_open=8,
             helpdesk_open_0_7=1,
-            helpdesk_open_8_30=7,
+            helpdesk_open_8_14=7,
         )
 
         for template in (
@@ -211,7 +230,7 @@ class TestReportOutput:
         markdown = generate_markdown(weeklog)
 
         assert "### Åbne sager fordelt på liggetid" in markdown
-        assert "| 0–7 dage | 20 | 50% |" in markdown
+        assert "| Under 1 uge | 14 | 35% |" in markdown
 
     def test_markdown_report_omits_the_section_without_data(
         self, weeklog_without_breakdown
@@ -223,10 +242,11 @@ class TestApiPayload:
     def test_serializer_exposes_buckets(self, weeklog):
         data = serialize_weeklog(weeklog)
 
-        assert data["helpdesk_open_stale"] == 10
+        assert data["helpdesk_open_stale"] == 12
+        assert len(data["helpdesk_open_by_age"]) == 7
         assert data["helpdesk_open_by_age"][0] == {
             "key": "helpdesk_open_0_7",
-            "label": "0–7 dage",
-            "count": 20,
-            "share": 50.0,
+            "label": "Under 1 uge",
+            "count": 14,
+            "share": 35.0,
         }

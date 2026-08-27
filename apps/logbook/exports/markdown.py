@@ -70,7 +70,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
         lines.append("")
         lines.append(
             f"{weeklog.helpdesk_open_stale} af {weeklog.helpdesk_open_bucketed} "
-            "åbne sager har ligget i mere end 30 dage."
+            "åbne sager har ligget i mere end 1 måned."
         )
         lines.append("")
 

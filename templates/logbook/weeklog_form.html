@@ -86,33 +86,54 @@
       <div>
         <h3 class="text-md font-medium text-sand-700 dark:text-sand-300 mb-1">Åbne sager fordelt på liggetid</h3>
         <p class="input-help mb-3">Skal summe til antallet af åbne sager — eller lad alle felter stå på 0.</p>
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <label for="{{ form.helpdesk_open_0_7.id_for_label }}" class="input-label">0–7 dage</label>
+            <label for="{{ form.helpdesk_open_0_7.id_for_label }}" class="input-label">Under 1 uge</label>
             {{ form.helpdesk_open_0_7 }}
             {% if form.helpdesk_open_0_7.errors %}
               <p class="input-error-message">{{ form.helpdesk_open_0_7.errors.0 }}</p>
             {% endif %}
           </div>
           <div>
-            <label for="{{ form.helpdesk_open_8_30.id_for_label }}" class="input-label">8–30 dage</label>
-            {{ form.helpdesk_open_8_30 }}
-            {% if form.helpdesk_open_8_30.errors %}
-              <p class="input-error-message">{{ form.helpdesk_open_8_30.errors.0 }}</p>
+            <label for="{{ form.helpdesk_open_8_14.id_for_label }}" class="input-label">1–2 uger</label>
+            {{ form.helpdesk_open_8_14 }}
+            {% if form.helpdesk_open_8_14.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_8_14.errors.0 }}</p>
             {% endif %}
           </div>
           <div>
-            <label for="{{ form.helpdesk_open_31_90.id_for_label }}" class="input-label">31–90 dage</label>
+            <label for="{{ form.helpdesk_open_15_30.id_for_label }}" class="input-label">2 uger – 1 md.</label>
+            {{ form.helpdesk_open_15_30 }}
+            {% if form.helpdesk_open_15_30.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_15_30.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_31_90.id_for_label }}" class="input-label">1–3 måneder</label>
             {{ form.helpdesk_open_31_90 }}
             {% if form.helpdesk_open_31_90.errors %}
               <p class="input-error-message">{{ form.helpdesk_open_31_90.errors.0 }}</p>
             {% endif %}
           </div>
           <div>
-            <label for="{{ form.helpdesk_open_over_90.id_for_label }}" class="input-label">Over 90 dage</label>
-            {{ form.helpdesk_open_over_90 }}
-            {% if form.helpdesk_open_over_90.errors %}
-              <p class="input-error-message">{{ form.helpdesk_open_over_90.errors.0 }}</p>
+            <label for="{{ form.helpdesk_open_91_180.id_for_label }}" class="input-label">3–6 måneder</label>
+            {{ form.helpdesk_open_91_180 }}
+            {% if form.helpdesk_open_91_180.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_91_180.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_181_365.id_for_label }}" class="input-label">6–12 måneder</label>
+            {{ form.helpdesk_open_181_365 }}
+            {% if form.helpdesk_open_181_365.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_181_365.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.helpdesk_open_over_365.id_for_label }}" class="input-label">Over 12 mdr.</label>
+            {{ form.helpdesk_open_over_365 }}
+            {% if form.helpdesk_open_over_365.errors %}
+              <p class="input-error-message">{{ form.helpdesk_open_over_365.errors.0 }}</p>
             {% endif %}
           </div>
         </div>

@@ -29,19 +29,19 @@
   {% endif %}
   {% comment %}
     Liggetid — how the open cases split by age. One stacked bar plus the
-    "older than 30 days" number, so the card still reads at a glance.
+    "older than a month" number, so the card still reads at a glance.
   {% endcomment %}
   {% if weeklog.has_helpdesk_age_breakdown %}
     <div style="display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--surface-2);">
       {% for bucket in weeklog.helpdesk_age_buckets %}
         {% if bucket.share %}
           <div title="{{ bucket.label }}: {{ bucket.count }} ({{ bucket.share|floatformat:0 }}%)"
-               style="width: {{ bucket.share|floatformat:"1u" }}%; background: {% if bucket.tone == 'good' %}var(--good){% elif bucket.tone == 'neutral' %}var(--accent){% elif bucket.tone == 'warn' %}var(--warn){% else %}var(--bad){% endif %};"></div>
+               style="width: {{ bucket.share|floatformat:"1u" }}%; background: {{ bucket.color }};"></div>
         {% endif %}
       {% endfor %}
     </div>
     <div style="font-size: 11.5px; color: var(--ink-3);">
-      {{ weeklog.helpdesk_open_stale }} over 30 dage
+      {{ weeklog.helpdesk_open_stale }} over 1 måned
     </div>
   {% endif %}
   {% if sync_error %}

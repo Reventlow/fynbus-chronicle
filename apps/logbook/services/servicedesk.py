@@ -279,7 +279,7 @@ class ServiceDeskClient:
 
         for created_ms in created_times_ms:
             age_days = max(0, (now_ms - created_ms) // 86_400_000)
-            for field, _label, _low, high, _tone in WeekLog.HELPDESK_AGE_BUCKETS:
+            for field, _label, _low, high, _color in WeekLog.HELPDESK_AGE_BUCKETS:
                 if high is None or age_days <= high:
                     buckets[field] += 1
                     break

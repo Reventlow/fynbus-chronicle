@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.1 — 2026-08-27
+
+### Changed
+- **Finere liggetid-opdeling** (FR #8, opfølgning). The age breakdown went from four buckets to seven: under 1 uge, 1–2 uger, 2 uger – 1 måned, 1–3 måneder, 3–6 måneder, 6–12 måneder og over 12 måneder. The bar colours now run as a ramp from sage (nyeste) to terracotta (ældste) and live in the model spec, so the report, the email body and the dashboard card can never drift apart. The highlight line counts everything older than **1 måned** (was 30 dage — same threshold, clearer wording).
+- The four 0.10.0 bucket fields are replaced by seven (migration `logbook/0013`). The old counts are dropped rather than split: the ServiceDesk sync recomputes the current week within five minutes, and no week had a hand-entered breakdown yet.
+
 ## 0.10.0 — 2026-08-27
 
 ### Added

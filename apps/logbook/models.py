@@ -27,16 +27,27 @@ class WeekLog(models.Model):
 
     # Age ("liggetid") buckets for open helpdesk tickets, youngest first.
     # Each entry: (field name, label, lower bound in days, upper bound in days
-    # or None for open-ended, tone used by templates for colour coding).
+    # or None for open-ended, bar colour). The colour lives here rather than in
+    # the templates so the report, the email and the dashboard stay in sync —
+    # it runs from sage (fresh) through gold to terracotta (oldest).
     HELPDESK_AGE_BUCKETS: tuple[tuple[str, str, int, int | None, str], ...] = (
-        ("helpdesk_open_0_7", "0–7 dage", 0, 7, "good"),
-        ("helpdesk_open_8_30", "8–30 dage", 8, 30, "neutral"),
-        ("helpdesk_open_31_90", "31–90 dage", 31, 90, "warn"),
-        ("helpdesk_open_over_90", "Over 90 dage", 91, None, "bad"),
+        ("helpdesk_open_0_7", "Under 1 uge", 0, 7, "#7D8471"),
+        ("helpdesk_open_8_14", "1–2 uger", 8, 14, "#9AA083"),
+        ("helpdesk_open_15_30", "2 uger – 1 måned", 15, 30, "#B3A177"),
+        ("helpdesk_open_31_90", "1–3 måneder", 31, 90, "#C4A35A"),
+        ("helpdesk_open_91_180", "3–6 måneder", 91, 180, "#C08A4A"),
+        ("helpdesk_open_181_365", "6–12 måneder", 181, 365, "#B06E4E"),
+        ("helpdesk_open_over_365", "Over 12 måneder", 366, None, "#A65D57"),
     )
 
-    # Buckets counted as "long-lived" in the report highlight line.
-    HELPDESK_AGE_STALE_FIELDS = ("helpdesk_open_31_90", "helpdesk_open_over_90")
+    # Buckets counted as "long-lived" in the report highlight line — anything
+    # that has been open for more than a month.
+    HELPDESK_AGE_STALE_FIELDS = (
+        "helpdesk_open_31_90",
+        "helpdesk_open_91_180",
+        "helpdesk_open_181_365",
+        "helpdesk_open_over_365",
+    )
 
     year = models.PositiveIntegerField(
         verbose_name="År",
@@ -69,24 +80,39 @@ class WeekLog(models.Model):
     # at the same time as helpdesk_open, so old weeks keep the numbers that
     # were true back then. Buckets are days since the ticket was created.
     helpdesk_open_0_7 = models.PositiveIntegerField(
-        verbose_name="Åbne 0-7 dage",
+        verbose_name="Åbne under 1 uge",
         default=0,
         help_text="Åbne sager med en liggetid på 0-7 dage",
     )
-    helpdesk_open_8_30 = models.PositiveIntegerField(
-        verbose_name="Åbne 8-30 dage",
+    helpdesk_open_8_14 = models.PositiveIntegerField(
+        verbose_name="Åbne 1-2 uger",
         default=0,
-        help_text="Åbne sager med en liggetid på 8-30 dage",
+        help_text="Åbne sager med en liggetid på 8-14 dage",
+    )
+    helpdesk_open_15_30 = models.PositiveIntegerField(
+        verbose_name="Åbne 2 uger - 1 måned",
+        default=0,
+        help_text="Åbne sager med en liggetid på 15-30 dage",
     )
     helpdesk_open_31_90 = models.PositiveIntegerField(
-        verbose_name="Åbne 31-90 dage",
+        verbose_name="Åbne 1-3 måneder",
         default=0,
         help_text="Åbne sager med en liggetid på 31-90 dage",
     )
-    helpdesk_open_over_90 = models.PositiveIntegerField(
-        verbose_name="Åbne over 90 dage",
+    helpdesk_open_91_180 = models.PositiveIntegerField(
+        verbose_name="Åbne 3-6 måneder",
         default=0,
-        help_text="Åbne sager med en liggetid på over 90 dage",
+        help_text="Åbne sager med en liggetid på 91-180 dage",
+    )
+    helpdesk_open_181_365 = models.PositiveIntegerField(
+        verbose_name="Åbne 6-12 måneder",
+        default=0,
+        help_text="Åbne sager med en liggetid på 181-365 dage",
+    )
+    helpdesk_open_over_365 = models.PositiveIntegerField(
+        verbose_name="Åbne over 12 måneder",
+        default=0,
+        help_text="Åbne sager med en liggetid på over 365 dage",
     )
 
     # Weekly summary
@@ -217,7 +243,7 @@ class WeekLog(models.Model):
 
     @property
     def helpdesk_open_stale(self) -> int:
-        """Open tickets that have been lying around for more than 30 days."""
+        """Open tickets that have been lying around for more than a month."""
         return sum(getattr(self, field) or 0 for field in self.HELPDESK_AGE_STALE_FIELDS)
 
     @property
@@ -225,7 +251,7 @@ class WeekLog(models.Model):
         """Age breakdown of the open tickets, ready for templates.
 
         Returns:
-            One dict per bucket with ``key``, ``label``, ``count``, ``tone``
+            One dict per bucket with ``key``, ``label``, ``count``, ``color``
             and ``share`` (percent of the bucketed total, one decimal).
         """
         total = self.helpdesk_open_bucketed
@@ -234,12 +260,12 @@ class WeekLog(models.Model):
                 "key": field,
                 "label": label,
                 "count": getattr(self, field) or 0,
-                "tone": tone,
+                "color": color,
                 "share": (
                     round((getattr(self, field) or 0) * 100 / total, 1) if total else 0.0
                 ),
             }
-            for field, label, _low, _high, tone in self.HELPDESK_AGE_BUCKETS
+            for field, label, _low, _high, color in self.HELPDESK_AGE_BUCKETS
         ]
 
     def apply_helpdesk_stats(self, stats: dict) -> None:

@@ -115,9 +115,14 @@ class WeekLogAdmin(admin.ModelAdmin):
                     ("helpdesk_new", "helpdesk_closed", "helpdesk_open"),
                     (
                         "helpdesk_open_0_7",
-                        "helpdesk_open_8_30",
+                        "helpdesk_open_8_14",
+                        "helpdesk_open_15_30",
+                    ),
+                    (
                         "helpdesk_open_31_90",
-                        "helpdesk_open_over_90",
+                        "helpdesk_open_91_180",
+                        "helpdesk_open_181_365",
+                        "helpdesk_open_over_365",
                     ),
                 ],
                 "description": (

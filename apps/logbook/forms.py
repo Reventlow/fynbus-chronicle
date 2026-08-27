@@ -23,9 +23,12 @@ class WeekLogForm(forms.ModelForm):
             "helpdesk_closed",
             "helpdesk_open",
             "helpdesk_open_0_7",
-            "helpdesk_open_8_30",
+            "helpdesk_open_8_14",
+            "helpdesk_open_15_30",
             "helpdesk_open_31_90",
-            "helpdesk_open_over_90",
+            "helpdesk_open_91_180",
+            "helpdesk_open_181_365",
+            "helpdesk_open_over_365",
             "summary",
         ]
         widgets = {
@@ -64,13 +67,22 @@ class WeekLogForm(forms.ModelForm):
             "helpdesk_open_0_7": forms.NumberInput(
                 attrs={"class": "input-field", "min": 0}
             ),
-            "helpdesk_open_8_30": forms.NumberInput(
+            "helpdesk_open_8_14": forms.NumberInput(
+                attrs={"class": "input-field", "min": 0}
+            ),
+            "helpdesk_open_15_30": forms.NumberInput(
                 attrs={"class": "input-field", "min": 0}
             ),
             "helpdesk_open_31_90": forms.NumberInput(
                 attrs={"class": "input-field", "min": 0}
             ),
-            "helpdesk_open_over_90": forms.NumberInput(
+            "helpdesk_open_91_180": forms.NumberInput(
+                attrs={"class": "input-field", "min": 0}
+            ),
+            "helpdesk_open_181_365": forms.NumberInput(
+                attrs={"class": "input-field", "min": 0}
+            ),
+            "helpdesk_open_over_365": forms.NumberInput(
                 attrs={"class": "input-field", "min": 0}
             ),
             "summary": forms.Textarea(
