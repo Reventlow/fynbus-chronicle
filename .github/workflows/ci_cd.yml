@@ -8,6 +8,11 @@ on:
 
 env:
   DOCKER_IMAGE: elohite/chronicle
+  # The ServiceDesk sync scheduler ships as its own (much smaller) image.
+  # It runs the same apps/ code as the web image, so both are built from the
+  # same commit and tagged with the same version — a sync container running
+  # older code silently writes stale statistics.
+  DOCKER_SYNC_IMAGE: elohite/chronicle_sync_servicedesk
 
 # Cancel in-progress runs on same branch to avoid Docker Hub rate limits
 concurrency:
@@ -75,5 +80,17 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.VERSION }}
             ${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push ServiceDesk sync image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.sync
+          push: true
+          tags: |
+            ${{ env.DOCKER_SYNC_IMAGE }}:${{ env.VERSION }}
+            ${{ env.DOCKER_SYNC_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.2 — 2026-08-27
+
+### Fixed
+- **Sync-containeren bygges nu af CI og versionsstyres.** `chronicle_sync_servicedesk` was built by hand and last pushed on 2026-02-03, so the deployed scheduler ran February's code against the current database — it would never have written the new liggetid buckets. CI now builds `docker/Dockerfile.sync` on every push to main and tags it with the same `version.txt` version as the web image, and the compose file pins both services to that version instead of letting the sync float on `:latest`.
+
 ## 0.10.1 — 2026-08-27
 
 ### Changed
