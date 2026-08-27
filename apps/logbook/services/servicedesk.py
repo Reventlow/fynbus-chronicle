@@ -5,6 +5,7 @@ Handles communication with ManageEngine ServiceDesk Plus API
 to fetch ticket statistics for Chronicle WeekLogs.
 """
 
+import json
 import logging
 import urllib.parse
 from datetime import datetime, timedelta
@@ -260,6 +261,118 @@ class ServiceDeskClient:
                 )
 
         return timestamps
+
+    def _fetch_paged(self, criteria: list[dict], fields: list[str]) -> list[dict] | None:
+        """Page through /requests for the given search criteria.
+
+        Returns None if any page fails — a partial list would understate
+        whatever is being counted.
+        """
+        if not self.base_url or not self.api_key:
+            logger.warning("ServiceDesk URL or API key not configured")
+            return None
+
+        rows: list[dict] = []
+        start_index = 1
+
+        for _ in range(self.MAX_PAGES):
+            input_data = {
+                "list_info": {
+                    "row_count": self.PAGE_SIZE,
+                    "start_index": start_index,
+                    "fields_required": fields,
+                    "search_criteria": criteria,
+                }
+            }
+            url = f"{self.base_url}/api/v3/requests?input_data={urllib.parse.quote(json.dumps(input_data))}"
+
+            try:
+                response = requests.get(
+                    url,
+                    headers={"authtoken": self.api_key, "Content-Type": "application/json"},
+                    timeout=60,
+                )
+                response.raise_for_status()
+                data = response.json()
+            except (requests.RequestException, ValueError) as e:
+                logger.error("ServiceDesk query failed: %s", e)
+                return None
+
+            if data.get("response_status", [{}])[0].get("status") != "success":
+                logger.error("ServiceDesk query error: %s", data.get("response_status"))
+                return None
+
+            rows += data.get("requests", []) or []
+
+            if not (data.get("list_info") or {}).get("has_more_rows"):
+                return rows
+            start_index += self.PAGE_SIZE
+
+        logger.warning("ServiceDesk query hit the %d page cap", self.MAX_PAGES)
+        return rows
+
+    @staticmethod
+    def _created_ms(request_row: dict) -> int | None:
+        """Epoch-ms out of a request's created_time field, or None."""
+        created = request_row.get("created_time")
+        raw = created.get("value") if isinstance(created, dict) else created
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+
+    def fetch_open_created_times_at(self, at_ms: int) -> list[int] | None:
+        """Creation timestamps of every request that was open at ``at_ms``.
+
+        Reconstructs a past week: a ticket was open at that instant if it
+        was created at or before it and either is still open now, or was
+        completed afterwards. Tickets deleted or merged since then cannot
+        be recovered, so the count can come out slightly below what was
+        recorded at the time.
+
+        Returns None if any query failed.
+        """
+        now_ms = int(datetime.now().timestamp() * 1000)
+        created_times: list[int] = []
+
+        for status in self.OPEN_STATUSES:
+            rows = self._fetch_paged(
+                [
+                    {"field": "status.name", "condition": "is", "value": status},
+                    {
+                        "field": "created_time",
+                        "condition": "lte",
+                        "value": str(at_ms),
+                        "logical_operator": "AND",
+                    },
+                ],
+                ["created_time", "status"],
+            )
+            if rows is None:
+                return None
+            created_times += [ms for ms in map(self._created_ms, rows) if ms is not None]
+
+        closed_since = self._fetch_paged(
+            [
+                {
+                    "field": "completed_time",
+                    "condition": "between",
+                    "values": [str(at_ms), str(now_ms)],
+                },
+                {
+                    "field": "created_time",
+                    "condition": "lte",
+                    "value": str(at_ms),
+                    "logical_operator": "AND",
+                },
+            ],
+            ["created_time", "completed_time", "status"],
+        )
+        if closed_since is None:
+            return None
+        created_times += [ms for ms in map(self._created_ms, closed_since) if ms is not None]
+
+        return created_times
 
     @staticmethod
     def bucket_by_age(created_times_ms: list[int], now_ms: int) -> dict[str, int]:

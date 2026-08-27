@@ -270,6 +270,8 @@ Sættes du på vagt af en kollega, får du besked via klokken øverst til højre
 
 ## Eksporter rapporter
 
+Uger fra før liggetid-opdelingen blev indført viser ikke afsnittet. Administratoren kan genskabe tallene for en lukket uge fra ServiceDesk-historikken med `python manage.py backfill_liggetid <år> <uge>` (køres i sync-containeren).
+
 Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: en bjælke pr. aldersgruppe (under 1 uge, 1-2 uger, 2 uger-1 måned, 1-3 måneder, 3-6 måneder, 6-12 måneder og over 12 måneder) med antal og andel, samt en linje der opsummerer hvor mange af de åbne sager der har ligget i mere end 1 måned. Afsnittet vises kun for uger hvor opdelingen er registreret.
 
 ### PDF rapport

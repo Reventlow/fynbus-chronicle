@@ -155,6 +155,74 @@ def changelog_latest(request: HttpRequest) -> JsonResponse:
 # -------------------------------------------------------------------------
 
 
+@require_http_methods(["PATCH"])
+@api_auth(scope="write")
+def weeklog_helpdesk_age(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Set the open-ticket age ("liggetid") breakdown on a past weeklog.
+
+    The ServiceDesk sync only ever fills in the *current* week, so a week
+    that closed before the breakdown existed can only be filled in by hand
+    or by reconstructing it from ticket history (see the
+    ``backfill_liggetid`` management command). This endpoint is that
+    write path.
+
+    Body: one key per bucket field (missing buckets count as 0), plus an
+    optional ``helpdesk_open`` to correct the recorded total. The buckets
+    must add up to the open-ticket total, exactly as the weeklog form
+    requires — a breakdown that does not add up would misreport the week.
+    """
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+
+    bucket_fields = [field for field, *_ in WeekLog.HELPDESK_AGE_BUCKETS]
+    unknown = set(data) - set(bucket_fields) - {"helpdesk_open"}
+    if unknown:
+        return JsonResponse(
+            {"error": "unknown_field", "detail": f"unknown fields: {sorted(unknown)}"},
+            status=400,
+        )
+
+    buckets = {}
+    for field in bucket_fields:
+        value = data.get(field, 0)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            return JsonResponse(
+                {"error": "invalid_value", "detail": f"{field} must be a non-negative integer"},
+                status=400,
+            )
+        buckets[field] = value
+
+    open_total = data.get("helpdesk_open", weeklog.helpdesk_open)
+    if not isinstance(open_total, int) or isinstance(open_total, bool) or open_total < 0:
+        return JsonResponse(
+            {"error": "invalid_value", "detail": "helpdesk_open must be a non-negative integer"},
+            status=400,
+        )
+
+    bucket_total = sum(buckets.values())
+    if bucket_total and bucket_total != open_total:
+        return JsonResponse(
+            {
+                "error": "breakdown_mismatch",
+                "detail": (
+                    f"buckets sum to {bucket_total} but helpdesk_open is {open_total}; "
+                    "pass helpdesk_open to correct the total"
+                ),
+            },
+            status=400,
+        )
+
+    weeklog.helpdesk_open = open_total
+    for field, count in buckets.items():
+        setattr(weeklog, field, count)
+    weeklog.save(update_fields=["helpdesk_open", *bucket_fields, "updated_at"])
+
+    return JsonResponse({"weeklog": serialize_weeklog(weeklog)})
+
+
 @require_POST
 @api_auth(scope="write")
 def priority_item_create(request: HttpRequest, year: int, week: int) -> JsonResponse:

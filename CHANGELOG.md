@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.3 — 2026-08-27
+
+### Added
+- **Backfill af liggetid for lukkede uger** (FR #8, opfølgning). The sync only ever fills in the current week, so weeks that closed before 0.10.0 showed no liggetid section at all. New `backfill_liggetid <år> <uge>` management command reconstructs a past week from ServiceDesk history: a ticket counts as open at the week's snapshot instant if it was created by then and is either still open or was closed afterwards, and ages are measured at that instant rather than today. `--all-missing` walks every week without a breakdown, `--dry-run` prints without saving. Run it where the ServiceDesk credentials live (the sync container).
+- **`PATCH /api/v1/weeklogs/<år>/<uge>/helpdesk-age/`** (write scope) sets the seven buckets on a past week. Same rule as the form: the buckets must add up to "Åbne sager", with an optional `helpdesk_open` to correct the total; all-zero clears the breakdown.
+
+### Note
+- A reconstruction can land slightly below the recorded open count — tickets deleted or merged since the snapshot cannot be recovered. The command refuses to save on a mismatch unless `--adjust-total` is passed, so the discrepancy stays visible rather than being silently absorbed into a bucket.
+
 ## 0.10.2 — 2026-08-27
 
 ### Fixed

@@ -20,6 +20,11 @@ urlpatterns = [
     path("changelog/latest/", views.changelog_latest, name="changelog-latest"),
     # Write
     path(
+        "weeklogs/<int:year>/<int:week>/helpdesk-age/",
+        views.weeklog_helpdesk_age,
+        name="weeklog-helpdesk-age",
+    ),
+    path(
         "weeklogs/<int:year>/<int:week>/priority-items/",
         views.priority_item_create,
         name="priority-item-create",
