@@ -93,7 +93,7 @@ class ServiceDeskClient:
             }
         }
 
-        encoded_input = urllib.parse.quote(str(input_data).replace("'", '"'))
+        encoded_input = urllib.parse.quote(json.dumps(input_data))
         url = f"{self.base_url}/api/v3/requests?input_data={encoded_input}"
 
         try:
@@ -148,7 +148,7 @@ class ServiceDeskClient:
                 }
             }
 
-            encoded_input = urllib.parse.quote(str(input_data).replace("'", '"'))
+            encoded_input = urllib.parse.quote(json.dumps(input_data))
             url = f"{self.base_url}/api/v3/requests?input_data={encoded_input}"
 
             try:
@@ -176,91 +176,42 @@ class ServiceDeskClient:
     PAGE_SIZE = 100
     MAX_PAGES = 20
 
-    def _fetch_open_created_times(self) -> list[int] | None:
-        """
-        Fetch the creation timestamp of every currently open request.
+    def _open_status_criterion(self) -> dict:
+        """Search criterion matching every status Chronicle counts as open.
 
-        Pages through the request list once per open status, asking only for
-        ``created_time`` to keep the payloads small.
+        One criterion with a ``values`` list rather than one query per
+        status — the sync runs every few minutes, so the difference is five
+        API calls per cycle versus one.
+        """
+        return {"field": "status.name", "condition": "is", "values": list(self.OPEN_STATUSES)}
+
+    def fetch_open_requests(self, created_before_ms: int | None = None) -> list[dict] | None:
+        """
+        Fetch every currently open request, with its creation timestamp.
+
+        This one listing answers both questions the sync asks — how many
+        tickets are open, and how old each of them is — so the counts and
+        the age breakdown can never disagree with each other.
+
+        Args:
+            created_before_ms: Only requests created at or before this
+                instant. Used when reconstructing a past week.
 
         Returns:
-            List of creation timestamps in milliseconds, or None if any query
-            failed — a partial list would understate the age breakdown.
+            The request rows, or None if any page failed — a partial list
+            would understate both the count and the breakdown.
         """
-        if not self.base_url or not self.api_key:
-            logger.warning("ServiceDesk URL or API key not configured")
-            return None
-
-        timestamps: list[int] = []
-
-        for status in self.OPEN_STATUSES:
-            start_index = 1
-
-            for _ in range(self.MAX_PAGES):
-                input_data = {
-                    "list_info": {
-                        "row_count": self.PAGE_SIZE,
-                        "start_index": start_index,
-                        "fields_required": ["created_time"],
-                        "search_criteria": [
-                            {
-                                "field": "status.name",
-                                "condition": "is",
-                                "value": status,
-                            }
-                        ],
-                    }
+        criteria = [self._open_status_criterion()]
+        if created_before_ms is not None:
+            criteria.append(
+                {
+                    "field": "created_time",
+                    "condition": "lte",
+                    "value": str(created_before_ms),
+                    "logical_operator": "AND",
                 }
-
-                encoded_input = urllib.parse.quote(str(input_data).replace("'", '"'))
-                url = f"{self.base_url}/api/v3/requests?input_data={encoded_input}"
-
-                try:
-                    response = requests.get(
-                        url,
-                        headers={
-                            "authtoken": self.api_key,
-                            "Content-Type": "application/json",
-                        },
-                        timeout=30,
-                    )
-                    response.raise_for_status()
-                    data = response.json()
-                except (requests.RequestException, ValueError) as e:
-                    logger.error(
-                        "ServiceDesk age query failed for status %s: %s", status, e
-                    )
-                    return None
-
-                if data.get("response_status", [{}])[0].get("status") != "success":
-                    logger.error(
-                        "ServiceDesk age query error for status %s: %s",
-                        status,
-                        data.get("response_status"),
-                    )
-                    return None
-
-                for request_row in data.get("requests", []) or []:
-                    created = request_row.get("created_time")
-                    # created_time comes back as {"value": "<epoch ms>", ...}
-                    raw = created.get("value") if isinstance(created, dict) else created
-                    try:
-                        timestamps.append(int(raw))
-                    except (TypeError, ValueError):
-                        logger.debug("Skipping request with unusable created_time: %r", created)
-
-                list_info = data.get("list_info", {}) or {}
-                if not list_info.get("has_more_rows"):
-                    break
-                start_index += self.PAGE_SIZE
-            else:
-                logger.warning(
-                    "ServiceDesk age query hit the %d page cap for status %s",
-                    self.MAX_PAGES,
-                    status,
-                )
-
-        return timestamps
+            )
+        return self._fetch_paged(criteria, ["created_time", "status"])
 
     def _fetch_paged(self, criteria: list[dict], fields: list[str]) -> list[dict] | None:
         """Page through /requests for the given search criteria.
@@ -333,24 +284,11 @@ class ServiceDeskClient:
         Returns None if any query failed.
         """
         now_ms = int(datetime.now().timestamp() * 1000)
-        created_times: list[int] = []
 
-        for status in self.OPEN_STATUSES:
-            rows = self._fetch_paged(
-                [
-                    {"field": "status.name", "condition": "is", "value": status},
-                    {
-                        "field": "created_time",
-                        "condition": "lte",
-                        "value": str(at_ms),
-                        "logical_operator": "AND",
-                    },
-                ],
-                ["created_time", "status"],
-            )
-            if rows is None:
-                return None
-            created_times += [ms for ms in map(self._created_ms, rows) if ms is not None]
+        still_open = self.fetch_open_requests(created_before_ms=at_ms)
+        if still_open is None:
+            return None
+        created_times = [ms for ms in map(self._created_ms, still_open) if ms is not None]
 
         closed_since = self._fetch_paged(
             [
@@ -407,10 +345,11 @@ class ServiceDeskClient:
             Dict keyed by WeekLog field name, or an empty dict when the
             breakdown could not be determined.
         """
-        created_times = self._fetch_open_created_times()
-        if created_times is None:
+        rows = self.fetch_open_requests()
+        if rows is None:
             return {}
 
+        created_times = [ms for ms in map(self._created_ms, rows) if ms is not None]
         now_ms = int(datetime.now().timestamp() * 1000)
         return self.bucket_by_age(created_times, now_ms)
 
@@ -433,8 +372,22 @@ class ServiceDeskClient:
 
         created = self._query_count("created_time", start_ms, end_ms)
         closed = self._query_count("completed_time", start_ms, end_ms)
-        open_count = self._query_open_count()
-        open_by_age = self.get_open_by_age()
+
+        # One listing of the open tickets answers both the count and the age
+        # breakdown; three API calls per sync in total. If it fails, fall back
+        # to the count-only query (one call per status) so the headline number
+        # still updates and the previous breakdown is left in place.
+        open_rows = self.fetch_open_requests()
+        if open_rows is None:
+            logger.warning("Open-ticket listing failed, falling back to count query")
+            open_count = self._query_open_count()
+            open_by_age: dict[str, int] = {}
+        else:
+            open_count = len(open_rows)
+            created_times = [ms for ms in map(self._created_ms, open_rows) if ms is not None]
+            open_by_age = self.bucket_by_age(
+                created_times, int(datetime.now().timestamp() * 1000)
+            )
 
         logger.info(
             "ServiceDesk stats for week %d/%d: created=%d, closed=%d, open=%d, by_age=%s",

@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.4 — 2026-08-28
+
+### Changed
+- **Sync'en kalder ServiceDesk 3 gange i stedet for 12.** The open-ticket queries were one API call per status (five), and the liggetid breakdown added five more on top. ServiceDesk Plus accepts a `values` list on `status.name`, so a single listing now returns every open ticket with its `created_time` — the count and the age breakdown come from the same rows and can no longer disagree. A sync cycle is now: new-count, closed-count, one open listing (plus one call per extra 100 open tickets). At the default five-minute interval that is ~860 calls a day instead of ~3.500 — and below the ~2.000 the sync made before liggetid existed. Historical reconstruction (`backfill_liggetid`) dropped from six calls per week to two.
+- If the listing fails, the sync falls back to the old count-per-status query so the headline number still updates, and leaves the previous breakdown in place rather than replacing it with zeros.
+
+### Fixed
+- **Count-forespørgslerne sendte Python-syntaks som JSON.** `_query_count` and `_query_open_count` serialised their payload with `str(dict)` and a quote swap, which emits `True` rather than `true` and would corrupt any value containing an apostrophe. Both now use `json.dumps`. ServiceDesk happened to accept the old form, so no numbers were wrong.
+
 ## 0.10.3 — 2026-08-27
 
 ### Added
