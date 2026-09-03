@@ -179,7 +179,10 @@ class WeekLog(models.Model):
 
     def get_absolute_url(self) -> str:
         """Return URL for viewing this week log."""
-        return reverse("logbook:weeklog-detail", kwargs={"pk": self.pk})
+        return reverse(
+            "logbook:weeklog-detail",
+            kwargs={"year": self.year, "week": self.week_number},
+        )
 
     @classmethod
     def get_current_week(cls) -> "WeekLog | None":

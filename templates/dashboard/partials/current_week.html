@@ -9,7 +9,7 @@
           {{ weeklog.week_label }}
         </h2>
       </div>
-      <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}" class="btn btn-sm">Se detaljer</a>
+      <a href="{% url 'logbook:weeklog-detail' weeklog.year weeklog.week_number %}" class="btn btn-sm">Se detaljer</a>
     </div>
 
     {% if weeklog.summary %}
@@ -37,7 +37,7 @@
       <div class="flex items-center justify-between" style="margin-bottom: 8px;">
         <div class="label-eyebrow">{% sw_phrase "Aktive opgaver" "Aktive missioner" "Imperial direktiver" "Pligter på dækket" trek="Aktive direktiver" klingon="Ordrer fra Kahless" %}</div>
         {% if is_editor %}
-        <a href="{% url 'logbook:weeklog-detail' weeklog.pk %}?action=add#priority-items-list"
+        <a href="{% url 'logbook:weeklog-detail' weeklog.year weeklog.week_number %}?action=add#priority-items-list"
            class="btn btn-sm btn-ghost"
            style="padding: 3px 8px; font-size: 11.5px;"
            title="Åbner ugelogen og en tom opgave-form">

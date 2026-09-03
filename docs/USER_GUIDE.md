@@ -121,6 +121,8 @@ Gå til "Ugelogs" i navigationen for at se alle ugelogs.
 
 Klik på "Se detaljer" for at åbne en ugelog.
 
+Adressen på en ugelog er `/logbook/<år>/<uge>/` — fx <https://chronicle.fynbus.net/logbook/2026/34/> for uge 34, 2026. Du kan skrive den direkte i browseren. Ældre links med et id (`/logbook/39/`) sender dig automatisk videre til den rigtige uge.
+
 Her kan du:
 - Se helpdesk-statistik
 - Administrere prioriterede opgaver

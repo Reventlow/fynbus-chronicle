@@ -151,7 +151,7 @@
 
       <!-- Actions -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-sand-200 dark:border-sand-700">
-        <a href="{% if object %}{% url 'logbook:weeklog-detail' object.pk %}{% else %}{% url 'logbook:weeklog-list' %}{% endif %}"
+        <a href="{% if object %}{% url 'logbook:weeklog-detail' object.year object.week_number %}{% else %}{% url 'logbook:weeklog-list' %}{% endif %}"
            class="btn-secondary">
           Annuller
         </a>

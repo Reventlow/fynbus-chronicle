@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.5 — 2026-09-03
+
+### Changed
+- **Ugelogs adresseres nu på år og uge.** `/logbook/39/` became `/logbook/2026/34/` — the way the team refers to a week, rather than a database id nobody can read. The edit page (`/logbook/2026/34/edit/`) and the four export endpoints (`/logbook/2026/34/export/pdf/` and friends) follow the same shape, which also matches what the JSON API has always used (`/api/v1/weeklogs/<år>/<uge>/`).
+- Old id-based links keep working: `/logbook/<id>/` and `/logbook/<id>/edit/` answer with a permanent redirect to the year/week URL, so bookmarks and links inside already-sent reports still resolve.
+- The HTMX partial endpoints inside the weeklog page (klarmelding, mødereferat, "tilføj eksisterende opgave") stay id-addressed — they are POST targets rendered into the page and never appear in the address bar.
+
 ## 0.10.4 — 2026-08-28
 
 ### Changed

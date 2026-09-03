@@ -9,9 +9,23 @@ app_name = "logbook"
 urlpatterns = [
     # Week log views
     path("", views.WeekLogListView.as_view(), name="weeklog-list"),
-    path("<int:pk>/", views.WeekLogDetailView.as_view(), name="weeklog-detail"),
+    # Weeklogs are addressed by ISO year + week — the way the team refers to
+    # them — rather than by database id.
+    path(
+        "<int:year>/<int:week>/",
+        views.WeekLogDetailView.as_view(),
+        name="weeklog-detail",
+    ),
     path("create/", views.WeekLogCreateView.as_view(), name="weeklog-create"),
-    path("<int:pk>/edit/", views.WeekLogUpdateView.as_view(), name="weeklog-edit"),
+    path(
+        "<int:year>/<int:week>/edit/",
+        views.WeekLogUpdateView.as_view(),
+        name="weeklog-edit",
+    ),
+    # Links from before 0.10.5 used the database id. Kept as permanent
+    # redirects so old bookmarks, emails and report links still resolve.
+    path("<int:pk>/", views.weeklog_legacy_redirect, name="weeklog-legacy"),
+    path("<int:pk>/edit/", views.weeklog_legacy_edit_redirect, name="weeklog-legacy-edit"),
     # HTMX toggle for the per-user "nothing more to add" marker (FR #7)
     path(
         "<int:pk>/signoff/toggle/",
@@ -138,8 +152,16 @@ urlpatterns = [
         name="incident-row",
     ),
     # Export endpoints
-    path("<int:pk>/export/pdf/", views.export_pdf, name="export-pdf"),
-    path("<int:pk>/export/markdown/", views.export_markdown, name="export-markdown"),
-    path("<int:pk>/export/html/", views.export_html, name="export-html"),
-    path("<int:pk>/export/email/", views.export_email, name="export-email"),
+    path("<int:year>/<int:week>/export/pdf/", views.export_pdf, name="export-pdf"),
+    path(
+        "<int:year>/<int:week>/export/markdown/",
+        views.export_markdown,
+        name="export-markdown",
+    ),
+    path("<int:year>/<int:week>/export/html/", views.export_html, name="export-html"),
+    path(
+        "<int:year>/<int:week>/export/email/",
+        views.export_email,
+        name="export-email",
+    ),
 ]

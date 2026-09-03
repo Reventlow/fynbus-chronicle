@@ -17,7 +17,7 @@
   {% if incidents %}
     <div class="flex-grow scrollbar-thin" style="overflow-y: auto;">
       {% for incident in incidents %}
-        <a href="{% url 'logbook:weeklog-detail' incident.weeklog.pk %}#incident-{{ incident.pk }}"
+        <a href="{% url 'logbook:weeklog-detail' incident.weeklog.year incident.weeklog.week_number %}#incident-{{ incident.pk }}"
            class="grid items-stretch gap-3"
            style="grid-template-columns: 6px 1fr auto; padding: 13px 24px; border-top: 1px solid var(--hairline); text-decoration: none; color: inherit; transition: background 0.12s;"
            onmouseover="this.style.background='var(--surface-2)'"

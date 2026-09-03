@@ -118,7 +118,7 @@
                     padding: 16px 24px;
                     border-top: 1px solid var(--hairline);">
           <div>
-            <a href="{% url 'logbook:weeklog-detail' a.weeklog.pk %}"
+            <a href="{% url 'logbook:weeklog-detail' a.weeklog.year a.weeklog.week_number %}"
                class="num" style="color: var(--ink-1); text-decoration: none; font-weight: 600; font-size: 13px;">
               {{ a.weeklog.week_label }}
             </a>

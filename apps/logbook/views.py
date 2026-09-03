@@ -14,7 +14,7 @@ from django.db import models as db_models
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -85,7 +85,12 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "weeklog"
 
     def get_object(self, queryset=None):
-        weeklog = super().get_object(queryset)
+        """Look the weeklog up by ISO year + week from the URL."""
+        weeklog = get_object_or_404(
+            queryset if queryset is not None else WeekLog.objects.all(),
+            year=self.kwargs["year"],
+            week_number=self.kwargs["week"],
+        )
         # If we're looking at the current ISO-week weeklog, run the
         # auto-close pass so anything older than 6 weeks is tidied up
         # before we render. Carry-over is intentionally NOT automatic —
@@ -131,7 +136,10 @@ class WeekLogCreateView(EditorRequiredMixin, CreateView):
 
     def get_success_url(self) -> str:
         """Redirect to detail view after creation."""
-        return reverse_lazy("logbook:weeklog-detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy(
+            "logbook:weeklog-detail",
+            kwargs={"year": self.object.year, "week": self.object.week_number},
+        )
 
 
 class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
@@ -141,6 +149,14 @@ class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
     form_class = WeekLogForm
     template_name = "logbook/weeklog_form.html"
 
+    def get_object(self, queryset=None):
+        """Look the weeklog up by ISO year + week from the URL."""
+        return get_object_or_404(
+            queryset if queryset is not None else WeekLog.objects.all(),
+            year=self.kwargs["year"],
+            week_number=self.kwargs["week"],
+        )
+
     def form_valid(self, form) -> HttpResponse:
         """Show success message."""
         response = super().form_valid(form)
@@ -149,7 +165,30 @@ class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
 
     def get_success_url(self) -> str:
         """Redirect back to detail view."""
-        return reverse_lazy("logbook:weeklog-detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy(
+            "logbook:weeklog-detail",
+            kwargs={"year": self.object.year, "week": self.object.week_number},
+        )
+
+
+def weeklog_legacy_redirect(request: HttpRequest, pk: int) -> HttpResponse:
+    """Redirect a pre-0.10.5 ``/logbook/<pk>/`` link to its year/week URL.
+
+    Weeklogs used to be addressed by database id. Old bookmarks, mails and
+    links inside already-sent reports still carry that form, so they get a
+    permanent redirect rather than a 404.
+    """
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    return redirect(weeklog, permanent=True)
+
+
+def weeklog_legacy_edit_redirect(request: HttpRequest, pk: int) -> HttpResponse:
+    """Redirect a pre-0.10.5 ``/logbook/<pk>/edit/`` link to its year/week URL."""
+    weeklog = get_object_or_404(WeekLog, pk=pk)
+    return redirect(
+        reverse("logbook:weeklog-edit", kwargs={"year": weeklog.year, "week": weeklog.week_number}),
+        permanent=True,
+    )
 
 
 # =============================================================================
@@ -512,7 +551,7 @@ def priority_item_merge_post(
         "-weeklog__year", "-weeklog__week_number"
     ).first()
     if target_appearance is not None:
-        return redirect("logbook:weeklog-detail", pk=target_appearance.weeklog.pk)
+        return redirect(target_appearance.weeklog)
     return redirect("logbook:priority-item-history", pk=winner.pk)
 
 
@@ -535,7 +574,7 @@ def weeklog_add_existing_post(request: HttpRequest, pk: int) -> HttpResponse:
         )
     else:
         messages.info(request, "Ingen opgaver tilføjet.")
-    return redirect("logbook:weeklog-detail", pk=weeklog.pk)
+    return redirect(weeklog)
 
 
 # =============================================================================
@@ -804,9 +843,9 @@ def incident_row(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
-def export_pdf(request: HttpRequest, pk: int) -> HttpResponse:
+def export_pdf(request: HttpRequest, year: int, week: int) -> HttpResponse:
     """Export a week log as PDF."""
-    weeklog = get_object_or_404(WeekLog, pk=pk)
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
     pdf_content = generate_pdf(weeklog)
 
     filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.pdf"
@@ -817,9 +856,9 @@ def export_pdf(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
-def export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
+def export_markdown(request: HttpRequest, year: int, week: int) -> HttpResponse:
     """Export a week log as Markdown."""
-    weeklog = get_object_or_404(WeekLog, pk=pk)
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
     md_content = generate_markdown(weeklog)
 
     filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.md"
@@ -830,9 +869,9 @@ def export_markdown(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
-def export_html(request: HttpRequest, pk: int) -> HttpResponse:
+def export_html(request: HttpRequest, year: int, week: int) -> HttpResponse:
     """Export a week log as HTML."""
-    weeklog = get_object_or_404(WeekLog, pk=pk)
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
     html_content = generate_html(weeklog)
 
     filename = f"ugelog_{weeklog.year}_uge{weeklog.week_number}.html"
@@ -843,9 +882,9 @@ def export_html(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
-def export_email(request: HttpRequest, pk: int) -> HttpResponse:
+def export_email(request: HttpRequest, year: int, week: int) -> HttpResponse:
     """Send a week log via email."""
-    weeklog = get_object_or_404(WeekLog, pk=pk)
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
     format = request.GET.get("format", "both")
     success, message = send_weeklog_email(
         weeklog, format=format, from_email=request.user.email
@@ -856,7 +895,7 @@ def export_email(request: HttpRequest, pk: int) -> HttpResponse:
     else:
         messages.error(request, message)
 
-    return redirect("logbook:weeklog-detail", pk=pk)
+    return redirect(weeklog)
 
 
 # ---------------------------------------------------------------------------
