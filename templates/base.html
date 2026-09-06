@@ -99,19 +99,15 @@
     the site, since the listener sits on <body>.
   {% endcomment %}
   <div id="htmx-error-toast"
-       class="alert alert-error"
+       class="alert alert-error error-toast"
        role="alert"
        aria-live="assertive"
-       hidden
-       style="position: fixed; right: 20px; bottom: 20px; z-index: 60;
-              max-width: 420px; box-shadow: var(--shadow-pop);
-              display: flex; align-items: flex-start; gap: 12px;">
+       hidden>
     <span id="htmx-error-text" style="flex: 1;"></span>
     <button type="button"
+            class="error-toast-close"
             onclick="document.getElementById('htmx-error-toast').hidden = true"
-            aria-label="Luk"
-            style="background: none; border: 0; cursor: pointer; color: inherit;
-                   font-size: 16px; line-height: 1; padding: 0;">&times;</button>
+            aria-label="Luk">&times;</button>
   </div>
 
   <script>

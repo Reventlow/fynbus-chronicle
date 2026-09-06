@@ -37,6 +37,27 @@ class TestErrorToastMarkup:
         assert 'role="alert"' in toast
         assert 'aria-live="assertive"' in toast
 
+    def test_toast_has_no_inline_display(self, client, editor):
+        """An inline `display` beats [hidden] { display: none }.
+
+        0.10.6 shipped the toast with inline `display: flex`, so an empty
+        red box sat in the corner of every page. The layout belongs in
+        CSS, where `.error-toast[hidden]` can switch it off.
+        """
+        html = client.get(reverse("logbook:weeklog-list")).content.decode()
+        toast = html[html.index('id="htmx-error-toast"') : html.index('id="htmx-error-text"')]
+
+        assert "display" not in toast
+        assert "error-toast" in toast
+
+    def test_stylesheet_hides_the_toast(self):
+        """The rule that actually keeps it off screen must exist."""
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "css" / "output.css").read_text()
+
+        assert ".error-toast[hidden]" in css
+
     def test_403_gets_its_own_wording(self, client, editor):
         """403 is the one users hit in practice — stale session or CSRF."""
         html = client.get(reverse("logbook:weeklog-list")).content.decode()

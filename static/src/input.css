@@ -1359,6 +1359,32 @@ html[data-density="dashboard"] .js-dashboard-main {
 }
 
 @layer components {
+  /* ── HTMX error toast ─────────────────────────────────────────────────
+     The layout lives here rather than inline: an inline `display: flex`
+     beats the browser's `[hidden] { display: none }` rule, which is what
+     made an empty toast sit on screen permanently in 0.10.6/0.11.0. */
+  .error-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 60;
+    max-width: 420px;
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .error-toast[hidden] { display: none; }
+  .error-toast-close {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+  }
+
   /* ── Rendered Markdown (priority descriptions, notes, minutes) ──────────
      Compact by design: these blocks sit inside table-like rows, so the
      vertical rhythm is tighter than a prose page would use. */

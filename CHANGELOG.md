@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.11.1 — 2026-09-06
+
+### Fixed
+- **Tom rød boks i hjørnet af hver side.** The htmx error toast added in 0.10.6 carried its layout as an inline `display: flex`, which beats the browser's `[hidden] { display: none }` rule — so the empty toast sat visible in the bottom-right corner of every page, showing nothing but its close button. The layout moved to `.error-toast` in the stylesheet, where `.error-toast[hidden]` can switch it off. Two tests now guard it: the markup must carry no inline `display`, and the rule must exist in the built CSS.
+
 ## 0.11.0 — 2026-09-06
 
 ### Added
