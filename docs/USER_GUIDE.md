@@ -146,6 +146,12 @@ er personlig — den påvirker ikke dine kollegers markeringer.
 
 ### Prioriterede opgaver
 
+**Genåbn en afsluttet opgave**
+
+På opgavesøgningen (Ugelogs → Opgavesøgning) har hver afsluttet opgave en ↺-knap.
+Den genåbner opgaven og lægger den på indeværende uge, så den dukker op i ugeloggen
+igen. Du bliver stående i søgningen med de filtre, du havde.
+
 **Markdown i beskrivelser**
 
 Beskrivelsen på en prioriteret opgave skrives i Markdown: `**fed**`, punkt- og

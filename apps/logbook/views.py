@@ -13,8 +13,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models as db_models
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -29,7 +30,13 @@ from .exports.email import send_weeklog_email
 from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
-from .forms import AbsenceForm, IncidentForm, MeetingMinutesForm, PriorityItemForm, WeekLogForm
+from .forms import (
+    AbsenceForm,
+    IncidentForm,
+    MeetingMinutesForm,
+    PriorityItemForm,
+    WeekLogForm,
+)
 from .models import (
     Absence,
     Incident,
@@ -38,7 +45,6 @@ from .models import (
     WeekLog,
     WeekLogSignoff,
 )
-
 
 # =============================================================================
 # WeekLog Views
@@ -447,6 +453,57 @@ def priority_item_soft_delete(request: HttpRequest, pk: int) -> HttpResponse:
         f"”Slettede” og gendanne den.",
     )
     return redirect("logbook:priority-item-history", pk=item.pk)
+
+
+def _back_to(request: HttpRequest, *, fallback: str) -> HttpResponse:
+    """Redirect to the page the action was triggered from.
+
+    The search page carries its filters in the query string, and losing
+    them on every action makes the page tedious to work with. Falls back
+    when there is no referer or it points somewhere else entirely.
+    """
+    referer = request.META.get("HTTP_REFERER")
+    if referer and url_has_allowed_host_and_scheme(
+        referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(referer)
+    return redirect(fallback)
+
+
+@login_required
+@editor_required
+@require_POST
+def priority_item_reopen(request: HttpRequest, pk: int) -> HttpResponse:
+    """Reopen a closed task from the search page.
+
+    Same semantics as flipping the status in the weeklog edit form: the
+    task goes back to "igangværende" and lands on the current week, so it
+    is somewhere visible rather than only findable through search.
+    """
+    item = get_object_or_404(PriorityItem, pk=pk)
+    if item.is_deleted:
+        messages.error(request, f"”{item.title}” er slettet — gendan den først.")
+        return redirect("logbook:priority-item-history", pk=item.pk)
+
+    current = WeekLog.get_current_week()
+    item.reopen(into_weeklog=current)
+
+    if current is not None:
+        messages.success(
+            request,
+            f"”{item.title}” er genåbnet og lagt på {current.week_label}.",
+        )
+    else:
+        # No weeklog for this week yet, so there is nowhere to put it.
+        messages.success(
+            request,
+            f"”{item.title}” er genåbnet. Der findes ingen ugelog for denne "
+            "uge endnu, så opgaven er ikke lagt på en uge.",
+        )
+    return _back_to(
+        request,
+        fallback=reverse("logbook:priority-item-history", kwargs={"pk": item.pk}),
+    )
 
 
 @login_required

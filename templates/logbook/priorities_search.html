@@ -113,6 +113,25 @@
             <span></span>
           {% endif %}
           {% if is_editor and not item.is_deleted %}
+          {% comment %}
+            Both actions share one grid cell so adding "genåbn" does not
+            shift the column layout for every row.
+          {% endcomment %}
+          <div class="flex items-center" style="gap: 2px;">
+            {% if item.status == 'completed' and not item.is_merged %}
+              <form method="post" action="{% url 'logbook:priority-item-reopen' item.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit"
+                        class="icon-btn"
+                        style="width: 28px; height: 28px;"
+                        title="Genåbn opgaven og læg den på denne uge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+                    <path d="M3 3v5h5"/>
+                  </svg>
+                </button>
+              </form>
+            {% endif %}
             <button hx-get="{% url 'logbook:priority-item-merge' item.pk %}"
                     hx-target="#merge-dialog"
                     hx-swap="innerHTML"
@@ -123,6 +142,7 @@
                 <path d="M8 6V3M16 6V3M8 21l4-4M16 21l-4-4M8 6c0 4 4 5 4 8M16 6c0 4-4 5-4 8"/>
               </svg>
             </button>
+          </div>
           {% else %}
             <span></span>
           {% endif %}

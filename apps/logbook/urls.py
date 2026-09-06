@@ -98,6 +98,11 @@ urlpatterns = [
         name="priority-item-restore",
     ),
     path(
+        "priorities/<int:pk>/reopen/",
+        views.priority_item_reopen,
+        name="priority-item-reopen",
+    ),
+    path(
         "<int:pk>/add-existing/",
         views.weeklog_add_existing_dialog,
         name="weeklog-add-existing",

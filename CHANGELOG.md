@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.13.0 — 2026-09-06
+
+### Added
+- **Genåbn-knap på opgavesøgningen.** Afsluttede opgaver har nu en ↺-knap i søgeresultatet: den sætter opgaven tilbage til "igangværende", rydder auto-lukket-markeringen og lægger den på indeværende uge, så den er synlig et sted og ikke kun kan findes gennem søgning. Knappen vises kun på afsluttede opgaver, kun for redaktører, og ikke på slettede eller flettede.
+- Efter handlingen lander man samme sted i søgningen — med fritekst, status og år intakt — i stedet for at blive sendt til opgavens historik. Et referer uden for sitet følges ikke.
+
 ## 0.12.1 — 2026-09-06
 
 ### Changed
