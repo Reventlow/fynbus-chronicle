@@ -1,9 +1,15 @@
+{% load markdown_extras %}
 {% comment %}
   Priority item row — represents a PriorityItemAppearance for one weeklog.
   Context: `appearance` (the row), `item` (the long-lived task). The row pk
   used by edit/delete/reorder is appearance.pk.
 {% endcomment %}
-<div class="row-hoverable grid items-center gap-3"
+{% comment %}
+  items-start, not items-center: a description can now be several
+  paragraphs of rendered Markdown, and pills centred against that float
+  in the middle of the row. Single-line rows look unchanged.
+{% endcomment %}
+<div class="row-hoverable grid items-start gap-3"
      style="grid-template-columns: 14px auto 1fr auto auto auto;
             padding: 12px 24px;
             border-top: 1px solid var(--hairline);
@@ -16,7 +22,7 @@
      onmouseout="this.style.background='transparent'">
 
   {% if is_editor %}
-    <span class="drag-handle">
+    <span class="drag-handle" style="margin-top: 3px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="9" cy="5" r="0.7" fill="currentColor"/>
         <circle cx="9" cy="12" r="0.7" fill="currentColor"/>
@@ -30,7 +36,7 @@
     <span></span>
   {% endif %}
 
-  <span class="check {% if item.status == 'completed' %}is-checked{% endif %}" aria-hidden="true">
+  <span class="check {% if item.status == 'completed' %}is-checked{% endif %}" aria-hidden="true" style="margin-top: 2px;">
     {% if item.status == 'completed' %}
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <path d="M5 12l5 5L20 7"/>
@@ -67,23 +73,28 @@
       {% endif %}
     </div>
     {% if appearance.description %}
-      <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-3); white-space: pre-wrap;">{{ appearance.description|urlize }}</p>
+      <div class="md" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-3); line-height: 1.55;">{{ appearance.description|render_markdown }}</div>
     {% elif item.notes %}
+      {% comment %}
+        Notes are only a one-line preview here (the full text renders as
+        Markdown on the task's history page), so this one stays plain and
+        keeps its ellipsis.
+      {% endcomment %}
       <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.notes|urlize }}</p>
     {% endif %}
   </div>
 
-  <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+  <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}" style="margin-top: 1px;">
     {{ item.get_priority_display }}
   </span>
 
-  <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
+  <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}" style="margin-top: 1px;">
     {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
     {{ item.get_status_display }}
   </span>
 
   {% if is_editor %}
-  <div class="flex items-center gap-1">
+  <div class="flex items-center gap-1" style="margin-top: -2px;">
     <button hx-get="{% url 'logbook:priority-item-edit' appearance.pk %}"
             class="icon-btn"
             style="width: 26px; height: 26px;"

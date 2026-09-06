@@ -218,7 +218,7 @@
       </span>
     </div>
     {% if item.description %}
-    <div style="font-size: 13px; color: #6B635B; margin-top: 6px;">{{ item.description|linebreaksbr }}</div>
+    <div class="md" style="font-size: 13px; color: #6B635B; margin-top: 6px;">{{ item.description|render_markdown_inline }}</div>
     {% endif %}
   </div>
   {% endfor %}

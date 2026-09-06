@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.11.0 — 2026-09-06
+
+### Added
+- **Markdown i prioriterede opgaver.** Beskrivelser og noter renderes nu som Markdown i stedet for rå tekst: **fed**, lister, tabeller, citater, overskrifter, links og kode. Bare URL'er bliver stadig klikbare af sig selv, som de var før.
+- **Syntaksfarvning i kodeblokke.** En fence med et sprog (` ```bash `, ` ```python `, …) farvelægges med Pygments. Websiden bruger CSS-klasser, så koden følger lys/mørk tilstand; en fence uden sprog gættes ikke, den forbliver neutral.
+- **Kopiér-knap** på hver kodeblok på websiden, også på blokke der kommer ind med en HTMX-opdatering.
+- **Det samme i alle eksporter.** PDF, HTML-eksport og email får den fulde formatering med farvelægning og blokke inlinet som `style`-attributter, fordi mailklienter fjerner stylesheets og Outlook taber CSS ved indsæt. Markdown-eksporten er uændret — den indeholder kilden i forvejen.
+
+### Changed
+- Rækken i ugeloggen justerer nu pills og knapper efter opgavens titel i stedet for at centrere dem, så de ikke svæver midt i en høj beskrivelse.
+- Renderet Markdown saniteres med nh3 (Ammonia) mod en allowlist. Felterne skrives af kolleger, men de er stadig brugerinput; rå `<script>`, event-handlers og `javascript:`-links overlever ikke, og links får `rel="noopener noreferrer"`. Det gælder også mødereferatet, som hidtil blev renderet uden filter.
+
 ## 0.10.6 — 2026-09-06
 
 ### Fixed

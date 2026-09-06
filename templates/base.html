@@ -157,6 +157,51 @@
     })();
   </script>
 
+  {% comment %}
+    Copy buttons on rendered-Markdown code blocks. Added from JS rather
+    than the template because the markup comes out of the Markdown
+    renderer; re-run after every htmx swap so blocks that arrive with a
+    partial get one too.
+  {% endcomment %}
+  <script>
+    (function () {
+      function label(button, text, copied) {
+        button.textContent = text;
+        button.dataset.copied = copied ? "true" : "false";
+      }
+
+      function addCopyButtons(root) {
+        (root || document).querySelectorAll(".md pre").forEach(function (pre) {
+          // The button lives on .codehilite when highlighting is on, so a
+          // highlighted block does not get two of them.
+          var host = pre.parentElement.classList.contains("codehilite") ? pre.parentElement : pre;
+          if (host.querySelector(":scope > .md-copy")) return;
+
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "md-copy";
+          button.textContent = "Kopiér";
+          button.addEventListener("click", function () {
+            var code = pre.querySelector("code") || pre;
+            navigator.clipboard.writeText(code.innerText.replace(/\n$/, "")).then(
+              function () {
+                label(button, "Kopieret", true);
+                setTimeout(function () { label(button, "Kopiér", false); }, 1600);
+              },
+              function () { label(button, "Kunne ikke kopiere", false); }
+            );
+          });
+          host.appendChild(button);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () { addCopyButtons(); });
+      document.body.addEventListener("htmx:afterSwap", function (event) {
+        addCopyButtons(event.target);
+      });
+    })();
+  </script>
+
   {% block extra_js %}{% endblock %}
 </body>
 </html>

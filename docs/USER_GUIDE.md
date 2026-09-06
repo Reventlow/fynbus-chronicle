@@ -146,6 +146,15 @@ er personlig — den påvirker ikke dine kollegers markeringer.
 
 ### Prioriterede opgaver
 
+**Markdown i beskrivelser og noter**
+
+Beskrivelser og noter på en prioriteret opgave skrives i Markdown: `**fed**`, punkt- og
+nummerlister, tabeller, citater, links og kode. En kodeblok laves med tre backticks og
+gerne et sprog — ` ```bash `, ` ```python `, ` ```sql ` — så bliver den farvelagt. På
+websiden får hver kodeblok en "Kopiér"-knap, når du holder musen over den.
+
+Formateringen følger med i alle eksporter: PDF, HTML, email og Markdown-filen.
+
 **Tilføj opgave**
 1. Klik "Tilføj" ved Prioriterede opgaver
 2. Udfyld:

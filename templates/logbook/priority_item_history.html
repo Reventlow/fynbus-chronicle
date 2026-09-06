@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load markdown_extras %}
 
 {% block title %}{{ item.title }} — historik · FynBus Chronicle{% endblock %}
 
@@ -100,7 +101,7 @@
       {% endif %}
     </div>
     {% if item.notes %}
-      <p class="linkified" style="margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap;">{{ item.notes|urlize }}</p>
+      <div class="md" style="margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ item.notes|render_markdown }}</div>
     {% endif %}
   </div>
 
@@ -128,7 +129,7 @@
           </div>
           <div>
             {% if a.description %}
-              <p class="linkified" style="margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; white-space: pre-wrap;">{{ a.description|urlize }}</p>
+              <div class="md" style="margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ a.description|render_markdown }}</div>
             {% else %}
               <p style="margin: 0; font-size: 13px; color: var(--ink-5); font-style: italic;">Ingen ugebeskrivelse.</p>
             {% endif %}

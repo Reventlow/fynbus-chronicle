@@ -178,12 +178,12 @@
       </tr>
       {% if item.description %}
       <tr>
-        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ item.description|linebreaksbr }}</td>
+        <td colspan="5" class="md" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ item.description|render_markdown_inline }}</td>
       </tr>
       {% endif %}
       {% if item.priority_item.notes %}
       <tr>
-        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;"><strong>Noter:</strong> {{ item.priority_item.notes|linebreaksbr }}</td>
+        <td colspan="5" class="md" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;"><strong>Noter:</strong> {{ item.priority_item.notes|render_markdown_inline }}</td>
       </tr>
       {% endif %}
     </table>
