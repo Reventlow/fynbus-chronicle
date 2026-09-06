@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.11.2 — 2026-09-06
+
+### Fixed
+- **Nummererede lister startede forfra ved 1.** A numbered procedure whose steps are separated by code blocks — step, ```bash``` block, next step — renders as several separate lists, each carrying a `start` attribute so the numbering continues. The sanitiser's allowlist did not include `start`, so it was stripped and every step came out as "1." Reported from uge 36, where each step of the Veeam setup is followed by a shell block.
+- **Kolonnejustering i tabeller forsvandt** for the same reason: `|:---|---:|` becomes `style="text-align: …"` on the cells, which the allowlist also dropped. Both are back, along with `colspan`/`rowspan`. The allowlist still refuses `style` on everything else in the web renderer, so raw HTML cannot smuggle in layout.
+
 ## 0.11.1 — 2026-09-06
 
 ### Fixed

@@ -45,10 +45,20 @@ ALLOWED_TAGS = {
 }
 
 # class carries the Pygments token colours; href/src are URL-checked by nh3.
+#
+# The rest are attributes Markdown itself emits and that carry meaning:
+#   ol start   — a list interrupted by a code fence continues at its own
+#                number instead of restarting at 1
+#   th/td style — column alignment from |:---|---:| syntax
+# Leaving them out of the allowlist silently discarded both.
 ALLOWED_ATTRIBUTES = {
     "*": {"class"},
     "a": {"href", "title"},
     "img": {"src", "alt", "title"},
+    "ol": {"class", "start", "type", "reversed"},
+    "li": {"class", "value"},
+    "th": {"class", "style", "colspan", "rowspan"},
+    "td": {"class", "style", "colspan", "rowspan"},
 }
 ALLOWED_ATTRIBUTES_INLINE = {**ALLOWED_ATTRIBUTES, "*": {"class", "style"}}
 ALLOWED_URL_SCHEMES = {"http", "https", "mailto"}

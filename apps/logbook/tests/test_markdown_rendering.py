@@ -48,8 +48,10 @@ class TestWebRenderer:
         assert 'class="codehilite"' in html
         # Pygments marks the keyword "def" — that is the highlighting.
         assert '<span class="k">def</span>' in html
-        # Web output stays class-based so the site CSS can theme it.
-        assert "style=" not in html.split("</table>")[0]
+        # Web output stays class-based so the site CSS can theme it —
+        # apart from table alignment, which Markdown emits as a style.
+        code_part = html[html.index("codehilite"): html.index("</pre>")]
+        assert "style=" not in code_part
 
     def test_unlabelled_fence_is_not_guessed(self):
         html = render_markdown("```\njust some text\n```")
@@ -82,6 +84,54 @@ class TestWebRenderer:
     def test_empty_input_is_empty_output(self):
         assert render_markdown("") == ""
         assert render_markdown(None) == ""
+
+
+class TestAttributesMarkdownNeedsSurviveSanitising:
+    """The allowlist must not eat attributes that carry meaning.
+
+    A numbered list interrupted by a code fence becomes several <ol>
+    elements; each carries a `start` so the numbering continues. Dropping
+    that attribute made every step render as "1." — reported from uge 36,
+    where each step of a Veeam procedure is followed by a bash block.
+    """
+
+    PROCEDURE = """1. Opret bruger
+```bash
+sudo adduser veeam
+```
+2. Opret nøgle
+```bash
+ssh-keygen -t rsa
+```
+3. Installer nøgle
+```bash
+sudo install -d
+```
+"""
+
+    def test_interrupted_list_keeps_counting(self):
+        html = render_markdown(self.PROCEDURE)
+
+        assert '<ol start="2">' in html
+        assert '<ol start="3">' in html
+
+    def test_interrupted_list_keeps_counting_in_exports(self):
+        """Same, but the export tags also carry an inline style."""
+        html = render_markdown_inline(self.PROCEDURE)
+
+        assert '<ol start="2"' in html
+        assert '<ol start="3"' in html
+
+    def test_table_column_alignment_survives(self):
+        html = render_markdown("| a | b |\n|:---|---:|\n| 1 | 2 |")
+
+        assert "text-align: right" in html
+
+    def test_a_plain_list_still_starts_at_one(self):
+        html = render_markdown("1. one\n2. two")
+
+        assert "<ol>" in html
+        assert "start=" not in html
 
 
 class TestRawHtmlIsNeutralised:
