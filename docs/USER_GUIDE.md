@@ -146,9 +146,9 @@ er personlig — den påvirker ikke dine kollegers markeringer.
 
 ### Prioriterede opgaver
 
-**Markdown i beskrivelser og noter**
+**Markdown i beskrivelser**
 
-Beskrivelser og noter på en prioriteret opgave skrives i Markdown: `**fed**`, punkt- og
+Beskrivelsen på en prioriteret opgave skrives i Markdown: `**fed**`, punkt- og
 nummerlister, tabeller, citater, links og kode. En kodeblok laves med tre backticks og
 gerne et sprog — ` ```bash `, ` ```python `, ` ```sql ` — så bliver den farvelagt. På
 websiden får hver kodeblok en "Kopiér"-knap, når du holder musen over den.

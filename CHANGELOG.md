@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.12.0 — 2026-09-06
+
+### Changed
+- **Noter-feltet er væk fra prioriterede opgaver.** Alt skrives i beskrivelsen for ugen, så feltet er fjernet fra opret/rediger-formularen. Formularen er nu Titel, Prioritet, Status og Beskrivelse.
+- Kolonnen bliver på modellen: 23 ældre opgaver har stadig tekst i noter, og den bliver ved med at blive vist på opgavens historik og i rapporterne. Nye opgaver har ingen noter, så de steder står tomme og fylder ingenting. Feltet kan stadig redigeres i admin, og API'et tager stadig imod `notes` — MCP-værktøjerne er uændrede.
+
 ## 0.11.2 — 2026-09-06
 
 ### Fixed

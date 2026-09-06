@@ -152,20 +152,17 @@ class PriorityItemForm(forms.ModelForm):
 
     class Meta:
         model = PriorityItem
-        fields = ["title", "priority", "status", "notes"]
+        # `notes` is deliberately absent: the team writes everything in the
+        # per-week description instead, so the field is no longer editable
+        # from the UI. It stays on the model — 23 older tasks still carry
+        # notes, and those keep rendering wherever they are shown.
+        fields = ["title", "priority", "status"]
         widgets = {
             "title": forms.TextInput(
                 attrs={"class": "input-field", "placeholder": "Opgavens titel"}
             ),
             "priority": forms.Select(attrs={"class": "select-field"}),
             "status": forms.Select(attrs={"class": "select-field"}),
-            "notes": forms.Textarea(
-                attrs={
-                    "class": "textarea-field",
-                    "rows": 2,
-                    "placeholder": "Generelle noter, der gælder hele opgaven...",
-                }
-            ),
         }
 
 
