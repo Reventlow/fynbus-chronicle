@@ -5,13 +5,27 @@ from datetime import timedelta
 import pytest
 from django.contrib.auth.models import Group, User
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.oncall import services
 from apps.oncall.models import OnCallChange, OnCallDuty, week_span
 
 pytestmark = pytest.mark.django_db
 
-YEAR, WEEK = 2026, 30
+def _future_week(weeks_ahead: int = 4) -> tuple[int, int]:
+    """An ISO (year, week) that is always in the future when the suite runs.
+
+    These tests used to pin 2026 week 30, commented as "a stable future
+    week". It stopped being one on 2026-07-20, and from then on the three
+    claim/release tests failed — the views correctly hide those actions on
+    a past week, so the failures said nothing about the behaviour under
+    test. Deriving the week from today keeps that from happening again.
+    """
+    iso = (timezone.localdate() + timedelta(weeks=weeks_ahead)).isocalendar()
+    return iso.year, iso.week
+
+
+YEAR, WEEK = _future_week()
 
 
 @pytest.fixture

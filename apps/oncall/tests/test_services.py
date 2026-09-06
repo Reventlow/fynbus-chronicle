@@ -17,7 +17,40 @@ from apps.oncall.models import OnCallChange, OnCallDuty, OnCallSegment, week_spa
 
 pytestmark = pytest.mark.django_db
 
-YEAR, WEEK = 2026, 30  # a stable future week for most tests
+def _future_week(weeks_ahead: int = 4) -> tuple[int, int]:
+    """An ISO (year, week) that is always in the future when the suite runs.
+
+    These tests used to pin 2026 week 30, commented as "a stable future
+    week". It stopped being one on 2026-07-20, and from then on the three
+    claim/release tests failed — the views correctly hide those actions on
+    a past week, so the failures said nothing about the behaviour under
+    test. Deriving the week from today keeps that from happening again.
+    """
+    iso = (timezone.localdate() + timedelta(weeks=weeks_ahead)).isocalendar()
+    return iso.year, iso.week
+
+
+# A future week, recomputed on every run — see _future_week above.
+YEAR, WEEK = _future_week()
+
+
+class TestTheTestWeekItself:
+    """Guard the guard: the fixture week must actually be in the future.
+
+    If this fails, every claim/release test below is testing a past week
+    and will fail for the wrong reason.
+    """
+
+    def test_fixture_week_starts_after_today(self):
+        start, _ = week_span(YEAR, WEEK)
+
+        assert start.date() > timezone.localdate()
+
+    def test_helper_survives_a_year_boundary(self):
+        """Adding weeks to a December date rolls into the next ISO year."""
+        iso = (datetime(2026, 12, 20).date() + timedelta(weeks=4)).isocalendar()
+
+        assert (iso.year, iso.week) == (2027, 2)
 
 
 @pytest.fixture
