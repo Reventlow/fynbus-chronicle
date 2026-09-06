@@ -143,7 +143,9 @@ class PriorityItemForm(forms.ModelForm):
         widget=forms.Textarea(
             attrs={
                 "class": "textarea-field",
-                "rows": 3,
+                # Roomy on purpose: this is the only field on the task now,
+                # and it holds Markdown — steps, code blocks, tables.
+                "rows": 8,
                 "placeholder": "Hvad skete der med opgaven i denne uge?",
             }
         ),
@@ -178,7 +180,7 @@ class PriorityItemAppearanceForm(forms.ModelForm):
             "description": forms.Textarea(
                 attrs={
                     "class": "textarea-field",
-                    "rows": 3,
+                    "rows": 8,
                     "placeholder": "Hvad skete der med opgaven i denne uge?",
                 }
             ),

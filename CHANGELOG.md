@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.12.1 — 2026-09-06
+
+### Changed
+- **Større beskrivelsesfelt på prioriterede opgaver.** Tekstfeltet gik fra 3 til 8 linjer. Beskrivelsen er nu det eneste felt på en opgave og indeholder Markdown — trin, kodeblokke, tabeller — så der var for lidt plads at arbejde i.
+
 ## 0.12.0 — 2026-09-06
 
 ### Changed
