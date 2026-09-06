@@ -92,6 +92,71 @@
     {% include 'components/footer.html' %}
   {% endif %}
 
+  {% comment %}
+    HTMX does not swap on a 4xx/5xx response: no new markup, no message —
+    the button simply appears dead. Surface those failures so a rejected
+    save is visible instead of silent. Applies to every HTMX request on
+    the site, since the listener sits on <body>.
+  {% endcomment %}
+  <div id="htmx-error-toast"
+       class="alert alert-error"
+       role="alert"
+       aria-live="assertive"
+       hidden
+       style="position: fixed; right: 20px; bottom: 20px; z-index: 60;
+              max-width: 420px; box-shadow: var(--shadow-pop);
+              display: flex; align-items: flex-start; gap: 12px;">
+    <span id="htmx-error-text" style="flex: 1;"></span>
+    <button type="button"
+            onclick="document.getElementById('htmx-error-toast').hidden = true"
+            aria-label="Luk"
+            style="background: none; border: 0; cursor: pointer; color: inherit;
+                   font-size: 16px; line-height: 1; padding: 0;">&times;</button>
+  </div>
+
+  <script>
+    (function () {
+      var toast = document.getElementById("htmx-error-toast");
+      var text = document.getElementById("htmx-error-text");
+      var hideTimer = null;
+
+      function show(message) {
+        text.textContent = message;
+        toast.hidden = false;
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { toast.hidden = true; }, 12000);
+      }
+
+      function messageFor(status) {
+        if (status === 403) {
+          return "Handlingen blev afvist (403). Din session er sandsynligvis " +
+                 "udløbet — genindlæs siden og prøv igen.";
+        }
+        if (status === 404) {
+          return "Elementet findes ikke længere (404). Genindlæs siden.";
+        }
+        if (status >= 500) {
+          return "Serverfejl (" + status + "). Prøv igen — sig til hvis den bliver ved.";
+        }
+        return "Handlingen kunne ikke gennemføres (" + status + ").";
+      }
+
+      // Server answered with an error status: htmx leaves the page untouched.
+      document.body.addEventListener("htmx:responseError", function (event) {
+        show(messageFor(event.detail.xhr.status));
+      });
+
+      // Request never reached the server (offline, VPN/tunnel down).
+      document.body.addEventListener("htmx:sendError", function () {
+        show("Ingen forbindelse til serveren. Tjek dit netværk og prøv igen.");
+      });
+
+      document.body.addEventListener("htmx:timeout", function () {
+        show("Serveren svarede ikke i tide. Prøv igen.");
+      });
+    })();
+  </script>
+
   {% block extra_js %}{% endblock %}
 </body>
 </html>

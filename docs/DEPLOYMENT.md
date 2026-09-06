@@ -42,7 +42,12 @@ POSTGRES_PASSWORD=<strong-password>
 DATABASE_URL=postgres://chronicle:<password>@db:5432/fynbus_chronicle
 
 # Security
-CSRF_TRUSTED_ORIGINS=https://chronicle.fynbus.dk
+# List EVERY origin the app is reached on, including the port when it is not
+# 443. Django rejects a POST whose Origin header is not an exact match —
+# scheme, host AND port — which shows up as a 403 on every form submit while
+# GET pages look completely normal. Reaching the site through an SSH tunnel
+# on e.g. :8443 therefore needs that origin listed here too.
+CSRF_TRUSTED_ORIGINS=https://chronicle.fynbus.dk,https://chronicle.fynbus.dk:8443
 SECURE_SSL_REDIRECT=True
 
 # Email (Optional - choose SMTP or Graph)

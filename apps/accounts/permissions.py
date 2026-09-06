@@ -35,13 +35,18 @@ def editor_required(view_func):
 
 
 class EditorRequiredMixin(LoginRequiredMixin):
-    """CBV mixin that raises 403 for users in the Viewer group."""
+    """CBV mixin that raises 403 for users in the Viewer group.
+
+    The check runs *before* the view body. An earlier version called
+    ``super().dispatch()`` first and only then tested the role, which meant
+    a viewer's POST was executed — object created, updated or deleted — and
+    the 403 was returned after the write had already landed.
+
+    Anonymous users fall through to ``LoginRequiredMixin``, which redirects
+    them to the login page rather than showing a 403.
+    """
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if hasattr(response, 'status_code') and response.status_code == 302:
-            # LoginRequiredMixin redirect — let it pass through
-            return response
-        if not is_editor(request.user):
+        if request.user.is_authenticated and not is_editor(request.user):
             raise PermissionDenied
-        return response
+        return super().dispatch(request, *args, **kwargs)

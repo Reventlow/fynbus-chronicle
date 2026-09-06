@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.10.6 — 2026-09-06
+
+### Fixed
+- **Sikkerhed: læsere kunne skrive alligevel.** `EditorRequiredMixin` ran the view *first* and checked the role afterwards, so a user in the Viewer group got a 403 back while their write had already been committed. Six paths were affected: create/edit/delete of a prioriteret opgave, edit of a ugelog, and create of fravær and hændelser. The role is now checked before the view body runs; anonymous users still get the login redirect rather than a 403, and staff still override group membership.
+- **HTMX-fejl er ikke længere tavse.** htmx performs no swap on a 4xx/5xx response, so a rejected save looked like a dead button — nothing moved, nothing was said. Every HTMX failure now raises a toast in the corner ("Handlingen blev afvist (403). Din session er sandsynligvis udløbet — genindlæs siden og prøv igen.", a server-error variant, and one for a request that never reached the server).
+
+### Note
+- If every form on the site 403s while pages load fine, the origin you are browsing on is missing from `CSRF_TRUSTED_ORIGINS` — Django matches scheme, host **and port** exactly, so reaching Chronicle through a tunnel on `:8443` needs that exact origin listed. See docs/DEPLOYMENT.md.
+
 ## 0.10.5 — 2026-09-03
 
 ### Changed
