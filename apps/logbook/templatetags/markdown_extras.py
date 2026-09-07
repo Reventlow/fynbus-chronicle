@@ -60,7 +60,16 @@ ALLOWED_ATTRIBUTES = {
     "th": {"class", "style", "colspan", "rowspan"},
     "td": {"class", "style", "colspan", "rowspan"},
 }
-ALLOWED_ATTRIBUTES_INLINE = {**ALLOWED_ATTRIBUTES, "*": {"class", "style"}}
+# The export renderer additionally emits layout tables around code blocks;
+# Word honours bgcolor and the width/cellpadding attributes more reliably
+# than the CSS equivalents, so they have to survive sanitising.
+ALLOWED_ATTRIBUTES_INLINE = {
+    **ALLOWED_ATTRIBUTES,
+    "*": {"class", "style"},
+    "table": {"class", "style", "role", "width", "cellpadding", "cellspacing", "border"},
+    "td": {"class", "style", "bgcolor", "colspan", "rowspan", "valign", "align", "width"},
+    "th": {"class", "style", "bgcolor", "colspan", "rowspan", "valign", "align", "width"},
+}
 ALLOWED_URL_SCHEMES = {"http", "https", "mailto"}
 
 # Inline styling for the export renderer, in the report palette.
@@ -93,13 +102,21 @@ EXPORT_STYLES = {
 # Code blocks. Pygments already puts its own style on the <pre> when
 # noclasses is on, so these are applied on top by _style_code_blocks.
 EXPORT_PRE_STYLE = (
-    "margin: 6px 0; padding: 10px 12px; background-color: #FAF9F7; "
-    "border: 1px solid #E5E0D8; border-radius: 8px; "
+    # No frame here: the wrapping table cell draws the background and
+    # border, because Word will not paint either on a <pre>.
+    "margin: 0; padding: 0; background: none; border: 0; "
     "font-family: 'JetBrains Mono', Consolas, monospace; font-size: 0.88em; "
     "line-height: 1.5; "
     # A PDF page cannot scroll sideways, so wrap instead of overflowing.
     "white-space: pre-wrap; word-break: break-word;"
 )
+CODE_BLOCK_BG = "#FAF9F7"
+# The cell now carries the frame, so the <pre> inside it can stay plain.
+EXPORT_CODE_CELL_STYLE = (
+    f"background-color:{CODE_BLOCK_BG}; border:1px solid #E5E0D8; "
+    "padding:10px 12px;"
+)
+
 # Inside a <pre> the chrome belongs to the block, not to the <code>.
 EXPORT_CODE_IN_PRE_STYLE = (
     "font-family: inherit; font-size: inherit; background: none; "
@@ -117,6 +134,12 @@ _FENCE = re.compile(r"^\s*(```|~~~)")
 _PRE_TAG = re.compile(r"<pre(?![^>]*\bstyle=)")
 _PRE_TAG_STYLED = re.compile(r'<pre style="([^"]*)"')
 _CODE_IN_PRE = re.compile(r"(<pre[^>]*>(?:<span></span>)?)<code>")
+# A highlighted block (codehilite wrapper) or a bare <pre> — matched
+# non-greedily so several blocks in one description each get their own table.
+_CODEHILITE_BLOCK = re.compile(r'<div class="codehilite".*?</div>', re.S)
+_CODEHILITE_BG = re.compile(r'<div class="codehilite" style="background:[^"]*"')
+_BARE_PRE_BLOCK = re.compile(r"(?<!>)<pre[^>]*>.*?</pre>", re.S)
+_EMPTY_PARAGRAPH = re.compile(r"<p[^>]*>\s*</p>")
 
 
 def _autolink(source: str) -> str:
@@ -156,7 +179,33 @@ def _style_code_blocks(html: str) -> str:
     """Inline the code-block chrome that the tree processor cannot reach."""
     html = _PRE_TAG_STYLED.sub(lambda m: f'<pre style="{m.group(1)} {EXPORT_PRE_STYLE}"', html)
     html = _PRE_TAG.sub(f'<pre style="{EXPORT_PRE_STYLE}"', html)
-    return _CODE_IN_PRE.sub(rf'\1<code style="{EXPORT_CODE_IN_PRE_STYLE}">', html)
+    html = _CODE_IN_PRE.sub(rf'\1<code style="{EXPORT_CODE_IN_PRE_STYLE}">', html)
+    return _wrap_code_blocks_in_tables(html)
+
+
+def _wrap_code_blocks_in_tables(html: str) -> str:
+    """Put every code block inside a one-cell table.
+
+    Outlook classic renders mail through Word, which will not paint a
+    background or a border on a <pre>; a table cell with a bgcolor
+    attribute is the one construct it always gets right. WeasyPrint and
+    browsers render the table identically, so the PDF is unaffected.
+    """
+    def wrap(match: re.Match) -> str:
+        block = match.group(0)
+        return (
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+            'border="0" style="border-collapse:collapse; margin:6px 0;">'
+            f'<tr><td bgcolor="{CODE_BLOCK_BG}" style="{EXPORT_CODE_CELL_STYLE}">'
+            f"{block}"
+            "</td></tr></table>"
+        )
+
+    # Pygments paints its own background on the wrapper when noclasses is
+    # on; the cell owns the background now, so drop it and keep one colour.
+    html = _CODEHILITE_BG.sub('<div class="codehilite"', html)
+    html = _CODEHILITE_BLOCK.sub(wrap, html)
+    return _BARE_PRE_BLOCK.sub(wrap, html)
 
 
 def _render(value: str, *, inline_styles: bool) -> str:
@@ -180,12 +229,16 @@ def _render(value: str, *, inline_styles: bool) -> str:
     if inline_styles:
         html = _style_code_blocks(html)
 
-    return nh3.clean(
+    clean = nh3.clean(
         html,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES_INLINE if inline_styles else ALLOWED_ATTRIBUTES,
         url_schemes=ALLOWED_URL_SCHEMES,
     )
+    # A code block lands inside a paragraph in Markdown's output, and the
+    # sanitiser's HTML5 parser closes that paragraph before the block —
+    # leaving an empty one, which Word renders as a blank line.
+    return _EMPTY_PARAGRAPH.sub("", clean)
 
 
 @register.filter(name="render_markdown")

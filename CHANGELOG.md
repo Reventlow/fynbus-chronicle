@@ -2,6 +2,16 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.13.1 — 2026-09-07
+
+### Fixed
+- **Rapport-emailen kan læses i Outlook classic.** Den klassiske Outlook-klient på Windows renderer mail gennem Word, som hverken kan flexbox, `max-width`, `border-radius` eller `data:`-URL'er. Mailen så derfor fin ud i Outlook web og ødelagt i klienten. Fire ting er lavet om:
+  - **Graferne sendes nu som inline-vedhæftninger** og refereres med `cid:` i stedet for at ligge som base64 i `src`. Word afviser `data:`-URL'er helt, så begge grafer var tomme kasser. Beskeden sendes som `multipart/related`, så klienten viser dem i teksten frem for at liste dem som filer. Graph-backend'en forstår nu `contentId`/`isInline`.
+  - **Nøgletallene (Nye/Lukkede/Åbne/Netto) er nu en tabel** i stedet for flexbox, som Word ignorerer — de stablede sig oven på hinanden i fuld bredde.
+  - **Hele mailen ligger i en 600 px centreringstabel**, og billeder har `width`/`height` som HTML-attributter, så Word ikke skalerer dem efter sin egen DPI.
+  - **Kodeblokke ligger i en tabelcelle med `bgcolor`**, fordi Word ikke tegner baggrund eller ramme på et `<pre>`. Tomme afsnit, som Markdown efterlader før hver blok, fjernes — Word viser dem som blanke linjer.
+- PDF- og HTML-eksporten er uændret at se på; kodeblokkenes tabel renderer ens i WeasyPrint og browseren. Kun mailen skifter grafer til `cid:` — den selvstændige HTML-eksport beholder `data:`-URL'er, så filen stadig virker alene.
+
 ## 0.13.0 — 2026-09-06
 
 ### Added

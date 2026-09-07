@@ -12,6 +12,7 @@ import base64
 import logging
 import threading
 import time
+from email.mime.base import MIMEBase
 
 import requests
 from django.conf import settings
@@ -101,7 +102,11 @@ def _build_message_payload(message: EmailMessage) -> dict:
             _build_recipient(addr) for addr in message.bcc
         ]
 
-    # Handle attachments.
+    # Handle attachments. Two shapes arrive here:
+    #   (filename, content, mimetype)  — a normal file attachment
+    #   MIMEBase with a Content-ID     — an image referenced as <img src="cid:…">
+    # The second is how the report charts travel: Outlook classic refuses
+    # data: URIs, so inline images have to be real attachments.
     if message.attachments:
         msg["attachments"] = []
         for attachment in message.attachments:
@@ -119,8 +124,31 @@ def _build_message_payload(message: EmailMessage) -> dict:
                         ),
                     }
                 )
+            else:
+                msg["attachments"].append(_build_inline_attachment(attachment))
 
     return payload
+
+
+def _build_inline_attachment(part: MIMEBase) -> dict:
+    """Convert a MIME part carrying a Content-ID into a Graph attachment.
+
+    ``isInline`` plus ``contentId`` is what makes ``<img src="cid:…">``
+    resolve; without it the image arrives as a separate attachment and
+    the body shows a broken image.
+    """
+    content_id = (part.get("Content-ID") or "").strip("<>")
+    filename = part.get_filename() or f"{content_id or 'inline'}.png"
+    payload = part.get_payload(decode=True) or b""
+
+    return {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        "name": filename,
+        "contentType": part.get_content_type(),
+        "contentBytes": base64.b64encode(payload).decode("ascii"),
+        "isInline": True,
+        "contentId": content_id,
+    }
 
 
 class GraphEmailBackend(BaseEmailBackend):
