@@ -324,6 +324,22 @@ FynBus Chronicle understøtter mørk tilstand for at reducere øjentræthed.
 2. Klik for at skifte mellem lys og mørk tilstand
 3. Din præference gemmes automatisk
 
+### Dagstemaer
+
+På bestemte dage skifter sitet udseende af sig selv — farver, logo-mærke og et
+banner øverst. Temaet kan også vælges manuelt under tandhjulet → Tema, og
+administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
+
+| Dato | Tema |
+|------|------|
+| 4. maj | Star Wars Day |
+| 8. september og 5. april | Star Trek Day / First Contact Day |
+| 19. september og 1. oktober | Pirate Day |
+| 21. september | Verdens Alzheimerdag — lilla, med fakta og henvisninger til Alzheimerforeningen i banneret i stedet for vittigheder |
+
+Vil du se et tema uden at vente på dagen, kan du tilføje `?force-theme=<navn>`
+til adressen, fx `?force-theme=alzheimer`.
+
 ---
 
 ## Tips og tricks

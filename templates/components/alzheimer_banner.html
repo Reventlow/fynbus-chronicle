@@ -1,0 +1,57 @@
+{% load theme_messages %}
+{% comment %}
+  World Alzheimer's Day banner — only shown when ACTIVE_THEME == "alzheimer"
+  (21. sep, a user pick in the tweaks panel, or ?force-theme=alzheimer).
+  CSS hides it for every other theme, so it can render unconditionally.
+
+  Same mechanics as the other banners: DB-backed messages, random first
+  pick, rotates every 2 minutes, JSON in its own <script> so quotes in the
+  copy cannot terminate x-data early. The copy itself is different in
+  kind — facts and pointers, not quips — and the theme deliberately adds
+  no phrase swaps elsewhere on the site.
+{% endcomment %}
+<script id="alzheimer-banner-messages" type="application/json">{% theme_messages_json "alzheimer" %}</script>
+<div class="alzheimer-banner" role="note" aria-label="Verdens Alzheimerdag"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('alzheimer-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="alzheimer-banner-inner">
+    {% comment %}
+      Original mark in the spirit of the World Alzheimer's Day concept art
+      (head in profile, purple ribbon where the mind sits, forget-me-not
+      petals) — drawn here rather than copied, since the reference is a
+      licensed stock asset. Colours come from the theme tokens so the mark
+      follows light/dark automatically.
+    {% endcomment %}
+    <svg class="alzheimer-banner-ribbon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="16" cy="16" r="16" fill="var(--accent-ink)"/>
+      {# head in profile, facing right #}
+      <path d="M11.5 27.5v-4.2c-3-1.6-4.9-4.6-4.9-8.1 0-5.2 4.1-9.2 9.4-9.2 4.9 0 8.6 3.3 9.2 7.9l1.8 3.3c.2.4 0 .8-.4.9l-1.6.4v3.1c0 1.1-.9 1.9-2 1.9h-2.1v4h-9.4z"
+            fill="#fff"/>
+      {# the ribbon, sitting where the mind is #}
+      <path d="M16.6 9.6c-1.7 0-2.8 1.1-2.8 2.5 0 1.3.8 2.3 1.6 3.4l-2.3 6.3h2.2l1.3-3.5 1.3 3.5h2.2l-2.3-6.3c.8-1.1 1.6-2.1 1.6-3.4 0-1.4-1.1-2.5-2.8-2.5zm0 1.6c.8 0 1.2.4 1.2 1 0 .7-.6 1.3-1.2 2.3-.6-1-1.2-1.6-1.2-2.3 0-.6.4-1 1.2-1z"
+            fill="var(--accent)"/>
+      {# three forget-me-not petals drifting off the crown #}
+      <circle cx="25.5" cy="7" r="1.4" fill="var(--accent)" opacity="0.9"/>
+      <circle cx="27.8" cy="10.4" r="1.05" fill="var(--accent)" opacity="0.7"/>
+      <circle cx="23.2" cy="4.4" r="0.85" fill="var(--accent)" opacity="0.55"/>
+    </svg>
+    <span class="alzheimer-banner-date">21. sep · Verdens Alzheimerdag</span>
+    <span class="alzheimer-banner-sep" aria-hidden="true">·</span>
+    <span class="alzheimer-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Forglemmigejen er symbolet — en lille blomst for dem, der glemmer.</span>
+  </div>
+</div>

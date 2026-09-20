@@ -22,6 +22,10 @@
         <span class="star-trek-footer-egg" aria-label="Star Trek Easter egg">▲ NCC-1701 · STARDATE 79023.5 ▲</span>
         <span class="footer-sep" aria-hidden="true">·</span>
       {% endif %}
+      {% if ACTIVE_THEME == "alzheimer" %}
+        <span class="alzheimer-footer-egg" aria-label="Verdens Alzheimerdag">❀ FORGLEM MIG EJ · 21/9 ❀</span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+      {% endif %}
       <a href="{% url 'admin:index' %}" class="footer-link">Administration</a>
       <span class="footer-sep" aria-hidden="true">·</span>
       <a href="{% url 'dashboard:docs-page' slug='changelog' %}"

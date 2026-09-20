@@ -592,6 +592,158 @@ html[data-density="dashboard"] .js-dashboard-main {
   }
 }
 
+/* =============================================================================
+   21. sep — Verdens Alzheimerdag (World Alzheimer's Day)
+   Not a costume like the others: purple is the international awareness
+   colour, the forget-me-not (forglemmigej, Alzheimerforeningen's symbol) is
+   the glyph, and the banner carries facts, not jokes. Same plumbing —
+   data-event="alzheimer" overrides the accent tokens, swaps the brand-mark
+   glyph, paints a very faint scatter behind the page, shows the banner.
+   Deliberately no phrase swaps and no themed greeting.
+   ============================================================================= */
+/* Palette lifted from the Alzheimer's Awareness ribbon mark: a deep
+   royal purple ring (#4B2C87), horizontal bands from #5B2E8F down to
+   #9B7BCD, white ribbon. Light mode uses the mid band as the accent and
+   the ring for ink; dark mode uses the lightest band as the accent. */
+html[data-event="alzheimer"] {
+  --accent:      oklch(0.50 0.15 300);   /* mid ribbon band, ≈#7B4FB2 */
+  --accent-soft: oklch(0.95 0.035 300);  /* pale lilac tint */
+  --accent-ink:  oklch(0.39 0.16 296);   /* ring purple, ≈#4B2C87 */
+  --chart-accent: rgb(123, 79, 178);
+  --alz-band-1:  oklch(0.42 0.16 297);   /* #5B2E8F */
+  --alz-band-2:  oklch(0.50 0.15 300);   /* #7B4FB2 */
+  --alz-band-3:  oklch(0.58 0.13 300);   /* #8B62BE */
+  --alz-band-4:  oklch(0.63 0.11 300);   /* #9B7BCD */
+}
+html[data-event="alzheimer"].dark {
+  --accent:      oklch(0.72 0.11 300);   /* lightest band, lifted for contrast */
+  --accent-soft: oklch(0.30 0.09 298);   /* ring purple, sunk */
+  --accent-ink:  oklch(0.90 0.06 300);   /* near-white lilac */
+  --chart-accent: rgb(155, 123, 205);
+}
+
+/* A sparse, very faint scatter — quieter than the star fields, more like
+   petals on a table than a night sky. */
+html[data-event="alzheimer"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, var(--accent) 1.3px, transparent 2.2px),
+    radial-gradient(circle at 70% 60%, var(--accent) 1.1px, transparent 2px),
+    radial-gradient(circle at 45% 85%, var(--accent) 0.9px, transparent 1.6px);
+  background-size: 210px 210px, 260px 260px, 170px 170px;
+  background-position: 0 0, 80px 110px, 130px 40px;
+  opacity: 0.06;
+}
+html[data-event="alzheimer"].dark body::before { opacity: 0.09; }
+html[data-event="alzheimer"] body > * { position: relative; z-index: 1; }
+html[data-event="alzheimer"] body > .nav-shell { z-index: 50; }
+
+/* Brand-mark glyph — a five-petalled florette for the forget-me-not,
+   the same in both modes. */
+html[data-event="alzheimer"] .brand-mark {
+  font-size: 0;
+}
+html[data-event="alzheimer"] .brand-mark::before {
+  content: "❀";
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-style: normal;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+
+/* Banner — same shape as the others, its own class for independence. */
+.alzheimer-banner { display: none; }
+html[data-event="alzheimer"] .alzheimer-banner {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  /* The ribbon mark's horizontal bands, at tint strength. */
+  background: linear-gradient(180deg,
+    color-mix(in oklch, var(--alz-band-1) 14%, var(--paper)) 0%,
+    color-mix(in oklch, var(--alz-band-1) 14%, var(--paper)) 25%,
+    color-mix(in oklch, var(--alz-band-2) 12%, var(--paper)) 25%,
+    color-mix(in oklch, var(--alz-band-2) 12%, var(--paper)) 50%,
+    color-mix(in oklch, var(--alz-band-3) 11%, var(--paper)) 50%,
+    color-mix(in oklch, var(--alz-band-3) 11%, var(--paper)) 75%,
+    color-mix(in oklch, var(--alz-band-4) 10%, var(--paper)) 75%,
+    color-mix(in oklch, var(--alz-band-4) 10%, var(--paper)) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent-ink) 45%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+html[data-event="alzheimer"].dark .alzheimer-banner {
+  background: linear-gradient(180deg,
+    color-mix(in oklch, var(--alz-band-1) 55%, var(--paper)) 0%,
+    color-mix(in oklch, var(--alz-band-1) 55%, var(--paper)) 25%,
+    color-mix(in oklch, var(--alz-band-2) 45%, var(--paper)) 25%,
+    color-mix(in oklch, var(--alz-band-2) 45%, var(--paper)) 50%,
+    color-mix(in oklch, var(--alz-band-3) 38%, var(--paper)) 50%,
+    color-mix(in oklch, var(--alz-band-3) 38%, var(--paper)) 75%,
+    color-mix(in oklch, var(--alz-band-4) 32%, var(--paper)) 75%,
+    color-mix(in oklch, var(--alz-band-4) 32%, var(--paper)) 100%);
+  border-bottom-color: color-mix(in oklch, var(--accent) 45%, transparent);
+}
+/* The ribbon itself as the banner glyph — an inline SVG in the template
+   so it can be white-on-purple like the mark, which a font glyph cannot. */
+.alzheimer-banner-ribbon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+.alzheimer-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.alzheimer-banner-glyph {
+  font-size: 15px;
+  color: var(--accent);
+}
+.alzheimer-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.alzheimer-banner-sep { color: var(--accent); opacity: 0.5; }
+.alzheimer-banner-msg {
+  color: var(--accent-ink);
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.alzheimer-banner-msg.is-fading { opacity: 0; }
+
+/* Footer line — quiet, no Easter-egg tone. */
+.alzheimer-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
 @layer base {
   html {
     @apply scroll-smooth;

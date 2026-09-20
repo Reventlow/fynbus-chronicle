@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.14.0 — 2026-09-20
+
+### Added
+- **Tema for Verdens Alzheimerdag, 21. september.** Sitet skifter til lilla — sagens internationale farve, hentet fra Alzheimer's Awareness-mærket (dyb kongelilla i ringen, vandrette bånd ned til lys lilla) — med et forglemmigej-mærke i logoet og et banner, der roterer korte fakta og henvisninger: Demenslinien (58 50 58 50) og alzheimer.dk. Bannerets mærke er en egen tegning i stil med dagens kampagnegrafik: et hoved i profil, den lilla sløjfe dér hvor sindet sidder, tre kronblade. Ingen vittigheder, ingen temaformuleringer andre steder — dagen er ikke et kostume. Kører automatisk hvert år den 21. september og kan vælges manuelt i tema-panelet som "Alzheimerdag".
+
 ## 0.13.1 — 2026-09-07
 
 ### Fixed
