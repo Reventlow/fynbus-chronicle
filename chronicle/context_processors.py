@@ -77,8 +77,12 @@ def active_theme(request):
         if scheduled is not None:
             slug = scheduled.slug
 
+    # Schedules are prefetched for ``Theme.when_label`` (the date hint on
+    # each row of the tweaks panel) — one extra query instead of one per theme.
     selectable = (
-        Theme.objects.filter(is_active=True, user_selectable=True).order_by("name")
+        Theme.objects.filter(is_active=True, user_selectable=True)
+        .prefetch_related("schedules")
+        .order_by("name")
     )
 
     return {

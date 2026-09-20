@@ -1227,6 +1227,75 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   /* =========================================================================
      Segmented control
      ========================================================================= */
+  /* ------------------------------------------------------------------
+     Theme picker in the tweaks panel — a vertical option list. Each row
+     carries a dot in the theme's own light-mode accent so the choice is
+     legible before it is applied; the dot colours mirror the --accent
+     tokens of the html[data-event] skins above. Unknown slugs (a theme
+     added in admin without a skin) fall back to a neutral dot.
+     ------------------------------------------------------------------ */
+  .theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 -4px;
+  }
+  .theme-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+  }
+  .theme-row:hover { background: var(--surface-2); color: var(--ink-1); }
+  .theme-row:disabled { cursor: not-allowed; opacity: 0.55; }
+  .theme-row.is-selected { color: var(--ink-1); font-weight: 500; }
+  .theme-row-name { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .theme-row-when {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink-4);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .theme-row-check {
+    flex: 0 0 auto;
+    width: 12px;
+    color: var(--accent-ink);
+    visibility: hidden;
+  }
+  .theme-row.is-selected .theme-row-check { visibility: visible; }
+  .theme-dot {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: var(--ink-3);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+  }
+  .theme-dot-auto {
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink-3);
+  }
+  .theme-row.is-selected .theme-dot-auto { color: var(--accent-ink); }
+  .theme-dot[data-theme="alzheimer"] { background: oklch(0.50 0.15 300); }
+  .theme-dot[data-theme="pirate"]    { background: oklch(0.50 0.10 200); }
+  .theme-dot[data-theme="star-trek"] { background: oklch(0.55 0.16 240); }
+  .theme-dot[data-theme="star-wars"] { background: oklch(0.68 0.17 55); }
+
   .segmented {
     display: inline-flex;
     gap: 4px;

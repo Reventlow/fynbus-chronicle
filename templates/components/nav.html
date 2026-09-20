@@ -154,35 +154,52 @@
               <span> (skedule overruler dit valg).</span>
             </div>
             {% comment %}
-              Buttons (not a select) so writes propagate through the nested
-              x-data="{ open: false }" scope reliably. $nextTick + custom
-              event mirrors the accent-picker pattern that already works.
+              A vertical option list (one full-width row per theme) rather
+              than a wrapping row of pills: five names of very different
+              lengths never wrap cleanly in a 250 px panel. Each row shows
+              the theme's own accent as a dot, its date, and a check on the
+              selected row. Buttons (not a select) so writes propagate
+              through the nested x-data="{ open: false }" scope reliably;
+              $nextTick + custom event mirrors the accent-picker pattern.
             {% endcomment %}
-            <div class="flex flex-wrap gap-2">
+            <div class="theme-list" role="radiogroup" aria-label="Tema">
               <button type="button"
+                      class="theme-row"
+                      role="radio"
                       @click="userTheme = 'auto'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
-                      class="flex-1 flex items-center justify-center gap-1.5"
-                      style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2); min-width: 0;"
                       :disabled="!!serverTheme"
-                      :style="userTheme === 'auto' && 'border-color: var(--ink-3);'">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
+                      :aria-checked="userTheme === 'auto'"
+                      :class="{ 'is-selected': userTheme === 'auto' }">
+                <span class="theme-dot theme-dot-auto" aria-hidden="true">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
+                  </svg>
+                </span>
+                <span class="theme-row-name">Auto</span>
+                <span class="theme-row-when">følger kalenderen</span>
+                <svg class="theme-row-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
                 </svg>
-                Auto
               </button>
               {% for theme in ACTIVE_THEMES %}
                 <button type="button"
+                        class="theme-row"
+                        role="radio"
                         @click="userTheme = '{{ theme.slug|escapejs }}'; $nextTick(() => window.dispatchEvent(new CustomEvent('accent-change')))"
-                        class="flex-1 flex items-center justify-center gap-1.5"
-                        style="padding: 6px 8px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-1); cursor: pointer; font-size: 12px; color: var(--ink-2); min-width: 0;"
                         :disabled="!!serverTheme"
-                        :style="userTheme === '{{ theme.slug|escapejs }}' && 'border-color: var(--ink-3);'">
-                  {{ theme.name }}
+                        :aria-checked="userTheme === '{{ theme.slug|escapejs }}'"
+                        :class="{ 'is-selected': userTheme === '{{ theme.slug|escapejs }}' }">
+                  <span class="theme-dot" data-theme="{{ theme.slug }}" aria-hidden="true"></span>
+                  <span class="theme-row-name">{{ theme.name }}</span>
+                  {% if theme.when_label %}<span class="theme-row-when">{{ theme.when_label }}</span>{% endif %}
+                  <svg class="theme-row-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
                 </button>
               {% endfor %}
             </div>
-            <p style="margin: 6px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.45;">
-              Vælg ”Auto” for at lade datoer styre temaet, eller vælg et tema for altid at få det vist (når intet skedule er aktivt).
+            <p style="margin: 8px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.45;">
+              ”Auto” lader kalenderen vælge. Et fast valg vises altid, medmindre et skedule er aktivt.
             </p>
             {% if request.user.is_authenticated and is_editor %}
               <a href="{% url 'themes:manage' %}"

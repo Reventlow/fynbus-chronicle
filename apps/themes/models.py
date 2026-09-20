@@ -62,6 +62,30 @@ class Theme(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    _MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+
+    @property
+    def when_label(self) -> str:
+        """Short Danish hint for the tweaks-panel row: "21. sep", "19.–21. sep",
+        "27. dec – 3. jan" or "" when nothing is scheduled.
+
+        Annual schedules are preferred (they describe the theme's day); a
+        one-shot schedule falls back to its year-less dates. Uses the
+        prefetched ``schedules`` when the context processor supplied them,
+        so the panel adds no per-theme query.
+        """
+        schedules = list(self.schedules.all())
+        if not schedules:
+            return ""
+        sched = next((s for s in schedules if s.recurs_annually), schedules[0])
+        start, end = sched.start_date, sched.end_date
+        m = self._MONTHS
+        if start == end or (start.month, start.day) == (end.month, end.day):
+            return f"{start.day}. {m[start.month - 1]}"
+        if start.month == end.month:
+            return f"{start.day}.–{end.day}. {m[start.month - 1]}"
+        return f"{start.day}. {m[start.month - 1]} – {end.day}. {m[end.month - 1]}"
+
     @classmethod
     def scheduled_for_today(cls) -> "Theme | None":
         """Return the active theme for today (Europe/Copenhagen), if any

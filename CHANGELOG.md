@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.14.1 — 2026-09-20
+
+### Changed
+- **Temavælgeren i tweaks-panelet er en lodret liste.** Fem temanavne af meget forskellig længde kunne ikke ombrydes pænt som piller i det 280 px brede panel — "Pirate Day" og "Star Trek" knækkede over to linjer. Nu har hvert tema sin egen række med en prik i temaets accentfarve, dets dato ("21. sep", "4. maj") og et flueben på det valgte. "Auto" står øverst med forklaringen "følger kalenderen". Datoen kommer fra temaets skedule (`Theme.when_label`), som hentes i ét ekstra opslag frem for ét pr. tema.
+
 ## 0.14.0 — 2026-09-20
 
 ### Added
