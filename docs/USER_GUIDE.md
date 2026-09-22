@@ -305,12 +305,14 @@ Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: e
 
 ### Email
 
-1. Åbn en ugelog
-2. Vælg format (HTML, PDF eller begge dele)
-3. Klik "Send som email"
-4. Rapporten sendes til konfigurerede modtagere med dig som afsender
+1. Åbn en ugelog (eller en opgaves historik)
+2. Klik "Eksportér" > "Email som HTML", "Email som PDF" eller "Email som HTML + PDF"
+3. En bekræftelsesside viser **hvem der modtager** rapporten, afsenderen, emnet og hvad der vedhæftes
+4. Klik "Send til N modtagere" — eller "Annullér" for at gå tilbage uden at sende
 
-> **Bemærk:** Email-funktionen kræver at administratoren har konfigureret email-modtagere i systemet. Afsenderen er den bruger der er logget ind.
+Intet sendes, før du trykker Send på bekræftelsessiden.
+
+> **Bemærk:** Modtagerlisten er fælles for alle rapporter og sættes af administratoren (`CHRONICLE_EMAIL_RECIPIENTS`). Er den tom, er Send-knappen slået fra, og siden fortæller hvorfor. Afsenderen er den bruger der er logget ind.
 
 ---
 

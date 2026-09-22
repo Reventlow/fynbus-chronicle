@@ -43,6 +43,41 @@ def _attach_inline(email: EmailMessage, png: bytes | None, cid: str) -> None:
     email.attach(image)
 
 
+EMAIL_FORMATS = ("html", "pdf", "both")
+FORMAT_LABELS = {"html": "HTML", "pdf": "PDF", "both": "HTML + PDF"}
+
+
+def email_recipients() -> list[str]:
+    """The configured report recipients (``CHRONICLE_EMAIL_RECIPIENTS``),
+    trimmed and de-duplicated in order. Shared by the send functions and
+    the confirmation page, so what the page shows is what gets used."""
+    seen: list[str] = []
+    for addr in getattr(settings, "CHRONICLE_EMAIL_RECIPIENTS", []) or []:
+        addr = addr.strip()
+        if addr and addr not in seen:
+            seen.append(addr)
+    return seen
+
+
+def email_summary(subject: str, format: str, pdf_filename: str, from_email: str | None = None) -> dict:
+    """What the confirmation page shows before a report is sent: subject,
+    sender, recipients, the format label and which attachments will ride
+    along. ``format`` must already be validated against EMAIL_FORMATS."""
+    attachments: list[str] = []
+    if format in ("html", "both"):
+        attachments.append("Rapporten som HTML i selve mailen")
+    if format in ("pdf", "both"):
+        attachments.append(f"{pdf_filename} (PDF, vedhæftet)")
+    return {
+        "subject": subject,
+        "from_email": from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "it@fynbus.dk"),
+        "recipients": email_recipients(),
+        "format": format,
+        "format_label": FORMAT_LABELS[format],
+        "attachments": attachments,
+    }
+
+
 def send_weeklog_email(
     weeklog: WeekLog, format: str = "both", from_email: str | None = None
 ) -> tuple[bool, str]:
@@ -57,10 +92,10 @@ def send_weeklog_email(
     Returns:
         Tuple of (success: bool, message: str).
     """
-    if format not in ("html", "pdf", "both"):
+    if format not in EMAIL_FORMATS:
         return False, f"Ugyldigt format: {format}. Brug 'html', 'pdf' eller 'both'."
 
-    recipients = getattr(settings, "CHRONICLE_EMAIL_RECIPIENTS", [])
+    recipients = email_recipients()
 
     if not recipients:
         return False, "Ingen email-modtagere konfigureret. Tjek CHRONICLE_EMAIL_RECIPIENTS."
@@ -134,7 +169,6 @@ def send_weeklog_email(
     # Send email
     try:
         email.send(fail_silently=False)
-        format_label = {"html": "HTML", "pdf": "PDF", "both": "HTML + PDF"}[format]
-        return True, f"Email ({format_label}) sendt til {len(recipients)} modtager(e)."
+        return True, f"Email ({FORMAT_LABELS[format]}) sendt til {len(recipients)} modtager(e)."
     except Exception as e:
         return False, f"Fejl ved afsendelse af email: {e}"

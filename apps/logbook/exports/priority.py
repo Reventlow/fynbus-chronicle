@@ -13,7 +13,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
 from ..models import PriorityItem
-
+from .email import EMAIL_FORMATS, FORMAT_LABELS, email_recipients
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -152,19 +152,23 @@ def generate_priority_pdf(item: PriorityItem) -> bytes:
 # ---------------------------------------------------------------------------
 
 
+def priority_email_subject(item: PriorityItem) -> str:
+    return f"FynBus IT Opgavelog — {item.title}"
+
+
 def send_priority_email(
     item: PriorityItem, format: str = "both", from_email: str | None = None
 ) -> tuple[bool, str]:
     """Send the priority history report via email. Same format options as
     the weeklog email exporter (``html`` / ``pdf`` / ``both``)."""
-    if format not in ("html", "pdf", "both"):
+    if format not in EMAIL_FORMATS:
         return False, f"Ugyldigt format: {format}. Brug 'html', 'pdf' eller 'both'."
 
-    recipients = getattr(settings, "CHRONICLE_EMAIL_RECIPIENTS", [])
+    recipients = email_recipients()
     if not recipients:
         return False, "Ingen email-modtagere konfigureret. Tjek CHRONICLE_EMAIL_RECIPIENTS."
 
-    subject = f"FynBus IT Opgavelog — {item.title}"
+    subject = priority_email_subject(item)
     if not from_email:
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "it@fynbus.dk")
 
@@ -194,8 +198,7 @@ def send_priority_email(
     except Exception as e:
         return False, f"Fejl ved afsendelse af email: {e}"
 
-    label = {"html": "HTML", "pdf": "PDF", "both": "HTML + PDF"}[format]
-    return True, f"Email ({label}) sendt til {len(recipients)} modtager(e)."
+    return True, f"Email ({FORMAT_LABELS[format]}) sendt til {len(recipients)} modtager(e)."
 
 
 # Re-export the filename helper so views can use it consistently.

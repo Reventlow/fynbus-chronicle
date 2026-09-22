@@ -11,11 +11,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models as db_models
-from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -26,7 +26,7 @@ from django.views.generic import (
 
 from apps.accounts.permissions import EditorRequiredMixin, editor_required
 
-from .exports.email import send_weeklog_email
+from .exports.email import EMAIL_FORMATS, email_summary, send_weeklog_email
 from .exports.html import generate_html
 from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
@@ -937,22 +937,53 @@ def export_html(request: HttpRequest, year: int, week: int) -> HttpResponse:
     return response
 
 
-@login_required
-@editor_required
-def export_email(request: HttpRequest, year: int, week: int) -> HttpResponse:
-    """Send a week log via email."""
-    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
-    format = request.GET.get("format", "both")
-    success, message = send_weeklog_email(
-        weeklog, format=format, from_email=request.user.email
+def _email_confirm_or_send(request: HttpRequest, *, summary: dict, send, back_url: str, heading: str) -> HttpResponse:
+    """Two-step send shared by the weeklog and priority reports.
+
+    GET renders the confirmation page — recipients, sender, subject and
+    attachments — and sends nothing. Only a POST from that page's Send
+    button (CSRF-protected) calls ``send()``. The format travels as a
+    query parameter on GET and a hidden field on POST; anything outside
+    EMAIL_FORMATS is a 400 rather than a silent fallback to "both".
+    """
+    if request.method == "POST":
+        success, message = send()
+        (messages.success if success else messages.error)(request, message)
+        return redirect(back_url)
+    return render(
+        request,
+        "logbook/email_confirm.html",
+        {"summary": summary, "back_url": back_url, "heading": heading},
     )
 
-    if success:
-        messages.success(request, message)
-    else:
-        messages.error(request, message)
 
-    return redirect(weeklog)
+def _requested_email_format(request: HttpRequest) -> str | None:
+    source = request.POST if request.method == "POST" else request.GET
+    fmt = source.get("format", "both")
+    return fmt if fmt in EMAIL_FORMATS else None
+
+
+@login_required
+@editor_required
+@require_http_methods(["GET", "POST"])
+def export_email(request: HttpRequest, year: int, week: int) -> HttpResponse:
+    """Send a week log via email — after a confirmation page (0.15.0)."""
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
+    fmt = _requested_email_format(request)
+    if fmt is None:
+        return HttpResponseBadRequest("Ugyldigt format. Brug 'html', 'pdf' eller 'both'.")
+    return _email_confirm_or_send(
+        request,
+        summary=email_summary(
+            subject=f"FynBus IT Ugelog - {weeklog.week_label}",
+            format=fmt,
+            pdf_filename=f"ugelog_{weeklog.year}_uge{weeklog.week_number}.pdf",
+            from_email=request.user.email,
+        ),
+        send=lambda: send_weeklog_email(weeklog, format=fmt, from_email=request.user.email),
+        back_url=weeklog.get_absolute_url(),
+        heading=f"Send ugelog {weeklog.week_label} som email",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1005,10 +1036,31 @@ def priority_export_html(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 @editor_required
+@require_http_methods(["GET", "POST"])
 def priority_export_email(request: HttpRequest, pk: int) -> HttpResponse:
-    from .exports.priority import send_priority_email
+    """Send a priority history report via email — after a confirmation page."""
+    from .exports.priority import (
+        priority_email_subject,
+        send_priority_email,
+        slug_for_filename,
+    )
+
     item = get_object_or_404(PriorityItem, pk=pk)
-    fmt = request.GET.get("format", "both")
-    success, msg = send_priority_email(item, format=fmt, from_email=request.user.email)
-    (messages.success if success else messages.error)(request, msg)
-    return redirect("logbook:priority-item-history", pk=pk)
+    fmt = _requested_email_format(request)
+    if fmt is None:
+        return HttpResponseBadRequest("Ugyldigt format. Brug 'html', 'pdf' eller 'both'.")
+    back_url = reverse("logbook:priority-item-history", kwargs={"pk": pk})
+    return _email_confirm_or_send(
+        request,
+        summary=email_summary(
+            subject=priority_email_subject(item),
+            format=fmt,
+            pdf_filename=f"{slug_for_filename(item)}.pdf",
+            from_email=request.user.email,
+        ),
+        send=lambda: send_priority_email(item, format=fmt, from_email=request.user.email),
+        back_url=back_url,
+        heading=f"Send opgavelog ”{item.title}” som email",
+    )
+
+

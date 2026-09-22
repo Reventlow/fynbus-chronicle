@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.15.0 — 2026-09-22
+
+### Added
+- **Bekræftelse før en rapport sendes som email.** "Email som HTML/PDF/HTML + PDF" i eksport-menuen sendte rapporten med det samme — ét klik, ingen mulighed for at se hvem der fik den. Nu åbner de en bekræftelsesside, der viser modtagerne (fra `CHRONICLE_EMAIL_RECIPIENTS`), afsenderen, emnet og hvad der vedhæftes, med en "Send til N modtagere"-knap og Annullér. Intet sendes, før der trykkes Send; selve afsendelsen sker som POST med CSRF-beskyttelse i stedet for et GET-link. Er modtagerlisten tom, er knappen slået fra, og siden forklarer hvorfor. Gælder både ugelog-rapporten og opgave-historikken. (FR #10)
+
+### Changed
+- Et ugyldigt `format` på email-eksporten svarer nu 400 i stedet for stille at falde tilbage til "both".
+
 ## 0.14.1 — 2026-09-20
 
 ### Changed

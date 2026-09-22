@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% comment %}
+  Confirmation step before a report goes out by email (0.15.0, FR #10).
+  Reached by GET from the "Email som …" links in the export menus; nothing
+  is sent until the Send button POSTs back to the same URL. The summary
+  (subject, sender, recipients, attachments) is built by
+  apps.logbook.exports.email.email_summary — the same helper the send
+  path uses for recipients, so the page cannot drift from what is sent.
+{% endcomment %}
+
+{% block title %}{{ heading }} - FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-sand-500 dark:text-sand-400 mb-1">
+      <a href="{{ back_url }}" class="hover:text-sand-700 dark:hover:text-sand-200">Tilbage</a>
+      <span>/</span>
+      <span>Send som email</span>
+    </div>
+    <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">{{ heading }}</h1>
+  </div>
+
+  <div class="card">
+    <form method="post" class="space-y-6" id="email-confirm-form">
+      {% csrf_token %}
+      <input type="hidden" name="format" value="{{ summary.format }}">
+
+      {% if not summary.recipients %}
+        <div class="alert alert-warning" role="alert">
+          Ingen modtagere er konfigureret. Bed administratoren sætte
+          <code>CHRONICLE_EMAIL_RECIPIENTS</code> i serverens miljø — indtil da kan rapporten ikke sendes.
+        </div>
+      {% endif %}
+
+      <div>
+        <div class="label-eyebrow" style="margin-bottom: 8px;">Modtagere ({{ summary.recipients|length }})</div>
+        {% if summary.recipients %}
+          <ul class="flex flex-wrap gap-2" style="list-style: none; margin: 0; padding: 0;" id="email-recipients">
+            {% for addr in summary.recipients %}
+              <li class="pill pill-accent" style="font-size: 13px; padding: 5px 11px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/>
+                </svg>
+                {{ addr }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p style="margin: 0; font-size: 13px; color: var(--ink-4);">—</p>
+        {% endif %}
+        <p style="margin: 8px 0 0; font-size: 11.5px; color: var(--ink-4); line-height: 1.45;">
+          Listen styres af administratoren og er den samme for alle rapporter.
+        </p>
+      </div>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-3" style="gap: 8px 16px; margin: 20px 0 0; font-size: 13.5px;">
+        <dt class="label-eyebrow" style="align-self: center;">Emne</dt>
+        <dd class="sm:col-span-2" style="margin: 0; color: var(--ink-1); font-weight: 500;">{{ summary.subject }}</dd>
+
+        <dt class="label-eyebrow" style="align-self: center;">Afsender</dt>
+        <dd class="sm:col-span-2" style="margin: 0; color: var(--ink-2);">{{ summary.from_email }}</dd>
+
+        <dt class="label-eyebrow" style="align-self: start; padding-top: 2px;">Indhold</dt>
+        <dd class="sm:col-span-2" style="margin: 0; color: var(--ink-2);">
+          <span style="color: var(--ink-1);">{{ summary.format_label }}</span>
+          <ul style="margin: 4px 0 0; padding-left: 18px; line-height: 1.5; list-style: disc;">
+            {% for line in summary.attachments %}<li>{{ line }}</li>{% endfor %}
+          </ul>
+        </dd>
+      </dl>
+
+      <div class="flex flex-wrap items-center gap-3" style="margin-top: 20px; border-top: 1px solid var(--hairline); padding-top: 16px;">
+        <button type="submit" class="btn btn-primary" {% if not summary.recipients %}disabled aria-disabled="true"{% endif %}
+                x-data="{ busy: false }" @click="busy = true" :disabled="busy{% if not summary.recipients %} || true{% endif %}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+          </svg>
+          <span x-text="busy ? 'Sender…' : 'Send til {{ summary.recipients|length }} modtager{{ summary.recipients|length|pluralize:"e" }}'">Send til {{ summary.recipients|length }} modtager{{ summary.recipients|length|pluralize:"e" }}</span>
+        </button>
+        <a href="{{ back_url }}" class="btn btn-ghost">Annullér</a>
+        <span style="margin-left: auto; font-size: 11.5px; color: var(--ink-4);">Intet sendes, før du trykker Send.</span>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
