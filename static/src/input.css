@@ -343,6 +343,61 @@ html[data-event="pirate"].dark .brand-mark::before {
 
 /* Banner — same shape as .sw-banner, separate class to keep visuals
    independent (different glyph, date prefix, copy). */
+/* ------------------------------------------------------------------
+   Read-only Friday banner — server-rendered on Fridays (see the
+   read_only_friday context processor). Red via the --bad tokens so it
+   reads as a rule, and independent of whichever day-theme is active.
+   ------------------------------------------------------------------ */
+.rof-banner {
+  position: sticky;
+  top: 0;
+  z-index: 31;                 /* above the theme banners (30) */
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--bad-soft) 100%, transparent) 0%,
+    color-mix(in oklch, var(--bad-soft) 75%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--bad) 45%, transparent);
+  color: var(--bad-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+.dark .rof-banner {
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--bad) 28%, var(--surface-1)) 0%,
+    color-mix(in oklch, var(--bad) 16%, var(--surface-1)) 100%);
+  border-bottom-color: color-mix(in oklch, var(--bad) 55%, transparent);
+  color: color-mix(in oklch, var(--bad) 70%, white);
+}
+.rof-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rof-banner-glyph { flex: none; color: var(--bad); }
+.dark .rof-banner-glyph { color: color-mix(in oklch, var(--bad) 80%, white); }
+.rof-banner-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.rof-banner-sep { color: var(--bad); opacity: 0.5; }
+.rof-banner-msg {
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rof-banner-msg.is-fading { opacity: 0; }
+
 .pirate-banner { display: none; }
 html[data-event="pirate"] .pirate-banner {
   display: block;

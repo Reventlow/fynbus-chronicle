@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.16.0 — 2026-10-01
+
+### Added
+- **Read-only Friday-banner.** Hver fredag (dansk tid) viser sitet et rødt banner øverst: "Read-only Friday — ingen ændringer i produktion i dag", med et par roterende påmindelser om at deploys, patches og "lige en lille rettelse" venter til mandag. Det er en regel, ikke et tema: det følger ugedagen frem for en dato, kan ikke slås fra i tema-panelet, og ligger oven i et eventuelt dagstema (Pirate Day falder fx på en fredag i 2026). Forhåndsvisning med `?force-friday=1`, skjul på en fredag med `?force-friday=0`.
+
 ## 0.15.0 — 2026-09-22
 
 ### Added

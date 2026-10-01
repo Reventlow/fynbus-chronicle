@@ -4,7 +4,7 @@ Custom context processors for Chronicle.
 Makes common variables available to all templates.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from django.conf import settings
@@ -22,7 +22,7 @@ def version(request):
     try:
         app_version = version_file.read_text().strip()
         mtime = version_file.stat().st_mtime
-        version_date = datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%d. %b %Y")
+        version_date = datetime.fromtimestamp(mtime, tz=UTC).strftime("%d. %b %Y")
     except FileNotFoundError:
         app_version = "unknown"
         version_date = ""
@@ -89,3 +89,21 @@ def active_theme(request):
         "ACTIVE_THEME": slug,
         "ACTIVE_THEMES": selectable,
     }
+
+
+def read_only_friday(request):
+    """``IS_READ_ONLY_FRIDAY`` — true every Friday (Europe/Copenhagen).
+
+    Read-only Friday is the ops rule that nothing changes in production on
+    a Friday: no deploys, no patches, no "just a small fix" that nobody is
+    around to roll back over the weekend. base.html shows a red banner
+    while it is true. Unlike the day-themes this is weekday-driven, so it
+    lives here rather than in the ThemeSchedule table (which is date-based).
+
+    Preview hatches: ``?force-friday=1`` shows the banner on any day,
+    ``?force-friday=0`` hides it on a Friday.
+    """
+    forced = request.GET.get("force-friday") if request is not None else None
+    if forced in ("0", "1"):
+        return {"IS_READ_ONLY_FRIDAY": forced == "1"}
+    return {"IS_READ_ONLY_FRIDAY": django_timezone.localdate().weekday() == 4}

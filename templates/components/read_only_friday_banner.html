@@ -1,0 +1,45 @@
+{% comment %}
+  Read-only Friday banner — rendered server-side only when the
+  read_only_friday context processor says so (a Friday in
+  Europe/Copenhagen, or ?force-friday=1). Red on purpose: it is a rule,
+  not a costume, so it uses the --bad tokens rather than a theme accent
+  and it coexists with whatever day-theme happens to be active.
+  Messages are fixed here rather than in the ThemeBannerMessage table —
+  the point is the same every week.
+{% endcomment %}
+{% if IS_READ_ONLY_FRIDAY %}
+<script id="rof-banner-messages" type="application/json">[
+  "Ingen ændringer i produktion i dag. Det, der går i stykker fredag, repareres i weekenden.",
+  "Deploys, patches og ”lige en lille rettelse” venter til mandag.",
+  "Hvis det virker nu, virker det også på mandag. Lad det være.",
+  "Den bedste ændring om fredagen er den, der ikke bliver lavet.",
+  "Læs, dokumentér, planlæg. Skriv ikke til produktion."
+]</script>
+<div class="rof-banner" role="note" aria-label="Read-only Friday"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('rof-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="rof-banner-inner">
+    <svg class="rof-banner-glyph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    <span class="rof-banner-title">Read-only Friday</span>
+    <span class="rof-banner-sep" aria-hidden="true">·</span>
+    <span class="rof-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Ingen ændringer i produktion i dag.</span>
+  </div>
+</div>
+{% endif %}

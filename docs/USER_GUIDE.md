@@ -339,6 +339,12 @@ administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
 | 19. september og 1. oktober | Pirate Day |
 | 21. september | Verdens Alzheimerdag — lilla, med fakta og henvisninger til Alzheimerforeningen i banneret i stedet for vittigheder |
 
+**Read-only Friday.** Hver fredag viser sitet et rødt banner øverst: ingen
+ændringer i produktion i dag — deploys, patches og "lige en lille rettelse"
+venter til mandag. Det er en regel, ikke et tema, så det kan ikke slås fra i
+tema-panelet og vises oven i et eventuelt dagstema. Forhåndsvisning på andre
+dage: tilføj `?force-friday=1` til adressen.
+
 Vil du se et tema uden at vente på dagen, kan du tilføje `?force-theme=<navn>`
 til adressen, fx `?force-theme=alzheimer`.
 
