@@ -54,5 +54,12 @@ LOGGING = {
             "level": "ERROR",
             "propagate": False,
         },
+        # Application logs (email send attempts and outcomes, see
+        # apps.logbook.views._email_confirm_or_send) at INFO.
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }

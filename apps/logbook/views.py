@@ -6,6 +6,7 @@ for inline editing of priority items, absences, and incidents.
 """
 
 import json
+import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -49,6 +50,8 @@ from .models import (
 # =============================================================================
 # WeekLog Views
 # =============================================================================
+
+logger = logging.getLogger(__name__)
 
 
 class WeekLogListView(LoginRequiredMixin, ListView):
@@ -947,7 +950,18 @@ def _email_confirm_or_send(request: HttpRequest, *, summary: dict, send, back_ur
     EMAIL_FORMATS is a 400 rather than a silent fallback to "both".
     """
     if request.method == "POST":
+        # Logged on purpose: the send functions swallow exceptions into the
+        # returned message, so without this a failed send left no trace in
+        # the container log — only a toast the user may not report.
+        logger.info(
+            "Email send requested by %s: %r (%s) to %d recipient(s)",
+            request.user.get_username(), summary["subject"], summary["format"], len(summary["recipients"]),
+        )
         success, message = send()
+        if success:
+            logger.info("Email sent: %r — %s", summary["subject"], message)
+        else:
+            logger.error("Email send FAILED: %r — %s", summary["subject"], message)
         (messages.success if success else messages.error)(request, message)
         return redirect(back_url)
     return render(

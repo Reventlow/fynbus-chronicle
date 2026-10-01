@@ -166,3 +166,34 @@ def test_priority_post_sends_and_redirects(client, editor, item, recipients, mai
     assert response["Location"] == reverse("logbook:priority-item-history", kwargs={"pk": item.pk})
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == RECIPIENTS
+
+
+# --- 0.16.1: the Send button must actually submit, and sends are logged ------
+
+
+def test_send_button_does_not_disable_itself_on_click(client, editor, weeklog, recipients):
+    """0.15.0 regression: @click="busy = true" + :disabled="busy" disabled the
+    button before the browser ran its default action, so the form never
+    submitted. busy must flip on the form's submit event instead."""
+    html = client.get(_weeklog_url(weeklog)).content.decode()
+    assert '@submit="busy = true"' in html
+    assert '@click="busy = true"' not in html
+
+
+@patch("apps.logbook.views.send_weeklog_email", return_value=(False, "Fejl ved afsendelse af email: boom"))
+def test_failed_send_is_logged_as_error(send, client, editor, weeklog, recipients, caplog):
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="apps.logbook.views"):
+        client.post(reverse("logbook:export-email", kwargs={"year": 2026, "week": 36}), {"format": "both"})
+    levels = [(r.levelname, r.getMessage()) for r in caplog.records if r.name == "apps.logbook.views"]
+    assert any(lvl == "INFO" and "Email send requested by gre" in msg for lvl, msg in levels)
+    assert any(lvl == "ERROR" and "boom" in msg for lvl, msg in levels)
+
+
+def test_successful_send_is_logged(client, editor, weeklog, recipients, mailoutbox, caplog):
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="apps.logbook.views"):
+        client.post(reverse("logbook:export-email", kwargs={"year": 2026, "week": 36}), {"format": "pdf"})
+    assert any("Email sent:" in r.getMessage() for r in caplog.records if r.name == "apps.logbook.views")

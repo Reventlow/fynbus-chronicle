@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.16.1 — 2026-10-01
+
+### Fixed
+- **Send-knappen på email-bekræftelsen sendte ikke.** Knappen skiftede til "Sender…" og blev slået fra i samme klik, og Alpine nåede at slå den fra, før browseren udførte selve indsendelsen — så formularen blev aldrig sendt, og der skete "ingenting". Nu skifter knappen først, når formularen faktisk er sendt af sted (på `submit`), hvor det kun forhindrer dobbeltklik. Fejl indført i 0.15.0.
+
+### Added
+- **Afsendelser logges.** Hvert forsøg på at sende en rapport logges i containerloggen med bruger, emne, format og antal modtagere, og resultatet logges som INFO (sendt) eller ERROR (fejlbesked fra Graph/SMTP). Sendefunktionerne sluger selv undtagelser til en toast, så en fejlet afsendelse efterlod hidtil intet spor.
+
 ## 0.16.0 — 2026-10-01
 
 ### Added

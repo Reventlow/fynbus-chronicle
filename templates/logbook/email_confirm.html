@@ -22,7 +22,15 @@
   </div>
 
   <div class="card">
-    <form method="post" class="space-y-6" id="email-confirm-form">
+    {% comment %}
+      busy lives on the form and flips on submit, not on the button's click:
+      0.15.0 set it in @click, Alpine applied :disabled before the browser
+      ran the button's default action, and the form never submitted — the
+      button just read "Sender…" forever. On submit the request is already
+      under way, so disabling the button then only prevents a double send.
+    {% endcomment %}
+    <form method="post" class="space-y-6" id="email-confirm-form"
+          x-data="{ busy: false }" @submit="busy = true">
       {% csrf_token %}
       <input type="hidden" name="format" value="{{ summary.format }}">
 
@@ -72,7 +80,7 @@
 
       <div class="flex flex-wrap items-center gap-3" style="margin-top: 20px; border-top: 1px solid var(--hairline); padding-top: 16px;">
         <button type="submit" class="btn btn-primary" {% if not summary.recipients %}disabled aria-disabled="true"{% endif %}
-                x-data="{ busy: false }" @click="busy = true" :disabled="busy{% if not summary.recipients %} || true{% endif %}">
+                :disabled="busy{% if not summary.recipients %} || true{% endif %}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
           </svg>
