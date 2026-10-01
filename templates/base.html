@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da"
+<html lang="da"{% if IS_READ_ONLY_FRIDAY %} data-rof="1"{% endif %}
       x-data="{
         darkMode:  localStorage.getItem('darkMode') === 'true',
         // Density: 'comfortable' (default), 'compact' (denser + graphs hidden),

@@ -53,12 +53,21 @@ def test_banner_renders_on_friday(client, editor):
     assert 'class="rof-banner"' in html
     assert "Read-only Friday" in html
     assert "Ingen ændringer i produktion i dag" in html
+    # 0.16.2: the html element carries the hook for the viewport frame + red brand mark.
+    assert '<html lang="da" data-rof="1"' in html
 
 
 def test_banner_absent_on_thursday(client, editor):
     with patch("chronicle.context_processors.django_timezone.localdate", return_value=THURSDAY):
         html = client.get(reverse("logbook:weeklog-list")).content.decode()
     assert "rof-banner" not in html
+    assert "data-rof" not in html
+
+
+def test_loud_styling_is_compiled():
+    css = open("static/css/output.css", encoding="utf-8").read()
+    assert "html[data-rof] body::after" in css or "html[data-rof] body:after" in css
+    assert "html[data-rof] .brand-mark" in css
 
 
 def test_banner_survives_an_active_theme(client, editor):

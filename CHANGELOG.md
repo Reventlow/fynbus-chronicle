@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.16.2 — 2026-10-01
+
+### Changed
+- **Read-only Friday er nu umulig at overse.** (FR #12 fra mra: "Kan vi MEGET tydeligt fremhæve …") Banneret er massivt rødt med hvid tekst og advarselsstriber i enderne, og teksten "Ingen ændringer i produktion i dag" står fast — kun den afsluttende påmindelse roterer. Hele siden får en rød ramme, der bliver stående mens man scroller, og logomærket i navigationen skifter til rødt. Stadig kun om fredagen; `?force-friday=1` viser det på andre dage.
+
 ## 0.16.1 — 2026-10-01
 
 ### Fixed
