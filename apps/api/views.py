@@ -27,6 +27,7 @@ from apps.logbook.models import (
     WeekLog,
 )
 from apps.oncall.models import OnCallDuty
+from apps.reports.models import Report
 
 from .serializers import (
     serialize_absence,
@@ -484,3 +485,62 @@ def feature_request_solve(request: HttpRequest, pk: int) -> JsonResponse:
     obj = get_object_or_404(FeatureRequest, pk=pk)
     obj.mark_solved(by=getattr(request, "api_user", None))
     return JsonResponse({"feature_request": serialize_feature_request(obj)})
+
+
+# ---------------------------------------------------------------------------
+# Reports (0.17.0): standalone HTML pages under "Rapporter".
+# ---------------------------------------------------------------------------
+
+
+def _report_payload(request: HttpRequest, report: Report) -> dict:
+    return {
+        "slug": report.slug,
+        "title": report.title,
+        "description": report.description,
+        "is_public": report.is_public,
+        "public_token": report.public_token,
+        "public_url": request.build_absolute_uri(report.get_public_path()),
+        "url": request.build_absolute_uri(report.get_absolute_url()),
+        "size_bytes": len(report.html.encode("utf-8")),
+        "created_at": report.created_at.isoformat(),
+        "updated_at": report.updated_at.isoformat(),
+    }
+
+
+@require_GET
+@api_auth(scope="read")
+def reports_list(request: HttpRequest) -> JsonResponse:
+    return JsonResponse({"reports": [_report_payload(request, r) for r in Report.objects.all()]})
+
+
+@require_http_methods(["PUT"])
+@api_auth(scope="write")
+def report_upsert(request: HttpRequest, slug: str) -> JsonResponse:
+    """Create or replace a report by slug. Body: title (required on create),
+    html (required on create), description, is_public. The public token is
+    kept across updates so a shared link survives a new version."""
+    try:
+        body = _parse_json_body(request)
+    except ValueError as e:
+        return JsonResponse({"error": "invalid_json", "detail": str(e)}, status=400)
+    unknown = set(body) - {"title", "html", "description", "is_public"}
+    if unknown:
+        return JsonResponse({"error": "unknown_fields", "detail": sorted(unknown)}, status=400)
+    report = Report.objects.filter(slug=slug).first()
+    created = report is None
+    if created:
+        missing = [f for f in ("title", "html") if not body.get(f)]
+        if missing:
+            return JsonResponse({"error": "missing_fields", "detail": missing}, status=400)
+        report = Report(slug=slug, created_by=request.api_user)
+    for field in ("title", "html", "description"):
+        if field in body:
+            if not isinstance(body[field], str):
+                return JsonResponse({"error": "invalid_field", "detail": f"{field} must be a string"}, status=400)
+            setattr(report, field, body[field])
+    if "is_public" in body:
+        if not isinstance(body["is_public"], bool):
+            return JsonResponse({"error": "invalid_field", "detail": "is_public must be a boolean"}, status=400)
+        report.is_public = body["is_public"]
+    report.save()
+    return JsonResponse({"report": _report_payload(request, report)}, status=201 if created else 200)

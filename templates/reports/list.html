@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapporter — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>{{ reports|length }} rapport{{ reports|length|pluralize:"er" }}</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Rapporter <span class="display-italic" style="color: var(--ink-3);">til at dele.</span>
+      </h1>
+      <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
+        Selvstændige sider med egen grafik, fx årsgennemgangen. En rapport, der er markeret
+        offentlig, kan åbnes på sit eget link uden login, så den kan sendes til folk uden for Chronicle.
+      </p>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# List #}
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    {% for r in reports %}
+      <div class="card" x-data="{ copied: false }" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 24px; align-items: start;">
+        <div style="min-width: 0;">
+          <div class="flex flex-wrap items-center gap-2" style="margin-bottom: 4px;">
+            <a href="{{ r.get_absolute_url }}" style="font-size: 18px; font-weight: 600; color: var(--ink-1); text-decoration: none;">{{ r.title }}</a>
+            {% if r.is_public %}
+              <span class="pill pill-good"><span class="pill-dot"></span>Offentligt link</span>
+            {% else %}
+              <span class="pill pill-neutral"><span class="pill-dot"></span>Kun indloggede</span>
+            {% endif %}
+          </div>
+          {% if r.description %}<p style="margin: 0 0 6px; font-size: 14px; color: var(--ink-2);">{{ r.description }}</p>{% endif %}
+          <div style="font-size: 12.5px; color: var(--ink-4);">
+            Lagt op {{ r.created_at|date:"j. M Y" }}{% if r.created_by %} af {{ r.created_by.get_full_name|default:r.created_by.username }}{% endif %}
+            {% if r.updated_at|date:"Y-m-d H:i" != r.created_at|date:"Y-m-d H:i" %} · opdateret {{ r.updated_at|date:"j. M Y H:i" }}{% endif %}
+          </div>
+          {% if r.is_public %}
+            <div class="flex flex-wrap items-center gap-2" style="margin-top: 10px;">
+              <code id="link-{{ r.pk }}" style="font-size: 12.5px; padding: 4px 8px; background: var(--surface-2); border-radius: 6px; word-break: break-all;">{{ request.scheme }}://{{ request.get_host }}{{ r.get_public_path }}</code>
+              <button type="button" class="btn btn-sm"
+                      @click="navigator.clipboard.writeText(document.getElementById('link-{{ r.pk }}').textContent).then(() => { copied = true; setTimeout(() => copied = false, 1600) })"
+                      x-text="copied ? 'Kopieret' : 'Kopiér link'">Kopiér link</button>
+            </div>
+          {% endif %}
+        </div>
+        <div class="flex flex-wrap items-center gap-2" style="justify-content: flex-end;">
+          <a href="{{ r.get_absolute_url }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">Åbn</a>
+          {% if is_editor %}
+            <form method="post" action="{% url 'reports:visibility' r.slug %}">{% csrf_token %}
+              <input type="hidden" name="public" value="{% if r.is_public %}0{% else %}1{% endif %}">
+              <button type="submit" class="btn btn-sm">{% if r.is_public %}Gør privat{% else %}Gør offentlig{% endif %}</button>
+            </form>
+            {% if r.is_public %}
+              <form method="post" action="{% url 'reports:rotate' r.slug %}">{% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-ghost" title="Udsted et nyt link; det gamle holder op med at virke">Nyt link</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{% url 'reports:delete' r.slug %}" x-data @submit="if (!window.__confirmDelete) { $event.preventDefault(); window.__confirmDelete = true; $el.querySelector('button').textContent = 'Slet – er du sikker?'; setTimeout(() => { window.__confirmDelete = false; $el.querySelector('button').textContent = 'Slet'; }, 4000) }">{% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--bad-ink);">Slet</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="card" style="color: var(--ink-3);">Ingen rapporter endnu.</div>
+    {% endfor %}
+  </div>
+
+  {# Upload (editors) #}
+  {% if is_editor %}
+    <div class="card" style="max-width: 720px;">
+      <div class="label-eyebrow" style="margin-bottom: 10px;">Læg en rapport op</div>
+      <form method="post" action="{% url 'reports:upload' %}" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="input-label" for="{{ form.title.id_for_label }}">Titel</label>
+          {{ form.title }}
+        </div>
+        <div>
+          <label class="input-label" for="{{ form.description.id_for_label }}">Beskrivelse</label>
+          {{ form.description }}
+        </div>
+        <div>
+          <label class="input-label" for="{{ form.file.id_for_label }}">HTML-fil</label>
+          {{ form.file }}
+          <p class="input-hint">{{ form.file.help_text }}</p>
+        </div>
+        {% if reports %}
+          <div>
+            <label class="input-label" for="replace">Erstat en eksisterende rapport (valgfrit)</label>
+            <select name="replace" id="replace" class="input">
+              <option value="">— Opret som ny —</option>
+              {% for r in reports %}<option value="{{ r.slug }}">{{ r.title }}</option>{% endfor %}
+            </select>
+            <p class="input-hint">Linket bevares, kun indholdet skiftes ud.</p>
+          </div>
+        {% endif %}
+        <label class="flex items-center gap-2" style="font-size: 14px;">
+          {{ form.is_public }} Offentligt link (kan åbnes uden login)
+        </label>
+        <div><button type="submit" class="btn btn-primary">Læg op</button></div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

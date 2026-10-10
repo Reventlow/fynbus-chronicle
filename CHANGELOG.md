@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.17.0 — 2026-10-10
+
+### Added
+- **Menuen Rapporter.** Selvstændige HTML-sider med egen grafik, fx den animerede årsgennemgang, kan lægges op i Chronicle og findes under "Rapporter". Siderne serveres uden Chronicles menu og farver. En rapport kan markeres **offentlig** og får så et langt, ugætteligt link, der virker uden login, så den kan sendes til ledelsen eller andre uden en Chronicle-konto. "Gør privat" slår linket fra med det samme, "Nyt link" udsteder et nyt. Redaktører lægger rapporter op fra siden (filupload, valgfri erstatning af en eksisterende rapport så linket bevares) eller via API'et: `PUT /api/v1/reports/<slug>/` og `GET /api/v1/reports/`. Offentlige sider sendes med `noindex`, `no-store` og `Referrer-Policy: no-referrer`, så linket ikke lækker. (FR #14)
+
 ## 0.16.2 — 2026-10-01
 
 ### Changed

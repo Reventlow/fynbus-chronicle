@@ -11,7 +11,8 @@ Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere 
 5. [Opgaver](#opgaver)
 6. [Vagtkalender](#vagtkalender)
 7. [Eksporter rapporter](#eksporter-rapporter)
-8. [Mørk tilstand](#mørk-tilstand)
+8. [Rapporter](#rapporter)
+9. [Mørk tilstand](#mørk-tilstand)
 
 ---
 
@@ -313,6 +314,26 @@ Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: e
 Intet sendes, før du trykker Send på bekræftelsessiden.
 
 > **Bemærk:** Modtagerlisten er fælles for alle rapporter og sættes af administratoren (`CHRONICLE_EMAIL_RECIPIENTS`). Er den tom, er Send-knappen slået fra, og siden fortæller hvorfor. Afsenderen er den bruger der er logget ind.
+
+## Rapporter
+
+Menuen **Rapporter** samler selvstændige sider med egen grafik, fx den animerede årsgennemgang "Oktober 2026 – et kig et år tilbage". Siderne vises uden Chronicles menu og farver; de har deres eget udseende.
+
+### Åbn og del
+
+1. Klik "Rapporter" i menuen og derefter "Åbn" på en rapport
+2. En rapport markeret **Offentligt link** har et langt, ugætteligt link under titlen. Klik "Kopiér link" og send det til fx ledelsen — det virker uden login
+3. "Gør privat" slår linket fra med det samme; "Nyt link" udsteder et nyt og lader det gamle dø
+
+> **Bemærk:** Linket er den eneste beskyttelse af en offentlig rapport. Send det kun til dem, der skal se den, og brug "Nyt link", hvis det er havnet forkert. Rapporter indekseres ikke af søgemaskiner.
+
+### Læg en rapport op (redaktører)
+
+1. Nederst på siden Rapporter: udfyld titel og beskrivelse, vælg en selvstændig `.html`-fil (højst 16 MB)
+2. Vælg eventuelt "Erstat en eksisterende rapport" for at skifte indholdet ud og beholde linket
+3. Sæt kryds i "Offentligt link", hvis rapporten skal kunne åbnes uden login
+
+Rapporter kan også lægges op og opdateres via API'et: `PUT /api/v1/reports/<slug>/` med `title`, `html`, `description` og `is_public` (skrivenøgle). `GET /api/v1/reports/` lister dem.
 
 ---
 
