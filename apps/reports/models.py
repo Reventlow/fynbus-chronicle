@@ -4,14 +4,14 @@ A ``Report`` is a self-contained HTML document (its own CSS and JS, no
 Chronicle chrome, none of the site's theme tokens) that editors upload or
 push through the API — the animated year-in-review, a one-off analysis, a
 slide deck exported as HTML. Reports are listed under the "Rapporter" menu
-for logged-in users, and a report marked public is also reachable on an
-unguessable token link that needs no login, so it can be sent to people
-who do not use Chronicle.
+for logged-in users. A report marked public needs no login: both its
+readable address (``/reports/<slug>/``) and its token link
+(``/reports/p/<token>/``) open for anyone, so it can be sent to people who
+do not use Chronicle. Making it private again closes both at once.
 
-The token is the only thing protecting a public report, so it is long
-(32 url-safe characters, ~190 bits), regenerable, and never derived from
-anything guessable. Making a report private again invalidates the link
-immediately.
+The token link exists for links already sent out and as an address that
+does not reveal the title; it is long (32 url-safe characters) and can be
+rotated.
 """
 
 import secrets

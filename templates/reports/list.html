@@ -18,7 +18,7 @@
       </h1>
       <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
         Selvstændige sider med egen grafik, fx årsgennemgangen. En rapport, der er markeret
-        offentlig, kan åbnes på sit eget link uden login, så den kan sendes til folk uden for Chronicle.
+        offentlig, kan åbnes uden login på sin adresse, så den kan sendes til folk uden for Chronicle.
       </p>
     </div>
   </div>
@@ -51,7 +51,7 @@
           </div>
           {% if r.is_public %}
             <div class="flex flex-wrap items-center gap-2" style="margin-top: 10px;">
-              <code id="link-{{ r.pk }}" style="font-size: 12.5px; padding: 4px 8px; background: var(--surface-2); border-radius: 6px; word-break: break-all;">{{ request.scheme }}://{{ request.get_host }}{{ r.get_public_path }}</code>
+              <code id="link-{{ r.pk }}" style="font-size: 12.5px; padding: 4px 8px; background: var(--surface-2); border-radius: 6px; word-break: break-all;">{{ request.scheme }}://{{ request.get_host }}{{ r.get_absolute_url }}</code>
               <button type="button" class="btn btn-sm"
                       @click="navigator.clipboard.writeText(document.getElementById('link-{{ r.pk }}').textContent).then(() => { copied = true; setTimeout(() => copied = false, 1600) })"
                       x-text="copied ? 'Kopieret' : 'Kopiér link'">Kopiér link</button>
@@ -67,7 +67,7 @@
             </form>
             {% if r.is_public %}
               <form method="post" action="{% url 'reports:rotate' r.slug %}">{% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-ghost" title="Udsted et nyt link; det gamle holder op med at virke">Nyt link</button>
+                <button type="submit" class="btn btn-sm btn-ghost" title="Udsted et nyt anonymt link (/reports/p/…); det gamle holder op med at virke">Nyt anonymt link</button>
               </form>
             {% endif %}
             <form method="post" action="{% url 'reports:delete' r.slug %}" x-data @submit="if (!window.__confirmDelete) { $event.preventDefault(); window.__confirmDelete = true; $el.querySelector('button').textContent = 'Slet – er du sikker?'; setTimeout(() => { window.__confirmDelete = false; $el.querySelector('button').textContent = 'Slet'; }, 4000) }">{% csrf_token %}

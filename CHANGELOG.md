@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.17.1 — 2026-10-10
+
+### Changed
+- **Offentlige rapporter er åbne på deres almindelige adresse.** `/reports/<slug>/` kræver ikke længere login, når rapporten er markeret offentlig; "Gør privat" lukker den igen. Siden Rapporter viser nu den læsbare adresse som det link, der kopieres. Det anonyme token-link (`/reports/p/…`) findes stadig for links, der allerede er sendt ud, og kan fornys med "Nyt anonymt link".
+
 ## 0.17.0 — 2026-10-10
 
 ### Added

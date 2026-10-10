@@ -76,9 +76,18 @@ def test_full_document_is_served_as_is(client, editor):
     assert body.count("<html") == 1 and body.startswith("<!DOCTYPE html>")
 
 
-def test_list_and_view_require_login(client, report):
+def test_list_and_private_view_require_login(client, report):
     assert client.get(reverse("reports:list")).status_code == 302
-    assert client.get(report.get_absolute_url()).status_code == 302
+    response = client.get(report.get_absolute_url())
+    assert response.status_code == 302 and "/accounts/login/" in response["Location"]
+
+
+def test_public_report_slug_url_opens_without_login(client, report):
+    report.is_public = True
+    report.save()
+    response = client.get(report.get_absolute_url())
+    assert response.status_code == 200 and "<h1>Hej</h1>" in response.content.decode()
+    assert response["Cache-Control"] == "private, no-store"
 
 
 # --- public link -----------------------------------------------------------------
@@ -111,6 +120,7 @@ def test_making_private_kills_the_link(client, editor, report):
     client.post(reverse("reports:visibility", kwargs={"slug": report.slug}), {"public": "0"})
     client.logout()
     assert client.get(report.get_public_path()).status_code == 404
+    assert client.get(report.get_absolute_url()).status_code == 302
 
 
 # --- editing -----------------------------------------------------------------------
@@ -120,7 +130,7 @@ def test_list_shows_public_link_and_actions_to_editors(client, editor, report):
     report.is_public = True
     report.save()
     html = client.get(reverse("reports:list")).content.decode()
-    assert report.public_token in html
+    assert report.get_absolute_url() in html
     assert "Kopiér link" in html and "Gør privat" in html and "Læg en rapport op" in html
 
 

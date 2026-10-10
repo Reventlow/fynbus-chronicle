@@ -322,10 +322,10 @@ Menuen **Rapporter** samler selvstændige sider med egen grafik, fx den animered
 ### Åbn og del
 
 1. Klik "Rapporter" i menuen og derefter "Åbn" på en rapport
-2. En rapport markeret **Offentligt link** har et langt, ugætteligt link under titlen. Klik "Kopiér link" og send det til fx ledelsen — det virker uden login
-3. "Gør privat" slår linket fra med det samme; "Nyt link" udsteder et nyt og lader det gamle dø
+2. En rapport markeret **Offentligt link** kan åbnes uden login på sin adresse, fx `https://chronicle.fynbus.net/reports/oktober-2026-et-kig-et-aar-tilbage/`. Klik "Kopiér link" og send den til fx ledelsen
+3. "Gør privat" lukker adressen med det samme, så den igen kræver login
 
-> **Bemærk:** Linket er den eneste beskyttelse af en offentlig rapport. Send det kun til dem, der skal se den, og brug "Nyt link", hvis det er havnet forkert. Rapporter indekseres ikke af søgemaskiner.
+> **Bemærk:** En offentlig rapport kan læses af alle, der kender adressen. Rapporter indekseres ikke af søgemaskiner. Der findes også et anonymt link (`/reports/p/…`), som ikke afslører titlen; "Nyt anonymt link" udsteder et nyt og lader det gamle dø.
 
 ### Læg en rapport op (redaktører)
 
