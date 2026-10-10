@@ -63,4 +63,5 @@ urlpatterns = [
     # Reports
     path("reports/", views.reports_list, name="reports-list"),
     path("reports/<slug:slug>/", views.report_upsert, name="report-upsert"),
+    path("reports/<slug:slug>/video/", views.report_video_upload, name="report-video-upload"),
 ]

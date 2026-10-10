@@ -6,10 +6,19 @@ site's theme tokens. If the stored HTML is not already a full document, it
 is wrapped in a minimal skeleton with the report title.
 """
 
+import os
+import re
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -58,6 +67,67 @@ def report_view(request: HttpRequest, slug: str) -> HttpResponse:
     return render_report(report, public=False)
 
 
+def _serve_video(request: HttpRequest, report: Report) -> HttpResponse:
+    """Stream the attached MP4 with HTTP Range support, so the browser can
+    seek. ``?download=1`` sends it as an attachment named after the slug."""
+    if not report.video:
+        raise Http404
+    path = report.video.path
+    try:
+        size = os.path.getsize(path)
+    except OSError as exc:
+        raise Http404 from exc
+    filename = f"{report.slug}.mp4"
+    disposition = ("attachment" if request.GET.get("download") == "1" else "inline") + f'; filename="{filename}"'
+    range_header = request.META.get("HTTP_RANGE", "")
+    m = re.match(r"bytes=(\d*)-(\d*)$", range_header)
+    if m and (m.group(1) or m.group(2)):
+        start = int(m.group(1)) if m.group(1) else max(0, size - int(m.group(2)))
+        end = int(m.group(2)) if m.group(1) and m.group(2) else size - 1
+        end = min(end, size - 1)
+        if start > end or start >= size:
+            resp = HttpResponse(status=416)
+            resp["Content-Range"] = f"bytes */{size}"
+            return resp
+        length = end - start + 1
+
+        def chunks(f, remaining, block=512 * 1024):
+            with f:
+                f.seek(start)
+                while remaining > 0:
+                    data = f.read(min(block, remaining))
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        resp = StreamingHttpResponse(chunks(open(path, "rb"), length), status=206, content_type="video/mp4")
+        resp["Content-Range"] = f"bytes {start}-{end}/{size}"
+        resp["Content-Length"] = str(length)
+    else:
+        resp = FileResponse(open(path, "rb"), content_type="video/mp4")
+        resp["Content-Length"] = str(size)
+    resp["Accept-Ranges"] = "bytes"
+    resp["Content-Disposition"] = disposition
+    resp["X-Robots-Tag"] = "noindex, nofollow"
+    resp["Cache-Control"] = "private, no-store"
+    return resp
+
+
+def report_video(request: HttpRequest, slug: str) -> HttpResponse:
+    report = get_object_or_404(Report, slug=slug)
+    if not report.is_public and not request.user.is_authenticated:
+        return redirect_to_login(request.get_full_path())
+    return _serve_video(request, report)
+
+
+def report_public_video(request: HttpRequest, token: str) -> HttpResponse:
+    report = Report.objects.filter(public_token=token, is_public=True).first()
+    if report is None:
+        raise Http404
+    return _serve_video(request, report)
+
+
 def report_public(request: HttpRequest, token: str) -> HttpResponse:
     """The token link, kept for links already sent out. A private report
     answers 404, not 403, so an old link confirms nothing."""
@@ -84,13 +154,18 @@ def report_upload(request: HttpRequest) -> HttpResponse:
         report.description = form.cleaned_data["description"]
         report.is_public = form.cleaned_data["is_public"]
         report.html = html
+        if form.cleaned_data.get("video"):
+            report.video = form.cleaned_data["video"]
         report.save()
         messages.success(request, f"”{report.title}” er opdateret.")
     else:
         report = form.save(commit=False)
         report.html = html
         report.created_by = request.user
-        report.save()
+        report.save()  # slug first, the video path is derived from it
+        if form.cleaned_data.get("video"):
+            report.video = form.cleaned_data["video"]
+            report.save(update_fields=["video", "updated_at"])
         messages.success(request, f"”{report.title}” er lagt op.")
     return redirect("reports:list")
 

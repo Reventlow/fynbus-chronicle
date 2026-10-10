@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.18.0 — 2026-10-10
+
+### Added
+- **Video på rapporter.** En rapport kan have en MP4 vedhæftet (upload-formularen eller `PUT /api/v1/reports/<slug>/video/`). Videoen streames med understøttelse af spoling (HTTP Range), kan downloades med `?download=1`, og følger rapportens adgang: offentlig rapport, offentlig video. Listen Rapporter viser "Slides + video" og en download-knap. Filerne ligger i `REPORT_FILES_DIR` (standard: ved siden af databasen, altså på det persisterede data-volumen i Docker).
+
 ## 0.17.1 — 2026-10-10
 
 ### Changed

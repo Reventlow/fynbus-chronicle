@@ -182,3 +182,63 @@ def test_api_requires_write_key_and_fields(client, write_key):
     assert client.put(url, data={"title": "t"}, content_type="application/json").status_code == 401
     bad = client.put(url, data={"title": "t"}, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {write_key}")
     assert bad.status_code == 400
+
+
+# --- video (0.18.0) -----------------------------------------------------------------
+
+
+MP4 = b"\x00\x00\x00\x18ftypmp42" + bytes(range(256)) * 40  # 10 KB of fake mp4
+
+
+@pytest.fixture
+def files_dir(settings, tmp_path):
+    settings.REPORT_FILES_DIR = tmp_path / "report_files"
+    return settings.REPORT_FILES_DIR
+
+
+def test_video_upload_via_form_and_serving(client, editor, files_dir):
+    f = SimpleUploadedFile("r.html", HTML.encode(), content_type="text/html")
+    v = SimpleUploadedFile("film.mp4", MP4, content_type="video/mp4")
+    client.post(reverse("reports:upload"), {"title": "Med video", "file": f, "video": v})
+    r = Report.objects.get(title="Med video")
+    assert r.video and (files_dir / r.slug / "video.mp4").exists()
+    # inline
+    resp = client.get(r.get_video_path())
+    assert resp.status_code == 200 and resp["Content-Type"] == "video/mp4" and resp["Accept-Ranges"] == "bytes"
+    assert resp["Content-Disposition"].startswith("inline") and b"".join(resp.streaming_content) == MP4
+    # download
+    resp = client.get(r.get_video_path() + "?download=1")
+    assert resp["Content-Disposition"] == f'attachment; filename="{r.slug}.mp4"'
+    # range
+    resp = client.get(r.get_video_path(), HTTP_RANGE="bytes=100-199")
+    assert resp.status_code == 206 and resp["Content-Range"] == f"bytes 100-199/{len(MP4)}" and b"".join(resp.streaming_content) == MP4[100:200]
+    resp = client.get(r.get_video_path(), HTTP_RANGE=f"bytes={len(MP4) + 5}-")
+    assert resp.status_code == 416
+
+
+def test_video_access_follows_report_visibility(client, report, files_dir):
+    report.video.save("video.mp4", SimpleUploadedFile("v.mp4", MP4), save=True)
+    assert client.get(report.get_video_path()).status_code == 302  # private: login
+    assert client.get(reverse("reports:public-video", kwargs={"token": report.public_token})).status_code == 404
+    report.is_public = True
+    report.save()
+    assert client.get(report.get_video_path()).status_code == 200
+    assert client.get(reverse("reports:public-video", kwargs={"token": report.public_token})).status_code == 200
+
+
+def test_video_missing_is_404(client, editor, report):
+    assert client.get(report.get_video_path()).status_code == 404
+
+
+def test_api_video_upload(client, write_key, report, files_dir):
+    url = reverse("api:report-video-upload", kwargs={"slug": report.slug})
+    assert client.put(url, data=MP4, content_type="application/octet-stream", HTTP_AUTHORIZATION=f"Bearer {write_key}").status_code == 415
+    resp = client.put(url, data=MP4, content_type="video/mp4", HTTP_AUTHORIZATION=f"Bearer {write_key}")
+    assert resp.status_code == 200 and resp.json()["report"]["has_video"] is True
+    report.refresh_from_db()
+    assert report.video.read() == MP4
+    # replacing keeps one file
+    client.put(url, data=MP4[:500], content_type="video/mp4", HTTP_AUTHORIZATION=f"Bearer {write_key}")
+    report.refresh_from_db()
+    assert report.video.size == 500 and len(list((files_dir / report.slug).iterdir())) == 1
+    assert client.put(reverse("api:report-video-upload", kwargs={"slug": "nope"}), data=MP4, content_type="video/mp4", HTTP_AUTHORIZATION=f"Bearer {write_key}").status_code == 404

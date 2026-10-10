@@ -15,12 +15,11 @@ from django.conf import settings
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.api_auth import api_auth
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
-    Absence,
     Incident,
     PriorityItem,
     PriorityItemAppearance,
@@ -30,7 +29,6 @@ from apps.oncall.models import OnCallDuty
 from apps.reports.models import Report
 
 from .serializers import (
-    serialize_absence,
     serialize_feature_request,
     serialize_incident,
     serialize_oncall,
@@ -502,6 +500,8 @@ def _report_payload(request: HttpRequest, report: Report) -> dict:
         "public_url": request.build_absolute_uri(report.get_public_path()),
         "url": request.build_absolute_uri(report.get_absolute_url()),
         "size_bytes": len(report.html.encode("utf-8")),
+        "has_video": bool(report.video),
+        "video_url": request.build_absolute_uri(report.get_video_path()) if report.video else None,
         "created_at": report.created_at.isoformat(),
         "updated_at": report.updated_at.isoformat(),
     }
@@ -544,3 +544,26 @@ def report_upsert(request: HttpRequest, slug: str) -> JsonResponse:
         report.is_public = body["is_public"]
     report.save()
     return JsonResponse({"report": _report_payload(request, report)}, status=201 if created else 200)
+
+
+@require_http_methods(["PUT"])
+@api_auth(scope="write")
+def report_video_upload(request: HttpRequest, slug: str) -> JsonResponse:
+    """Attach or replace the report's MP4. Body is the raw file
+    (Content-Type: video/mp4). Up to 300 MB."""
+    from django.core.files.base import ContentFile
+
+    report = Report.objects.filter(slug=slug).first()
+    if report is None:
+        return JsonResponse({"error": "not_found", "detail": "No report with that slug"}, status=404)
+    if not request.content_type.startswith("video/mp4"):
+        return JsonResponse({"error": "unsupported_media_type", "detail": "Send the MP4 as the raw body with Content-Type: video/mp4"}, status=415)
+    data = request.body
+    if not data:
+        return JsonResponse({"error": "empty_body"}, status=400)
+    if len(data) > 300 * 1024 * 1024:
+        return JsonResponse({"error": "too_large", "detail": "Max 300 MB"}, status=413)
+    if report.video:
+        report.video.delete(save=False)
+    report.video.save("video.mp4", ContentFile(data), save=True)
+    return JsonResponse({"report": _report_payload(request, report)})

@@ -144,6 +144,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Media files
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Files attached to reports (videos). Lives beside the SQLite database so it
+# sits on the persisted /app/data volume in Docker; served by a Django view,
+# never as static media.
+REPORT_FILES_DIR = Path(config("REPORT_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "report_files")))
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

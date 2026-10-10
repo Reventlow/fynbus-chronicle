@@ -11,6 +11,11 @@ class ReportUploadForm(forms.ModelForm):
         help_text="En selvstændig .html-fil med egen CSS og JS. Højst 16 MB.",
     )
 
+    video = forms.FileField(
+        label="Video (valgfri)", required=False,
+        help_text="MP4 af rapporten, vises under siden med en download-knap. Højst 300 MB.",
+    )
+
     class Meta:
         model = Report
         fields = ["title", "description", "is_public"]
@@ -31,3 +36,13 @@ class ReportUploadForm(forms.ModelForm):
         except UnicodeDecodeError as e:
             raise forms.ValidationError("Filen skal være UTF-8.") from e
         return f
+
+    def clean_video(self):
+        v = self.cleaned_data.get("video")
+        if not v:
+            return v
+        if v.size > 300 * 1024 * 1024:
+            raise forms.ValidationError("Videoen er større end 300 MB.")
+        if not (v.name or "").lower().endswith(".mp4"):
+            raise forms.ValidationError("Kun .mp4-videoer.")
+        return v

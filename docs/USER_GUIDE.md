@@ -332,8 +332,9 @@ Menuen **Rapporter** samler selvstændige sider med egen grafik, fx den animered
 1. Nederst på siden Rapporter: udfyld titel og beskrivelse, vælg en selvstændig `.html`-fil (højst 16 MB)
 2. Vælg eventuelt "Erstat en eksisterende rapport" for at skifte indholdet ud og beholde linket
 3. Sæt kryds i "Offentligt link", hvis rapporten skal kunne åbnes uden login
+4. Vedhæft eventuelt en video (MP4, højst 300 MB). Den vises under rapporten med en download-knap, og listen får en "Download video"-knap
 
-Rapporter kan også lægges op og opdateres via API'et: `PUT /api/v1/reports/<slug>/` med `title`, `html`, `description` og `is_public` (skrivenøgle). `GET /api/v1/reports/` lister dem.
+Rapporter kan også lægges op og opdateres via API'et: `PUT /api/v1/reports/<slug>/` med `title`, `html`, `description` og `is_public` (skrivenøgle); `PUT /api/v1/reports/<slug>/video/` med MP4-filen som rå body (`Content-Type: video/mp4`). `GET /api/v1/reports/` lister dem.
 
 ---
 

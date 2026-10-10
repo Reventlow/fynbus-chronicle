@@ -17,6 +17,7 @@ rotated.
 import secrets
 
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -24,6 +25,27 @@ from django.utils.text import slugify
 
 def _new_token() -> str:
     return secrets.token_urlsafe(24)  # 32 characters
+
+
+class ReportFileStorage(FileSystemStorage):
+    """Storage rooted at REPORT_FILES_DIR, resolved at run time so tests and
+    Docker can point it elsewhere. Files are served by a view with the same
+    access rules as the report, never by the static file server."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def base_location(self):  # type: ignore[override]
+        return str(settings.REPORT_FILES_DIR)
+
+    @property
+    def location(self):  # type: ignore[override]
+        return str(settings.REPORT_FILES_DIR)
+
+
+def _video_path(instance: "Report", filename: str) -> str:
+    return f"{instance.slug}/video.mp4"
 
 
 class Report(models.Model):
@@ -45,6 +67,13 @@ class Report(models.Model):
         help_text="Når sand kan rapporten åbnes uden login på det ugættelige link.",
     )
     public_token = models.CharField(max_length=64, unique=True, default=_new_token, editable=False)
+    video = models.FileField(
+        "Video",
+        upload_to=_video_path,
+        storage=ReportFileStorage(),
+        blank=True,
+        help_text="Valgfri MP4 af rapporten. Vises under siden og kan downloades.",
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="reports"
     )
@@ -79,6 +108,9 @@ class Report(models.Model):
 
     def get_public_path(self) -> str:
         return reverse("reports:public", kwargs={"token": self.public_token})
+
+    def get_video_path(self) -> str:
+        return reverse("reports:video", kwargs={"slug": self.slug})
 
     def rotate_token(self) -> None:
         """Issue a new public link; the old one stops working at once."""

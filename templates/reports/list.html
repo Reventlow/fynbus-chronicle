@@ -43,6 +43,7 @@
             {% else %}
               <span class="pill pill-neutral"><span class="pill-dot"></span>Kun indloggede</span>
             {% endif %}
+            {% if r.video %}<span class="pill pill-accent"><span class="pill-dot"></span>Slides + video</span>{% endif %}
           </div>
           {% if r.description %}<p style="margin: 0 0 6px; font-size: 14px; color: var(--ink-2);">{{ r.description }}</p>{% endif %}
           <div style="font-size: 12.5px; color: var(--ink-4);">
@@ -60,6 +61,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2" style="justify-content: flex-end;">
           <a href="{{ r.get_absolute_url }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">Åbn</a>
+          {% if r.video %}<a href="{{ r.get_video_path }}?download=1" class="btn btn-sm">Download video</a>{% endif %}
           {% if is_editor %}
             <form method="post" action="{% url 'reports:visibility' r.slug %}">{% csrf_token %}
               <input type="hidden" name="public" value="{% if r.is_public %}0{% else %}1{% endif %}">
@@ -99,6 +101,11 @@
           <label class="input-label" for="{{ form.file.id_for_label }}">HTML-fil</label>
           {{ form.file }}
           <p class="input-hint">{{ form.file.help_text }}</p>
+        </div>
+        <div>
+          <label class="input-label" for="{{ form.video.id_for_label }}">Video (valgfri)</label>
+          {{ form.video }}
+          <p class="input-hint">{{ form.video.help_text }} Ved "Erstat" beholdes en eksisterende video, hvis feltet er tomt.</p>
         </div>
         {% if reports %}
           <div>
