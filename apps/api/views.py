@@ -551,19 +551,31 @@ def report_upsert(request: HttpRequest, slug: str) -> JsonResponse:
 def report_video_upload(request: HttpRequest, slug: str) -> JsonResponse:
     """Attach or replace the report's MP4. Body is the raw file
     (Content-Type: video/mp4). Up to 300 MB."""
-    from django.core.files.base import ContentFile
-
     report = Report.objects.filter(slug=slug).first()
     if report is None:
         return JsonResponse({"error": "not_found", "detail": "No report with that slug"}, status=404)
     if not request.content_type.startswith("video/mp4"):
         return JsonResponse({"error": "unsupported_media_type", "detail": "Send the MP4 as the raw body with Content-Type: video/mp4"}, status=415)
-    data = request.body
-    if not data:
+    # Stream the body to a temp file: request.body would load it into memory and
+    # trip DATA_UPLOAD_MAX_MEMORY_SIZE (2.5 MB) for any real video.
+    from django.core.files import File
+    from django.core.files.temp import NamedTemporaryFile
+
+    limit = 300 * 1024 * 1024
+    tmp = NamedTemporaryFile(suffix=".mp4")
+    total = 0
+    while True:
+        chunk = request.read(1024 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > limit:
+            return JsonResponse({"error": "too_large", "detail": "Max 300 MB"}, status=413)
+        tmp.write(chunk)
+    if total == 0:
         return JsonResponse({"error": "empty_body"}, status=400)
-    if len(data) > 300 * 1024 * 1024:
-        return JsonResponse({"error": "too_large", "detail": "Max 300 MB"}, status=413)
+    tmp.seek(0)
     if report.video:
         report.video.delete(save=False)
-    report.video.save("video.mp4", ContentFile(data), save=True)
+    report.video.save("video.mp4", File(tmp), save=True)
     return JsonResponse({"report": _report_payload(request, report)})

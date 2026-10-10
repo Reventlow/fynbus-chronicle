@@ -242,3 +242,14 @@ def test_api_video_upload(client, write_key, report, files_dir):
     report.refresh_from_db()
     assert report.video.size == 500 and len(list((files_dir / report.slug).iterdir())) == 1
     assert client.put(reverse("api:report-video-upload", kwargs={"slug": "nope"}), data=MP4, content_type="video/mp4", HTTP_AUTHORIZATION=f"Bearer {write_key}").status_code == 404
+
+
+def test_api_video_upload_above_memory_cap(client, write_key, report, files_dir, settings):
+    """A real video is far above DATA_UPLOAD_MAX_MEMORY_SIZE; the upload must stream, not buffer."""
+    settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024
+    big = MP4 * 400  # ~4 MB
+    url = reverse("api:report-video-upload", kwargs={"slug": report.slug})
+    resp = client.put(url, data=big, content_type="video/mp4", HTTP_AUTHORIZATION=f"Bearer {write_key}")
+    assert resp.status_code == 200, resp.content[:200]
+    report.refresh_from_db()
+    assert report.video.size == len(big)

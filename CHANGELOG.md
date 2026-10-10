@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.18.1 — 2026-10-10
+
+### Fixed
+- **Video-upload via API'et afviste rigtige videoer.** `PUT /api/v1/reports/<slug>/video/` læste hele filen ind i hukommelsen og ramte Djangos grænse på 2,5 MB med et 400-svar. Filen streames nu til disk i bidder, så grænsen er de 300 MB, der var meningen.
+
 ## 0.18.0 — 2026-10-10
 
 ### Added
