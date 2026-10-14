@@ -6,10 +6,14 @@ Uses WeasyPrint to generate PDF documents from HTML templates.
 
 from django.template.loader import render_to_string
 
+from apps.images.embedding import embed_as_data_uris
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
 from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
+
+# Pasted images are capped to the printable width of an A4 page.
+PDF_IMAGE_MAX_WIDTH = 640
 
 
 def generate_pdf(weeklog: WeekLog) -> bytes:
@@ -52,6 +56,8 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
     }
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)
+    # Pasted images sit behind a login; carry the bytes in the document.
+    html_content = embed_as_data_uris(html_content, max_width=PDF_IMAGE_MAX_WIDTH)
 
     # Generate PDF with custom CSS
     from django.conf import settings

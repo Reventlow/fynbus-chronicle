@@ -8,6 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 from PIL import Image, UnidentifiedImageError
 
 from apps.accounts.permissions import editor_required
+from apps.logbook.templatetags.markdown_extras import render_markdown
 
 from .models import PastedImage
 
@@ -83,3 +84,22 @@ def view(request: HttpRequest, key: str) -> HttpResponse:
     response["Cache-Control"] = "private, max-age=31536000, immutable"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+# Descriptions are short; this only stops the preview being used to make the
+# server render megabytes of Markdown.
+MAX_PREVIEW_CHARS = 100_000
+
+
+@login_required
+@editor_required
+@require_POST
+def preview(request: HttpRequest) -> HttpResponse:
+    """Render a description as the detail page will, for the live preview.
+
+    Goes through the same ``render_markdown`` filter (and so the same nh3
+    sanitising) as the saved description, so what the preview shows is
+    exactly what will be shown after saving.
+    """
+    text = request.POST.get("text", "")[:MAX_PREVIEW_CHARS]
+    return HttpResponse(render_markdown(text), content_type="text/html; charset=utf-8")

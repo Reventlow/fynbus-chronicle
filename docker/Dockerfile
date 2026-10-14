@@ -17,6 +17,8 @@ COPY tailwind.config.js ./
 COPY static/src/ ./static/src/
 COPY templates/ ./templates/
 COPY apps/ ./apps/
+# Scripts that create elements with their own classes (see tailwind.config.js).
+COPY static/js/description-images.js ./static/js/
 
 # Build CSS
 RUN npm run build:css
@@ -69,6 +71,8 @@ COPY --from=python-builder /opt/venv /opt/venv
 COPY manage.py ./
 COPY chronicle/ ./chronicle/
 COPY apps/ ./apps/
+# Scripts that create elements with their own classes (see tailwind.config.js).
+COPY static/js/description-images.js ./static/js/
 COPY templates/ ./templates/
 COPY static/ ./static/
 COPY docs/ ./docs/

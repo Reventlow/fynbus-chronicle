@@ -54,7 +54,7 @@ ALLOWED_TAGS = {
 ALLOWED_ATTRIBUTES = {
     "*": {"class"},
     "a": {"href", "title"},
-    "img": {"src", "alt", "title"},
+    "img": {"src", "alt", "title", "width"},
     "ol": {"class", "start", "type", "reversed"},
     "li": {"class", "value"},
     "th": {"class", "style", "colspan", "rowspan"},
@@ -159,6 +159,28 @@ def _autolink(source: str) -> str:
     return "\n".join(out)
 
 
+# Image size suffix: ``![billede|480](url)`` renders 480 px wide, the
+# convention Obsidian uses. The paste-image preview writes it; the number is
+# clamped so a typo cannot produce an absurd layout. CSS still caps every
+# image at the width of its container.
+_IMAGE_SIZE = re.compile(r"^(.*?)\|(\d{1,4})$")
+IMAGE_MIN_WIDTH, IMAGE_MAX_WIDTH = 40, 2000
+
+
+class ImageSizeTreeprocessor(Treeprocessor):
+    """Turn an ``alt|width`` suffix into a ``width`` attribute."""
+
+    def run(self, root):
+        for img in root.iter("img"):
+            match = _IMAGE_SIZE.match(img.get("alt", ""))
+            if not match:
+                continue
+            width = min(max(int(match.group(2)), IMAGE_MIN_WIDTH), IMAGE_MAX_WIDTH)
+            img.set("alt", match.group(1).strip())
+            img.set("width", str(width))
+        return root
+
+
 class InlineStyleTreeprocessor(Treeprocessor):
     """Give each rendered element an inline style, for export targets."""
 
@@ -222,6 +244,7 @@ def _render(value: str, *, inline_styles: bool) -> str:
             }
         },
     )
+    md.treeprocessors.register(ImageSizeTreeprocessor(md), "chronicle_image_size", 2)
     if inline_styles:
         md.treeprocessors.register(InlineStyleTreeprocessor(md), "chronicle_inline_styles", 1)
 

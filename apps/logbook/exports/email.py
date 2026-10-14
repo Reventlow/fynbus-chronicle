@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
+from apps.images.embedding import InlineImage, embed_as_cid
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
@@ -18,6 +19,8 @@ from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
 from .pdf import generate_pdf
 
 CHART_CID = "chronicle-helpdesk-chart"
+# Pasted images in a mail body: the usual 600 px mail width.
+EMAIL_IMAGE_MAX_WIDTH = 600
 FLOW_CHART_CID = "chronicle-helpdesk-flow-chart"
 
 
@@ -41,6 +44,14 @@ def _attach_inline(email: EmailMessage, png: bytes | None, cid: str) -> None:
     image.add_header("Content-ID", f"<{cid}>")
     image.add_header("Content-Disposition", "inline", filename=f"{cid}.png")
     email.attach(image)
+
+
+def _attach_pasted(email: EmailMessage, image: InlineImage) -> None:
+    """Attach a pasted image so its ``<img src="cid:…">`` resolves."""
+    part = MIMEImage(image.data, _subtype=image.subtype)
+    part.add_header("Content-ID", f"<{image.cid}>")
+    part.add_header("Content-Disposition", "inline", filename=f"{image.cid}.{image.subtype}")
+    email.attach(part)
 
 
 EMAIL_FORMATS = ("html", "pdf", "both")
@@ -124,6 +135,8 @@ def send_weeklog_email(
 
     try:
         body_html = render_to_string("logbook/exports/email_body.html", context)
+        # Pasted images sit behind a login; send them along like the charts.
+        body_html, pasted_images = embed_as_cid(body_html, max_width=EMAIL_IMAGE_MAX_WIDTH)
     except Exception as e:
         return False, f"Fejl ved generering af email-indhold: {e}"
 
@@ -155,6 +168,8 @@ def send_weeklog_email(
         email.mixed_subtype = "related"
         _attach_inline(email, chart_png, CHART_CID)
         _attach_inline(email, flow_chart_png, FLOW_CHART_CID)
+        for image in pasted_images:
+            _attach_pasted(email, image)
 
     # Attach PDF for "pdf" and "both"
     if format in ("pdf", "both"):

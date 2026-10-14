@@ -4,6 +4,8 @@ module.exports = {
   content: [
     './templates/**/*.html',
     './apps/**/templates/**/*.html',
+    // Classes created by script (the paste-image preview).
+    './static/js/description-images.js',
   ],
   theme: {
     extend: {

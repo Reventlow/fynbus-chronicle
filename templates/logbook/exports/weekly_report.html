@@ -233,7 +233,7 @@
         </td>
       </tr>
       <tr>
-        <td colspan="5" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ incident.description }}</td>
+        <td colspan="5" class="md" style="padding:0 14px 10px 14px; font-size:9pt; color:#6B635B;">{{ incident.description|render_markdown_inline }}</td>
       </tr>
       {% if incident.resolution %}
       <tr>

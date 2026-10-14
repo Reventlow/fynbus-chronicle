@@ -10,6 +10,7 @@ renders well in web browsers (the PDF export is unaffected).
 from django.conf import settings
 from django.template.loader import render_to_string
 
+from apps.images.embedding import embed_as_data_uris
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
@@ -91,6 +92,9 @@ img {
 }
 """
 
+# The body is 800 px with 40 px padding each side.
+HTML_IMAGE_MAX_WIDTH = 720
+
 
 def generate_html(weeklog: WeekLog) -> str:
     """
@@ -128,6 +132,8 @@ def generate_html(weeklog: WeekLog) -> str:
     }
 
     html_content = render_to_string("logbook/exports/weekly_report.html", context)
+    # Pasted images sit behind a login; the downloaded file must carry them.
+    html_content = embed_as_data_uris(html_content, max_width=HTML_IMAGE_MAX_WIDTH)
 
     # Load shared PDF/print CSS
     css_path = settings.BASE_DIR / "static" / "css" / "pdf_styles.css"

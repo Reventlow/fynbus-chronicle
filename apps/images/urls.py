@@ -8,5 +8,6 @@ app_name = "images"
 
 urlpatterns = [
     path("", views.upload, name="upload"),
+    path("preview/", views.preview, name="preview"),
     path("<str:key>/", views.view, name="view"),
 ]

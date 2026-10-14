@@ -322,7 +322,8 @@ class IncidentForm(forms.ModelForm):
                 attrs={
                     "class": "textarea-field",
                     "rows": 4,
-                    "placeholder": "Beskriv hændelsen...",
+                    "placeholder": "Beskriv hændelsen... (Markdown, indsæt billeder med Ctrl+V)",
+                    "data-paste-images": "",
                 }
             ),
             "resolved": forms.CheckboxInput(

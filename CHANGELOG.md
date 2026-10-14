@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.19.1 — 2026-10-14
+
+### Added
+- **Forhåndsvisning og størrelse på indsatte billeder.** Så snart en beskrivelse indeholder et billede, vises en forhåndsvisning under feltet — renderet præcis som på detaljesiden. Hold musen over et billede for at vælge størrelse: **S** (240 px), **M** (480 px), **L** (800 px) eller **Fuld**, eller træk i det runde håndtag i hjørnet for en fri bredde. ✕ fjerner billedet fra teksten. Størrelsen gemmes i teksten som `![billede|480](/images/…)` og bruges også på detaljesiden og i eksporter.
+- **Billeder i hændelser.** Beskrivelsen på en hændelse tager nu også imod indsatte billeder (Ctrl+V, træk-og-slip, forhåndsvisning og størrelse) og vises som Markdown i ugeloggen. Billederne kommer med i ugerapporten: i PDF'en og HTML-eksporten er de indlejret i selve filen, og i mailen sendes de som indlejrede billeder ligesom graferne, så modtagerne ser dem uden at logge ind. Bredden begrænses til siden (PDF) og mailens bredde, så et stort screenshot ikke løber ud over kanten.
+
+### Changed
+- I ugerapport-mailen vises hændelsernes beskrivelse nu i fuld længde og formateret som Markdown — før blev den skåret ned til 30 ord som ren tekst. PDF og HTML viser også beskrivelsen formateret.
+
+### Fixed
+- Indsætning læser nu også billeder, som browseren kun lægger i udklipsholderens `items` og ikke i `files`.
+
 ## 0.19.0 — 2026-10-14
 
 ### Added

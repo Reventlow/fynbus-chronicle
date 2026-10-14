@@ -146,6 +146,63 @@ def test_feature_request_detail_shows_pasted_image(client, editor):
 def test_paste_handler_is_only_installed_for_editors(client, editor, viewer):
     client.force_login(editor)
     assert "data-paste-images" in client.get(reverse("tasks:task-create")).content.decode()
-    assert "UPLOAD_URL" in client.get(reverse("tasks:task-list")).content.decode()
+    assert "js/description-images.js" in client.get(reverse("tasks:task-list")).content.decode()
     client.force_login(viewer)
-    assert "UPLOAD_URL" not in client.get(reverse("tasks:task-list")).content.decode()
+    assert "js/description-images.js" not in client.get(reverse("tasks:task-list")).content.decode()
+
+
+# --- sizes and live preview (0.19.1) ----------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "source, width",
+    [
+        ("![billede|480](/images/abc/)", "480"),
+        ("![billede|10](/images/abc/)", "40"),      # clamped up
+        ("![billede|5000](/images/abc/)", "2000"),  # clamped down
+    ],
+)
+def test_size_suffix_becomes_width(source, width):
+    html = render_markdown(source)
+    assert f'width="{width}"' in html
+    assert 'alt="billede"' in html  # the suffix is not part of the alt text
+
+
+def test_no_suffix_no_width():
+    assert "width=" not in render_markdown("![billede](/images/abc/)")
+
+
+def test_pipe_in_ordinary_alt_text_is_left_alone():
+    html = render_markdown("![før|efter](/images/abc/)")
+    assert "width=" not in html and 'alt="før|efter"' in html
+
+
+def test_size_survives_the_export_renderer():
+    from apps.logbook.templatetags.markdown_extras import render_markdown_inline
+
+    assert 'width="240"' in render_markdown_inline("![billede|240](/images/abc/)")
+
+
+def test_card_preview_strips_sized_references():
+    assert strip_images("a ![billede|480](/images/abc/) b") == "a [billede] b"
+
+
+def test_preview_renders_like_the_detail_page(client, editor):
+    text = "**Fejl:**\n\n![billede|320](/images/abc/)\n\n<script>alert(1)</script>"
+    response = client.post(reverse("images:preview"), {"text": text})
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert body == str(render_markdown(text))
+    assert 'width="320"' in body and "<strong>Fejl:</strong>" in body
+    assert "<script>" not in body
+
+
+def test_preview_is_for_editors_only(client, viewer):
+    assert client.post(reverse("images:preview"), {"text": "x"}).status_code == 403
+    client.logout()
+    assert client.post(reverse("images:preview"), {"text": "x"}).status_code == 302
+
+
+def test_preview_styles_survive_the_css_purge():
+    css = open("static/css/output.css", encoding="utf-8").read()
+    assert ".paste-preview" in css and ".paste-resize-handle" in css and ".paste-size-btn" in css

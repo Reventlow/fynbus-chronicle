@@ -1825,6 +1825,78 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     display: block; max-width: 100%; height: auto; margin: 0.5em 0;
     border: 1px solid var(--hairline); border-radius: 6px;
   }
+
+  /* Live preview under a description field with pasted images
+     (static/js/description-images.js). */
+  .paste-preview {
+    margin-top: 8px;
+    padding: 10px 12px 12px;
+    border: 1px dashed var(--hairline);
+    border-radius: 8px;
+    background: var(--surface-2);
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .paste-preview-label {
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  /* An image with its size toolbar and drag handle. */
+  .paste-figure {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    margin: 0.5em 0;
+  }
+  .paste-figure img { margin: 0; }
+  .paste-size-bar {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 6px;
+    background: color-mix(in oklch, var(--surface-1) 92%, transparent);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .paste-figure:hover .paste-size-bar,
+  .paste-figure:focus-within .paste-size-bar { opacity: 1; }
+  /* No hover on touch screens: keep the toolbar visible. */
+  @media (hover: none) { .paste-size-bar { opacity: 1; } }
+  .paste-size-btn {
+    min-width: 26px;
+    padding: 2px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .paste-size-btn:hover { background: var(--surface-2); }
+  .paste-size-btn.is-active { background: var(--accent); color: #fff; }
+  .paste-size-btn.is-remove { color: var(--bad); }
+  .paste-resize-handle {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    cursor: nwse-resize;
+    touch-action: none;
+  }
   .md hr { margin: 0.8em 0; border: 0; border-top: 1px solid var(--hairline); }
   .md table {
     margin: 0 0 0.6em;
