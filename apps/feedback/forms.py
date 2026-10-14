@@ -26,8 +26,10 @@ class FeatureRequestForm(forms.ModelForm):
                     "rows": 6,
                     "placeholder": (
                         "Hvad ønskes der? Hvorfor? Du kan paste links til GitHub-"
-                        "issues, screenshots, Figma osv. — de bliver klikbare."
+                        "issues, Figma osv. — de bliver klikbare. Screenshots "
+                        "indsættes direkte med Ctrl+V."
                     ),
+                    "data-paste-images": "",
                 }
             ),
             "category": forms.Select(attrs={"class": "select-field"}),
@@ -53,7 +55,7 @@ class FeatureRequestEditForm(forms.ModelForm):
         widgets = {
             "title": forms.TextInput(attrs={"class": "input-field", "maxlength": 200}),
             "description": forms.Textarea(
-                attrs={"class": "textarea-field", "rows": 6}
+                attrs={"class": "textarea-field", "rows": 6, "data-paste-images": ""}
             ),
             "category": forms.Select(attrs={"class": "select-field"}),
             "importance": forms.Select(attrs={"class": "select-field"}),

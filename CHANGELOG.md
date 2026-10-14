@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.19.0 — 2026-10-14
+
+### Added
+- **Indsæt billeder med Ctrl+V.** I beskrivelsen på opgaver og feature requests kan et screenshot nu indsættes direkte fra udklipsholderen (eller trækkes ind i feltet). Billedet uploades med det samme, og der indsættes en Markdown-reference, `![billede](/images/…)`, hvor markøren står. Beskrivelserne vises nu som Markdown på detaljesiderne, så billederne ses der; på feature-request-tavlen står der `[billede]` i forhåndsvisningen. Kun PNG, JPEG, GIF og WebP (maks. 15 MB) accepteres — formatet afgøres af selve filen, ikke filnavnet. Billederne ligger i `IMAGE_FILES_DIR` (standard: ved siden af databasen, på data-volumen i Docker) og kræver login for at blive vist. Kun redaktører kan uploade.
+- **Touch-Grass-Weekend.** Søsteren til Read-only Friday: hver lørdag og søndag viser Chronicle et grønt banner — "Det er weekend. Gå udenfor." — med en roterende påmindelse om, at det kan vente til mandag, medmindre man har vagten. Banneret har en græskant, en stribe græs løber langs bunden af vinduet, og logomærket bliver grønt. Det følger lys/mørk tilstand og lever side om side med temadagene. `?force-weekend=1` viser det på hverdage, `?force-weekend=0` skjuler det i weekenden.
+
 ## 0.18.1 — 2026-10-10
 
 ### Fixed

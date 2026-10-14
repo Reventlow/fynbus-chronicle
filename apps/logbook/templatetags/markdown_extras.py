@@ -257,6 +257,21 @@ def render_markdown_inline(value: str) -> str:
     return mark_safe(_render(value, inline_styles=True))
 
 
+_IMAGE_REF = re.compile(r"!\[[^\]]*\]\([^)\s]*\)")
+
+
+@register.filter(name="strip_images")
+def strip_images(value: str) -> str:
+    """Replace Markdown image references with a short marker.
+
+    For plain-text previews (the feature-request cards), where a pasted
+    screenshot would otherwise show up as ``![billede](/images/…)``.
+    """
+    if not value:
+        return ""
+    return _IMAGE_REF.sub("[billede]", value)
+
+
 @register.filter(name="split_commas")
 def split_commas(value: str) -> list[str]:
     """Split a comma-separated string into a list of trimmed strings."""

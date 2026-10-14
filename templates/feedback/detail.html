@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static markdown_extras %}
 
 {% block title %}{{ request_obj.title }} — FynBus Chronicle{% endblock %}
 
@@ -61,7 +61,7 @@
   {% if request_obj.description %}
     <div class="card">
       <div class="label-eyebrow" style="margin-bottom: 8px;">Beskrivelse</div>
-      <p class="linkified" style="margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; white-space: pre-wrap;">{{ request_obj.description|urlize }}</p>
+      <div class="md" style="font-size: 14px; color: var(--ink-2); line-height: 1.6;">{{ request_obj.description|render_markdown }}</div>
     </div>
   {% endif %}
 

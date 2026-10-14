@@ -47,6 +47,7 @@ LOCAL_APPS = [
     "apps.themes",
     "apps.notifications",
     "apps.reports",
+    "apps.images",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -80,6 +81,7 @@ TEMPLATES = [
                 "chronicle.context_processors.active_theme",
                 "chronicle.context_processors.star_wars_day",
                 "chronicle.context_processors.read_only_friday",
+                "chronicle.context_processors.touch_grass_weekend",
                 "apps.accounts.context_processors.editor_context",
                 "apps.feedback.context_processors.feedback_badge",
                 "apps.notifications.context_processors.notifications_badge",
@@ -148,6 +150,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 # sits on the persisted /app/data volume in Docker; served by a Django view,
 # never as static media.
 REPORT_FILES_DIR = Path(config("REPORT_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "report_files")))
+# Images pasted into descriptions (tasks, feature requests). Same reasoning:
+# persisted volume, served by a login-gated view.
+IMAGE_FILES_DIR = Path(config("IMAGE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "image_files")))
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

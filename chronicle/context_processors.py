@@ -107,3 +107,21 @@ def read_only_friday(request):
     if forced in ("0", "1"):
         return {"IS_READ_ONLY_FRIDAY": forced == "1"}
     return {"IS_READ_ONLY_FRIDAY": django_timezone.localdate().weekday() == 4}
+
+
+def touch_grass_weekend(request):
+    """``IS_TOUCH_GRASS_WEEKEND`` — true every Saturday and Sunday (Europe/Copenhagen).
+
+    The companion to Read-only Friday: Friday nothing changes, and the
+    weekend is for being away from the screen. base.html shows a green
+    banner and a strip of grass along the bottom of the viewport. Like
+    Read-only Friday it is weekday-driven, so it lives here rather than in
+    the date-based ThemeSchedule table, and it coexists with any day-theme.
+
+    Preview hatches: ``?force-weekend=1`` shows it on any day,
+    ``?force-weekend=0`` hides it on a weekend.
+    """
+    forced = request.GET.get("force-weekend") if request is not None else None
+    if forced in ("0", "1"):
+        return {"IS_TOUCH_GRASS_WEEKEND": forced == "1"}
+    return {"IS_TOUCH_GRASS_WEEKEND": django_timezone.localdate().weekday() >= 5}

@@ -431,6 +431,104 @@ html[data-rof] .brand-mark {
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--bad) 30%, transparent);
 }
 
+/* ------------------------------------------------------------------
+   Touch-Grass-Weekend — server-rendered on Saturdays and Sundays (see
+   the touch_grass_weekend context processor; base.html sets
+   html[data-tgw]). The calm counterpart to Read-only Friday: a green
+   banner with a grass fringe along its lower edge, a low strip of grass
+   fixed to the bottom of the viewport, and the brand mark in green.
+   Uses the --good tokens, so it follows light/dark and sits on top of
+   whichever day-theme is active.
+   ------------------------------------------------------------------ */
+.tgw-banner {
+  position: sticky;
+  top: 0;
+  z-index: 31;                 /* same layer as the Friday banner; never both */
+  background: var(--good);
+  color: #fff;
+  font-size: 14.5px;
+  letter-spacing: -0.005em;
+  box-shadow: 0 2px 10px color-mix(in oklch, var(--good) 40%, transparent);
+}
+/* grass fringe hanging off the banner's lower edge */
+.tgw-banner::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 7px;
+  background:
+    linear-gradient(135deg, var(--good) 50%, transparent 50%) 0 0 / 8px 7px repeat-x,
+    linear-gradient(225deg, var(--good) 50%, transparent 50%) 0 0 / 8px 7px repeat-x;
+  pointer-events: none;
+}
+.dark .tgw-banner {
+  background: color-mix(in oklch, var(--good) 55%, black);
+  color: #fff;
+}
+.dark .tgw-banner::after {
+  background:
+    linear-gradient(135deg, color-mix(in oklch, var(--good) 55%, black) 50%, transparent 50%) 0 0 / 8px 7px repeat-x,
+    linear-gradient(225deg, color-mix(in oklch, var(--good) 55%, black) 50%, transparent 50%) 0 0 / 8px 7px repeat-x;
+}
+.tgw-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tgw-banner-glyph { flex: none; }
+.tgw-banner-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.tgw-banner-sep { opacity: 0.7; }
+.tgw-banner-lead {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tgw-banner-msg {
+  font-weight: 400;
+  opacity: 0.92;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.tgw-banner-msg.is-fading { opacity: 0; }
+/* a low strip of grass along the bottom of the viewport; its own element
+   because the day-themes own body::before. No pointer events. */
+.tgw-grass {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.85;
+  background:
+    linear-gradient(135deg, transparent 50%, var(--good) 50%) 0 100% / 10px 12px repeat-x,
+    linear-gradient(225deg, transparent 50%, var(--good) 50%) 0 100% / 10px 12px repeat-x,
+    linear-gradient(135deg, transparent 50%, color-mix(in oklch, var(--good) 70%, black) 50%) 5px 100% / 14px 9px repeat-x,
+    linear-gradient(225deg, transparent 50%, color-mix(in oklch, var(--good) 70%, black) 50%) 5px 100% / 14px 9px repeat-x;
+}
+html[data-tgw] .brand-mark {
+  background: var(--good) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--good) 30%, transparent);
+}
+
 .pirate-banner { display: none; }
 html[data-event="pirate"] .pirate-banner {
   display: block;
@@ -1722,6 +1820,10 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     padding: 0.15em 0 0.15em 0.8em;
     border-left: 3px solid var(--hairline-strong);
     color: var(--ink-3);
+  }
+  .md img {
+    display: block; max-width: 100%; height: auto; margin: 0.5em 0;
+    border: 1px solid var(--hairline); border-radius: 6px;
   }
   .md hr { margin: 0.8em 0; border: 0; border-top: 1px solid var(--hairline); }
   .md table {

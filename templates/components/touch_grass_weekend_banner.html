@@ -1,0 +1,46 @@
+{% comment %}
+  Touch-Grass-Weekend banner (0.19.0) — rendered server-side only when the
+  touch_grass_weekend context processor says so (Saturday or Sunday in
+  Europe/Copenhagen, or ?force-weekend=1). The calm sibling of Read-only
+  Friday: green --good tokens instead of the --bad red, a grass fringe
+  instead of hazard stripes. Like that banner it is a rule rather than a
+  costume, so the copy is fixed here and it coexists with any day-theme.
+{% endcomment %}
+{% if IS_TOUCH_GRASS_WEEKEND %}
+<script id="tgw-banner-messages" type="application/json">[
+  "Har du ikke vagten, har du fri. Luk laptoppen.",
+  "Sagerne i helpdesken er der også på mandag.",
+  "Græsset er udenfor. Det er det eneste, der skal røres i dag.",
+  "Hvile er også driftssikkerhed — trætte folk laver fejl.",
+  "Er det ikke et nedbrud, kan det vente til mandag."
+]</script>
+<div class="tgw-banner" role="note" aria-label="Touch-Grass-Weekend"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('tgw-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="tgw-banner-inner">
+    <svg class="tgw-banner-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 21v-9"/><path d="M12 12C12 8 9 5 4 5c0 5 3 7 8 7Z"/><path d="M12 15c0-4 3-7 8-7 0 5-3 7-8 7Z"/>
+    </svg>
+    <span class="tgw-banner-title">Touch-Grass-Weekend</span>
+    <span class="tgw-banner-sep" aria-hidden="true">—</span>
+    <span class="tgw-banner-lead">Det er weekend. Gå udenfor.</span>
+    <span class="tgw-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Har du ikke vagten, har du fri. Luk laptoppen.</span>
+  </div>
+</div>
+<div class="tgw-grass" aria-hidden="true"></div>
+{% endif %}

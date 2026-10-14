@@ -56,7 +56,8 @@ class TaskForm(forms.ModelForm):
                 attrs={
                     "class": "textarea-field",
                     "rows": 4,
-                    "placeholder": "Beskrivelse af opgaven...",
+                    "placeholder": "Beskrivelse af opgaven... (Markdown, indsæt billeder med Ctrl+V)",
+                    "data-paste-images": "",
                 }
             ),
             "status": forms.Select(
