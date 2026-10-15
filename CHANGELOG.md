@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.2 — 2026-10-15
+
+### Changed
+- **Forklaringer under løsningstiderne på Statistik.** Median, gennemsnit, "9 ud af 10 er løst inden" og "løst inden for et døgn" har nu hver en kort tekst, der forklarer, hvad tallet betyder — og hvorfor gennemsnittet ligger langt over medianen.
+
 ## 0.20.1 — 2026-10-15
 
 ### Changed

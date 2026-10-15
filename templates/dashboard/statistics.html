@@ -125,10 +125,22 @@
       Kalendertid — nætter og weekender tæller med. Annullerede sager er ikke med.
     </p>
     <div class="stats-figures">
-      <div><span class="num">{{ helpdesk.resolution.median }}</span><small>median</small></div>
-      <div><span class="num">{{ helpdesk.resolution.mean }}</span><small>gennemsnit</small></div>
-      <div><span class="num">{{ helpdesk.resolution.p90 }}</span><small>9 ud af 10 er løst inden</small></div>
-      <div><span class="num">{{ helpdesk.resolution.within_day }}%</span><small>løst inden for et døgn</small></div>
+      <div>
+        <span class="num">{{ helpdesk.resolution.median }}</span><small>median</small>
+        <p class="stats-explain">Den typiske sag. Halvdelen er løst hurtigere, halvdelen langsommere — enkelte meget lange sager trækker ikke tallet op.</p>
+      </div>
+      <div>
+        <span class="num">{{ helpdesk.resolution.mean }}</span><small>gennemsnit</small>
+        <p class="stats-explain">Alle løsningstider lagt sammen og delt med antallet. De få sager, der ligger åbne i uger eller måneder, trækker det op — derfor er det langt over medianen.</p>
+      </div>
+      <div>
+        <span class="num">{{ helpdesk.resolution.p90 }}</span><small>9 ud af 10 er løst inden</small>
+        <p class="stats-explain">90 % af sagerne er lukket inden for denne tid; de sidste 10 % tager længere. Viser, hvor lang halen af langsomme sager er.</p>
+      </div>
+      <div>
+        <span class="num">{{ helpdesk.resolution.within_day }}%</span><small>løst inden for et døgn</small>
+        <p class="stats-explain">Andelen af sagerne, der blev lukket mindre end 24 timer efter, de blev oprettet.</p>
+      </div>
     </div>
     <div class="stats-chart"><canvas id="chart-resolution"></canvas></div>
   </section>

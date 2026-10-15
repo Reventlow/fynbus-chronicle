@@ -2175,6 +2175,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .stats-figures > div { display: flex; flex-direction: column; gap: 3px; }
   .stats-figures .num { font-size: 22px; font-weight: 500; letter-spacing: -0.03em; color: var(--ink-1); }
   .stats-figures small { font-size: 11.5px; color: var(--ink-3); }
+  .stats-explain { margin: 4px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-4); max-width: 34ch; }
 
   .stats-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 
