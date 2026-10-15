@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.5 — 2026-10-15
+
+### Added
+- **Åbne sager fordelt på kategori.** Et donut-diagram over de åbne helpdesk-sager fordelt på ServiceDesk-kategori:
+  - **Kontrolpanelet** har et nyt kort med diagrammet, en forklaring og antal og andel pr. kategori. Kortet opdateres hvert minut og skjules i Kompakt-visning ligesom de andre grafer.
+  - **Ugerapporten** (PDF, HTML, mail og Markdown) har en ny sektion med samme diagram og samme farver. For den aktuelle uge er det sagerne, der er åbne nu; for en tidligere uge er det sagerne, der var åbne ved ugens udgang. I mailen sendes diagrammet som indlejret billede, og forklaringen er en tabel, så den holder i Outlook.
+  - Sager uden kategori vises som en grå skive, *Ingen kategori*. Ved få åbne sager giver det et ærligere billede end kun at regne andele af de kategoriserede.
+
 ## 0.20.4 — 2026-10-15
 
 ### Added

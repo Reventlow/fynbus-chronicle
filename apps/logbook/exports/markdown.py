@@ -74,6 +74,19 @@ def generate_markdown(weeklog: WeekLog) -> str:
         )
         lines.append("")
 
+    # Open tickets by category at the end of the week
+    open_categories = weeklog.helpdesk_open_by_category()
+    if open_categories["total"]:
+        lines.append("### Åbne sager fordelt på kategori")
+        lines.append("")
+        lines.append("| Kategori | Antal | Andel |")
+        lines.append("| --- | ---: | ---: |")
+        for category in open_categories["categories"]:
+            lines.append(
+                f"| {category['label']} | {category['count']} | {category['share']:.0f}% |"
+            )
+        lines.append("")
+
     # Summary
     if weeklog.summary:
         lines.append("## Ugeoversigt")

@@ -1,0 +1,55 @@
+{% comment %}
+  Open tickets by category — a donut plus a legend. Data from
+  HelpdeskTicket.open_by_category() (the ServiceDesk mirror); colours come
+  from the server so the week report uses the same ones. Polled by HTMX.
+{% endcomment %}
+{% if breakdown.total %}
+  <div class="open-cat">
+    <div class="stats-chart stats-chart-round"><canvas id="open-categories-chart"></canvas></div>
+    <ul class="stats-list">
+      {% for c in breakdown.categories %}
+        <li><span class="stats-dot" style="background: {{ c.color }};"></span>{{ c.label }}<span class="num">{{ c.count }} · {{ c.share|floatformat:0 }}%</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% if breakdown.uncategorised %}
+    <p class="stats-note">{{ breakdown.uncategorised }} af {{ breakdown.total }} åbne sager har ingen kategori i ServiceDesk.</p>
+  {% endif %}
+  {{ breakdown.categories|json_script:"open-categories-data" }}
+  <script>
+  (function () {
+    function draw() {
+      if (!window.Chart) return setTimeout(draw, 50);
+      var el = document.getElementById("open-categories-chart");
+      if (!el) return;
+      var data = JSON.parse(document.getElementById("open-categories-data").textContent);
+      var dark = document.documentElement.classList.contains("dark");
+      // HTMX swaps the partial every minute; drop the old chart first.
+      if (window._openCategoriesChart) window._openCategoriesChart.destroy();
+      window._openCategoriesChart = new Chart(el.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: data.map(function (c) { return c.label; }),
+          datasets: [{ data: data.map(function (c) { return c.count; }),
+            backgroundColor: data.map(function (c) { return c.color; }), borderWidth: 0 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: "62%", animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: dark ? "rgba(44,48,56,0.98)" : "rgba(255,255,255,0.98)",
+              titleColor: dark ? "#f0f0f0" : "#191e26",
+              bodyColor: dark ? "#cdd0d6" : "#3c424c",
+              borderColor: dark ? "#4a505a" : "#dadce2", borderWidth: 1, padding: 10, cornerRadius: 8,
+            },
+          },
+        },
+      });
+    }
+    draw();
+  })();
+  </script>
+{% else %}
+  <p class="stats-note" style="padding: 12px 0;">Ingen åbne sager — eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+{% endif %}

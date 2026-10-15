@@ -224,6 +224,20 @@ class WeekLog(models.Model):
         """Human-readable week label."""
         return f"Uge {self.week_number}, {self.year}"
 
+    def helpdesk_open_by_category(self) -> dict:
+        """Open tickets by category at the end of this week (see HelpdeskTicket).
+
+        For the current (or a future) week the answer is "open right now";
+        for a past week, the tickets that were open when the week ended,
+        each with its category as ServiceDesk has it today.
+        """
+        from datetime import date, datetime, timedelta
+
+        next_monday = date.fromisocalendar(self.year, self.week_number, 1) + timedelta(days=7)
+        week_end = timezone.make_aware(datetime.combine(next_monday, datetime.min.time()))
+        at = None if week_end > timezone.now() else week_end
+        return HelpdeskTicket.open_by_category(at)
+
     @property
     def helpdesk_delta(self) -> int:
         """Calculate net change in helpdesk tickets."""
@@ -951,3 +965,52 @@ class HelpdeskTicket(models.Model):
 
     def __str__(self) -> str:
         return f"#{self.sdp_id} ({self.status})"
+
+    # Category colours, assigned largest category first; shared by the
+    # dashboard chart and the week report so a category keeps its colour
+    # within one view. Tickets without a category are always grey.
+    CATEGORY_COLORS = (
+        "#286ED2", "#468E66", "#B48438", "#A65D57", "#7D8471", "#8B7355", "#9AA083", "#C08A4A",
+    )
+    NO_CATEGORY_COLOR = "#C9C4BC"
+    NO_CATEGORY_LABEL = "Ingen kategori"
+
+    @classmethod
+    def open_by_category(cls, at=None) -> dict:
+        """Open tickets split by category, for a donut chart.
+
+        ``at=None`` means open right now; otherwise the tickets open at that
+        instant (created before it, not closed by then). Tickets without a
+        category are their own grey slice, listed last.
+
+        Returns ``{"total", "categorised", "uncategorised", "categories":
+        [{label, count, share, color}]}``.
+        """
+        from collections import Counter
+
+        if at is None:
+            tickets = cls.objects.filter(is_open=True)
+        else:
+            tickets = cls.objects.filter(created_at__lt=at).filter(
+                models.Q(closed_at__isnull=True) | models.Q(closed_at__gte=at)
+            )
+        counts = Counter(tickets.values_list("category", flat=True))
+        total = sum(counts.values())
+        uncategorised = counts.pop("", 0)
+
+        def entry(label, count, color):
+            share = round(100 * count / total, 1) if total else 0
+            return {"label": label, "count": count, "share": share, "color": color}
+
+        categories = [
+            entry(label, count, cls.CATEGORY_COLORS[i % len(cls.CATEGORY_COLORS)])
+            for i, (label, count) in enumerate(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
+        ]
+        if uncategorised:
+            categories.append(entry(cls.NO_CATEGORY_LABEL, uncategorised, cls.NO_CATEGORY_COLOR))
+        return {
+            "total": total,
+            "categorised": total - uncategorised,
+            "uncategorised": uncategorised,
+            "categories": categories,
+        }

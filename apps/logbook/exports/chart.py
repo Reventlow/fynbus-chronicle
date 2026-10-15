@@ -179,3 +179,40 @@ def generate_helpdesk_flow_chart(weeklog) -> str | None:
 
     encoded = base64.b64encode(buf.read()).decode("ascii")
     return f"data:image/png;base64,{encoded}"
+
+
+def generate_category_donut(breakdown: dict) -> str | None:
+    """
+    Donut of open tickets by category, for the week report.
+
+    Args:
+        breakdown: ``HelpdeskTicket.open_by_category()`` output; its
+            colours are used so the report matches the dashboard.
+
+    Returns:
+        Base64-encoded PNG data URI, or None when there are no open tickets.
+    """
+    categories = breakdown.get("categories") or []
+    if not breakdown.get("total"):
+        return None
+
+    fig, ax = plt.subplots(figsize=(2.4, 2.4))
+    fig.patch.set_alpha(0)
+    ax.pie(
+        [c["count"] for c in categories],
+        colors=[c["color"] for c in categories],
+        startangle=90,
+        counterclock=False,
+        wedgeprops={"width": 0.38, "edgecolor": "white", "linewidth": 1.5},
+    )
+    # The total in the hole, like a KPI.
+    ax.text(0, 0.08, str(breakdown["total"]), ha="center", va="center",
+            fontsize=20, fontweight="bold", color="#4A4540")
+    ax.text(0, -0.22, "åbne", ha="center", va="center", fontsize=9, color="#6B635B")
+    ax.set_aspect("equal")
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", transparent=True)
+    plt.close(fig)
+    encoded = base64.b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"

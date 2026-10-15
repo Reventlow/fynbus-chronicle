@@ -10,7 +10,11 @@ from apps.images.embedding import embed_as_data_uris
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
-from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
+from .chart import (
+    generate_category_donut,
+    generate_helpdesk_chart,
+    generate_helpdesk_flow_chart,
+)
 
 # Pasted images are capped to the printable width of an A4 page.
 PDF_IMAGE_MAX_WIDTH = 640
@@ -36,6 +40,7 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
 
     # Generate helpdesk charts
     chart_image = generate_helpdesk_chart(weeklog)
+    open_categories = weeklog.helpdesk_open_by_category()
     flow_chart_image = generate_helpdesk_flow_chart(weeklog)
 
     # Calculate weekly averages
@@ -51,6 +56,8 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
         "oncall_split": OnCallSegment.split_week_display(weeklog.year, weeklog.week_number),
         "chart_image": chart_image,
         "flow_chart_image": flow_chart_image,
+        "open_categories": open_categories,
+        "category_chart_image": generate_category_donut(open_categories),
         "avg_new": avgs["avg_new"],
         "avg_closed": avgs["avg_closed"],
     }

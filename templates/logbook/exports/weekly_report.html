@@ -103,6 +103,44 @@
   </div>
   {% endif %}
 
+  {% comment %}
+    Open tickets by category at the end of the week — a donut beside a
+    legend table. Tables, bgcolor and inline styles, like the liggetid bars,
+    so the layout survives Outlook. Colours match the dashboard.
+  {% endcomment %}
+  {% if open_categories.total %}
+  <div class="section">
+    <h2>Åbne sager fordelt på kategori</h2>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; background-color:#FAF9F7; border:1px solid #E5E0D8;" bgcolor="#FAF9F7">
+    <tr>
+      {% if category_chart_image %}
+      <td width="170" style="width:170px; padding:10px; border:none; vertical-align:middle;">
+        <img src="{{ category_chart_image }}" width="150" height="150" style="display:block; width:150px; height:150px;" alt="Åbne sager fordelt på kategori">
+      </td>
+      {% endif %}
+      <td style="padding:10px 14px 10px 4px; border:none; vertical-align:middle;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin:0;">
+          {% for c in open_categories.categories %}
+          <tr>
+            <td width="18" style="width:18px; padding:4px 0; border:none; vertical-align:middle;">
+              <table role="presentation" width="10" cellpadding="0" cellspacing="0" style="width:10px; border-collapse:collapse; margin:0;"><tr><td width="10" height="10" bgcolor="{{ c.color }}" style="width:10px; height:10px; padding:0; border:none; font-size:1px; line-height:10px; background-color:{{ c.color }};">&nbsp;</td></tr></table>
+            </td>
+            <td style="padding:4px 6px; border:none; vertical-align:middle; font-size:9.5pt; color:#4A4540;">{{ c.label }}</td>
+            <td align="right" style="padding:4px 0; border:none; vertical-align:middle; font-size:9.5pt; color:#4A4540; white-space:nowrap;">
+              <strong>{{ c.count }}</strong> <span style="color:#6B635B;">({{ c.share|floatformat:0 }}%)</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+    </tr>
+  </table>
+  <p style="margin:2px 0 0 0; font-size:9pt; color:#6B635B;">
+    {{ open_categories.total }} åbne sager ved ugens udgang{% if open_categories.uncategorised %}, heraf {{ open_categories.uncategorised }} uden kategori i ServiceDesk{% endif %}.
+  </p>
+  </div>
+  {% endif %}
+
   <!-- Helpdesk Charts -->
   {% if chart_image or flow_chart_image %}
   <div class="section">

@@ -2243,4 +2243,10 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     color: var(--ink-2);
   }
   .share-prompt { width: 100%; margin-top: 8px; font-size: 12.5px; line-height: 1.5; resize: vertical; }
+
+  /* Open tickets by category on the dashboard: donut beside its legend when there is room. */
+  .open-cat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: center; }
+  @media (min-width: 640px) {
+    .open-cat { grid-template-columns: 190px minmax(0, 1fr); }
+  }
 }

@@ -331,6 +331,19 @@ class HelpdeskFlowChartPartialView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/partials/helpdesk_flow_chart.html"
 
 
+class OpenCategoriesPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: open helpdesk tickets by category (donut)."""
+
+    template_name = "dashboard/partials/open_categories.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        from apps.logbook.models import HelpdeskTicket
+
+        context = super().get_context_data(**kwargs)
+        context["breakdown"] = HelpdeskTicket.open_by_category()
+        return context
+
+
 class IncidentsPartialView(LoginRequiredMixin, TemplateView):
     """HTMX partial for recent incidents list."""
 

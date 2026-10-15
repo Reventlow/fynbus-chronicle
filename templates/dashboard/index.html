@@ -241,6 +241,19 @@
         </div>
       </div>
 
+      {# Open tickets by category — js-dashboard-graphs: hidden in Kompakt mode #}
+      <div class="card js-dashboard-graphs" style="display: flex; flex-direction: column; gap: 10px;">
+        <div>
+          <div class="label-eyebrow">Kategorier</div>
+          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på kategori</h2>
+        </div>
+        <div hx-get="{% url 'dashboard:partial-open-categories' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="skeleton" style="height: 190px; width: 100%;"></div>
+        </div>
+      </div>
+
       {% comment %}
         Latest changelog entry — polled every 300s.
         js-dashboard-extras: hidden in Dashboard mode.

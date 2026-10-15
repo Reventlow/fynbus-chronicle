@@ -15,13 +15,20 @@ from apps.images.embedding import InlineImage, embed_as_cid
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
 from ..models import WeekLog
-from .chart import generate_helpdesk_chart, generate_helpdesk_flow_chart
+from .chart import (
+    generate_category_donut,
+    generate_helpdesk_chart,
+    generate_helpdesk_flow_chart,
+)
 from .pdf import generate_pdf
 
 CHART_CID = "chronicle-helpdesk-chart"
 # Pasted images in a mail body: the usual 600 px mail width.
 EMAIL_IMAGE_MAX_WIDTH = 600
 FLOW_CHART_CID = "chronicle-helpdesk-flow-chart"
+
+# Content-ID of the open-tickets-by-category donut.
+CATEGORY_CHART_CID = "chronicle-helpdesk-category-chart"
 
 
 def _png_bytes(data_uri: str | None) -> bytes | None:
@@ -115,6 +122,8 @@ def send_weeklog_email(
     # _png_bytes below.
     chart_png = _png_bytes(generate_helpdesk_chart(weeklog))
     flow_chart_png = _png_bytes(generate_helpdesk_flow_chart(weeklog))
+    open_categories = weeklog.helpdesk_open_by_category()
+    category_chart_png = _png_bytes(generate_category_donut(open_categories))
 
     # Calculate weekly averages
     avgs = weeklog.helpdesk_weekly_averages()
@@ -129,6 +138,8 @@ def send_weeklog_email(
         "oncall_split": OnCallSegment.split_week_display(weeklog.year, weeklog.week_number),
         "chart_cid": CHART_CID if chart_png else "",
         "flow_chart_cid": FLOW_CHART_CID if flow_chart_png else "",
+        "open_categories": open_categories,
+        "category_chart_cid": CATEGORY_CHART_CID if category_chart_png else "",
         "avg_new": avgs["avg_new"],
         "avg_closed": avgs["avg_closed"],
     }
@@ -168,6 +179,7 @@ def send_weeklog_email(
         email.mixed_subtype = "related"
         _attach_inline(email, chart_png, CHART_CID)
         _attach_inline(email, flow_chart_png, FLOW_CHART_CID)
+        _attach_inline(email, category_chart_png, CATEGORY_CHART_CID)
         for image in pasted_images:
             _attach_pasted(email, image)
 
