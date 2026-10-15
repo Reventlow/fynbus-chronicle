@@ -737,45 +737,12 @@ html[data-density="compact"] .js-dashboard-changelog {
   display: none !important;
 }
 
-/* Kompakt — collapse the two-column grids to a single column so the rail
-   and the incidents card span full width instead of sitting next to an
-   empty column where the chart used to live. Effect: incidents moves
-   visually higher (no empty gap in front of it) and the rail isn't
-   crammed into a narrow side column. */
-html[data-density="compact"] .js-dashboard-flow-row,
-html[data-density="compact"] .js-dashboard-tasks-row {
-  grid-template-columns: minmax(0, 1fr) !important;
-}
-
-/* Dashboard mode — hide the side rail, the changelog card, and the incidents
-   card. The KPI strip and both chart cards remain. */
-html[data-density="dashboard"] .js-dashboard-rail,
+/* Dashboard mode — hide the "Nu" row (incidents, on-call, current week)
+   and the changelog card. The KPI strip and both chart rows remain. The
+   Kontrolpanel rows carry these classes as a whole (templates/dashboard/
+   index.html), so no grid needs collapsing in either mode. */
 html[data-density="dashboard"] .js-dashboard-extras {
   display: none !important;
-}
-
-/* In Dashboard mode the two-column layouts have nothing in their right
-   column (rail / incidents are hidden), so collapse both grids to a single
-   column and let the remaining graph card take the full width inside its
-   own row. */
-html[data-density="dashboard"] .js-dashboard-flow-row,
-html[data-density="dashboard"] .js-dashboard-tasks-row {
-  grid-template-columns: minmax(0, 1fr) !important;
-}
-
-/* Dashboard mode — put the two row-containers side by side so the flow
-   chart and the open-tickets chart sit in a 2-column layout. The rows'
-   own grid-template-columns is collapsed to 1fr above so each chart
-   spans the full width of its half. */
-html[data-density="dashboard"] .js-dashboard-main {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-  gap: var(--gutter) !important;
-}
-@media (max-width: 1024px) {
-  html[data-density="dashboard"] .js-dashboard-main {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
 }
 
 /* =============================================================================

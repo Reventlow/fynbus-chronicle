@@ -95,24 +95,88 @@
   </div>
 
   {% comment %}
-    js-dashboard-main: wraps the flow row + tasks row so Dashboard mode
-    can flip both rows into a side-by-side 2-column grid (charts next to
-    each other). In Komfort / Kompakt this is just a passthrough flex
-    column with the same gutter as the page wrapper, so the existing
-    layout is unchanged.
+    Order, most actionable first:
+      1. "Nu"        — incidents, who is on call, this week's log.
+      2. "Åbne sager" — today's open tickets by technician and by category.
+      3. "Udvikling" — the two trend charts (flow, open over time).
+      4. Latest changelog entry.
+    Density modes (static/src/input.css) act on whole rows:
+      Kompakt hides rows 2–3 and the changelog (js-dashboard-graphs /
+      js-dashboard-changelog); Dashboard hides row 1 and the changelog
+      (js-dashboard-extras), leaving KPIs + both chart rows.
   {% endcomment %}
-  <div class="js-dashboard-main flex flex-col" style="gap: var(--gutter);">
-  {# === Main grid: chart (1.25fr) + side rail (1fr) ========================= #}
-  {% comment %}
-    js-dashboard-flow-row: collapsed to a single column in Dashboard mode
-    (where the rail is hidden) so the flow chart spans full width.
-  {% endcomment %}
-  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-flow-row"
-       style="gap: var(--gutter);">
 
-    {# === Flow chart card === #}
-    {# js-dashboard-graphs: hidden in Kompakt mode (charts off) #}
-    <div class="card overflow-hidden js-dashboard-graphs" style="padding: 0;"
+  {# === 1. Nu: incidents (wide) + on-call / current week ==================== #}
+  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-extras"
+       style="gap: var(--gutter);">
+    {# Incidents #}
+    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+      <div class="card animate-pulse">
+        <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 60px; width: 100%;"></div>
+      </div>
+    </div>
+
+    {# On-call + current week #}
+    <div class="flex flex-col" style="gap: var(--gutter);">
+      <div hx-get="{% url 'dashboard:partial-oncall' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse">
+          <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+          <div class="skeleton" style="height: 44px; width: 220px;"></div>
+        </div>
+      </div>
+
+      <div hx-get="{% url 'dashboard:partial-current-week' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card animate-pulse">
+          <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 12px;"></div>
+          <div class="skeleton" style="height: 18px; width: 200px; margin-bottom: 10px;"></div>
+          <div class="skeleton" style="height: 14px; width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# === 2. Åbne sager nu: by technician + by category ====================== #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 js-dashboard-graphs" style="gap: var(--gutter);">
+    {# Open tickets by technician #}
+    <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <div class="label-eyebrow">Teknikere</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på tekniker</h2>
+      </div>
+      <div hx-get="{% url 'dashboard:partial-open-technicians' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="skeleton" style="height: 190px; width: 100%;"></div>
+      </div>
+    </div>
+
+    {# Open tickets by category #}
+    <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <div class="label-eyebrow">Kategorier</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på kategori</h2>
+      </div>
+      <div hx-get="{% url 'dashboard:partial-open-categories' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="skeleton" style="height: 190px; width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  {# === 3. Udvikling: flow + open tickets over time ======================== #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 js-dashboard-graphs" style="gap: var(--gutter);">
+    {# New vs. closed per week #}
+    <div class="card overflow-hidden" style="padding: 0;"
          x-data="{
            win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
            set(n) {
@@ -166,135 +230,59 @@
       </div>
     </div>
 
-    {# === Right rail: on-call + current week === #}
-    {# js-dashboard-rail: hidden in Dashboard mode (extras off) #}
-    <div class="flex flex-col js-dashboard-rail" style="gap: var(--gutter);">
-      <div hx-get="{% url 'dashboard:partial-oncall' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card animate-pulse">
-          <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
-          <div class="skeleton" style="height: 44px; width: 220px;"></div>
+    {# Open tickets over time #}
+    <div class="card overflow-hidden" style="padding: 0;"
+         x-data="{
+           win: parseInt(localStorage.getItem('openChartWindow') || '12'),
+           set(n) {
+             this.win = n;
+             localStorage.setItem('openChartWindow', String(n));
+             window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
+           },
+           label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+         }">
+      <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+        <div>
+          <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
+          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
+            {% sw_phrase "Åbne sager — udvikling" "Aktive missioner — udvikling" "Aktive oprørere — udvikling" "Åbne kapringer — sø-trend" trek="Aktive missioner — over tid" klingon="Aktive kampe — over tid" %}
+          </h2>
+        </div>
+        <div class="segmented">
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 12 }"
+                  @click="set(12)">12U</button>
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 26 }"
+                  @click="set(26)">26U</button>
+          <button type="button" class="segmented-btn"
+                  :class="{ 'segmented-btn-active': win === 52 }"
+                  @click="set(52)">12M</button>
         </div>
       </div>
-
-      <div hx-get="{% url 'dashboard:partial-current-week' %}"
+      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
            hx-trigger="load, every 60s"
            hx-swap="innerHTML">
-        <div class="card animate-pulse">
-          <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 12px;"></div>
-          <div class="skeleton" style="height: 18px; width: 200px; margin-bottom: 10px;"></div>
-          <div class="skeleton" style="height: 14px; width: 100%;"></div>
+        <div class="animate-pulse" style="padding: 0 24px 20px;">
+          <div class="skeleton" style="height: 240px; width: 100%;"></div>
         </div>
       </div>
     </div>
   </div>
 
-  {# === Tasks + incidents row ============================================= #}
+  {# === 4. Latest changelog entry ========================================== #}
   {% comment %}
-    js-dashboard-tasks-row: container row that holds graph (left) + extras
-    (changelog under graph, incidents on right). The row itself is kept;
-    individual children carry the js-dashboard-graphs / js-dashboard-extras
-    hooks so each density mode hides the right pieces.
+    Latest changelog entry — polled every 300s.
+    js-dashboard-extras: hidden in Dashboard mode.
+    js-dashboard-changelog: also hidden in Kompakt.
   {% endcomment %}
-  <div class="grid grid-cols-1 lg:grid-cols-2 items-start js-dashboard-tasks-row" style="gap: var(--gutter);">
-
-    {# Left column: helpdesk chart + latest changelog entry #}
-    <div class="flex flex-col" style="gap: var(--gutter);">
-      {# Helpdesk open-tickets chart (kept) #}
-      {# js-dashboard-graphs: hidden in Kompakt mode #}
-      <div class="card overflow-hidden js-dashboard-graphs" style="padding: 0;"
-           x-data="{
-             win: parseInt(localStorage.getItem('openChartWindow') || '12'),
-             set(n) {
-               this.win = n;
-               localStorage.setItem('openChartWindow', String(n));
-               window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
-             },
-             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
-           }">
-        <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
-          <div>
-            <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
-            <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-              {% sw_phrase "Åbne sager — udvikling" "Aktive missioner — udvikling" "Aktive oprørere — udvikling" "Åbne kapringer — sø-trend" trek="Aktive missioner — over tid" klingon="Aktive kampe — over tid" %}
-            </h2>
-          </div>
-          <div class="segmented">
-            <button type="button" class="segmented-btn"
-                    :class="{ 'segmented-btn-active': win === 12 }"
-                    @click="set(12)">12U</button>
-            <button type="button" class="segmented-btn"
-                    :class="{ 'segmented-btn-active': win === 26 }"
-                    @click="set(26)">26U</button>
-            <button type="button" class="segmented-btn"
-                    :class="{ 'segmented-btn-active': win === 52 }"
-                    @click="set(52)">12M</button>
-          </div>
-        </div>
-        <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-             hx-trigger="load, every 60s"
-             hx-swap="innerHTML">
-          <div class="animate-pulse" style="padding: 0 24px 20px;">
-            <div class="skeleton" style="height: 240px; width: 100%;"></div>
-          </div>
-        </div>
-      </div>
-
-      {# Open tickets by category — js-dashboard-graphs: hidden in Kompakt mode #}
-      <div class="card js-dashboard-graphs" style="display: flex; flex-direction: column; gap: 10px;">
-        <div>
-          <div class="label-eyebrow">Kategorier</div>
-          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på kategori</h2>
-        </div>
-        <div hx-get="{% url 'dashboard:partial-open-categories' %}"
-             hx-trigger="load, every 60s"
-             hx-swap="innerHTML">
-          <div class="skeleton" style="height: 190px; width: 100%;"></div>
-        </div>
-      </div>
-
-      {# Open tickets by technician — js-dashboard-graphs: hidden in Kompakt mode #}
-      <div class="card js-dashboard-graphs" style="display: flex; flex-direction: column; gap: 10px;">
-        <div>
-          <div class="label-eyebrow">Teknikere</div>
-          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på tekniker</h2>
-        </div>
-        <div hx-get="{% url 'dashboard:partial-open-technicians' %}"
-             hx-trigger="load, every 60s"
-             hx-swap="innerHTML">
-          <div class="skeleton" style="height: 190px; width: 100%;"></div>
-        </div>
-      </div>
-
-      {% comment %}
-        Latest changelog entry — polled every 300s.
-        js-dashboard-extras: hidden in Dashboard mode.
-        js-dashboard-changelog: also hidden in Kompakt.
-      {% endcomment %}
-      <div class="card overflow-hidden flex-grow js-dashboard-extras js-dashboard-changelog"
-           style="padding: 0;"
-           hx-get="{% url 'dashboard:partial-latest-change' %}"
-           hx-trigger="load, every 300s"
-           hx-swap="innerHTML">
-        {% include 'dashboard/partials/latest_change.html' %}
-      </div>
-    </div>
-
-    {# Incidents — js-dashboard-extras: hidden in Dashboard mode #}
-    <div class="js-dashboard-extras"
-         hx-get="{% url 'dashboard:partial-incidents' %}"
-         hx-trigger="load, every 60s"
-         hx-swap="innerHTML">
-      <div class="card animate-pulse">
-        <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%;"></div>
-      </div>
-    </div>
+  <div class="card overflow-hidden js-dashboard-extras js-dashboard-changelog"
+       style="padding: 0;"
+       hx-get="{% url 'dashboard:partial-latest-change' %}"
+       hx-trigger="load, every 300s"
+       hx-swap="innerHTML">
+    {% include 'dashboard/partials/latest_change.html' %}
   </div>
-  </div>{# /js-dashboard-main #}
 
 </div>
 {% endblock %}

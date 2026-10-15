@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.7 — 2026-10-15
+
+### Changed
+- **Ny rækkefølge på Kontrolpanelet**, så det vigtigste står øverst:
+  1. Nøgletallene for helpdesk (uændret).
+  2. **Nu:** hændelser, rådighedsvagt og aktuel ugelog.
+  3. **Åbne sager lige nu:** fordelt på tekniker og på kategori, side om side.
+  4. **Udvikling:** *Ny vs. lukket* og *Åbne sager — udvikling*, side om side.
+  5. Seneste ændring i Chronicle.
+- Kompakt og Dashboard viser de samme kort som før: Kompakt skjuler graferne og seneste ændring, Dashboard skjuler hændelser, vagt, ugelog og seneste ændring.
+
 ## 0.20.6 — 2026-10-15
 
 ### Added
