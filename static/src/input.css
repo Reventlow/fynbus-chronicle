@@ -2225,4 +2225,22 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     border-radius: 4px;
     background: linear-gradient(to right, var(--surface-2), var(--chart-info));
   }
+
+  /* Statistics share links (templates/dashboard/statistics_share.html). */
+  .share-urls { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .share-url { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .share-url .label-eyebrow { width: 84px; flex: none; }
+  .share-url code {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11.5px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    color: var(--ink-2);
+  }
+  .share-prompt { width: 100%; margin-top: 8px; font-size: 12.5px; line-height: 1.5; resize: vertical; }
 }

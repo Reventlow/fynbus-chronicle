@@ -15,7 +15,10 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
+from django.contrib import messages
 from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
@@ -144,6 +147,110 @@ def statistics_export(request, fmt: str) -> HttpResponse:
     disposition = "inline" if request.GET.get("inline") else "attachment"
     response["Content-Disposition"] = f'{disposition}; filename="{exports.filename(data, extension)}"'
     return response
+
+
+def _shared_response(response: HttpResponse) -> HttpResponse:
+    """Headers for anything served on a share link: never cached, never indexed."""
+    response["Cache-Control"] = "no-store"
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    response["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+def statistics_shared_json(request, token: str) -> HttpResponse:
+    """The statistics JSON on a share link — no login, the token is the key.
+
+    An unknown, expired or revoked token gets the same 404, so the
+    response never tells which tokens exist.
+    """
+    from . import exports
+    from .models import StatisticsShareLink
+
+    link = StatisticsShareLink.active(token)
+    if link is None:
+        raise Http404
+    link.record_use()
+    body = json.dumps(
+        exports.generate_json(exports.collect()), ensure_ascii=False, indent=2, cls=DjangoJSONEncoder
+    )
+    return _shared_response(HttpResponse(body, content_type="application/json; charset=utf-8"))
+
+
+def statistics_shared_guide(request, token: str) -> HttpResponse:
+    """The guide to the shared JSON, as Markdown, for Claude to read first."""
+    from .models import StatisticsShareLink
+
+    link = StatisticsShareLink.active(token)
+    if link is None:
+        raise Http404
+    text = render_to_string(
+        "dashboard/statistics_share_guide.md",
+        {"link": link, "data_url": request.build_absolute_uri(link.get_data_path())},
+    )
+    return _shared_response(HttpResponse(text, content_type="text/markdown; charset=utf-8"))
+
+
+def share_prompt(guide_url: str, data_url: str) -> str:
+    """The Danish prompt an editor pastes into Claude together with a link."""
+    return (
+        "Lav en animeret præsentation af FynBus IT's helpdesk-statistik for de "
+        "seneste 12 måneder.\n\n"
+        f"1. Læs først vejledningen: {guide_url}\n"
+        f"2. Hent derefter data (JSON): {data_url}\n\n"
+        "Følg vejledningens forslag til forløb og dens regler for, hvordan tallene "
+        "læses. Brug kun tal fra data, skriv al tekst på dansk, og gentag ikke "
+        "linkene i præsentationen."
+    )
+
+
+@login_required
+@editor_required
+def statistics_share(request) -> HttpResponse:
+    """List, create and revoke share links for the statistics (editors only)."""
+    from .models import StatisticsShareLink
+
+    created = None
+    if request.method == "POST":
+        if "revoke" in request.POST:
+            link = get_object_or_404(StatisticsShareLink, pk=request.POST.get("revoke"))
+            link.revoke()
+            messages.success(request, f"Linket \u201d{link.label}\u201d er tilbagekaldt og virker ikke længere.")
+            return redirect("dashboard:statistics-share")
+
+        label = (request.POST.get("label") or "").strip()[:100] or "Claude Motion"
+        valid_days = dict(StatisticsShareLink.VALIDITY_CHOICES)
+        try:
+            days = int(request.POST.get("days", StatisticsShareLink.DEFAULT_VALIDITY_DAYS))
+        except ValueError:
+            days = StatisticsShareLink.DEFAULT_VALIDITY_DAYS
+        if days not in valid_days:
+            days = StatisticsShareLink.DEFAULT_VALIDITY_DAYS
+        created = StatisticsShareLink.objects.create(
+            label=label,
+            created_by=request.user,
+            expires_at=timezone.now() + timedelta(days=days),
+        )
+
+    links = []
+    for link in StatisticsShareLink.objects.select_related("created_by"):
+        guide_url = request.build_absolute_uri(link.get_guide_path())
+        data_url = request.build_absolute_uri(link.get_data_path())
+        links.append({
+            "link": link,
+            "guide_url": guide_url,
+            "data_url": data_url,
+            "prompt": share_prompt(guide_url, data_url),
+        })
+    return render(
+        request,
+        "dashboard/statistics_share.html",
+        {
+            "links": links,
+            "created_id": created.pk if created else None,
+            "validity_choices": StatisticsShareLink.VALIDITY_CHOICES,
+            "default_days": StatisticsShareLink.DEFAULT_VALIDITY_DAYS,
+        },
+    )
 
 
 def _read_latest_changelog_entry() -> dict | None:

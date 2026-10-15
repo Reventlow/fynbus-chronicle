@@ -10,6 +10,10 @@ urlpatterns = [
     path("", views.DashboardView.as_view(), name="index"),
     path("statistik/", views.StatisticsView.as_view(), name="statistics"),
     path("statistik/export/<str:fmt>/", views.statistics_export, name="statistics-export"),
+    path("statistik/deling/", views.statistics_share, name="statistics-share"),
+    # Public share links: no login, the token is the key.
+    path("statistik/delt/<str:token>/data.json", views.statistics_shared_json, name="statistics-shared-json"),
+    path("statistik/delt/<str:token>/vejledning.md", views.statistics_shared_guide, name="statistics-shared-guide"),
     # HTMX partials
     path(
         "partials/current-week/",

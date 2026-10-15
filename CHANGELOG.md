@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.4 — 2026-10-15
+
+### Added
+- **Del statistikken som link (Claude Motion).** Under *Statistik → Eksportér → Del som link* kan redaktører oprette hemmelige links til statistikken for værktøjer, der ikke kan logge ind, f.eks. Claude på nettet og Claude Motion.
+  - Hvert link får et navn og en gyldighed (7, 30, 90 dage eller 1 år) og kan tilbagekaldes med det samme. Siden viser, hvor mange gange og hvornår linket sidst er hentet.
+  - Linket har to adresser: **data** (`…/data.json`, statistikken som JSON, beregnet frisk ved hver hentning) og en **vejledning** (`…/vejledning.md`). Vejledningen forklarer Claude hvert felt og enhederne og de forbehold, der gælder (kalendertid, de manglende kategorier, anonymiserede teknikere), og foreslår et forløb i ti scener til en animeret præsentation på dansk.
+  - *Kopiér prompt* giver en færdig dansk prompt med begge links, som kan sættes direkte ind i Claude Motion. Siden har en trin-for-trin-vejledning.
+  - Linkene kræver ikke login, men giver kun adgang til statistikken. Svarene caches ikke og indekseres ikke, og et ukendt, udløbet eller tilbagekaldt link giver 404.
+
 ## 0.20.3 — 2026-10-15
 
 ### Added

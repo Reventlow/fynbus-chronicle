@@ -55,6 +55,8 @@
         <hr class="hr-soft" style="margin: 4px 8px;">
         <a href="{% url 'dashboard:statistics-export' 'json' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download JSON</a>
         <a href="{% url 'dashboard:statistics-export' 'json' %}?inline=1" target="_blank" rel="noopener" class="nav-link" style="width: 100%; padding: 8px 10px;">Vis JSON i browseren</a>
+        <hr class="hr-soft" style="margin: 4px 8px;">
+        <a href="{% url 'dashboard:statistics-share' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Del som link (Claude Motion)…</a>
       </div>
     </div>
   {% endif %}
