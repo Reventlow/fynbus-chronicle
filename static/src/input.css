@@ -2172,6 +2172,14 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
 
   /* Horizontal share bars (technicians, age). */
   .stats-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  /* Long bar lists (departments) split into two columns on wide screens. */
+  @media (min-width: 1024px) {
+    .stats-bars-cols {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: calc(var(--gutter) * 2);
+      /* Fill the first column top-down, then the second, so the ranking reads in order. */
+      grid-template-rows: repeat(var(--rows, 1), auto); grid-auto-flow: column;
+    }
+  }
   .stats-bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 4px; }
   .stats-bar-label .num { color: var(--ink-3); white-space: nowrap; }
   .stats-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }

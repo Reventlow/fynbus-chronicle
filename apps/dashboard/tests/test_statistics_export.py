@@ -20,6 +20,7 @@ def tickets():
     HelpdeskTicket.objects.create(
         sdp_id=1, created_at=now - timedelta(days=3), closed_at=now - timedelta(days=2),
         status="Lukket", is_open=False, requester_ref="a", technician="Morten", category="Hardware",
+        department="Jura",
     )
     HelpdeskTicket.objects.create(
         sdp_id=2, created_at=now - timedelta(days=1), status="Åben", is_open=True, requester_ref="b",
@@ -52,6 +53,8 @@ def test_json_is_self_describing(tickets):
     assert all(len(r["counts"]) == 24 for r in doc["helpdesk"]["hourly_heatmap"]["rows"])
     assert len(doc["helpdesk"]["weekly"]) == 52
     assert doc["helpdesk"]["solved_by_technician"][0]["technician"] == "Morten"
+    departments = {d["department"]: d["count"] for d in doc["helpdesk"]["created_by_department"]}
+    assert departments == {"Jura": 1, "Ingen afdeling": 1}
     assert "definitions" in doc and "median" in doc["definitions"]
 
 
@@ -76,6 +79,7 @@ def test_markdown_download(editor, tickets):
     assert body.startswith("# FynBus IT — Statistik")
     assert "| Sager oprettet |" in body
     assert "Morten" in body
+    assert "### Sager pr. afdeling" in body and "| Jura |" in body
 
 
 def test_html_download_is_standalone(editor, tickets):

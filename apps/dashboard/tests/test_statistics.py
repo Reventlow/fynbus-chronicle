@@ -170,6 +170,18 @@ def test_categories_exclude_uncategorised_from_the_split():
     assert stats["uncategorised_share"] == 50
 
 
+def test_departments_count_created_tickets_including_missing_department():
+    make(1, NOW - timedelta(days=1), department="Jura")
+    make(2, NOW - timedelta(days=2), NOW - timedelta(days=1), department="Jura")
+    make(3, NOW - timedelta(days=3), department="")
+    make(4, NOW - timedelta(days=400), department="Plan")  # outside the window
+    stats = helpdesk_statistics(NOW)
+    assert stats["departments"] == [
+        {"label": "Jura", "count": 2, "share": 66.7},
+        {"label": "Ingen afdeling", "count": 1, "share": 33.3},
+    ]
+
+
 def test_open_per_week_is_reconstructed_from_open_and_close_times():
     # Open for most of the year, closed two days ago.
     make(1, NOW - timedelta(days=300), NOW - timedelta(days=2))
@@ -227,13 +239,15 @@ def test_statistics_page_requires_login(client):
 def test_statistics_page_renders(client):
     user = User.objects.create_user("viewer", password="x")
     client.force_login(user)
-    make(1, timezone.now() - timedelta(days=2), timezone.now() - timedelta(days=1), technician="Morten")
+    make(1, timezone.now() - timedelta(days=2), timezone.now() - timedelta(days=1), technician="Morten",
+         department="Kundecenter")
     response = client.get(reverse("dashboard:statistics"))
     assert response.status_code == 200
     body = response.content.decode()
     assert "Statistik" in body
     assert 'id="stats-data"' in body
     assert "Morten" in body
+    assert "Sager pr. afdeling" in body and "Kundecenter" in body
 
 
 def test_statistics_page_without_data_explains_itself(client):

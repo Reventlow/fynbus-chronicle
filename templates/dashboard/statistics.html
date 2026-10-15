@@ -248,6 +248,22 @@
     </div>
   </section>
 
+  <section class="card stats-card">
+    <div class="label-eyebrow">Afdelinger</div>
+    <h2 class="stats-title">Sager pr. afdeling</h2>
+    <ul class="stats-bars stats-bars-cols" style="--rows: {{ helpdesk.department_rows }};">
+      {% for d in helpdesk.departments %}
+        <li>
+          <div class="stats-bar-label"><span>{{ d.label }}</span><span class="num">{{ d.share|floatformat:0 }}% · {{ d.count }}</span></div>
+          <div class="stats-bar"><div style="width: {{ d.share|floatformat:'1u' }}%;"></div></div>
+        </li>
+      {% empty %}
+        <li class="stats-note">Ingen sager i perioden.</li>
+      {% endfor %}
+    </ul>
+    <p class="stats-note">Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk. Annullerede sager tæller med.</p>
+  </section>
+
   {# === Chronicle ========================================================= #}
   <div style="margin-top: 12px;">
     <div class="label-eyebrow">Chronicle</div>

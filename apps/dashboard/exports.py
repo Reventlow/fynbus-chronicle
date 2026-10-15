@@ -171,6 +171,10 @@ def generate_json(data: dict) -> dict:
                     for x in h["categories"]
                 ],
             },
+            "created_by_department": [
+                {"department": x["label"], "count": x["count"], "percent": x["share"]}
+                for x in h["departments"]
+            ],
             "solved_by_technician": [
                 {"technician": x["label"], "count": x["count"], "percent": x["share"]}
                 for x in h["technicians"]
@@ -301,6 +305,12 @@ def generate_markdown(data: dict) -> str:
         "har ingen kategori; andelene ovenfor er af de kategoriserede.",
         "",
     ]
+
+    out += ["### Sager pr. afdeling", "", "Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk.", ""]
+    out += _table(
+        ["Afdeling", "Sager", "Andel"],
+        [[x["label"], x["count"], _pct(x["share"])] for x in h["departments"]],
+    )
 
     out += ["### Løste sager pr. tekniker", ""]
     out += _table(

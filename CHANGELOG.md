@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.10 — 2026-10-15
+
+### Added
+- **Sager pr. afdeling på Statistik-siden.** Et nyt kort med én søjle pr. afdeling for årets sager, med antal og andel, sorteret efter flest sager. Sager uden afdeling står som *Ingen afdeling*.
+  - Afdelingen er den, som den person, der oprettede sagen, hører til i ServiceDesk. Annullerede sager tæller med, ligesom i kategorierne.
+  - Fordelingen er også med i eksporterne: HTML/PDF, Markdown og JSON (`helpdesk.created_by_department`).
+
 ## 0.20.9 — 2026-10-15
 
 ### Added

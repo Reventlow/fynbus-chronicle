@@ -45,6 +45,7 @@ RESOLUTION_BUCKETS = (
 )
 
 NO_CATEGORY = "Ingen kategori"
+NO_DEPARTMENT = "Ingen afdeling"
 UNASSIGNED = "Ikke tildelt"
 ANONYMISED = "Anonymiseret tekniker"
 
@@ -130,7 +131,7 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     tickets = list(
         HelpdeskTicket.objects.only(
             "created_at", "closed_at", "is_open", "is_cancelled",
-            "requester_ref", "category", "technician",
+            "requester_ref", "department", "category", "technician",
         )
     )
     created = [t for t in tickets if t.created_at >= since]
@@ -239,6 +240,10 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     uncategorised = categories.get(NO_CATEGORY, 0)
     categorised = Counter({k: v for k, v in categories.items() if k != NO_CATEGORY})
 
+    # --- Departments (created in the window) -------------------------------
+    # The requester's department as ServiceDesk holds it on the last sync.
+    departments = Counter(t.department or NO_DEPARTMENT for t in created)
+
     # --- Solved per technician ---------------------------------------------
     technicians = Counter(_technician_label(t.technician) for t in solved)
 
@@ -288,6 +293,9 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
         "categories": _shares(categorised),
         "uncategorised": uncategorised,
         "uncategorised_share": round(100 * uncategorised / len(created)) if created else 0,
+        "departments": _shares(departments),
+        # Rows per column when the list is split in two (ranked top-down).
+        "department_rows": (len(departments) + 1) // 2,
         "technicians": _shares(technicians),
         "open_by_age": open_by_age,
     }

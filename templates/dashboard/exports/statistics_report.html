@@ -108,6 +108,20 @@
   </div>
 
   <div class="section no-break">
+    <h3>Sager pr. afdeling</h3>
+    <table width="100%">
+      <tr><th>Afdeling</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      {% for x in h.departments %}
+      <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
+          <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
+      {% empty %}
+      <tr><td colspan="4">Ingen sager i perioden.</td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted">Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk.</p>
+  </div>
+
+  <div class="section no-break">
     <h3>Løste sager pr. tekniker</h3>
     <table width="100%">
       <tr><th>Tekniker</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
