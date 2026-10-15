@@ -97,7 +97,7 @@
   {% comment %}
     Order, most actionable first:
       1. "Nu"        — incidents, who is on call, this week's log.
-      2. "Åbne sager" — today's open tickets by technician and by category.
+      2. "Åbne sager" — today's open tickets by technician, by category and by age.
       3. "Udvikling" — the two trend charts (flow, open over time).
       4. Latest changelog entry.
     Density modes (static/src/input.css) act on whole rows:
@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  {# === 2. Åbne sager nu: by technician + by category ====================== #}
+  {# === 2. Åbne sager nu: by technician + by category, then by age ========= #}
   <div class="grid grid-cols-1 lg:grid-cols-2 js-dashboard-graphs" style="gap: var(--gutter);">
     {# Open tickets by technician #}
     <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
@@ -170,6 +170,19 @@
            hx-trigger="load, every 60s"
            hx-swap="innerHTML">
         <div class="skeleton" style="height: 190px; width: 100%;"></div>
+      </div>
+    </div>
+
+    {# Open tickets by age (liggetid), full width under the donuts #}
+    <div class="card lg:col-span-2" style="display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <div class="label-eyebrow">Liggetid</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på liggetid</h2>
+      </div>
+      <div hx-get="{% url 'dashboard:partial-open-age' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="skeleton" style="height: 200px; width: 100%;"></div>
       </div>
     </div>
   </div>

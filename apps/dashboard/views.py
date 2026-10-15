@@ -332,6 +332,21 @@ class HelpdeskFlowChartPartialView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/partials/helpdesk_flow_chart.html"
 
 
+class OpenAgePartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: open helpdesk tickets by age (liggetid), as bars.
+
+    Uses the current week's ServiceDesk snapshot, the same numbers as the
+    small bar in the "Åbne sager" KPI card and the week report section.
+    """
+
+    template_name = "dashboard/partials/open_age.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["weeklog"] = WeekLog.get_current_week()
+        return context
+
+
 class OpenCategoriesPartialView(LoginRequiredMixin, TemplateView):
     """HTMX partial: open helpdesk tickets by category (donut)."""
 

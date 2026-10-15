@@ -745,6 +745,18 @@ html[data-density="dashboard"] .js-dashboard-extras {
   display: none !important;
 }
 
+/* Kontrolpanel liggetid card — label, bar, count per age group. */
+.open-age { display: flex; flex-direction: column; gap: 6px; }
+.open-age-row {
+  display: grid; align-items: center; gap: 14px;
+  grid-template-columns: 130px minmax(0, 1fr) 76px;
+  font-size: 13px; color: var(--ink-2);
+}
+.open-age-track { display: block; height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.open-age-track > span { display: block; height: 100%; border-radius: 5px; }
+.open-age-count { text-align: right; color: var(--ink-3); white-space: nowrap; }
+.open-age-count strong { color: var(--ink-1); font-weight: 600; }
+
 /* Kontrolpanel incidents card — rows older than 30 days stay hidden until
    "Vis ældre" sets .incidents-expanded on the polling wrapper. */
 .incident-older { display: none !important; }

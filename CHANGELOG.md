@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.9 — 2026-10-15
+
+### Added
+- **Åbne sager fordelt på liggetid på Kontrolpanelet.** Et kort med de samme søjler som i ugerapporten, én pr. aldersgruppe fra *Under 1 uge* til *Over 12 måneder*, med antal og andel og en linje om, hvor mange sager der har ligget i mere end en måned.
+  - Kortet står i fuld bredde under de to donut-diagrammer i rækken *Åbne sager lige nu*. Det opdateres hvert minut og skjules i Kompakt-visning ligesom de andre grafer.
+  - Tallene er de samme som den lille søjle på nøgletallet *Åbne sager*: ugens seneste ServiceDesk-synkronisering.
+
 ## 0.20.8 — 2026-10-15
 
 ### Changed
