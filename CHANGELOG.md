@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.0 — 2026-10-15
+
+### Added
+- **Statistik-side.** Ny side under *Statistik* i menuen med et års tal (de seneste 365 dage):
+  - **Helpdesk:** antal oprettede sager, hvor mange forskellige kolleger der har skrevet, gennemsnit pr. måned, median løsningstid og åbne sager lige nu.
+  - **Hvornår der skrives:** nye sager pr. ugedag i gennemsnit og et varmekort over ugedag × klokkeslæt.
+  - **Løsningstid:** median, gennemsnit, hvornår 9 ud af 10 er løst, andel løst inden for et døgn og en fordeling fra "under 1 time" til "over 4 uger". Det er kalendertid, så nætter og weekender tæller med.
+  - **Pr. uge:** åbne sager ved ugens udgang og oprettet mod løst.
+  - **Fordelinger:** sager pr. kategori, løste sager pr. tekniker (i procent) og åbne sager efter alder.
+  - **Chronicle:** prioriterede opgaver (oprettet, afsluttet, aktive, levetid, pr. måned) og nedbrud/hændelser (antal, pr. måned, alvorlighed og type).
+- **Spejl af helpdesk-sagerne.** Statistikken bygger på en lokal kopi af sagerne i ServiceDesk (tabellen `HelpdeskTicket`), som synk-containeren holder opdateret: en fuld synkronisering ved opstart og én gang i døgnet, og derimellem kun de ændrede sager i hver runde. Der gemmes kun det, statistikken bruger. Anmoderen gemmes som ServiceDesk-id, ikke som navn. `python manage.py sync_helpdesk_tickets [--full]` kører synkroniseringen manuelt. Sagerne kan ses (ikke redigeres) under Admin → Helpdesk-sager.
+
 ## 0.19.1 — 2026-10-14
 
 ### Added

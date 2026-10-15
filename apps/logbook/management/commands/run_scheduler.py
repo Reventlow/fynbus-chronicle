@@ -6,17 +6,25 @@ Usage:
 
 Runs a simple loop that syncs ticket counts every SERVICEDESK_SYNC_INTERVAL
 seconds (default: 300). The dashboard sync button works independently.
+
+Each cycle also updates the ticket mirror behind the statistics page:
+a full sync on start-up and then once every FULL_MIRROR_SYNC_EVERY, an
+incremental one (changed tickets only) in between.
 """
 
 import logging
 import time
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from apps.logbook.tasks import sync_current_week_tickets
+from apps.logbook.tasks import sync_current_week_tickets, sync_ticket_mirror
 
 logger = logging.getLogger(__name__)
+
+# How often the statistics mirror is rebuilt from scratch.
+FULL_MIRROR_SYNC_EVERY = timedelta(hours=24)
 
 
 class Command(BaseCommand):
@@ -44,6 +52,10 @@ class Command(BaseCommand):
             )
         )
 
+        # Monotonic time of the last successful full mirror sync; None
+        # forces one on the first cycle.
+        last_full_mirror: float | None = None
+
         try:
             while True:
                 try:
@@ -53,6 +65,21 @@ class Command(BaseCommand):
                     )
                 except Exception:
                     logger.exception("Error during sync")
+
+                # The mirror is separate, so a failure there never holds up
+                # the week counts above (and vice versa).
+                try:
+                    full = (
+                        last_full_mirror is None
+                        or time.monotonic() - last_full_mirror
+                        >= FULL_MIRROR_SYNC_EVERY.total_seconds()
+                    )
+                    synced = sync_ticket_mirror(full=full)
+                    if full and synced is not None:
+                        last_full_mirror = time.monotonic()
+                except Exception:
+                    logger.exception("Error during ticket mirror sync")
+
                 time.sleep(interval)
         except KeyboardInterrupt:
             self.stdout.write(self.style.WARNING("\nScheduler stopped."))

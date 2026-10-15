@@ -19,6 +19,7 @@
       {% url 'feedback:board' as url_feedback %}
       {% url 'dashboard:docs-index' as url_docs %}
       {% url 'reports:list' as url_reports %}
+      {% url 'dashboard:statistics' as url_statistics %}
 
       <a href="{{ url_dashboard }}"
          class="nav-link {% if request.resolver_match.url_name == 'index' and request.resolver_match.app_name == 'dashboard' %}nav-link-active{% endif %}">
@@ -62,6 +63,13 @@
           <path d="M7 15l4-5 4 3 5-7"/>
         </svg>
         Rapporter
+      </a>
+      <a href="{{ url_statistics }}"
+         class="nav-link {% if request.resolver_match.url_name == 'statistics' %}nav-link-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+        Statistik
       </a>
       <a href="{{ url_docs }}"
          class="nav-link {% if 'docs' in request.resolver_match.url_name %}nav-link-active{% endif %}">
@@ -285,6 +293,7 @@
       <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
       <a href="{% url 'feedback:board' %}" class="nav-link">Forslag</a>
       <a href="{% url 'reports:list' %}" class="nav-link">Rapporter</a>
+      <a href="{% url 'dashboard:statistics' %}" class="nav-link">Statistik</a>
       <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
     </div>
   </div>

@@ -15,6 +15,7 @@ from .exports.markdown import generate_markdown
 from .exports.pdf import generate_pdf
 from .models import (
     Absence,
+    HelpdeskTicket,
     Incident,
     PriorityItem,
     PriorityItemAppearance,
@@ -321,3 +322,23 @@ class IncidentAdmin(admin.ModelAdmin):
     search_fields = ["title", "description", "resolution"]
     date_hierarchy = "occurred_at"
     list_editable = ["resolved"]
+
+
+@admin.register(HelpdeskTicket)
+class HelpdeskTicketAdmin(admin.ModelAdmin):
+    """Read-only view of the ServiceDesk mirror behind the statistics page.
+
+    The rows are owned by the sync (``services/ticket_mirror.py``); edits
+    here would be overwritten on the next sync, so none are allowed.
+    """
+
+    list_display = ["sdp_id", "created_at", "closed_at", "status", "category", "technician"]
+    list_filter = ["is_open", "is_cancelled", "status", "technician"]
+    search_fields = ["sdp_id"]
+    date_hierarchy = "created_at"
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
+        return False

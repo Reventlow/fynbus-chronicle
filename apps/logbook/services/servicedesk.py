@@ -213,8 +213,13 @@ class ServiceDeskClient:
             )
         return self._fetch_paged(criteria, ["created_time", "status"])
 
-    def _fetch_paged(self, criteria: list[dict], fields: list[str]) -> list[dict] | None:
+    def _fetch_paged(
+        self, criteria: list[dict], fields: list[str], max_pages: int | None = None
+    ) -> list[dict] | None:
         """Page through /requests for the given search criteria.
+
+        ``max_pages`` overrides ``MAX_PAGES`` for listings known to be
+        larger, such as a year of tickets for the statistics mirror.
 
         Returns None if any page fails — a partial list would understate
         whatever is being counted.
@@ -226,7 +231,8 @@ class ServiceDeskClient:
         rows: list[dict] = []
         start_index = 1
 
-        for _ in range(self.MAX_PAGES):
+        page_cap = max_pages or self.MAX_PAGES
+        for _ in range(page_cap):
             input_data = {
                 "list_info": {
                     "row_count": self.PAGE_SIZE,
@@ -259,7 +265,7 @@ class ServiceDeskClient:
                 return rows
             start_index += self.PAGE_SIZE
 
-        logger.warning("ServiceDesk query hit the %d page cap", self.MAX_PAGES)
+        logger.warning("ServiceDesk query hit the %d page cap", page_cap)
         return rows
 
     @staticmethod

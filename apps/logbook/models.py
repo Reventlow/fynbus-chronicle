@@ -900,3 +900,54 @@ class Incident(models.Model):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.get_severity_display()})"
+
+
+class HelpdeskTicket(models.Model):
+    """
+    Local mirror of one ServiceDesk Plus request, for the statistics page.
+
+    The WeekLog only keeps weekly totals; questions such as "who writes
+    to us", "when in the day" or "how fast is it solved" need the
+    individual tickets. The scheduler keeps this table in step with
+    ServiceDesk (see ``services/ticket_mirror.py``): every ticket created
+    or closed within the statistics window, plus every ticket open now.
+
+    Only what the statistics need is stored. The requester is kept as the
+    ServiceDesk id — enough to count distinct colleagues — never by name.
+    """
+
+    sdp_id = models.PositiveIntegerField(verbose_name="ServiceDesk-id", unique=True)
+    created_at = models.DateTimeField(verbose_name="Oprettet", db_index=True)
+    closed_at = models.DateTimeField(
+        verbose_name="Lukket",
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Udført, lukket eller annulleret. Tom mens sagen er åben.",
+    )
+    status = models.CharField(verbose_name="Status", max_length=60)
+    is_open = models.BooleanField(verbose_name="Åben", default=True)
+    is_cancelled = models.BooleanField(verbose_name="Annulleret", default=False)
+    requester_ref = models.CharField(
+        verbose_name="Anmoder (id)",
+        max_length=40,
+        blank=True,
+        help_text="ServiceDesk-id på anmoderen; bruges kun til at tælle forskellige kolleger.",
+    )
+    department = models.CharField(verbose_name="Afdeling", max_length=120, blank=True)
+    category = models.CharField(verbose_name="Kategori", max_length=120, blank=True)
+    technician = models.CharField(verbose_name="Tekniker", max_length=120, blank=True)
+    sdp_updated_at = models.DateTimeField(
+        verbose_name="Sidst ændret i ServiceDesk",
+        null=True,
+        blank=True,
+    )
+    synced_at = models.DateTimeField(verbose_name="Synkroniseret", auto_now=True)
+
+    class Meta:
+        verbose_name = "Helpdesk-sag"
+        verbose_name_plural = "Helpdesk-sager"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"#{self.sdp_id} ({self.status})"

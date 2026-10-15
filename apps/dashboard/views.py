@@ -6,6 +6,7 @@ dynamic content loading, and documentation pages.
 """
 
 import re
+from datetime import timedelta
 from pathlib import Path
 
 import markdown
@@ -62,6 +63,42 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             weeklog.incidents.count() if weeklog else 0
         )
         context["latest_change"] = _read_latest_changelog_entry()
+        return context
+
+
+class StatisticsView(LoginRequiredMixin, TemplateView):
+    """
+    One year of helpdesk and Chronicle statistics on a single page.
+
+    The numbers are computed in ``statistics.py``; the chart series are
+    handed to the template's script through ``json_script``.
+    """
+
+    template_name = "dashboard/statistics.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        """Add the helpdesk and Chronicle statistics to the context."""
+        from .statistics import chronicle_statistics, helpdesk_statistics
+
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+        helpdesk = helpdesk_statistics(now)
+        chronicle = chronicle_statistics(now)
+        context.update(
+            helpdesk=helpdesk,
+            chronicle=chronicle,
+            period_start=now - timedelta(days=365),
+            period_end=now,
+            chart_data={
+                "weekdays": helpdesk["weekday_avg"],
+                "weekly": helpdesk["weekly"],
+                "resolution": helpdesk["resolution"]["buckets"],
+                "categories": helpdesk["categories"],
+                "technicians": helpdesk["technicians"],
+                "priorities": chronicle["priorities"],
+                "incidents": chronicle["incidents"],
+            },
+        )
         return context
 
 

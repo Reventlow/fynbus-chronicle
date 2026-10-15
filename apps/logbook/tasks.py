@@ -46,3 +46,19 @@ def sync_current_week_tickets() -> None:
         stats["open"],
         stats.get("open_by_age") or "n/a",
     )
+
+
+def sync_ticket_mirror(*, full: bool = False) -> int | None:
+    """
+    Update the HelpdeskTicket mirror behind the statistics page.
+
+    The scheduler asks for a full sync once a day (it also prunes deleted
+    tickets and ones that have aged out) and an incremental one, tickets
+    changed since the last sync, on every other cycle.
+
+    Returns the number of tickets synced, or None if the sync failed or
+    is disabled.
+    """
+    from apps.logbook.services import ticket_mirror
+
+    return ticket_mirror.sync_full() if full else ticket_mirror.sync_incremental()

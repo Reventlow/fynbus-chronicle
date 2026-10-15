@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistik — FynBus Chronicle{% endblock %}
+
+{% block extra_js_head %}
+<script src="{% static 'js/chart.min.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+{% comment %}
+  Statistik — one year of helpdesk (ServiceDesk mirror) and Chronicle data.
+  Numbers come from apps/dashboard/statistics.py; the chart series arrive
+  through json_script and are drawn by the script at the bottom.
+{% endcomment %}
+<div class="stats-page" style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# === Header ============================================================ #}
+  <div>
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>Seneste 12 måneder · {{ period_start|date:"j. N Y" }} – {{ period_end|date:"j. N Y" }}</span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 44px; line-height: 1.05;">
+      Statistik <span class="display-italic" style="color: var(--ink-3);">over året.</span>
+    </h1>
+    <div style="margin-top: 10px; color: var(--ink-3); font-size: 13.5px;">
+      Helpdesk-tal fra ManageEngine ServiceDesk
+      {% if helpdesk.last_sync %}· synkroniseret {{ helpdesk.last_sync|date:"j. N H:i" }}{% endif %}
+      · Chronicle-tal fra prioriterede opgaver og hændelser.
+    </div>
+  </div>
+
+  {% if not helpdesk.has_data %}
+    <div class="card" style="color: var(--ink-3);">
+      Der er endnu ingen helpdesk-sager i Chronicle. Synkroniseringen henter dem automatisk
+      (første gang tager det et halvt minut), eller kør
+      <code>python manage.py sync_helpdesk_tickets --full</code>.
+    </div>
+  {% endif %}
+
+  {# === KPI strip ========================================================= #}
+  <section class="stats-kpis">
+    <div class="card stats-kpi">
+      <div class="label-eyebrow">Sager oprettet</div>
+      <div class="stats-kpi-value num">{{ helpdesk.total_created }}</div>
+      <div class="stats-kpi-note">heraf {{ helpdesk.cancelled }} annulleret</div>
+    </div>
+    <div class="card stats-kpi">
+      <div class="label-eyebrow">Kolleger der skrev</div>
+      <div class="stats-kpi-value num">{{ helpdesk.requesters }}</div>
+      <div class="stats-kpi-note">{{ helpdesk.per_requester|floatformat:1 }} sager pr. kollega</div>
+    </div>
+    <div class="card stats-kpi">
+      <div class="label-eyebrow">Gns. pr. måned</div>
+      <div class="stats-kpi-value num">{{ helpdesk.per_month|floatformat:0 }}</div>
+      <div class="stats-kpi-note">nye sager</div>
+    </div>
+    <div class="card stats-kpi">
+      <div class="label-eyebrow">Median løsningstid</div>
+      <div class="stats-kpi-value num">{{ helpdesk.resolution.median }}</div>
+      <div class="stats-kpi-note">{{ helpdesk.resolution.within_day }}% løst inden for et døgn</div>
+    </div>
+    <div class="card stats-kpi">
+      <div class="label-eyebrow">Åbne lige nu</div>
+      <div class="stats-kpi-value num">{{ helpdesk.open_now }}</div>
+      <div class="stats-kpi-note">{{ helpdesk.total_solved }} løst i perioden</div>
+    </div>
+  </section>
+
+  {# === When do people write ============================================== #}
+  <section class="stats-grid stats-grid-wide">
+    <div class="card stats-card">
+      <div class="label-eyebrow">Ugedage</div>
+      <h2 class="stats-title">Nye sager pr. ugedag, i gennemsnit</h2>
+      <p class="stats-sub">
+        {% if helpdesk.busiest_day %}Travleste dag er <strong>{{ helpdesk.busiest_day|lower }}</strong>.{% endif %}
+        Tallet er sager på en gennemsnitlig dag af den slags.
+      </p>
+      <div class="stats-chart"><canvas id="chart-weekdays"></canvas></div>
+    </div>
+
+    <div class="card stats-card">
+      <div class="label-eyebrow">Tidspunkt</div>
+      <h2 class="stats-title">Hvornår på dagen skriver kollegerne?</h2>
+      <p class="stats-sub">
+        {% if helpdesk.busiest_hour is not None %}Flest sager kommer mellem kl. <strong>{{ helpdesk.busiest_hour|stringformat:"02d" }}–{{ helpdesk.busiest_hour|add:1|stringformat:"02d" }}</strong>.{% endif %}
+        Gennemsnitligt antal nye sager pr. time på hver ugedag.
+      </p>
+      <div class="stats-heatmap-wrap">
+        <table class="stats-heatmap">
+          <thead>
+            <tr>
+              <th></th>
+              {% for row in helpdesk.heatmap|slice:":1" %}{% for cell in row.cells %}
+                <th scope="col">{% if forloop.counter0|divisibleby:3 %}{{ forloop.counter0|stringformat:"02d" }}{% endif %}</th>
+              {% endfor %}{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in helpdesk.heatmap %}
+              <tr>
+                <th scope="row">{{ row.day }}</th>
+                {% for cell in row.cells %}
+                  <td data-value="{{ cell|stringformat:'f' }}"
+                      title="{{ row.day }} kl. {{ forloop.counter0|stringformat:'02d' }}: {{ cell|floatformat:2 }} sager i gns."></td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="stats-heat-legend">
+        <span>Få</span><span class="stats-heat-scale"></span><span>Mange ({{ helpdesk.heat_max|floatformat:1 }} pr. time)</span>
+      </div>
+    </div>
+  </section>
+
+  {# === Resolution time =================================================== #}
+  <section class="card stats-card">
+    <div class="label-eyebrow">Løsningstid</div>
+    <h2 class="stats-title">Hvor hurtigt bliver sagerne løst?</h2>
+    <p class="stats-sub">
+      Tid fra oprettelse til lukning for {{ helpdesk.resolution.count }} løste sager oprettet i perioden.
+      Kalendertid — nætter og weekender tæller med. Annullerede sager er ikke med.
+    </p>
+    <div class="stats-figures">
+      <div><span class="num">{{ helpdesk.resolution.median }}</span><small>median</small></div>
+      <div><span class="num">{{ helpdesk.resolution.mean }}</span><small>gennemsnit</small></div>
+      <div><span class="num">{{ helpdesk.resolution.p90 }}</span><small>9 ud af 10 er løst inden</small></div>
+      <div><span class="num">{{ helpdesk.resolution.within_day }}%</span><small>løst inden for et døgn</small></div>
+    </div>
+    <div class="stats-chart"><canvas id="chart-resolution"></canvas></div>
+  </section>
+
+  {# === Weekly flow ======================================================= #}
+  <section class="stats-grid">
+    <div class="card stats-card">
+      <div class="label-eyebrow">Åbne sager</div>
+      <h2 class="stats-title">Åbne sager ved ugens udgang</h2>
+      <p class="stats-sub">Genberegnet ud fra hver sags oprettelse og lukning; slettede sager kan ikke tælles med.</p>
+      <div class="stats-chart"><canvas id="chart-open"></canvas></div>
+    </div>
+    <div class="card stats-card">
+      <div class="label-eyebrow">Flow</div>
+      <h2 class="stats-title">Oprettet vs. løst pr. uge</h2>
+      <p class="stats-sub">Oprettet i alt {{ helpdesk.total_created }}, løst i alt {{ helpdesk.total_solved }}. Annullerede sager tæller ikke som løst.</p>
+      <div class="stats-chart"><canvas id="chart-flow"></canvas></div>
+      <div class="stats-legend">
+        <span><i class="chart-swatch chart-swatch-info"></i> Oprettet</span>
+        <span><i class="chart-swatch chart-swatch-good"></i> Løst</span>
+      </div>
+    </div>
+  </section>
+
+  {# === Who and what ====================================================== #}
+  <section class="stats-grid stats-grid-3">
+    <div class="card stats-card">
+      <div class="label-eyebrow">Kategorier</div>
+      <h2 class="stats-title">Sager fordelt på kategori</h2>
+      {% if helpdesk.categories %}
+        <div class="stats-chart stats-chart-round"><canvas id="chart-categories"></canvas></div>
+        <ul class="stats-list">
+          {% for c in helpdesk.categories %}
+            <li><span class="stats-dot" data-series="{{ forloop.counter0 }}"></span>{{ c.label }}<span class="num">{{ c.share|floatformat:0 }}%</span></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if helpdesk.uncategorised %}
+        <p class="stats-note">
+          {{ helpdesk.uncategorised }} af {{ helpdesk.total_created }} sager ({{ helpdesk.uncategorised_share }}%) har ingen kategori i ServiceDesk
+          {% if helpdesk.categories %}— fordelingen ovenfor er kun for de kategoriserede{% endif %}.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="card stats-card">
+      <div class="label-eyebrow">Teknikere</div>
+      <h2 class="stats-title">Løste sager pr. tekniker</h2>
+      <ul class="stats-bars">
+        {% for t in helpdesk.technicians %}
+          <li>
+            <div class="stats-bar-label"><span>{{ t.label }}</span><span class="num">{{ t.share|floatformat:0 }}% · {{ t.count }}</span></div>
+            <div class="stats-bar"><div style="width: {{ t.share|floatformat:'1u' }}%;"></div></div>
+          </li>
+        {% empty %}
+          <li class="stats-note">Ingen løste sager i perioden.</li>
+        {% endfor %}
+      </ul>
+      <p class="stats-note">Den tekniker, sagen stod på, da den blev lukket. Tidligere medarbejdere er anonymiseret af ServiceDesk.</p>
+    </div>
+
+    <div class="card stats-card">
+      <div class="label-eyebrow">Liggetid</div>
+      <h2 class="stats-title">Åbne sager efter alder</h2>
+      <ul class="stats-bars">
+        {% for b in helpdesk.open_by_age %}
+          <li>
+            <div class="stats-bar-label"><span>{{ b.label }}</span><span class="num">{{ b.count }}</span></div>
+            <div class="stats-bar"><div style="width: {{ b.share|floatformat:'1u' }}%; background: {{ b.color }};"></div></div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="stats-note">{{ helpdesk.open_now }} åbne sager i alt, efter dage siden oprettelse.</p>
+    </div>
+  </section>
+
+  {# === Chronicle ========================================================= #}
+  <div style="margin-top: 12px;">
+    <div class="label-eyebrow">Chronicle</div>
+    <h2 class="display" style="margin: 6px 0 0; font-size: 30px;">Prioriterede opgaver og nedbrud</h2>
+  </div>
+
+  <section class="stats-grid">
+    {% with p=chronicle.priorities %}
+    <div class="card stats-card">
+      <div class="label-eyebrow">Prioriterede opgaver</div>
+      <div class="stats-figures">
+        <div><span class="num">{{ p.created }}</span><small>oprettet</small></div>
+        <div><span class="num">{{ p.completed }}</span><small>afsluttet{% if p.auto_closed %} ({{ p.auto_closed }} auto-lukket){% endif %}</small></div>
+        <div><span class="num">{{ p.active }}</span><small>aktive nu</small></div>
+        <div><span class="num">{% if p.median_days is not None %}{{ p.median_days }} d{% else %}—{% endif %}</span><small>median levetid</small></div>
+      </div>
+      <div class="stats-chart"><canvas id="chart-priorities"></canvas></div>
+      <div class="stats-legend">
+        <span><i class="chart-swatch chart-swatch-info"></i> Oprettet</span>
+        <span><i class="chart-swatch chart-swatch-good"></i> Afsluttet</span>
+      </div>
+      <div class="stats-pills">
+        {% for s in p.by_status %}<span class="pill">{{ s.label }}: {{ s.count }}</span>{% endfor %}
+        {% for s in p.by_priority %}<span class="pill">Prioritet {{ s.label|lower }}: {{ s.share|floatformat:0 }}%</span>{% endfor %}
+      </div>
+    </div>
+    {% endwith %}
+
+    {% with i=chronicle.incidents %}
+    <div class="card stats-card">
+      <div class="label-eyebrow">Nedbrud og hændelser</div>
+      <div class="stats-figures">
+        <div><span class="num">{{ i.total }}</span><small>hændelser</small></div>
+        <div><span class="num">{{ i.per_month|floatformat:1 }}</span><small>pr. måned</small></div>
+        <div><span class="num">{{ i.critical }}</span><small>kritiske</small></div>
+        <div><span class="num">{{ i.unresolved }}</span><small>ikke løst</small></div>
+      </div>
+      <div class="stats-chart"><canvas id="chart-incidents"></canvas></div>
+      <div class="stats-pills">
+        {% for s in i.by_severity %}<span class="pill">{{ s.label }}: {{ s.count }}</span>{% endfor %}
+        {% for t in i.by_type %}<span class="pill">{{ t.label }}: {{ t.share|floatformat:0 }}%</span>{% endfor %}
+      </div>
+    </div>
+    {% endwith %}
+  </section>
+</div>
+
+{{ chart_data|json_script:"stats-data" }}
+
+<script>
+(function () {
+  "use strict";
+
+  // Fill the heatmap cells: opacity of the accent scaled to the busiest hour.
+  var max = {{ helpdesk.heat_max|stringformat:"f" }} || 1;
+  document.querySelectorAll(".stats-heatmap td").forEach(function (td) {
+    var v = parseFloat(td.dataset.value) || 0;
+    td.style.setProperty("--heat", (v / max).toFixed(3));
+  });
+
+  function draw() {
+    if (!window.Chart) return setTimeout(draw, 50);
+    var data = JSON.parse(document.getElementById("stats-data").textContent);
+    var cs = getComputedStyle(document.documentElement);
+    var css = function (name, fallback) { return cs.getPropertyValue(name).trim() || fallback; };
+    var dark = document.documentElement.classList.contains("dark");
+
+    var C = {
+      info: css("--chart-info", "rgb(40,110,210)"),
+      good: css("--chart-good", "rgb(70,142,102)"),
+      accent: css("--chart-accent", "rgb(180,132,56)"),
+      ink: dark ? "rgb(150,152,158)" : "rgb(110,115,124)",
+      grid: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+    };
+    // Categorical palette for the doughnut; matches the .stats-dot swatches.
+    var SERIES = [C.info, C.good, C.accent, "#A65D57", "#7D8471", "#8B7355", "#9AA083", "#C08A4A"];
+    document.querySelectorAll(".stats-dot").forEach(function (dot) {
+      dot.style.background = SERIES[parseInt(dot.dataset.series, 10) % SERIES.length];
+    });
+
+    // Translucent version of a colour for bar fills.
+    function soft(color, alpha) {
+      var c = document.createElement("canvas").getContext("2d");
+      c.fillStyle = color;
+      var hex = c.fillStyle.match(/^#([0-9a-f]{6})$/i);
+      if (!hex) return color;
+      var n = parseInt(hex[1], 16);
+      return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + alpha + ")";
+    }
+
+    var font = { family: "JetBrains Mono", size: 10 };
+    var tooltip = {
+      backgroundColor: dark ? "rgba(44,48,56,0.98)" : "rgba(255,255,255,0.98)",
+      titleColor: dark ? "#f0f0f0" : "#191e26",
+      bodyColor: dark ? "#cdd0d6" : "#3c424c",
+      borderColor: dark ? "#4a505a" : "#dadce2",
+      borderWidth: 1, padding: 10, cornerRadius: 8,
+      titleFont: { family: "JetBrains Mono", size: 11 },
+      bodyFont: { family: "Inter Tight", size: 12 },
+    };
+    function axes(opts) {
+      opts = opts || {};
+      return {
+        x: { grid: { display: false }, ticks: { color: C.ink, font: font, maxRotation: 0, autoSkip: true, maxTicksLimit: opts.xTicks || 13 }, stacked: !!opts.stacked },
+        y: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.ink, font: font, precision: 0, callback: opts.yFormat }, stacked: !!opts.stacked },
+      };
+    }
+    function chart(id, config) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      config.options = Object.assign({
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false }, tooltip: tooltip },
+      }, config.options || {});
+      new Chart(el.getContext("2d"), config);
+    }
+
+    // Weekdays — average new tickets on such a day.
+    chart("chart-weekdays", {
+      type: "bar",
+      data: {
+        labels: data.weekdays.map(function (d) { return d.short; }),
+        datasets: [{ label: "Sager i gns.", data: data.weekdays.map(function (d) { return d.avg; }),
+          backgroundColor: soft(C.info, 0.75), borderRadius: 6, maxBarThickness: 44 }],
+      },
+      options: { scales: axes({ yFormat: function (v) { return v; } }) },
+    });
+
+    // Resolution-time distribution, in percent of solved tickets.
+    chart("chart-resolution", {
+      type: "bar",
+      data: {
+        labels: data.resolution.map(function (b) { return b.label; }),
+        datasets: [{ label: "Andel af løste sager (%)", data: data.resolution.map(function (b) { return b.share; }),
+          backgroundColor: soft(C.good, 0.75), borderRadius: 6, maxBarThickness: 64 }],
+      },
+      options: { scales: axes({ yFormat: function (v) { return v + "%"; } }) },
+    });
+
+    // Open tickets at each week's end.
+    chart("chart-open", {
+      type: "line",
+      data: {
+        labels: data.weekly.map(function (w) { return w.label; }),
+        datasets: [{ label: "Åbne sager", data: data.weekly.map(function (w) { return w.open; }),
+          borderColor: C.accent, backgroundColor: soft(C.accent, 0.15), fill: true,
+          tension: 0.3, borderWidth: 2.25, pointRadius: 0, pointHoverRadius: 4 }],
+      },
+      options: { scales: axes() },
+    });
+
+    // Created vs solved per week.
+    chart("chart-flow", {
+      type: "bar",
+      data: {
+        labels: data.weekly.map(function (w) { return w.label; }),
+        datasets: [
+          { label: "Oprettet", data: data.weekly.map(function (w) { return w.created; }), backgroundColor: soft(C.info, 0.8), borderRadius: 3 },
+          { label: "Løst", data: data.weekly.map(function (w) { return w.solved; }), backgroundColor: soft(C.good, 0.8), borderRadius: 3 },
+        ],
+      },
+      options: { scales: axes() },
+    });
+
+    // Categories (only the categorised tickets).
+    if (data.categories.length) {
+      chart("chart-categories", {
+        type: "doughnut",
+        data: {
+          labels: data.categories.map(function (c) { return c.label; }),
+          datasets: [{ data: data.categories.map(function (c) { return c.count; }),
+            backgroundColor: data.categories.map(function (_, i) { return SERIES[i % SERIES.length]; }),
+            borderWidth: 0 }],
+        },
+        options: { cutout: "62%", interaction: { mode: "nearest", intersect: true } },
+      });
+    }
+
+    // Priority tasks created vs completed per month.
+    chart("chart-priorities", {
+      type: "bar",
+      data: {
+        labels: data.priorities.months,
+        datasets: [
+          { label: "Oprettet", data: data.priorities.created_by_month, backgroundColor: soft(C.info, 0.8), borderRadius: 3 },
+          { label: "Afsluttet", data: data.priorities.completed_by_month, backgroundColor: soft(C.good, 0.8), borderRadius: 3 },
+        ],
+      },
+      options: { scales: axes() },
+    });
+
+    // Incidents per month.
+    chart("chart-incidents", {
+      type: "bar",
+      data: {
+        labels: data.incidents.months,
+        datasets: [{ label: "Hændelser", data: data.incidents.by_month, backgroundColor: soft("#A65D57", 0.8), borderRadius: 3, maxBarThickness: 36 }],
+      },
+      options: { scales: axes() },
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", draw);
+  else draw();
+})();
+</script>
+{% endblock %}
