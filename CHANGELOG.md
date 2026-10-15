@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.3 — 2026-10-15
+
+### Added
+- **Eksport af Statistik.** Statistik-siden har nu samme *Eksportér*-menu som ugerapporten (kun for redaktører):
+  - **PDF** og **HTML**: hele siden som rapport med ugerapportens layout; graferne tegnes på serveren og ligger i filen, så den virker uden login.
+  - **Markdown**: alle tal som tabeller.
+  - **JSON**: et maskinlæsbart dokument til andre værktøjer, f.eks. Claude Motion. Det har faste engelske nøgler, eksplicitte enheder (timer, procent, antal), periode og kilder, og definitionerne bag tallene. Det indeholder alle rå tal, også varmekortet som 7 × 24 tal og de 52 uger. Formatet er versioneret (`schema_version`). *Vis JSON i browseren* åbner filen direkte i stedet for at downloade den.
+
 ## 0.20.2 — 2026-10-15
 
 ### Changed

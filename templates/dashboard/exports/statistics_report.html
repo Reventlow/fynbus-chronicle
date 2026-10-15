@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+{% comment %}
+  Statistik report — shared by the PDF and the HTML export
+  (apps/dashboard/exports.py). Styled by static/css/pdf_styles.css, like the
+  week report; charts arrive as PNG data URIs in `charts`.
+{% endcomment %}
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>FynBus IT Statistik — {{ now|date:"j. F Y" }}</title>
+  <style>
+    .chart { width: 100%; margin: 4px 0 10px; }
+    .muted { color: #6B635B; font-size: 9pt; }
+    .bar-cell { width: 45%; }
+    .bar-track { background: #F0EDE8; height: 8px; border-radius: 4px; }
+    .bar-fill { height: 8px; border-radius: 4px; background: #286ED2; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  {% with h=helpdesk c=chronicle %}
+  <div class="report-header">
+    <h1>FynBus IT Statistik</h1>
+    <div class="report-meta" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:14px 16px;">
+      <p><strong>Periode:</strong> {{ period_start|date:"j. F Y" }} – {{ now|date:"j. F Y" }} (seneste 12 måneder)</p>
+      <p><strong>Genereret:</strong> {{ now|date:"j. F Y H:i" }}</p>
+      <p><strong>Kilder:</strong> ManageEngine ServiceDesk{% if h.last_sync %} (synkroniseret {{ h.last_sync|date:"j. F H:i" }}){% endif %} og Chronicle</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Helpdesk</h2>
+    <table class="stats-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value">{{ h.total_created }}</div><div class="stat-label">Sager oprettet</div>
+        </td>
+        <td width="1%" style="border:none;"></td>
+        <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value">{{ h.requesters }}</div><div class="stat-label">Kolleger der skrev</div>
+        </td>
+        <td width="1%" style="border:none;"></td>
+        <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value">{{ h.per_month|floatformat:0 }}</div><div class="stat-label">Gns. pr. måned</div>
+        </td>
+        <td width="1%" style="border:none;"></td>
+        <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value">{{ h.resolution.median }}</div><div class="stat-label">Median løsningstid</div>
+        </td>
+        <td width="1%" style="border:none;"></td>
+        <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
+          <div class="stat-value">{{ h.open_now }}</div><div class="stat-label">Åbne lige nu</div>
+        </td>
+      </tr>
+    </table>
+    <p class="muted">{{ h.total_solved }} sager løst og {{ h.cancelled }} annulleret i perioden · {{ h.per_requester|floatformat:1 }} sager pr. kollega.</p>
+  </div>
+
+  <div class="section no-break">
+    <h3>Nye sager pr. ugedag (gennemsnit)</h3>
+    {% if h.busiest_day %}<p class="muted">Travleste dag er {{ h.busiest_day|lower }}. Tallet er sager på en gennemsnitlig dag af den slags.</p>{% endif %}
+    <img class="chart" src="{{ charts.weekdays }}" alt="Nye sager pr. ugedag">
+  </div>
+
+  <div class="section no-break">
+    <h3>Hvornår på dagen skriver kollegerne?</h3>
+    {% if h.busiest_hour is not None %}<p class="muted">Flest sager kommer mellem kl. {{ h.busiest_hour|stringformat:"02d" }}–{{ h.busiest_hour|add:1|stringformat:"02d" }}. Tallene er nye sager i perioden pr. ugedag og time.</p>{% endif %}
+    <img class="chart" src="{{ charts.heatmap }}" alt="Nye sager pr. ugedag og time">
+  </div>
+
+  <div class="section no-break">
+    <h3>Løsningstid</h3>
+    <p class="muted">Tid fra oprettelse til lukning for {{ h.resolution.count }} løste sager oprettet i perioden. Kalendertid — nætter og weekender tæller med. Annullerede sager er ikke med.</p>
+    <table width="100%">
+      <tr><th>Mål</th><th class="num">Værdi</th><th>Betydning</th></tr>
+      <tr><td>Median</td><td class="num">{{ h.resolution.median }}</td><td>Den typiske sag: halvdelen er løst hurtigere, halvdelen langsommere.</td></tr>
+      <tr><td>Gennemsnit</td><td class="num">{{ h.resolution.mean }}</td><td>Trækkes op af de få sager, der ligger åbne i uger eller måneder.</td></tr>
+      <tr><td>9 ud af 10 løst inden</td><td class="num">{{ h.resolution.p90 }}</td><td>De sidste 10 % tager længere.</td></tr>
+      <tr><td>Løst inden for et døgn</td><td class="num">{{ h.resolution.within_day }}%</td><td>Lukket under 24 timer efter oprettelse.</td></tr>
+    </table>
+    <img class="chart" src="{{ charts.resolution }}" alt="Fordeling af løsningstid">
+  </div>
+
+  <div class="section no-break">
+    <h3>Åbne sager ved ugens udgang</h3>
+    <p class="muted">Genberegnet ud fra hver sags oprettelse og lukning; slettede sager kan ikke tælles med.</p>
+    <img class="chart" src="{{ charts.open }}" alt="Åbne sager pr. uge">
+  </div>
+
+  <div class="section no-break">
+    <h3>Oprettet vs. løst pr. uge</h3>
+    <p class="muted">Annullerede sager tæller ikke som løst.</p>
+    <img class="chart" src="{{ charts.flow }}" alt="Oprettet og løst pr. uge">
+  </div>
+
+  <div class="section no-break">
+    <h3>Sager fordelt på kategori</h3>
+    {% if h.categories %}
+    <table width="100%">
+      <tr><th>Kategori</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      {% for x in h.categories %}
+      <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
+          <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if h.uncategorised %}<p class="muted">{{ h.uncategorised }} af {{ h.total_created }} sager ({{ h.uncategorised_share }}%) har ingen kategori i ServiceDesk{% if h.categories %} — andelene ovenfor er af de kategoriserede{% endif %}.</p>{% endif %}
+  </div>
+
+  <div class="section no-break">
+    <h3>Løste sager pr. tekniker</h3>
+    <table width="100%">
+      <tr><th>Tekniker</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      {% for x in h.technicians %}
+      <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
+          <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
+      {% empty %}
+      <tr><td colspan="4">Ingen løste sager i perioden.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="section no-break">
+    <h3>Åbne sager efter alder</h3>
+    <table width="100%">
+      <tr><th>Liggetid</th><th class="num">Sager</th><th class="bar-cell"></th></tr>
+      {% for b in h.open_by_age %}
+      <tr><td>{{ b.label }}</td><td class="num">{{ b.count }}</td>
+          <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ b.share|floatformat:'1u' }}%; background: {{ b.color }};"></div></div></td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted">{{ h.open_now }} åbne sager i alt, efter dage siden oprettelse.</p>
+  </div>
+
+  {% with p=c.priorities i=c.incidents %}
+  <div class="section no-break">
+    <h2>Chronicle</h2>
+    <h3>Prioriterede opgaver</h3>
+    <table width="100%">
+      <tr><td>Oprettet</td><td class="num">{{ p.created }}</td><td>Afsluttet</td><td class="num">{{ p.completed }}{% if p.auto_closed %} ({{ p.auto_closed }} auto-lukket){% endif %}</td></tr>
+      <tr><td>Aktive nu</td><td class="num">{{ p.active }}</td><td>Median levetid</td><td class="num">{% if p.median_days is not None %}{{ p.median_days }} dage{% else %}—{% endif %}</td></tr>
+    </table>
+    <img class="chart" src="{{ charts.priorities }}" alt="Prioriterede opgaver pr. måned">
+    <p class="muted">
+      {% for s in p.by_status %}{{ s.label }}: {{ s.count }}{% if not forloop.last %} · {% endif %}{% endfor %}
+      {% if p.by_priority %}<br>Prioritet: {% for s in p.by_priority %}{{ s.label|lower }} {{ s.share|floatformat:0 }}%{% if not forloop.last %} · {% endif %}{% endfor %}{% endif %}
+    </p>
+  </div>
+
+  <div class="section no-break">
+    <h3>Nedbrud og hændelser</h3>
+    <table width="100%">
+      <tr><td>Hændelser</td><td class="num">{{ i.total }}</td><td>Pr. måned</td><td class="num">{{ i.per_month|floatformat:1 }}</td></tr>
+      <tr><td>Kritiske</td><td class="num">{{ i.critical }}</td><td>Ikke løst</td><td class="num">{{ i.unresolved }}</td></tr>
+    </table>
+    <img class="chart" src="{{ charts.incidents }}" alt="Hændelser pr. måned">
+    <p class="muted">
+      {% for s in i.by_severity %}{{ s.label }}: {{ s.count }}{% if not forloop.last %} · {% endif %}{% endfor %}
+      {% if i.by_type %}<br>{% for t in i.by_type %}{{ t.label }} {{ t.share|floatformat:0 }}%{% if not forloop.last %} · {% endif %}{% endfor %}{% endif %}
+    </p>
+  </div>
+  {% endwith %}
+
+  {% endwith %}
+</body>
+</html>

@@ -9,6 +9,7 @@ app_name = "dashboard"
 urlpatterns = [
     path("", views.DashboardView.as_view(), name="index"),
     path("statistik/", views.StatisticsView.as_view(), name="statistics"),
+    path("statistik/export/<str:fmt>/", views.statistics_export, name="statistics-export"),
     # HTMX partials
     path(
         "partials/current-week/",

@@ -200,6 +200,10 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
         "mean": _format_duration(mean(durations)) if durations else "—",
         "p90": _format_duration(durations[min(n_dur - 1, int(0.9 * n_dur))]) if durations else "—",
         "within_day": round(100 * sum(1 for h in durations if h < 24) / n_dur) if n_dur else 0,
+        # The same figures as plain numbers (hours), for the JSON export.
+        "median_hours": round(median(durations), 2) if durations else None,
+        "mean_hours": round(mean(durations), 2) if durations else None,
+        "p90_hours": round(durations[min(n_dur - 1, int(0.9 * n_dur))], 2) if durations else None,
         "buckets": [
             {
                 "label": label,
@@ -217,6 +221,7 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
         start = timezone.make_aware(datetime.combine(monday, datetime.min.time()))
         weekly.append({
             "label": _week_label(monday),
+            "week_start": monday,
             "created": sum(1 for t in tickets if start <= t.created_at < end),
             "solved": sum(
                 1 for t in tickets

@@ -16,6 +16,7 @@
 <div class="stats-page" style="display: flex; flex-direction: column; gap: var(--gutter);">
 
   {# === Header ============================================================ #}
+  <div class="flex flex-wrap items-end justify-between gap-4">
   <div>
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
@@ -29,6 +30,34 @@
       {% if helpdesk.last_sync %}· synkroniseret {{ helpdesk.last_sync|date:"j. N H:i" }}{% endif %}
       · Chronicle-tal fra prioriterede opgaver og hændelser.
     </div>
+  </div>
+  {% if is_editor %}
+    {% comment %}
+      Same export menu as the week report. JSON is the machine-readable
+      version (stable keys, units and definitions) for other tools.
+    {% endcomment %}
+    <div class="relative" x-data="{ open: false }">
+      <button @click="open = !open" class="btn btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Eksportér
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+      <div x-show="open" @click.outside="open = false" x-cloak x-transition.opacity
+           class="absolute right-0 mt-2 z-50"
+           style="width: 220px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); padding: 6px;">
+        <a href="{% url 'dashboard:statistics-export' 'pdf' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download PDF</a>
+        <a href="{% url 'dashboard:statistics-export' 'markdown' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download Markdown</a>
+        <a href="{% url 'dashboard:statistics-export' 'html' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download HTML</a>
+        <hr class="hr-soft" style="margin: 4px 8px;">
+        <a href="{% url 'dashboard:statistics-export' 'json' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download JSON</a>
+        <a href="{% url 'dashboard:statistics-export' 'json' %}?inline=1" target="_blank" rel="noopener" class="nav-link" style="width: 100%; padding: 8px 10px;">Vis JSON i browseren</a>
+      </div>
+    </div>
+  {% endif %}
   </div>
 
   {% if not helpdesk.has_data %}

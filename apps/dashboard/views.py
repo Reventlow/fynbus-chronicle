@@ -5,6 +5,7 @@ Provides the main dashboard view, HTMX partials for
 dynamic content loading, and documentation pages.
 """
 
+import json
 import re
 from datetime import timedelta
 from pathlib import Path
@@ -13,11 +14,13 @@ import markdown
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404, JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import Http404, HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
+from apps.accounts.permissions import editor_required
 from apps.logbook.models import Incident, WeekLog
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
@@ -100,6 +103,47 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             },
         )
         return context
+
+
+# Export formats of the statistics page: (content type, file extension).
+STATISTICS_EXPORT_FORMATS = {
+    "pdf": ("application/pdf", "pdf"),
+    "html": ("text/html; charset=utf-8", "html"),
+    "markdown": ("text/markdown; charset=utf-8", "md"),
+    "json": ("application/json; charset=utf-8", "json"),
+}
+
+
+@login_required
+@editor_required
+def statistics_export(request, fmt: str) -> HttpResponse:
+    """Download the statistics page as PDF, HTML, Markdown or JSON.
+
+    Editors only, like the week report exports. ``?inline=1`` shows the
+    file in the browser instead of downloading it (handy for the JSON).
+    """
+    from . import exports
+
+    if fmt not in STATISTICS_EXPORT_FORMATS:
+        raise Http404("Ukendt format")
+    content_type, extension = STATISTICS_EXPORT_FORMATS[fmt]
+
+    data = exports.collect()
+    if fmt == "pdf":
+        body = exports.generate_pdf(data)
+    elif fmt == "html":
+        body = exports.generate_html(data)
+    elif fmt == "markdown":
+        body = exports.generate_markdown(data)
+    else:
+        body = json.dumps(
+            exports.generate_json(data), ensure_ascii=False, indent=2, cls=DjangoJSONEncoder
+        )
+
+    response = HttpResponse(body, content_type=content_type)
+    disposition = "inline" if request.GET.get("inline") else "attachment"
+    response["Content-Disposition"] = f'{disposition}; filename="{exports.filename(data, extension)}"'
+    return response
 
 
 def _read_latest_changelog_entry() -> dict | None:
