@@ -85,7 +85,7 @@
       <h2 class="stats-title">Hvornår på dagen skriver kollegerne?</h2>
       <p class="stats-sub">
         {% if helpdesk.busiest_hour is not None %}Flest sager kommer mellem kl. <strong>{{ helpdesk.busiest_hour|stringformat:"02d" }}–{{ helpdesk.busiest_hour|add:1|stringformat:"02d" }}</strong>.{% endif %}
-        Gennemsnitligt antal nye sager pr. time på hver ugedag.
+        Tallene er nye sager i perioden pr. ugedag og time; hold musen over et felt for gennemsnittet pr. dag.
       </p>
       <div class="stats-heatmap-wrap">
         <table class="stats-heatmap">
@@ -93,7 +93,7 @@
             <tr>
               <th></th>
               {% for row in helpdesk.heatmap|slice:":1" %}{% for cell in row.cells %}
-                <th scope="col">{% if forloop.counter0|divisibleby:3 %}{{ forloop.counter0|stringformat:"02d" }}{% endif %}</th>
+                <th scope="col">{{ cell.hour|stringformat:"02d" }}</th>
               {% endfor %}{% endfor %}
             </tr>
           </thead>
@@ -102,8 +102,8 @@
               <tr>
                 <th scope="row">{{ row.day }}</th>
                 {% for cell in row.cells %}
-                  <td data-value="{{ cell|stringformat:'f' }}"
-                      title="{{ row.day }} kl. {{ forloop.counter0|stringformat:'02d' }}: {{ cell|floatformat:2 }} sager i gns."></td>
+                  <td data-value="{{ cell.count }}"
+                      title="{{ row.day }} kl. {{ cell.hour|stringformat:'02d' }}: {{ cell.count }} sager i alt, {{ cell.avg|floatformat:2 }} i gns. pr. dag">{% if cell.count %}{{ cell.count }}{% endif %}</td>
                 {% endfor %}
               </tr>
             {% endfor %}
@@ -111,7 +111,7 @@
         </table>
       </div>
       <div class="stats-heat-legend">
-        <span>Få</span><span class="stats-heat-scale"></span><span>Mange ({{ helpdesk.heat_max|floatformat:1 }} pr. time)</span>
+        <span>Få</span><span class="stats-heat-scale"></span><span>Mange ({{ helpdesk.heat_max }} sager)</span>
       </div>
     </div>
   </section>
@@ -259,10 +259,12 @@
   "use strict";
 
   // Fill the heatmap cells: opacity of the accent scaled to the busiest hour.
-  var max = {{ helpdesk.heat_max|stringformat:"f" }} || 1;
+  var max = {{ helpdesk.heat_max }} || 1;
   document.querySelectorAll(".stats-heatmap td").forEach(function (td) {
     var v = parseFloat(td.dataset.value) || 0;
     td.style.setProperty("--heat", (v / max).toFixed(3));
+    // Light text on the darkest cells so the number stays readable.
+    if (v / max > 0.55) td.classList.add("is-hot");
   });
 
   function draw() {

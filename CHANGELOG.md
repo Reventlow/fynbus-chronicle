@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.1 — 2026-10-15
+
+### Changed
+- **Tal i varmekortet på Statistik.** Hvert felt i "Hvornår på dagen skriver kollegerne?" viser nu antallet af nye sager i perioden for den ugedag og time; tomme felter står blanke, og på de mørkeste felter er tallet hvidt. Alle timer har nu en overskrift. Hold musen over et felt for at se gennemsnittet pr. dag.
+
 ## 0.20.0 — 2026-10-15
 
 ### Added

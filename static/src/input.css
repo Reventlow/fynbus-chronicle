@@ -2193,7 +2193,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
 
   /* Weekday × hour heatmap; --heat (0–1) is set per cell by the page script. */
   .stats-heatmap-wrap { overflow-x: auto; }
-  .stats-heatmap { border-collapse: separate; border-spacing: 2px; width: 100%; min-width: 520px; table-layout: fixed; }
+  .stats-heatmap { border-collapse: separate; border-spacing: 2px; width: 100%; min-width: 640px; table-layout: fixed; }
   .stats-heatmap th:first-child { width: 34px; }
   .stats-heatmap thead th { overflow: visible; white-space: nowrap; }
   .stats-heatmap th {
@@ -2207,10 +2207,16 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .stats-heatmap thead th { height: 16px; }
   .stats-heatmap td {
     --heat: 0;
-    height: 22px;
+    height: 24px;
     border-radius: 3px;
     background: color-mix(in srgb, var(--chart-info) calc(var(--heat) * 100%), var(--surface-2));
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--ink-2);
   }
+  .stats-heatmap td.is-hot { color: #fff; }
   .stats-heat-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-4); }
   .stats-heat-scale {
     width: 90px;

@@ -161,17 +161,23 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     weekday_avg = [
         round(by_day[d] / day_counts[d], 2) if day_counts[d] else 0 for d in range(7)
     ]
+    # Each cell carries the year's count (printed in the cell, and what the
+    # colour scales with) and the average per such weekday (tooltip).
     heatmap = [
         {
             "day": WEEKDAYS_SHORT[d],
             "cells": [
-                round(by_day_hour[(d, h)] / day_counts[d], 2) if day_counts[d] else 0
+                {
+                    "hour": h,
+                    "count": by_day_hour[(d, h)],
+                    "avg": round(by_day_hour[(d, h)] / day_counts[d], 2) if day_counts[d] else 0,
+                }
                 for h in range(24)
             ],
         }
         for d in range(7)
     ]
-    heat_max = max((c for row in heatmap for c in row["cells"]), default=0)
+    heat_max = max((c["count"] for row in heatmap for c in row["cells"]), default=0)
     busiest_day = max(range(7), key=lambda d: weekday_avg[d]) if created else None
     busiest_hour = max(range(24), key=lambda h: by_hour[h]) if created else None
 

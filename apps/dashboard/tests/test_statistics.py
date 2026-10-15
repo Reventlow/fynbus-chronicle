@@ -240,3 +240,14 @@ def test_statistics_page_without_data_explains_itself(client):
     client.force_login(User.objects.create_user("viewer", password="x"))
     response = client.get(reverse("dashboard:statistics"))
     assert "sync_helpdesk_tickets" in response.content.decode()
+
+
+def test_heatmap_cells_carry_the_count():
+    # Two tickets on a Wednesday at 09 local time (07 UTC in summer time).
+    make(1, datetime(2026, 10, 7, 7, 10, tzinfo=dt_timezone.utc))
+    make(2, datetime(2026, 9, 30, 7, 40, tzinfo=dt_timezone.utc))
+    stats = helpdesk_statistics(NOW)
+    cell = stats["heatmap"][2]["cells"][9]
+    assert cell["count"] == 2
+    assert cell["avg"] > 0
+    assert stats["heat_max"] == 2
