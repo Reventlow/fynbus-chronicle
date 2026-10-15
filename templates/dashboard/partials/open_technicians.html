@@ -1,0 +1,13 @@
+{% comment %}
+  Open tickets by technician — a donut plus a legend. Data from
+  HelpdeskTicket.open_by_technician() (the ServiceDesk mirror); colours come
+  from the server so the week report uses the same ones. Polled by HTMX.
+{% endcomment %}
+{% if breakdown.total %}
+  {% include "dashboard/partials/_open_donut.html" with slices=breakdown.technicians chart_id="open-technicians-chart" data_id="open-technicians-chart-data" %}
+  {% if breakdown.unassigned %}
+    <p class="stats-note">{{ breakdown.unassigned }} af {{ breakdown.total }} åbne sager er ikke tildelt en tekniker.</p>
+  {% endif %}
+{% else %}
+  <p class="stats-note" style="padding: 12px 0;">Ingen åbne sager — eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+{% endif %}

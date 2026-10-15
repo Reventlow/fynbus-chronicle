@@ -182,31 +182,41 @@ def generate_helpdesk_flow_chart(weeklog) -> str | None:
 
 
 def generate_category_donut(breakdown: dict) -> str | None:
+    """Donut of open tickets by category (``HelpdeskTicket.open_by_category()``)."""
+    return generate_open_donut(breakdown.get("total"), breakdown.get("categories") or [])
+
+
+def generate_technician_donut(breakdown: dict) -> str | None:
+    """Donut of open tickets by technician (``HelpdeskTicket.open_by_technician()``)."""
+    return generate_open_donut(breakdown.get("total"), breakdown.get("technicians") or [])
+
+
+def generate_open_donut(total: int | None, slices: list[dict]) -> str | None:
     """
-    Donut of open tickets by category, for the week report.
+    Donut of open tickets split some way, for the week report.
 
     Args:
-        breakdown: ``HelpdeskTicket.open_by_category()`` output; its
-            colours are used so the report matches the dashboard.
+        total: Number of open tickets, shown in the hole.
+        slices: ``[{count, color, ...}]`` from a ``HelpdeskTicket.open_by_*``
+            helper; its colours are used so the report matches the dashboard.
 
     Returns:
         Base64-encoded PNG data URI, or None when there are no open tickets.
     """
-    categories = breakdown.get("categories") or []
-    if not breakdown.get("total"):
+    if not total:
         return None
 
     fig, ax = plt.subplots(figsize=(2.4, 2.4))
     fig.patch.set_alpha(0)
     ax.pie(
-        [c["count"] for c in categories],
-        colors=[c["color"] for c in categories],
+        [c["count"] for c in slices],
+        colors=[c["color"] for c in slices],
         startangle=90,
         counterclock=False,
         wedgeprops={"width": 0.38, "edgecolor": "white", "linewidth": 1.5},
     )
     # The total in the hole, like a KPI.
-    ax.text(0, 0.08, str(breakdown["total"]), ha="center", va="center",
+    ax.text(0, 0.08, str(total), ha="center", va="center",
             fontsize=20, fontweight="bold", color="#4A4540")
     ax.text(0, -0.22, "åbne", ha="center", va="center", fontsize=9, color="#6B635B")
     ax.set_aspect("equal")

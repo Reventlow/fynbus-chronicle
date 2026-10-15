@@ -344,6 +344,19 @@ class OpenCategoriesPartialView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class OpenTechniciansPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: open helpdesk tickets by assigned technician (donut)."""
+
+    template_name = "dashboard/partials/open_technicians.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        from apps.logbook.models import HelpdeskTicket
+
+        context = super().get_context_data(**kwargs)
+        context["breakdown"] = HelpdeskTicket.open_by_technician()
+        return context
+
+
 class IncidentsPartialView(LoginRequiredMixin, TemplateView):
     """HTMX partial for recent incidents list."""
 

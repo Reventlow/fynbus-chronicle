@@ -41,6 +41,11 @@ urlpatterns = [
         name="partial-open-categories",
     ),
     path(
+        "partials/open-technicians/",
+        views.OpenTechniciansPartialView.as_view(),
+        name="partial-open-technicians",
+    ),
+    path(
         "partials/incidents/",
         views.IncidentsPartialView.as_view(),
         name="partial-incidents",

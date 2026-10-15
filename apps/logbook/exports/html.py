@@ -16,6 +16,7 @@ from apps.oncall.models import OnCallDuty, OnCallSegment
 from ..models import WeekLog
 from .chart import (
     generate_category_donut,
+    generate_technician_donut,
     generate_helpdesk_chart,
     generate_helpdesk_flow_chart,
 )
@@ -117,6 +118,7 @@ def generate_html(weeklog: WeekLog) -> str:
     # Generate helpdesk charts
     chart_image = generate_helpdesk_chart(weeklog)
     open_categories = weeklog.helpdesk_open_by_category()
+    open_technicians = weeklog.helpdesk_open_by_technician()
     flow_chart_image = generate_helpdesk_flow_chart(weeklog)
 
     # Calculate weekly averages
@@ -134,6 +136,8 @@ def generate_html(weeklog: WeekLog) -> str:
         "flow_chart_image": flow_chart_image,
         "open_categories": open_categories,
         "category_chart_image": generate_category_donut(open_categories),
+        "open_technicians": open_technicians,
+        "technician_chart_image": generate_technician_donut(open_technicians),
         "avg_new": avgs["avg_new"],
         "avg_closed": avgs["avg_closed"],
     }

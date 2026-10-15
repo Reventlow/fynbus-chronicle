@@ -19,6 +19,7 @@ from .chart import (
     generate_category_donut,
     generate_helpdesk_chart,
     generate_helpdesk_flow_chart,
+    generate_technician_donut,
 )
 from .pdf import generate_pdf
 
@@ -29,6 +30,8 @@ FLOW_CHART_CID = "chronicle-helpdesk-flow-chart"
 
 # Content-ID of the open-tickets-by-category donut.
 CATEGORY_CHART_CID = "chronicle-helpdesk-category-chart"
+# Content-ID of the open-tickets-by-technician donut.
+TECHNICIAN_CHART_CID = "chronicle-helpdesk-technician-chart"
 
 
 def _png_bytes(data_uri: str | None) -> bytes | None:
@@ -124,6 +127,8 @@ def send_weeklog_email(
     flow_chart_png = _png_bytes(generate_helpdesk_flow_chart(weeklog))
     open_categories = weeklog.helpdesk_open_by_category()
     category_chart_png = _png_bytes(generate_category_donut(open_categories))
+    open_technicians = weeklog.helpdesk_open_by_technician()
+    technician_chart_png = _png_bytes(generate_technician_donut(open_technicians))
 
     # Calculate weekly averages
     avgs = weeklog.helpdesk_weekly_averages()
@@ -140,6 +145,8 @@ def send_weeklog_email(
         "flow_chart_cid": FLOW_CHART_CID if flow_chart_png else "",
         "open_categories": open_categories,
         "category_chart_cid": CATEGORY_CHART_CID if category_chart_png else "",
+        "open_technicians": open_technicians,
+        "technician_chart_cid": TECHNICIAN_CHART_CID if technician_chart_png else "",
         "avg_new": avgs["avg_new"],
         "avg_closed": avgs["avg_closed"],
     }
@@ -180,6 +187,7 @@ def send_weeklog_email(
         _attach_inline(email, chart_png, CHART_CID)
         _attach_inline(email, flow_chart_png, FLOW_CHART_CID)
         _attach_inline(email, category_chart_png, CATEGORY_CHART_CID)
+        _attach_inline(email, technician_chart_png, TECHNICIAN_CHART_CID)
         for image in pasted_images:
             _attach_pasted(email, image)
 

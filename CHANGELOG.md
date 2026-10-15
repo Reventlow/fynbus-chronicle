@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.6 — 2026-10-15
+
+### Added
+- **Åbne sager fordelt på tekniker.** Et donut-diagram over de åbne helpdesk-sager fordelt på den tekniker, sagen er tildelt i ServiceDesk, i samme stil som kategori-diagrammet:
+  - **Kontrolpanelet** har et nyt kort under kategori-kortet. Det opdateres hvert minut og skjules i Kompakt-visning.
+  - **Ugerapporten** (PDF, HTML, mail og Markdown) har en ny sektion efter kategorierne, med samme regler for tidspunkt: åbne nu for den aktuelle uge, åbne ved ugens udgang for tidligere uger.
+  - Sager uden tekniker vises som en grå skive, *Ikke tildelt*. Teknikere, som ServiceDesk har anonymiseret (tidligere ansatte), samles under *Anonymiseret tekniker*.
+
 ## 0.20.5 — 2026-10-15
 
 ### Added

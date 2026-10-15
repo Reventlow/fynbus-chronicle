@@ -224,6 +224,15 @@ class WeekLog(models.Model):
         """Human-readable week label."""
         return f"Uge {self.week_number}, {self.year}"
 
+    def _helpdesk_open_at(self):
+        """The instant "open at the end of this week" refers to: None (now)
+        for the current or a future week, else the following Monday 00:00."""
+        from datetime import date, datetime, timedelta
+
+        next_monday = date.fromisocalendar(self.year, self.week_number, 1) + timedelta(days=7)
+        week_end = timezone.make_aware(datetime.combine(next_monday, datetime.min.time()))
+        return None if week_end > timezone.now() else week_end
+
     def helpdesk_open_by_category(self) -> dict:
         """Open tickets by category at the end of this week (see HelpdeskTicket).
 
@@ -231,12 +240,12 @@ class WeekLog(models.Model):
         for a past week, the tickets that were open when the week ended,
         each with its category as ServiceDesk has it today.
         """
-        from datetime import date, datetime, timedelta
+        return HelpdeskTicket.open_by_category(self._helpdesk_open_at())
 
-        next_monday = date.fromisocalendar(self.year, self.week_number, 1) + timedelta(days=7)
-        week_end = timezone.make_aware(datetime.combine(next_monday, datetime.min.time()))
-        at = None if week_end > timezone.now() else week_end
-        return HelpdeskTicket.open_by_category(at)
+    def helpdesk_open_by_technician(self) -> dict:
+        """Open tickets by technician at the end of this week; same timing
+        rules as ``helpdesk_open_by_category``, with today's assignment."""
+        return HelpdeskTicket.open_by_technician(self._helpdesk_open_at())
 
     @property
     def helpdesk_delta(self) -> int:
@@ -975,6 +984,49 @@ class HelpdeskTicket(models.Model):
     NO_CATEGORY_COLOR = "#C9C4BC"
     NO_CATEGORY_LABEL = "Ingen kategori"
 
+    NO_TECHNICIAN_LABEL = "Ikke tildelt"
+    ANONYMISED_TECHNICIAN_LABEL = "Anonymiseret tekniker"
+
+    @classmethod
+    def _open_tickets(cls, at=None):
+        """Tickets open now (``at=None``) or at the instant ``at``: created
+        before it and not closed by then."""
+        if at is None:
+            return cls.objects.filter(is_open=True)
+        return cls.objects.filter(created_at__lt=at).filter(
+            models.Q(closed_at__isnull=True) | models.Q(closed_at__gte=at)
+        )
+
+    @classmethod
+    def _open_split(cls, field: str, at, empty_label: str, rename=None) -> tuple[int, int, list[dict]]:
+        """Count open tickets per value of ``field``, for a donut chart.
+
+        Slices are sorted largest first and coloured from CATEGORY_COLORS;
+        tickets with an empty value form one grey ``empty_label`` slice,
+        listed last. ``rename`` maps a raw value to its display label.
+
+        Returns ``(total, empty_count, [{label, count, share, color}])``.
+        """
+        from collections import Counter
+
+        counts = Counter()
+        for value in cls._open_tickets(at).values_list(field, flat=True):
+            counts[rename(value) if (rename and value) else value] += 1
+        total = sum(counts.values())
+        empty = counts.pop("", 0)
+
+        def entry(label, count, color):
+            share = round(100 * count / total, 1) if total else 0
+            return {"label": label, "count": count, "share": share, "color": color}
+
+        slices = [
+            entry(label, count, cls.CATEGORY_COLORS[i % len(cls.CATEGORY_COLORS)])
+            for i, (label, count) in enumerate(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
+        ]
+        if empty:
+            slices.append(entry(empty_label, empty, cls.NO_CATEGORY_COLOR))
+        return total, empty, slices
+
     @classmethod
     def open_by_category(cls, at=None) -> dict:
         """Open tickets split by category, for a donut chart.
@@ -986,31 +1038,35 @@ class HelpdeskTicket(models.Model):
         Returns ``{"total", "categorised", "uncategorised", "categories":
         [{label, count, share, color}]}``.
         """
-        from collections import Counter
-
-        if at is None:
-            tickets = cls.objects.filter(is_open=True)
-        else:
-            tickets = cls.objects.filter(created_at__lt=at).filter(
-                models.Q(closed_at__isnull=True) | models.Q(closed_at__gte=at)
-            )
-        counts = Counter(tickets.values_list("category", flat=True))
-        total = sum(counts.values())
-        uncategorised = counts.pop("", 0)
-
-        def entry(label, count, color):
-            share = round(100 * count / total, 1) if total else 0
-            return {"label": label, "count": count, "share": share, "color": color}
-
-        categories = [
-            entry(label, count, cls.CATEGORY_COLORS[i % len(cls.CATEGORY_COLORS)])
-            for i, (label, count) in enumerate(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
-        ]
-        if uncategorised:
-            categories.append(entry(cls.NO_CATEGORY_LABEL, uncategorised, cls.NO_CATEGORY_COLOR))
+        total, uncategorised, categories = cls._open_split("category", at, cls.NO_CATEGORY_LABEL)
         return {
             "total": total,
             "categorised": total - uncategorised,
             "uncategorised": uncategorised,
             "categories": categories,
+        }
+
+    @classmethod
+    def open_by_technician(cls, at=None) -> dict:
+        """Open tickets split by assigned technician, for a donut chart.
+
+        Same rules as ``open_by_category``; unassigned tickets are the grey
+        "Ikke tildelt" slice, and technicians ServiceDesk has anonymised
+        (``ANONYMOUS_<id>``, former staff) are pooled under one label.
+
+        Returns ``{"total", "assigned", "unassigned", "technicians":
+        [{label, count, share, color}]}``.
+        """
+
+        def rename(name):
+            return cls.ANONYMISED_TECHNICIAN_LABEL if name.startswith("ANONYMOUS_") else name
+
+        total, unassigned, technicians = cls._open_split(
+            "technician", at, cls.NO_TECHNICIAN_LABEL, rename=rename
+        )
+        return {
+            "total": total,
+            "assigned": total - unassigned,
+            "unassigned": unassigned,
+            "technicians": technicians,
         }
