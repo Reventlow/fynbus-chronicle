@@ -15,6 +15,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Q
 from django.contrib import messages
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -362,18 +363,25 @@ class IncidentsPartialView(LoginRequiredMixin, TemplateView):
 
     template_name = "dashboard/partials/incidents_list.html"
 
+    # Incidents newer than this are shown; older ones sit behind "Vis ældre".
+    RECENT_DAYS = 30
+    # How many older incidents the expanded list adds.
+    OLDER_LIMIT = 20
+
     def get_context_data(self, **kwargs) -> dict:
-        """Get recent incidents."""
+        """Incidents from the last RECENT_DAYS days, plus any still
+        unresolved however old, and a capped list of older resolved ones
+        that the card reveals on request."""
         context = super().get_context_data(**kwargs)
+        cutoff = timezone.now() - timedelta(days=self.RECENT_DAYS)
+        incidents = Incident.objects.select_related("weeklog").order_by("-occurred_at")
+        older = incidents.filter(occurred_at__lt=cutoff, resolved=True)
 
-        # Get incidents from last 4 weeks
-        context["incidents"] = Incident.objects.select_related("weeklog").order_by(
-            "-occurred_at"
-        )[:10]
-
-        # Get unresolved count
+        context["incidents"] = incidents.filter(Q(occurred_at__gte=cutoff) | Q(resolved=False))
+        context["older_incidents"] = older[: self.OLDER_LIMIT]
+        context["older_count"] = older.count()
+        context["recent_days"] = self.RECENT_DAYS
         context["unresolved_count"] = Incident.objects.filter(resolved=False).count()
-
         return context
 
 

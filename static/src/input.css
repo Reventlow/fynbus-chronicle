@@ -745,6 +745,18 @@ html[data-density="dashboard"] .js-dashboard-extras {
   display: none !important;
 }
 
+/* Kontrolpanel incidents card — rows older than 30 days stay hidden until
+   "Vis ældre" sets .incidents-expanded on the polling wrapper. */
+.incident-older { display: none !important; }
+.incidents-expanded .incident-older { display: grid !important; }
+.incident-toggle {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: var(--ink-3);
+}
+.incident-toggle:hover { color: var(--ink-1); }
+/* Alpine removes x-cloak once it has initialised the element. */
+[x-cloak] { display: none !important; }
+
 /* =============================================================================
    21. sep — Verdens Alzheimerdag (World Alzheimer's Day)
    Not a costume like the others: purple is the international awareness

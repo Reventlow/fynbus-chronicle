@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.8 — 2026-10-15
+
+### Changed
+- **Hændelser på Kontrolpanelet viser kun de seneste 30 dage.** Hændelser, der stadig er uløste, vises altid, uanset alder.
+  - Ældre hændelser ligger bag *Vis ældre* nederst på kortet (op til 20). *Kun de seneste 30 dage* klapper dem sammen igen, og valget holder, når kortet opdateres hvert minut.
+  - Er der ingen hændelser i perioden, står der *Ingen hændelser de seneste 30 dage*, og de ældre kan stadig foldes ud.
+
 ## 0.20.7 — 2026-10-15
 
 ### Changed

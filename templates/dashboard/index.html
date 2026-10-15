@@ -109,8 +109,9 @@
   {# === 1. Nu: incidents (wide) + on-call / current week ==================== #}
   <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-extras"
        style="gap: var(--gutter);">
-    {# Incidents #}
-    <div hx-get="{% url 'dashboard:partial-incidents' %}"
+    {# Incidents: last 30 days; olderIncidents toggles the older rows and survives the poll #}
+    <div x-data="{ olderIncidents: false }" :class="{ 'incidents-expanded': olderIncidents }"
+         hx-get="{% url 'dashboard:partial-incidents' %}"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
       <div class="card animate-pulse">
