@@ -2146,6 +2146,13 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     .stats-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
+  /* Fra/Til period picker under the page header; wraps on narrow screens. */
+  .stats-period { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; }
+  .stats-period-field { display: flex; flex-direction: column; gap: 4px; }
+  .stats-period-field .field { width: 170px; }
+  .stats-period .stats-note { flex-basis: 100%; }
+  @media (min-width: 1024px) { .stats-period .stats-note { flex-basis: auto; } }
+
   .stats-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .stats-title { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink-1); }
   .stats-sub { margin: 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }

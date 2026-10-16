@@ -75,27 +75,35 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 class StatisticsView(LoginRequiredMixin, TemplateView):
     """
-    One year of helpdesk and Chronicle statistics on a single page.
+    Helpdesk and Chronicle statistics on a single page.
 
-    The numbers are computed in ``statistics.py``; the chart series are
-    handed to the template's script through ``json_script``.
+    Covers the last 365 days unless ``?fra=``/``?til=`` choose another
+    period (see ``statistics.period_from_params``). The numbers are
+    computed in ``statistics.py``; the chart series are handed to the
+    template's script through ``json_script``.
     """
 
     template_name = "dashboard/statistics.html"
 
     def get_context_data(self, **kwargs) -> dict:
         """Add the helpdesk and Chronicle statistics to the context."""
-        from .statistics import chronicle_statistics, helpdesk_statistics
+        from .statistics import (
+            chronicle_statistics,
+            helpdesk_statistics,
+            period_from_params,
+        )
 
         context = super().get_context_data(**kwargs)
         now = timezone.now()
-        helpdesk = helpdesk_statistics(now)
-        chronicle = chronicle_statistics(now)
+        period, period_error = period_from_params(self.request.GET, now)
+        helpdesk = helpdesk_statistics(period=period)
+        chronicle = chronicle_statistics(period=period)
         context.update(
             helpdesk=helpdesk,
             chronicle=chronicle,
-            period_start=now - timedelta(days=365),
-            period_end=now,
+            period=period,
+            period_error=period_error,
+            today=timezone.localdate(now),
             chart_data={
                 "weekdays": helpdesk["weekday_avg"],
                 "weekly": helpdesk["weekly"],
@@ -125,14 +133,18 @@ def statistics_export(request, fmt: str) -> HttpResponse:
 
     Editors only, like the week report exports. ``?inline=1`` shows the
     file in the browser instead of downloading it (handy for the JSON).
+    ``?fra=``/``?til=`` choose the period, as on the page.
     """
     from . import exports
+    from .statistics import period_from_params
 
     if fmt not in STATISTICS_EXPORT_FORMATS:
         raise Http404("Ukendt format")
     content_type, extension = STATISTICS_EXPORT_FORMATS[fmt]
 
-    data = exports.collect()
+    now = timezone.now()
+    period, _error = period_from_params(request.GET, now)
+    data = exports.collect(now, period)
     if fmt == "pdf":
         body = exports.generate_pdf(data)
     elif fmt == "html":

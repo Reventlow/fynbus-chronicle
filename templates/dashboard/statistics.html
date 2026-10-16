@@ -9,7 +9,8 @@
 
 {% block content %}
 {% comment %}
-  Statistik — one year of helpdesk (ServiceDesk mirror) and Chronicle data.
+  Statistik — helpdesk (ServiceDesk mirror) and Chronicle data for a period:
+  the last 365 days by default, or the one chosen in the Fra/Til form.
   Numbers come from apps/dashboard/statistics.py; the chart series arrive
   through json_script and are drawn by the script at the bottom.
 {% endcomment %}
@@ -20,10 +21,10 @@
   <div>
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>Seneste 12 måneder · {{ period_start|date:"j. N Y" }} – {{ period_end|date:"j. N Y" }}</span>
+      <span>{{ period.label }} · {{ period.first_day|date:"j. N Y" }} – {{ period.last_day|date:"j. N Y" }}</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 44px; line-height: 1.05;">
-      Statistik <span class="display-italic" style="color: var(--ink-3);">over året.</span>
+      Statistik <span class="display-italic" style="color: var(--ink-3);">{% if period.is_default %}over året.{% else %}over perioden.{% endif %}</span>
     </h1>
     <div style="margin-top: 10px; color: var(--ink-3); font-size: 13.5px;">
       Helpdesk-tal fra ManageEngine ServiceDesk
@@ -49,18 +50,43 @@
       <div x-show="open" @click.outside="open = false" x-cloak x-transition.opacity
            class="absolute right-0 mt-2 z-50"
            style="width: 220px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; box-shadow: var(--shadow-pop); padding: 6px;">
-        <a href="{% url 'dashboard:statistics-export' 'pdf' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download PDF</a>
-        <a href="{% url 'dashboard:statistics-export' 'markdown' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download Markdown</a>
-        <a href="{% url 'dashboard:statistics-export' 'html' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download HTML</a>
+        <a href="{% url 'dashboard:statistics-export' 'pdf' %}{% if period.query %}?{{ period.query }}{% endif %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download PDF</a>
+        <a href="{% url 'dashboard:statistics-export' 'markdown' %}{% if period.query %}?{{ period.query }}{% endif %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download Markdown</a>
+        <a href="{% url 'dashboard:statistics-export' 'html' %}{% if period.query %}?{{ period.query }}{% endif %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download HTML</a>
         <hr class="hr-soft" style="margin: 4px 8px;">
-        <a href="{% url 'dashboard:statistics-export' 'json' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download JSON</a>
-        <a href="{% url 'dashboard:statistics-export' 'json' %}?inline=1" target="_blank" rel="noopener" class="nav-link" style="width: 100%; padding: 8px 10px;">Vis JSON i browseren</a>
+        <a href="{% url 'dashboard:statistics-export' 'json' %}{% if period.query %}?{{ period.query }}{% endif %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Download JSON</a>
+        <a href="{% url 'dashboard:statistics-export' 'json' %}?inline=1{% if period.query %}&amp;{{ period.query }}{% endif %}" target="_blank" rel="noopener" class="nav-link" style="width: 100%; padding: 8px 10px;">Vis JSON i browseren</a>
         <hr class="hr-soft" style="margin: 4px 8px;">
         <a href="{% url 'dashboard:statistics-share' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Del som link (Claude Motion)…</a>
       </div>
     </div>
   {% endif %}
   </div>
+
+  {% comment %}
+    Period picker. Both days are inclusive; empty fields fall back to the
+    default (the last 365 days, ending now). Plain GET, so a period can be
+    bookmarked or shared as a link.
+  {% endcomment %}
+  <form method="get" class="stats-period">
+    <label class="stats-period-field">
+      <span class="input-label">Fra</span>
+      <input type="date" name="fra" value="{{ period.first_day|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" class="field">
+    </label>
+    <label class="stats-period-field">
+      <span class="input-label">Til</span>
+      <input type="date" name="til" value="{{ period.last_day|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" class="field">
+    </label>
+    <button type="submit" class="btn btn-primary btn-sm">Vis periode</button>
+    {% if not period.is_default %}
+      <a href="{% url 'dashboard:statistics' %}" class="btn btn-sm">Seneste 12 måneder</a>
+    {% endif %}
+    {% if period_error %}
+      <span class="stats-note" role="alert" style="color: var(--bad-ink);">{{ period_error }}</span>
+    {% elif not period.live %}
+      <span class="stats-note">Åbne sager vises, som de stod ved periodens slutning. Aktive opgaver er altid dagens tal.</span>
+    {% endif %}
+  </form>
 
   {% if not helpdesk.has_data %}
     <div class="card" style="color: var(--ink-3);">
@@ -93,7 +119,7 @@
       <div class="stats-kpi-note">{{ helpdesk.resolution.within_day }}% løst inden for et døgn</div>
     </div>
     <div class="card stats-kpi">
-      <div class="label-eyebrow">Åbne lige nu</div>
+      <div class="label-eyebrow">{{ period.open_label }}</div>
       <div class="stats-kpi-value num">{{ helpdesk.open_now }}</div>
       <div class="stats-kpi-note">{{ helpdesk.total_solved }} løst i perioden</div>
     </div>
@@ -244,7 +270,7 @@
           </li>
         {% endfor %}
       </ul>
-      <p class="stats-note">{{ helpdesk.open_now }} åbne sager i alt, efter dage siden oprettelse.</p>
+      <p class="stats-note">{{ helpdesk.open_now }} åbne sager i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
     </div>
   </section>
 

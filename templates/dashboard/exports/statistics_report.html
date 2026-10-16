@@ -22,7 +22,7 @@
   <div class="report-header">
     <h1>FynBus IT Statistik</h1>
     <div class="report-meta" style="background-color:#FAF9F7; border:1px solid #E5E0D8; padding:14px 16px;">
-      <p><strong>Periode:</strong> {{ period_start|date:"j. F Y" }} – {{ now|date:"j. F Y" }} (seneste 12 måneder)</p>
+      <p><strong>Periode:</strong> {{ period.first_day|date:"j. F Y" }} – {{ period.last_day|date:"j. F Y" }} ({{ period.label|lower }})</p>
       <p><strong>Genereret:</strong> {{ now|date:"j. F Y H:i" }}</p>
       <p><strong>Kilder:</strong> ManageEngine ServiceDesk{% if h.last_sync %} (synkroniseret {{ h.last_sync|date:"j. F H:i" }}){% endif %} og Chronicle</p>
     </div>
@@ -49,7 +49,7 @@
         </td>
         <td width="1%" style="border:none;"></td>
         <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
-          <div class="stat-value">{{ h.open_now }}</div><div class="stat-label">Åbne lige nu</div>
+          <div class="stat-value">{{ h.open_now }}</div><div class="stat-label">{{ period.open_label }}</div>
         </td>
       </tr>
     </table>
@@ -143,7 +143,7 @@
           <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ b.share|floatformat:'1u' }}%; background: {{ b.color }};"></div></div></td></tr>
       {% endfor %}
     </table>
-    <p class="muted">{{ h.open_now }} åbne sager i alt, efter dage siden oprettelse.</p>
+    <p class="muted">{{ h.open_now }} åbne sager i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
   </div>
 
   {% with p=c.priorities i=c.incidents %}

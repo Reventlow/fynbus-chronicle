@@ -18,7 +18,7 @@ shows the numbers the page showed at that moment.
 
 import base64
 import io
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -26,8 +26,9 @@ from django.utils import timezone
 
 from .statistics import (
     RESOLUTION_BUCKETS,
-    WINDOW_DAYS,
+    Period,
     chronicle_statistics,
+    default_period,
     helpdesk_statistics,
 )
 
@@ -44,19 +45,29 @@ _ACCENT = "#B48438"
 _BAD = "#A65D57"
 
 
-def collect(now: datetime | None = None) -> dict:
-    """Both statistics dicts plus the period, computed once for an export."""
+def collect(now: datetime | None = None, period: Period | None = None) -> dict:
+    """Both statistics dicts plus the period, computed once for an export.
+
+    ``now`` is when the export was made; ``period`` defaults to the 365
+    days ending then.
+    """
     now = now or timezone.now()
+    period = period or default_period(now)
     return {
         "now": now,
-        "period_start": now - timedelta(days=WINDOW_DAYS),
-        "helpdesk": helpdesk_statistics(now),
-        "chronicle": chronicle_statistics(now),
+        "period": period,
+        "period_start": period.start,
+        "period_end": period.end,
+        "helpdesk": helpdesk_statistics(period=period),
+        "chronicle": chronicle_statistics(period=period),
     }
 
 
 def filename(data: dict, extension: str) -> str:
-    """``statistik_2026-10-15.<ext>``."""
+    """``statistik_2026-10-15.<ext>``, or ``statistik_<first>_<last>.<ext>`` for a chosen period."""
+    period = data["period"]
+    if not period.is_default:
+        return f"statistik_{period.first_day.isoformat()}_{period.last_day.isoformat()}.{extension}"
     return f"statistik_{timezone.localtime(data['now']).date().isoformat()}.{extension}"
 
 
@@ -89,9 +100,18 @@ def generate_json(data: dict) -> dict:
         "organisation": "FynBus IT",
         "period": {
             "start": _iso(data["period_start"]),
-            "end": _iso(data["now"]),
-            "days": WINDOW_DAYS,
-            "description": "De seneste 12 måneder (rullende 365 dage).",
+            "end": _iso(data["period_end"]),
+            "days": round(data["period"].days),
+            "description": (
+                "De seneste 12 måneder (rullende 365 dage)."
+                if data["period"].is_default
+                else f"Valgt periode: {data['period'].first_day:%d.%m.%Y} – {data['period'].last_day:%d.%m.%Y}."
+            ),
+            "open_figures": (
+                "Åbne sager er et øjebliksbillede nu."
+                if data["period"].live
+                else "Åbne sager er genberegnet til periodens slutning."
+            ),
         },
         "sources": {
             "helpdesk": "ManageEngine ServiceDesk Plus (synkroniseret kopi i Chronicle)",
@@ -234,13 +254,13 @@ def generate_markdown(data: dict) -> str:
     """The statistics as Markdown tables."""
     h, c = data["helpdesk"], data["chronicle"]
     res = h["resolution"]
-    start = timezone.localtime(data["period_start"]).strftime("%d.%m.%Y")
-    end = timezone.localtime(data["now"]).strftime("%d.%m.%Y")
+    period = data["period"]
+    start, end = f"{period.first_day:%d.%m.%Y}", f"{period.last_day:%d.%m.%Y}"
 
     out = [
         "# FynBus IT — Statistik",
         "",
-        f"Periode: {start} – {end} (seneste 12 måneder). "
+        f"Periode: {start} – {end} ({period.label.lower()}). "
         f"Genereret {timezone.localtime(data['now']).strftime('%d.%m.%Y %H:%M')}.",
         "",
         "## Helpdesk",
@@ -253,7 +273,7 @@ def generate_markdown(data: dict) -> str:
             ["Sager løst", h["total_solved"]],
             ["Kolleger der skrev", h["requesters"]],
             ["Gns. nye sager pr. måned", f"{h['per_month']:.0f}"],
-            ["Åbne lige nu", h["open_now"]],
+            [period.open_label, h["open_now"]],
         ],
     )
 

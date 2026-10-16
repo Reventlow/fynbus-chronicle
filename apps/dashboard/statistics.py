@@ -9,7 +9,11 @@ tickets, so this stays well under a tenth of a second.
 
 Conventions used throughout:
 
-* The window is the last 365 days, ending now.
+* The window defaults to the last 365 days, ending now. The page can ask
+  for another period (``Period``); every window-shaped figure follows it.
+  "Open" figures are a snapshot at the end of the period: live from the
+  ServiceDesk status when the period ends now, otherwise rebuilt from the
+  open and close times.
 * "Løst" (solved) means closed and not cancelled. Cancelled tickets still
   close a ticket for the open count, but are not credited as solved.
 * Times are local (Europe/Copenhagen); a ticket written at 07:55 counts
@@ -19,8 +23,10 @@ Conventions used throughout:
 """
 
 from collections import Counter
-from datetime import date, datetime, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, time, timedelta
 from statistics import mean, median
+from urllib.parse import urlencode
 
 from django.utils import timezone
 
@@ -28,6 +34,7 @@ from apps.logbook.models import HelpdeskTicket, Incident, PriorityItem, WeekLog
 
 WINDOW_DAYS = 365
 WEEKS = 52
+DAYS_PER_MONTH = 365 / 12
 
 WEEKDAYS = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"]
 WEEKDAYS_SHORT = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"]
@@ -83,15 +90,123 @@ def _format_duration(hours: float | None) -> str:
     return f"{hours / 24:.1f} dage".replace(".", ",")
 
 
-def _week_ends(now: datetime) -> list[tuple[date, datetime]]:
-    """The last ``WEEKS`` ISO weeks as (monday, end instant), oldest first.
+@dataclass(frozen=True)
+class Period:
+    """The window the statistics cover: ``start`` (inclusive) to ``end``.
 
-    The end of the current week is "now", so its open count is today's.
+    ``live`` means the period ends at the present moment, so "open" figures
+    can use the live ServiceDesk status instead of being rebuilt.
     """
-    local_now = timezone.localtime(now)
-    this_monday = local_now.date() - timedelta(days=local_now.weekday())
+
+    start: datetime
+    end: datetime
+    is_default: bool = True
+    live: bool = True
+
+    @property
+    def days(self) -> float:
+        return (self.end - self.start).total_seconds() / 86400
+
+    @property
+    def months(self) -> float:
+        """Length in average months; exactly 12 for the default 365 days."""
+        return self.days / DAYS_PER_MONTH
+
+    @property
+    def week_count(self) -> int:
+        """ISO weeks in the weekly series: 52 by default, else every week touched."""
+        if self.is_default:
+            return WEEKS
+        first = self.first_day - timedelta(days=self.first_day.weekday())
+        last = self.last_day - timedelta(days=self.last_day.weekday())
+        return (last - first).days // 7 + 1
+
+    @property
+    def month_count(self) -> int:
+        """Calendar months in the monthly series: 12 by default, else every month touched."""
+        if self.is_default:
+            return 12
+        first, last = self.first_day, self.last_day
+        return (last.year - first.year) * 12 + last.month - first.month + 1
+
+    @property
+    def first_day(self) -> date:
+        return timezone.localtime(self.start).date()
+
+    @property
+    def last_day(self) -> date:
+        """The last calendar day inside the period (``end`` is exclusive)."""
+        return timezone.localtime(self.end - timedelta(microseconds=1)).date()
+
+    @property
+    def label(self) -> str:
+        return "Seneste 12 måneder" if self.is_default else "Valgt periode"
+
+    @property
+    def open_label(self) -> str:
+        return "Åbne lige nu" if self.live else "Åbne ved periodens slutning"
+
+    @property
+    def query(self) -> str:
+        """``fra=…&til=…`` for links that must keep the period; empty by default."""
+        if self.is_default:
+            return ""
+        return urlencode({"fra": self.first_day.isoformat(), "til": self.last_day.isoformat()})
+
+
+def default_period(now: datetime | None = None) -> Period:
+    """The last 365 days, ending now."""
+    now = now or timezone.now()
+    return Period(start=now - timedelta(days=WINDOW_DAYS), end=now)
+
+
+def _parse_day(value: str | None) -> date | None:
+    try:
+        return date.fromisoformat(value) if value else None
+    except ValueError:
+        return None
+
+
+def _local_midnight(day: date) -> datetime:
+    return timezone.make_aware(datetime.combine(day, time.min))
+
+
+def period_from_params(params, now: datetime | None = None) -> tuple[Period, str | None]:
+    """The period asked for in ``?fra=YYYY-MM-DD&til=YYYY-MM-DD``.
+
+    Both days are inclusive. A missing ``til`` (or one today or later)
+    ends the period now; a missing ``fra`` starts it 365 days before the
+    end. Returns the period and an error message (Danish) when the input
+    could not be used, in which case the period is the default one.
+    """
+    now = now or timezone.now()
+    raw_from, raw_to = params.get("fra") or "", params.get("til") or ""
+    if not raw_from and not raw_to:
+        return default_period(now), None
+    first, last = _parse_day(raw_from), _parse_day(raw_to)
+    if (raw_from and first is None) or (raw_to and last is None):
+        return default_period(now), "Ugyldig dato. Viser de seneste 12 måneder."
+
+    end = now
+    if last is not None:
+        end = min(_local_midnight(last + timedelta(days=1)), now)
+    start = _local_midnight(first) if first is not None else end - timedelta(days=WINDOW_DAYS)
+    if start >= end:
+        return default_period(now), "Startdatoen skal ligge før slutdatoen. Viser de seneste 12 måneder."
+    return Period(start=start, end=end, is_default=False, live=end >= now), None
+
+
+def _week_ends(now: datetime, count: int = WEEKS) -> list[tuple[date, datetime]]:
+    """The last ``count`` ISO weeks up to ``now``, as (monday, end instant), oldest first.
+
+    The last week ends at ``now``, so its open count is the one at the end
+    of the period.
+    """
+    # ``now`` may be a period end at midnight; that instant belongs to the day before.
+    last_day = timezone.localtime(now - timedelta(microseconds=1)).date()
+    this_monday = last_day - timedelta(days=last_day.weekday())
     weeks = []
-    for i in range(WEEKS - 1, -1, -1):
+    for i in range(count - 1, -1, -1):
         monday = this_monday - timedelta(weeks=i)
         if i == 0:
             end = now
@@ -106,12 +221,12 @@ def _week_label(monday: date) -> str:
     return f"U{monday.isocalendar()[1]}"
 
 
-def _month_keys(now: datetime) -> list[tuple[int, int]]:
-    """The 12 calendar months ending with the current one, oldest first."""
-    local = timezone.localtime(now)
+def _month_keys(now: datetime, count: int = 12) -> list[tuple[int, int]]:
+    """The ``count`` calendar months ending with the one ``now`` is in, oldest first."""
+    local = timezone.localtime(now - timedelta(microseconds=1))
     year, month = local.year, local.month
     keys = []
-    for _ in range(12):
+    for _ in range(count):
         keys.append((year, month))
         month -= 1
         if month == 0:
@@ -123,10 +238,11 @@ def _month_label(key: tuple[int, int]) -> str:
     return f"{MONTHS_SHORT[key[1] - 1]} {str(key[0])[2:]}"
 
 
-def helpdesk_statistics(now: datetime | None = None) -> dict:
-    """Every helpdesk figure on the statistics page."""
-    now = now or timezone.now()
-    since = now - timedelta(days=WINDOW_DAYS)
+def helpdesk_statistics(now: datetime | None = None, period: Period | None = None) -> dict:
+    """Every helpdesk figure on the statistics page, for ``period``
+    (default: the 365 days ending at ``now``)."""
+    period = period or default_period(now)
+    since, until = period.start, period.end
 
     tickets = list(
         HelpdeskTicket.objects.only(
@@ -134,10 +250,10 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
             "requester_ref", "department", "category", "technician",
         )
     )
-    created = [t for t in tickets if t.created_at >= since]
+    created = [t for t in tickets if since <= t.created_at < until]
     solved = [
         t for t in tickets
-        if t.closed_at is not None and t.closed_at >= since and not t.is_cancelled
+        if t.closed_at is not None and since <= t.closed_at < until and not t.is_cancelled
     ]
 
     # --- Headline numbers ------------------------------------------------
@@ -147,8 +263,10 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     # Divide by how many of each weekday the window holds, so a Monday
     # figure is "tickets on an average Monday", not a yearly total.
     day_counts = Counter()
-    for offset in range(WINDOW_DAYS):
-        day_counts[(timezone.localtime(now) - timedelta(days=offset)).weekday()] += 1
+    day = period.first_day
+    while day <= period.last_day:
+        day_counts[day.weekday()] += 1
+        day += timedelta(days=1)
 
     by_day = Counter()
     by_day_hour = Counter()
@@ -216,7 +334,7 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     }
 
     # --- Per week: created, solved, open at week end ----------------------
-    weeks = _week_ends(now)
+    weeks = _week_ends(until, period.week_count)
     weekly = []
     for monday, end in weeks:
         start = timezone.make_aware(datetime.combine(monday, datetime.min.time()))
@@ -247,10 +365,16 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     # --- Solved per technician ---------------------------------------------
     technicians = Counter(_technician_label(t.technician) for t in solved)
 
-    # --- Open now, by age ---------------------------------------------------
-    now_ms = int(now.timestamp() * 1000)
+    # --- Open at the end of the period, by age -------------------------------
+    now_ms = int(until.timestamp() * 1000)
     age_buckets = Counter()
-    open_now = [t for t in tickets if t.is_open]
+    if period.live:
+        open_now = [t for t in tickets if t.is_open]
+    else:
+        open_now = [
+            t for t in tickets
+            if t.created_at < until and (t.closed_at is None or t.closed_at >= until)
+        ]
     for t in open_now:
         age_days = max(0, (now_ms - int(t.created_at.timestamp() * 1000)) // 86_400_000)
         for field, label, _low, high, color in WeekLog.HELPDESK_AGE_BUCKETS:
@@ -278,7 +402,7 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
         "total_solved": len(solved),
         "cancelled": sum(1 for t in created if t.is_cancelled),
         "requesters": len(requesters),
-        "per_month": round(len(created) / 12, 1),
+        "per_month": round(len(created) / period.months, 1),
         "per_requester": round(len(created) / len(requesters), 1) if requesters else 0,
         "open_now": len(open_now),
         "weekday_avg": [
@@ -301,11 +425,15 @@ def helpdesk_statistics(now: datetime | None = None) -> dict:
     }
 
 
-def chronicle_statistics(now: datetime | None = None) -> dict:
-    """Priority tasks and incidents ("nedbrud") over the same year."""
-    now = now or timezone.now()
-    since = now - timedelta(days=WINDOW_DAYS)
-    months = _month_keys(now)
+def chronicle_statistics(now: datetime | None = None, period: Period | None = None) -> dict:
+    """Priority tasks and incidents ("nedbrud") over the same period.
+
+    "Active" tasks and their status are always today's: task status
+    history is not stored, so it cannot be rebuilt for a past date.
+    """
+    period = period or default_period(now)
+    since, until = period.start, period.end
+    months = _month_keys(until, period.month_count)
 
     def month_of(dt: datetime) -> tuple[int, int]:
         local = timezone.localtime(dt)
@@ -313,10 +441,10 @@ def chronicle_statistics(now: datetime | None = None) -> dict:
 
     # --- Priority tasks (soft-deleted and merged ones left out) -----------
     items = list(PriorityItem.objects.filter(deleted_at=None))
-    created = [i for i in items if i.created_at >= since]
+    created = [i for i in items if since <= i.created_at < until]
     completed = [
         i for i in items
-        if i.status == PriorityItem.Status.COMPLETED and i.closed_at and i.closed_at >= since
+        if i.status == PriorityItem.Status.COMPLETED and i.closed_at and since <= i.closed_at < until
     ]
     active = [i for i in items if i.status != PriorityItem.Status.COMPLETED]
     lead_days = [
@@ -350,7 +478,7 @@ def chronicle_statistics(now: datetime | None = None) -> dict:
     }
 
     # --- Incidents ("nedbrud") --------------------------------------------
-    incidents = list(Incident.objects.filter(occurred_at__gte=since))
+    incidents = list(Incident.objects.filter(occurred_at__gte=since, occurred_at__lt=until))
     type_labels = dict(Incident.IncidentType.choices)
     severity_labels = dict(Incident.Severity.choices)
     by_month = Counter(month_of(i.occurred_at) for i in incidents)
@@ -366,7 +494,7 @@ def chronicle_statistics(now: datetime | None = None) -> dict:
         "resolved": sum(1 for i in incidents if i.resolved),
         "unresolved": sum(1 for i in incidents if not i.resolved),
         "critical": sum(1 for i in incidents if i.severity == Incident.Severity.CRITICAL),
-        "per_month": round(len(incidents) / 12, 1),
+        "per_month": round(len(incidents) / period.months, 1),
         "by_type": _shares(Counter(type_labels[i.incident_type] for i in incidents)),
         "by_severity": [
             {

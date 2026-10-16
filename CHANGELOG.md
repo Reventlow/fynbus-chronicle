@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.12 — 2026-10-16
+
+### Added
+- **Vælg periode på Statistik-siden.** Felterne *Fra* og *Til* øverst på siden. Standard er stadig de seneste 12 måneder frem til nu, og *Seneste 12 måneder* nulstiller valget.
+  - Begge dage er med. Alle tal, uge- og månedsgrafer, ugedagsgennemsnit og hændelser følger perioden.
+  - Slutter perioden før i dag, vises åbne sager, som de stod ved periodens slutning (genberegnet ud fra oprettelses- og lukketid). Aktive prioriterede opgaver er altid dagens tal, fordi deres statushistorik ikke gemmes.
+  - Perioden står i adressen, så den kan bogmærkes eller deles, og eksporterne (PDF, HTML, Markdown og JSON) bruger den samme periode. Delingslinket til Claude Motion viser fortsat de seneste 12 måneder.
+
 ## 0.20.11 — 2026-10-16
 
 ### Fixed
