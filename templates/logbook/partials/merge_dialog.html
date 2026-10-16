@@ -43,11 +43,13 @@
              placeholder="Filtrer på titel eller noter..."
              hx-get="{% url 'logbook:priority-item-merge' loser.pk %}"
              hx-trigger="keyup changed delay:200ms"
-             hx-target="#merge-dialog"
-             hx-swap="innerHTML">
+             hx-target="#merge-results"
+             hx-select="#merge-results"
+             hx-swap="outerHTML">
     </div>
 
-    <div style="flex: 1 1 auto; overflow-y: auto;">
+    {# Only this list is swapped while filtering, so the search field keeps its caret. #}
+    <div id="merge-results" style="flex: 1 1 auto; overflow-y: auto;">
       {% if candidates %}
         {% for cand in candidates %}
           <label class="grid items-center gap-3"

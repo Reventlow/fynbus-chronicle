@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.20.11 — 2026-10-16
+
+### Fixed
+- **Søgefeltet i *Tilføj åbne opgaver fra tidligere uger* og *Flet* mister ikke længere markøren.** Før blev hele dialogen genindlæst efter få bogstaver, så markøren sprang til starten af feltet, og bogstaver skrevet imens forsvandt. Nu opdateres kun listen med opgaver, og feltet bliver stående, mens du skriver.
+
 ## 0.20.10 — 2026-10-15
 
 ### Added

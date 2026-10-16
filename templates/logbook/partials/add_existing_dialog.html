@@ -39,13 +39,16 @@
              placeholder="Filtrer på titel eller noter..."
              hx-get="{% url 'logbook:weeklog-add-existing' weeklog.pk %}"
              hx-trigger="keyup changed delay:200ms"
-             hx-target="#add-existing-dialog"
-             hx-swap="innerHTML">
+             hx-target="#add-existing-results"
+             hx-select="#add-existing-results"
+             hx-swap="outerHTML">
     </div>
 
     <form method="post" action="{% url 'logbook:weeklog-add-existing-post' weeklog.pk %}"
           style="flex: 1 1 auto; overflow-y: auto;">
       {% csrf_token %}
+      {# Only this list is swapped while filtering, so the search field keeps its caret. #}
+      <div id="add-existing-results">
       {% if items %}
         {% for item in items %}
           <label class="grid items-center gap-3"
@@ -75,6 +78,7 @@
           Ingen åbne opgaver matcher.
         </p>
       {% endif %}
+      </div>
 
       <div class="flex justify-end gap-2" style="padding: 14px 24px; border-top: 1px solid var(--hairline);">
         <button type="button" class="btn btn-sm"
