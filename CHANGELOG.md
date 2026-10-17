@@ -2,6 +2,27 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.0 — 2026-10-17
+
+🎉 **Chronicle 1.0.** Fra første commit den 1. februar 2026 til i dag: 254 commits, 126 udgivelser, 431 tests — og et værktøj, IT-afdelingen bruger hver uge.
+
+### Hvad 1.0 lover
+- **API'et under `/api/v1/`** og statistikkens JSON-skema (version 1) ændres kun bagudkompatibelt.
+- **Opgraderinger kører af sig selv:** databasen migreres, når containeren starter; ingen manuelle trin.
+
+### Det har vi bygget
+- **Ugelogs** med prioriterede opgaver, der lever på tværs af uger (Markdown, billeder med Ctrl+V, fletning, genåbning, auto-luk efter 6 uger), hændelser, bemanding, mødereferat og klarmelding.
+- **Eksport** af ugerapporten som PDF, HTML, Markdown og email via Microsoft Graph, med bekræftelse før afsendelse.
+- **ServiceDesk-integration:** ugens helpdesk-tal, liggetid og en lokal kopi af alle sager med emne, kategori, tekniker og afdeling.
+- **Kontrolpanel** med nøgletal, hændelser, åbne sager fordelt på tekniker, kategori og liggetid, de nyeste og ældste uløste sager med direkte link til ServiceDesk, og udviklingen over tid.
+- **Statistik** over et valgfrit tidsrum, med eksport og delte links til Claude Motion.
+- **Rådighedsvagt** med vagtkalender, delte uger, vagtskifte midt i ugen og historik.
+- **Forslag** som udviklingstavle, **Rapporter** med slides og video, **notifikationer** og **API-nøgler** til MCP og scripts.
+- **Temaer:** Star Wars, Pirate Day, Star Trek, Verdens Alzheimerdag, Read-only Friday og Touch-Grass-Weekend.
+- **v3-designet:** sidemenu, nummererede afsnit, tynde kanter og temaets farver på alle sider, i lyst og mørkt, på skærm og mobil.
+
+Tak til alle, der har brugt Chronicle, meldt fejl og foreslået forbedringer. Det er jeres værktøj.
+
 ## 0.21.3 — 2026-10-17
 
 ### Changed
