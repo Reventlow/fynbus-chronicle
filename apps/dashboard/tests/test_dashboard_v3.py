@@ -77,6 +77,8 @@ def test_numbered_sections_and_shell(logged_in):
     assert 'class="toolbar"' in body
     assert "nav-shell" not in body
     assert reverse("dashboard:partial-oncall-mini") in body
+    # The dashboard on-call card is only a fallback for when the sidebar's is hidden.
+    assert 'class="dash-oncall"' in body
 
 
 def test_current_week_lists_every_task_without_strikethrough(logged_in):

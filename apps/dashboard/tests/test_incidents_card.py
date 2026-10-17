@@ -69,3 +69,11 @@ def test_heading_counts_this_week_and_critical(logged_in):
     incident("Lav", 0)
     _, body = get_card(logged_in)
     assert "2 denne uge, 1 kritisk" in body
+
+
+def test_every_row_says_solved_or_unsolved(logged_in):
+    incident("Løst sag", 2)
+    incident("Åben sag", 1, resolved=False)
+    _, body = get_card(logged_in)
+    assert body.count(">Løst</span>") == 1
+    assert body.count(">Uløst</span>") == 1

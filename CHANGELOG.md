@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.21.1 — 2026-10-17
+
+### Changed
+- **Rådighedsvagten står kun i sidemenuen.** Kortet på Kontrolpanelet vises kun, når sidemenuens kort ikke kan ses: på mobil og når menuen er klappet sammen. Sidemenuens kort viser nu også, hvem der er næste på vagt.
+- **Hændelser på Kontrolpanelet viser altid, om de er løst eller uløst**, med en grøn eller rød prik.
+
 ## 0.21.0 — 2026-10-17
 
 ### Changed

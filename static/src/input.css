@@ -1802,6 +1802,9 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .kpi-stale-tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--bad-ink); white-space: nowrap; }
   .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--gutter); }
   @media (min-width: 1100px) { .now-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .dash-oncall { display: none; }
+  @media (max-width: 767px) { .dash-oncall { display: block; } }
+  html[data-sidebar="collapsed"] .dash-oncall { display: block; }
   .trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: var(--gutter); }
   .chart-legend {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px;

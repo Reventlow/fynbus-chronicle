@@ -14,7 +14,11 @@
       <span class="num" style="font-family: var(--font-mono);">{{ incident.occurred_at|date:"D j. M · H:i" }}</span>
       {% if incident.get_incident_type_display %}<span>{{ incident.get_incident_type_display }}</span>{% endif %}
       {% if incident.created_by %}<span>· {% with n=incident.created_by.get_full_name|default:incident.created_by.username %}{{ n|slice:":2"|upper }}{% endwith %}</span>{% endif %}
-      {% if not incident.resolved %}<span style="color: var(--bad-ink); font-weight: 500;">uløst</span>{% endif %}
+      {% if incident.resolved %}
+        <span class="task-status" style="color: var(--good-ink);"><span class="pill-dot" style="background: var(--good);"></span>Løst</span>
+      {% else %}
+        <span class="task-status" style="color: var(--bad-ink); font-weight: 500;"><span class="pill-dot" style="background: var(--bad);"></span>Uløst</span>
+      {% endif %}
     </div>
   </div>
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
