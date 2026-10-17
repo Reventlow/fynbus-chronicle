@@ -2,6 +2,23 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.21.0 — 2026-10-17
+
+### Changed
+- **Nyt udseende: sidemenu i stedet for topmenu.** Menuen sidder nu i venstre side med rådighedsvagten nederst, og den kan klappes sammen til ikoner. Valget huskes.
+  - Tandhjulet nederst i menuen samler *Udseende* (lyst/mørkt), *Densitet*, *Accent* og *Tema*. Mørk tilstand har ikke længere sin egen knap.
+  - Øverst på hver side står en smal bjælke med brødkrumme, søgning i opgaver (Ctrl/⌘+K) og notifikationer. Temabannerne står under den.
+  - På mobil er menuen skjult bag menuknappen i bjælken.
+  - Kort har nu en tynd kant i stedet for skygge.
+- **Kontrolpanelet er bygget om i nummererede afsnit.** Overskriften siger, hvor mange sager der er åbne, og om det er flere eller færre end sidste uge. Linjen under viser synkronisering, ugens hændelser og ugelogen.
+  - *01 Nu:* hændelser, rådighedsvagt (nu med vagtskifte og næste på vagt) og ugens opgaver. *Alle* ugens opgaver vises, afsluttede er nedtonede i stedet for overstreget.
+  - *02 Åbne sager:* tekniker, kategori og liggetid samlet i ét kort. Liggetid er samlet i fire grupper med et mærke for sager over 3 måneder.
+  - *03 Udvikling:* de to grafer, nu med ændringen over den viste periode under grafen for åbne sager.
+  - Seneste ændring er en smal linje nederst.
+  - Hændelser viser alvor som en farvet kant og P1/P2/P3 i teksten i stedet for et mærke.
+  - Stopper synkroniseringen med ServiceDesk, siger overskriften, hvor gamle tallene er, nøgletallene markeres *forældet*, og der er en *Prøv igen*-knap.
+- **Ugelog:** overskrift og nøgletal folder pænt på smalle skærme, og nøgletallene viser forrige uges tal. Opgaver viser *N åbne af M* og *x / M afsluttet*, hændelser *N denne uge · M kritisk*. Afsluttede opgaver er nedtonede, ikke overstreget, også i opgavesøgningen.
+
 ## 0.20.12 — 2026-10-16
 
 ### Added

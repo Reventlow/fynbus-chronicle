@@ -1,0 +1,74 @@
+{% comment %}
+  "Åbne sager" bento: three cells inside one card (index.html provides the
+  .card.bento wrapper and polls this every minute).
+    Tekniker — horizontal bars, unassigned muted, scaled to the largest.
+    Kategori — SVG donut (overview.donut_segments) plus legend; colours
+               from the server, the same as the week report.
+    Liggetid — one stacked bar and four age groups (overview.age_groups)
+               from the current week's ServiceDesk snapshot.
+{% endcomment %}
+<div class="bento-cell">
+  <div class="card-head"><div class="label-eyebrow">Tekniker</div></div>
+  {% if technicians %}
+    <div class="bento-bars">
+      {% for t in technicians %}
+        <div class="bento-bar{% if t.muted %} is-muted{% endif %}" title="{{ t.label }}: {{ t.count }} ({{ t.share|floatformat:0 }}%)">
+          <span class="bento-bar-name">{{ t.label }}</span>
+          <span class="bento-bar-track"><span style="width: {{ t.bar|floatformat:'1u' }}%;"></span></span>
+          <span class="bento-count num">{{ t.count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="stats-note">Ingen åbne sager, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+  {% endif %}
+</div>
+
+<div class="bento-cell">
+  <div class="card-head"><div class="label-eyebrow">Kategori</div></div>
+  {% if donut %}
+    <div class="bento-donut">
+      <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="{{ category_total }} åbne sager fordelt på kategori">
+        {% for seg in donut %}
+          <circle cx="64" cy="64" r="48" fill="none" stroke="{{ seg.color }}" stroke-width="14"
+                  stroke-dasharray="{{ seg.dash }}" stroke-dashoffset="{{ seg.offset }}" transform="rotate(-90 64 64)">
+            <title>{{ seg.label }}: {{ seg.count }}</title>
+          </circle>
+        {% endfor %}
+        <text x="64" y="62" text-anchor="middle" font-size="26" font-weight="500" fill="var(--ink-1)" font-family="var(--font-ui)" letter-spacing="-1">{{ category_total }}</text>
+        <text x="64" y="78" text-anchor="middle" font-size="9.5" fill="var(--ink-4)" font-family="var(--font-mono)" letter-spacing="0.8">ÅBNE</text>
+      </svg>
+      <div class="bento-legend">
+        {% for seg in donut %}
+          <div><span class="swatch" style="background: {{ seg.color }};"></span><span class="name" title="{{ seg.label }}">{{ seg.label }}</span><span class="num">{{ seg.count }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    <p class="stats-note">Ingen åbne sager, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+  {% endif %}
+</div>
+
+<div class="bento-cell">
+  <div class="card-head">
+    <div class="label-eyebrow">Liggetid</div>
+    {% if ages.over_3_months %}<span class="pill pill-warn">{{ ages.over_3_months }} over 3 mdr</span>{% endif %}
+  </div>
+  {% if ages %}
+    <div class="age-stack" aria-hidden="true">
+      {% for g in ages.groups %}
+        {% if g.count %}<span style="width: {{ g.share|floatformat:'1u' }}%; background: {{ g.color }};" title="{{ g.label }}: {{ g.count }}"></span>{% endif %}
+      {% endfor %}
+    </div>
+    <div class="age-grid">
+      {% for g in ages.groups %}
+        <div>
+          <div class="k"><span style="width: 6px; height: 6px; border-radius: 999px; background: {{ g.color }};"></span>{{ g.label }}</div>
+          <div class="v num">{{ g.count }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="stats-note">Ingen opdeling på liggetid for denne uge endnu. Den kommer med næste ServiceDesk-synkronisering.</p>
+  {% endif %}
+</div>

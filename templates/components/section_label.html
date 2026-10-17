@@ -1,0 +1,16 @@
+{% comment %}
+  Editorial section label on the Kontrolpanel: number, serif title, sub
+  line and an optional right-hand link (link_url + link_label) or
+  eyebrow text (right_eyebrow).
+  Usage: {% include 'components/section_label.html' with n="01" title="Nu" sub="…" %}
+{% endcomment %}
+<div class="section-label">
+  <span class="section-label-n">{{ n }}</span>
+  <h2 class="display">{{ title }}</h2>
+  {% if sub %}<span class="section-label-sub">{{ sub }}</span>{% endif %}
+  {% if link_url %}
+    <a href="{{ link_url }}" class="btn btn-sm btn-ghost section-label-right">{{ link_label }}</a>
+  {% elif right_eyebrow %}
+    <span class="label-eyebrow section-label-right" style="font-size: 10.5px;">{{ right_eyebrow }}</span>
+  {% endif %}
+</div>

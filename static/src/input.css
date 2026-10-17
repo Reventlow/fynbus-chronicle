@@ -10,6 +10,8 @@
    ============================================================================= */
 
 :root {
+  /* Height of the sticky toolbar; the day-theme banners stick right under it. */
+  --toolbar-h: 52px;
   --font-ui:      'Inter Tight', system-ui, sans-serif;
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
@@ -166,11 +168,11 @@ html[data-event="star-wars"] body::before {
 html[data-event="star-wars"].dark body::before { opacity: 0.10; }
 /* Keep page content above the starfield. */
 html[data-event="star-wars"] body > * { position: relative; z-index: 1; }
-/* …but keep the nav-shell on top so its tweaks dropdown can overlay main
-   content. The body > * rule above has specificity (0,1,1) and would
-   otherwise collapse the nav-shell from z-40 down to z-1, putting it at
-   the same level as <main> (and losing the source-order tiebreak). */
-html[data-event="star-wars"] body > .nav-shell { z-index: 50; }
+/* …but keep the sidebar sticky and on top so its settings popover can
+   overlay main content. The body > * rule above has specificity (0,1,1) and would
+   otherwise turn the sticky sidebar into a relative box at z-1, so it
+   would scroll away with the page and lose its popovers' stacking. */
+html[data-event="star-wars"] body > .sidebar { position: sticky; z-index: 50; }
 
 /* Brand mark glyph swap — Rebel ✦ on light, Imperial ⌖ on dark.
    Hide the literal "C" by zeroing its font-size on the parent, then render
@@ -198,7 +200,7 @@ html[data-event="star-wars"].dark .brand-mark::before {
 html[data-event="star-wars"] .sw-banner {
   display: block;
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 30;
   background: linear-gradient(90deg,
     color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
@@ -320,8 +322,8 @@ html[data-event="pirate"] body::before {
 html[data-event="pirate"].dark body::before { opacity: 0.09; }
 /* Keep page content above the pattern. */
 html[data-event="pirate"] body > * { position: relative; z-index: 1; }
-/* Same nav-shell stacking fix as Star Wars (see 0.7.3 changelog). */
-html[data-event="pirate"] body > .nav-shell { z-index: 50; }
+/* Same sidebar stacking fix as Star Wars. */
+html[data-event="pirate"] body > .sidebar { position: sticky; z-index: 50; }
 
 /* Brand mark glyph swap — anchor on light, Jolly Roger on dark. */
 html[data-event="pirate"] .brand-mark {
@@ -353,7 +355,7 @@ html[data-event="pirate"].dark .brand-mark::before {
    ------------------------------------------------------------------ */
 .rof-banner {
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 31;                 /* above the theme banners (30) */
   background: var(--bad);
   color: #fff;
@@ -442,7 +444,7 @@ html[data-rof] .brand-mark {
    ------------------------------------------------------------------ */
 .tgw-banner {
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 31;                 /* same layer as the Friday banner; never both */
   background: var(--good);
   color: #fff;
@@ -533,7 +535,7 @@ html[data-tgw] .brand-mark {
 html[data-event="pirate"] .pirate-banner {
   display: block;
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 30;
   background: linear-gradient(90deg,
     color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
@@ -632,7 +634,7 @@ html[data-event="star-trek"] body::before {
 }
 html[data-event="star-trek"].dark body::before { opacity: 0.10; }
 html[data-event="star-trek"] body > * { position: relative; z-index: 1; }
-html[data-event="star-trek"] body > .nav-shell { z-index: 50; }
+html[data-event="star-trek"] body > .sidebar { position: sticky; z-index: 50; }
 
 /* Brand-mark glyph swap — Starfleet command delta on light, Klingon
    warrior emblem on dark. */
@@ -658,7 +660,7 @@ html[data-event="star-trek"].dark .brand-mark::before {
 html[data-event="star-trek"] .star-trek-banner {
   display: block;
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 30;
   background: linear-gradient(90deg,
     color-mix(in oklch, var(--accent-soft) 90%, transparent) 0%,
@@ -745,17 +747,6 @@ html[data-density="dashboard"] .js-dashboard-extras {
   display: none !important;
 }
 
-/* Kontrolpanel liggetid card — label, bar, count per age group. */
-.open-age { display: flex; flex-direction: column; gap: 6px; }
-.open-age-row {
-  display: grid; align-items: center; gap: 14px;
-  grid-template-columns: 130px minmax(0, 1fr) 76px;
-  font-size: 13px; color: var(--ink-2);
-}
-.open-age-track { display: block; height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
-.open-age-track > span { display: block; height: 100%; border-radius: 5px; }
-.open-age-count { text-align: right; color: var(--ink-3); white-space: nowrap; }
-.open-age-count strong { color: var(--ink-1); font-weight: 600; }
 
 /* Kontrolpanel incidents card — rows older than 30 days stay hidden until
    "Vis ældre" sets .incidents-expanded on the polling wrapper. */
@@ -817,7 +808,7 @@ html[data-event="alzheimer"] body::before {
 }
 html[data-event="alzheimer"].dark body::before { opacity: 0.09; }
 html[data-event="alzheimer"] body > * { position: relative; z-index: 1; }
-html[data-event="alzheimer"] body > .nav-shell { z-index: 50; }
+html[data-event="alzheimer"] body > .sidebar { position: sticky; z-index: 50; }
 
 /* Brand-mark glyph — a five-petalled florette for the forget-me-not,
    the same in both modes. */
@@ -839,7 +830,7 @@ html[data-event="alzheimer"] .brand-mark::before {
 html[data-event="alzheimer"] .alzheimer-banner {
   display: block;
   position: sticky;
-  top: 0;
+  top: var(--toolbar-h);
   z-index: 30;
   /* The ribbon mark's horizontal bands, at tint strength. */
   background: linear-gradient(180deg,
@@ -1055,10 +1046,13 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   /* =========================================================================
      Cards / surfaces
      ========================================================================= */
+  /* One surface level (v3): hairline cards, no shadow. --shadow-pop is
+     kept for popovers and dropdowns only. */
   .card {
     background: var(--surface-1);
     border-radius: 14px;
-    box-shadow: var(--shadow-card);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: none;
     padding: var(--card-pad);
     color: var(--ink-2);
   }
@@ -1071,10 +1065,11 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   }
 
   .card-hover {
-    transition: box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
   }
   .card-hover:hover {
-    box-shadow: var(--shadow-pop);
+    border-color: var(--ink-4);
+    box-shadow: none;
   }
 
   .well {
@@ -1288,15 +1283,6 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   /* =========================================================================
      Navigation
      ========================================================================= */
-  .nav-shell {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background: color-mix(in oklch, var(--paper) 86%, transparent);
-    backdrop-filter: saturate(140%) blur(14px);
-    -webkit-backdrop-filter: saturate(140%) blur(14px);
-    border-bottom: 1px solid var(--hairline);
-  }
 
   .nav-link {
     display: inline-flex;
@@ -1610,20 +1596,280 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .htmx-request.htmx-indicator { opacity: 1; }
 
   /* =========================================================================
+     App shell (v3): sticky sidebar on the left, toolbar + content right.
+     Collapsed state is the user's choice (localStorage.sidebarCollapsed, mirrored on <html data-sidebar>).
+     Below 768px the sidebar is hidden and the toolbar's menu takes over.
+     ========================================================================= */
+  .app-shell { display: flex; min-height: 100vh; }
+  .app-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
+  .sidebar {
+    width: 232px; flex: none;
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    border-right: 1px solid var(--hairline);
+    transition: width 0.2s cubic-bezier(.2,.8,.2,1);
+    overflow: hidden;
+    z-index: 50;
+  }
+  html[data-sidebar="collapsed"] .sidebar { width: 64px; }
+  @media (max-width: 767px) { .sidebar { display: none; } }
+
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 11px;
+    height: 60px; padding: 16px 18px; flex: none;
+    color: inherit; text-decoration: none;
+  }
+  .sidebar-lockup { line-height: 1.05; white-space: nowrap; }
+
+  .sidebar-nav { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; }
+  .sidebar-link {
+    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em;
+    color: var(--ink-3); white-space: nowrap; text-decoration: none;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .sidebar-link:hover { color: var(--ink-1); background: color-mix(in oklch, var(--surface-2) 60%, transparent); }
+  .sidebar-link.is-active { background: var(--surface-2); color: var(--ink-1); }
+  .sidebar-link.is-active::before {
+    content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px;
+    width: 2px; border-radius: 2px; background: var(--accent);
+  }
+  .sidebar-link > svg { flex: none; }
+  .sidebar-label { flex: 1; text-align: left; }
+  .sidebar-link .nav-badge-slot { display: inline-flex; }
+
+  .sidebar-oncall {
+    margin: 0 10px 10px; padding: 12px;
+    border-radius: 10px; background: var(--surface-2);
+  }
+  .sidebar-oncall-avatar {
+    width: 26px; height: 26px; flex: none; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-ink));
+    color: var(--paper); display: grid; place-items: center;
+    font-size: 10.5px; font-weight: 600;
+  }
+
+  .sidebar-foot {
+    border-top: 1px solid var(--hairline);
+    padding: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sidebar-user {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px; border-radius: 8px; border: 0;
+    background: transparent; cursor: pointer; color: var(--ink-2);
+  }
+  .sidebar-user:hover { background: var(--surface-2); }
+  .sidebar-user-avatar {
+    width: 26px; height: 26px; flex: none; border-radius: 999px;
+    background: color-mix(in oklch, var(--ink-3) 18%, transparent);
+    color: var(--ink-1); display: grid; place-items: center;
+    font-size: 10.5px; font-weight: 600;
+  }
+  .sidebar-user-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar .icon-btn.is-open { background: var(--surface-2); color: var(--ink-1); }
+
+  /* Collapsed: icons only, centred; labels, lockup and the on-call card go. */
+  html[data-sidebar="collapsed"] .sidebar .sidebar-link { justify-content: center; padding: 9px 0; }
+  html[data-sidebar="collapsed"] .sidebar .sidebar-link.is-active::before { left: 2px; }
+  html[data-sidebar="collapsed"] .sidebar .sidebar-label,
+  html[data-sidebar="collapsed"] .sidebar .sidebar-lockup,
+  html[data-sidebar="collapsed"] .sidebar .sidebar-oncall,
+  html[data-sidebar="collapsed"] .sidebar .sidebar-user-name { display: none; }
+  html[data-sidebar="collapsed"] .sidebar .sidebar-user { flex: none; }
+  html[data-sidebar="collapsed"] .sidebar .sidebar-foot { flex-direction: column; }
+  /* Forslag badge becomes a dot on the icon. */
+  html[data-sidebar="collapsed"] .sidebar .sidebar-link .nav-badge {
+    position: absolute; top: 6px; right: 14px;
+    min-width: 0; width: 6px; height: 6px; padding: 0; margin: 0;
+    font-size: 0; background: var(--accent);
+  }
+
+  /* Popovers anchored to the sidebar footer (settings, user menu). Fixed,
+     so the sidebar's overflow: hidden does not clip them. */
+  .sidebar-pop {
+    position: fixed; bottom: 54px; left: 10px; width: 272px; z-index: 80;
+    background: var(--surface-1);
+    border: 1px solid var(--hairline); border-radius: 12px;
+    box-shadow: var(--shadow-pop);
+    padding: 14px;
+    max-height: calc(100vh - 70px); overflow-y: auto;
+  }
+  html[data-sidebar="collapsed"] .sidebar .sidebar-pop { left: 72px; bottom: 10px; }
+  .sidebar-pop-menu { width: 220px; padding: 6px; }
+  .settings-row { margin-bottom: 12px; }
+  .accent-choice {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px 4px; border-radius: 7px;
+    border: 1px solid var(--hairline); background: var(--surface-1);
+    cursor: pointer; font-size: 11.5px; color: var(--ink-2);
+  }
+  .accent-choice.is-selected { border-color: var(--ink-3); }
+  .settings-row > .label-eyebrow { margin-bottom: 7px; }
+
+  .toolbar {
+    height: var(--toolbar-h);
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 28px;
+    background: color-mix(in oklch, var(--paper) 86%, transparent);
+    backdrop-filter: saturate(140%) blur(14px);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  @media (max-width: 767px) { .toolbar { padding: 0 16px; } }
+  .toolbar-crumbs {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+    font-size: 12.5px; color: var(--ink-4); white-space: nowrap;
+  }
+  .toolbar-crumbs a { color: inherit; text-decoration: none; }
+  .toolbar-crumbs a:hover { color: var(--ink-1); }
+  .toolbar-crumbs .sep { color: var(--ink-5); }
+  .toolbar-crumbs .current { color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+  .toolbar-search {
+    display: flex; align-items: center; gap: 8px;
+    width: 220px; padding: 5px 10px 5px 9px;
+    background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 8px;
+    font-size: 12.5px; color: var(--ink-4);
+  }
+  .toolbar-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .toolbar-search input {
+    flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+    font: inherit; color: var(--ink-1); padding: 0;
+  }
+  .toolbar-search input::placeholder { color: var(--ink-4); }
+  .kbd {
+    font-family: var(--font-mono); font-size: 10.5px; line-height: 1.4;
+    background: var(--surface-1); padding: 1px 5px; border-radius: 4px;
+    border: 1px solid var(--hairline); color: var(--ink-4);
+  }
+  @media (max-width: 640px) { .toolbar-search { display: none; } }
+  .mobile-sheet {
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper);
+    padding: 10px 16px 14px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+
+  /* =========================================================================
+     Editorial section label: "01  Nu  Hændelser, vagt og ugens log"
+     ========================================================================= */
+  .section-label {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px;
+    margin-top: 8px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .section-label-n { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--accent-ink); }
+  .section-label h2 { margin: 0; font-size: 24px; line-height: 1; }
+  .section-label-sub { font-size: 13px; color: var(--ink-4); }
+  .section-label-right { margin-left: auto; }
+
+  /* Card head used across the v3 dashboard: eyebrow + 15.5px title. */
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .card-head h3 { margin: 4px 0 0; font-size: 15.5px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em; }
+
+  /* =========================================================================
+     Bento: one card split into cells by 1px hairline gaps.
+     ========================================================================= */
+  .bento {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px; background: var(--hairline); overflow: hidden; padding: 0;
+  }
+  .bento-cell { background: var(--surface-1); padding: var(--card-pad); min-width: 0; }
+  @media (max-width: 1100px) {
+    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bento-cell:last-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 680px) {
+    .bento { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  /* =========================================================================
+     Kontrolpanel v3 layout
+     ========================================================================= */
+  .dash-section { display: flex; flex-direction: column; gap: var(--gutter); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: var(--gutter); }
+  .kpi-grid .label-eyebrow { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi-grid .card.is-stale { opacity: 0.7; }
+  .kpi-grid .card.is-stale .num { color: var(--ink-3) !important; }
+  .kpi-stale-tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--bad-ink); white-space: nowrap; }
+  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--gutter); }
+  @media (min-width: 1100px) { .now-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: var(--gutter); }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px;
+    padding: 10px 24px 16px; border-top: 1px solid var(--hairline);
+    font-size: 12px; color: var(--ink-3);
+  }
+  .chart-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Incidents card: severity rail, mono P-level, no pills. */
+  .incident-row {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+    padding: var(--row-y) 24px; border-top: 1px solid var(--hairline);
+    color: inherit; text-decoration: none; transition: background 0.12s ease;
+  }
+  .incident-row:hover { background: var(--surface-2); }
+  .incident-rail { width: 4px; align-self: stretch; border-radius: 99px; background: var(--ink-5); }
+  .incident-rail[data-sev="P1"] { background: var(--bad); }
+  .incident-rail[data-sev="P2"] { background: var(--warn); }
+  .incident-title { font-size: 13.5px; color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .incident-meta { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; }
+  .incident-sev { font-family: var(--font-mono); font-weight: 500; color: var(--ink-3); }
+  .incident-sev[data-sev="P1"] { color: var(--bad-ink); }
+  .incident-sev[data-sev="P2"] { color: var(--warn-ink); }
+
+  /* Task status as dot + text; only "Blokeret" keeps a pill. */
+  .task-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; }
+  .task-row.is-done { opacity: 0.55; }
+  .task-row-title { color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .task-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-4); white-space: nowrap; flex: none; }
+
+  /* Bento cells */
+  .bento-bars { display: flex; flex-direction: column; gap: 10px; }
+  .bento-bar { display: grid; grid-template-columns: 120px minmax(0, 1fr) 28px; align-items: center; gap: 10px; font-size: 13px; }
+  .bento-bar-name { color: var(--ink-1); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bento-bar.is-muted .bento-bar-name { color: var(--ink-4); }
+  .bento-bar-track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .bento-bar-track > span { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+  .bento-bar.is-muted .bento-bar-track > span { background: var(--ink-5); }
+  .bento-count { text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+  .bento-donut { display: flex; align-items: center; gap: 18px; }
+  .bento-donut svg { flex: none; }
+  .bento-legend { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  .bento-legend > div { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .bento-legend .swatch { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .bento-legend .name { color: var(--ink-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bento-legend .num { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }
+  .age-stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; margin-bottom: 14px; }
+  .age-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .age-grid .k { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-4); white-space: nowrap; }
+  .age-grid .v { font-size: 22px; font-weight: 500; color: var(--ink-1); letter-spacing: -0.03em; margin-top: 4px; }
+
+  /* Changelog: a flat dashed strip instead of a card. */
+  .changelog-strip:empty { display: none; }
+  .changelog-strip-inner {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+    padding: 14px 18px; border-radius: 12px;
+    border: 1px dashed var(--hairline-strong);
+    font-size: 13px; color: var(--ink-3); text-decoration: none;
+  }
+  .changelog-strip-inner:hover { border-color: var(--ink-4); }
+
+  /* =========================================================================
      Page-level layout
      ========================================================================= */
   .page-shell {
     max-width: 1280px;
     margin: 0 auto;
     padding: 32px 28px 80px;
-  }
-  .nav-shell-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 12px 28px;
-    display: flex;
-    align-items: center;
-    gap: 28px;
   }
 
   /* =========================================================================
@@ -2250,9 +2496,4 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   }
   .share-prompt { width: 100%; margin-top: 8px; font-size: 12.5px; line-height: 1.5; resize: vertical; }
 
-  /* Open tickets by category on the dashboard: donut beside its legend when there is room. */
-  .open-cat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: center; }
-  @media (min-width: 640px) {
-    .open-cat { grid-template-columns: 190px minmax(0, 1fr); }
-  }
 }

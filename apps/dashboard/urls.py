@@ -36,19 +36,14 @@ urlpatterns = [
         name="partial-helpdesk-flow-chart",
     ),
     path(
-        "partials/open-age/",
-        views.OpenAgePartialView.as_view(),
-        name="partial-open-age",
+        "partials/open-breakdown/",
+        views.OpenBreakdownPartialView.as_view(),
+        name="partial-open-breakdown",
     ),
     path(
-        "partials/open-categories/",
-        views.OpenCategoriesPartialView.as_view(),
-        name="partial-open-categories",
-    ),
-    path(
-        "partials/open-technicians/",
-        views.OpenTechniciansPartialView.as_view(),
-        name="partial-open-technicians",
+        "partials/oncall-mini/",
+        views.OnCallMiniPartialView.as_view(),
+        name="partial-oncall-mini",
     ),
     path(
         "partials/incidents/",

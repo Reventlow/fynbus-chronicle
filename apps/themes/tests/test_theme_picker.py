@@ -78,9 +78,10 @@ def test_panel_omits_date_hint_without_schedule(client_logged_in):
     html = client_logged_in.get(reverse("logbook:weeklog-list")).content.decode()
     assert 'data-theme="plain"' in html
     assert '<span class="theme-row-name">Plain</span>\n' in html
-    # No empty date span for a theme without a schedule: Auto plus one per scheduled theme.
+    # No empty date span for a theme without a schedule: Auto plus one per scheduled theme,
+    # in each of the two copies of the panel (sidebar popover and mobile menu).
     scheduled = Theme.objects.filter(is_active=True, user_selectable=True, schedules__isnull=False).distinct().count()
-    assert html.count('class="theme-row-when"') == 1 + scheduled
+    assert html.count('class="theme-row-when"') == 2 * (1 + scheduled)
 
 
 def test_panel_query_count_is_flat(client_logged_in, django_assert_max_num_queries):

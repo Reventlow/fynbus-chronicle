@@ -1,23 +1,14 @@
-{# Helpdesk open-tickets chart — chart canvas + stats grid (parent provides card wrapper). #}
+{# Helpdesk open-tickets chart — chart canvas + legend footer (parent provides card wrapper). #}
 <div style="padding: 0 24px 16px;">
   <div class="relative" style="height: 240px;">
     <canvas id="helpdesk-chart"></canvas>
   </div>
 </div>
 
-<div class="grid grid-cols-3" style="border-top: 1px solid var(--hairline); padding: 14px 24px;">
-  <div class="text-center">
-    <div id="stat-min-open" class="num" style="font-size: 18px; font-weight: 600; color: var(--good-ink); letter-spacing: -0.02em;">—</div>
-    <div class="label-eyebrow" style="font-size: 10px; margin-top: 2px;">Laveste</div>
-  </div>
-  <div class="text-center" style="border-left: 1px solid var(--hairline); border-right: 1px solid var(--hairline);">
-    <div id="stat-current-open" class="num" style="font-size: 18px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.02em;">—</div>
-    <div class="label-eyebrow" style="font-size: 10px; margin-top: 2px;">Nuværende</div>
-  </div>
-  <div class="text-center">
-    <div id="stat-max-open" class="num" style="font-size: 18px; font-weight: 600; color: var(--bad-ink); letter-spacing: -0.02em;">—</div>
-    <div class="label-eyebrow" style="font-size: 10px; margin-top: 2px;">Højeste</div>
-  </div>
+{# Legend footer: the series, and the change across the visible window. #}
+<div class="chart-legend">
+  <span><span class="chart-swatch" style="background: var(--accent);"></span>Åbne sager, ugens slutning</span>
+  <span id="stat-open-delta" class="num" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-4);"></span>
 </div>
 
 <script>
@@ -38,11 +29,13 @@
       // sliced range so they reflect what's visible.
       const fullWeeks = data.weeks;
       const slice = w => fullWeeks.slice(-Math.min(w, fullWeeks.length));
+      // Footer: change from the first to the last visible week, e.g. "−27 siden U30".
       const updateStats = sliced => {
-        const opens = sliced.map(w => w.open);
-        document.getElementById('stat-min-open').textContent = Math.min(...opens);
-        document.getElementById('stat-current-open').textContent = opens[opens.length - 1] || 0;
-        document.getElementById('stat-max-open').textContent = Math.max(...opens);
+        const el = document.getElementById('stat-open-delta');
+        if (!el || sliced.length < 2) return;
+        const d = sliced[sliced.length - 1].open - sliced[0].open;
+        const sign = d > 0 ? '+' : d < 0 ? '−' : '±';
+        el.textContent = sign + Math.abs(d) + ' siden ' + sliced[0].label;
       };
 
       let sliced = slice(parseInt(localStorage.getItem('openChartWindow') || '12'));

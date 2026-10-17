@@ -9,25 +9,20 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
+  Kontrolpanel (v3): a headline that states the key number, the KPI strip,
+  then three numbered sections — 01 Nu, 02 Åbne sager, 03 Udvikling — and
+  the latest changelog entry as a flat strip. Each section's label sits
+  inside the same density wrapper as its cards, so Kompakt / Dashboard
+  hide label and content together (see static/src/input.css).
+{% endcomment %}
 <div style="display: flex; flex-direction: column; gap: var(--gutter);">
 
-  {# === Editorial header band ============================================== #}
-  <div class="flex flex-wrap items-end justify-between gap-6">
-    <div>
-      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+  {# === Header =========================================================== #}
+  <div class="flex flex-wrap items-end justify-between" style="gap: 16px 24px; margin-bottom: 4px;">
+    <div style="min-width: 0;">
+      <div class="label-eyebrow inline-flex items-center flex-wrap" style="gap: 6px 10px; margin-bottom: 10px;">
         <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-        <span>
-          Uge {% now "W · j N Y" %}
-          {% if APP_VERSION %}
-            <span style="color: var(--ink-5); margin: 0 6px;">·</span>
-            <span style="color: var(--ink-4);"
-                  hx-get="{% url 'dashboard:partial-footer-version' %}"
-                  hx-trigger="every 300s"
-                  hx-swap="innerHTML">v{{ APP_VERSION }}</span>
-          {% endif %}
-        </span>
-      </div>
-      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
         <span x-data x-text="(() => {
           const h = new Date().getHours();
           const slot = h < 11 ? 'morning' : h < 18 ? 'day' : h < 23 ? 'evening' : 'night';
@@ -45,18 +40,52 @@
             trek:    { morning: 'Morgen-shift',      day: 'Hilsen, kommandør',   evening: 'Aftenwatch',      night: 'Sov i fred' },
             klingon: { morning: 'nuqneH',            day: 'Qapla',               evening: 'Krigsskumring',   night: 'Sov i ære' },
           };
-          return g[variant][slot];
-        })()">Goddag</span>,
-        {{ user.first_name|default:user.get_short_name|default:user.username }}.
-        <span class="display-italic" style="color: var(--ink-3);">her er ugen.</span>
-      </h1>
-      <div style="margin-top: 12px; color: var(--ink-3); font-size: 14.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-        <span class="inline-flex items-center" style="gap: 6px;">
-          <span class="pill-dot animate-pulse-glow" style="background: var(--good);"></span>
-          {% sw_phrase "Live" "Holocron" "Imperial holonet" "Skibslog" trek="Stjerneflåde-net" klingon="Klingon kampnet" %} · synkroniseret kl <span class="num">{% now "H:i" %}</span>
-        </span>
+          return g[variant][slot] + ', {{ user.first_name|default:user.get_short_name|default:user.username|escapejs }}';
+        })()">Goddag, {{ user.first_name|default:user.get_short_name|default:user.username }}</span>
         <span style="color: var(--ink-5);">·</span>
-        <span><span class="num">{{ incident_count_week }}</span> {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %} denne uge</span>
+        <span>Uge {{ iso_week }}</span>
+        <span style="color: var(--ink-5);">·</span>
+        <span>{% now "j N Y" %}</span>
+      </div>
+
+      {% comment %}
+        The headline states the key number: open tickets and the change
+        since the end of last week (good = fewer). With a failing sync the
+        italic part says how old the numbers are instead.
+      {% endcomment %}
+      <h1 class="display" style="margin: 0; font-size: 40px; line-height: 1.05;">
+        <span class="num">{{ open_count }}</span> {% if open_count == 1 %}åben sag{% else %}åbne sager{% endif %}{% if sync.stale %},
+          <span class="display-italic" style="color: var(--ink-3);">{% if sync.last_sync %}tal fra {{ sync.label }}.{% else %}endnu ikke synkroniseret.{% endif %}</span>
+        {% elif open_delta %},
+          <span class="display-italic" style="color: {% if open_delta.tone == 'good' %}var(--good-ink){% elif open_delta.tone == 'bad' %}var(--bad-ink){% else %}var(--ink-3){% endif %};">{{ open_delta.text }}</span>{% if open_delta.tone == 'flat' %} siden sidste uge.{% else %} end sidste uge.{% endif %}
+        {% else %} lige nu.{% endif %}
+      </h1>
+
+      <div style="margin-top: 10px; color: var(--ink-3); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;">
+        {% if sync.stale %}
+          <span class="inline-flex items-center flex-wrap" style="gap: 6px; color: var(--bad-ink);">
+            <span class="pill-dot" style="background: var(--bad);"></span>
+            Synk med ServiceDesk fejlede{% if sync.last_sync %} · sidst <span class="num">{{ sync.label }}</span>{% endif %}
+            <button type="button" class="btn btn-sm" style="margin-left: 6px; padding: 2px 8px; font-size: 12px;"
+                    hx-post="{% url 'dashboard:sync-servicedesk' %}" hx-swap="none"
+                    hx-on::after-request="window.location.reload()">Prøv igen</button>
+          </span>
+        {% else %}
+          <span class="inline-flex items-center" style="gap: 6px;">
+            <span class="pill-dot animate-pulse-glow" style="background: var(--good);"></span>
+            {% sw_phrase "Live" "Holocron" "Imperial holonet" "Skibslog" trek="Stjerneflåde-net" klingon="Klingon kampnet" %} · synk <span class="num">{{ sync.label }}</span>
+          </span>
+        {% endif %}
+        <span style="color: var(--ink-5);">·</span>
+        <span><span class="num">{{ incident_count_week }}</span> {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %} denne uge, {% if incident_critical_week %}<span class="num">{{ incident_critical_week }}</span>{% else %}ingen{% endif %} kritisk</span>
+        <span style="color: var(--ink-5);">·</span>
+        <span>Ugelog {{ iso_week }}:
+          {% if current_week %}
+            <a href="{% url 'logbook:weeklog-detail' current_week.year current_week.week_number %}" style="color: var(--ink-1); text-decoration: none; font-weight: 500;"><span class="num">{{ weeklog_task_count }}</span> opgave{{ weeklog_task_count|pluralize:"r" }}</a>
+          {% else %}
+            <span style="color: var(--ink-4);">ikke oprettet</span>
+          {% endif %}
+        </span>
       </div>
     </div>
     {% if is_editor %}
@@ -78,16 +107,13 @@
   </div>
 
   {# === KPI strip — helpdesk stats ========================================= #}
-  <div id="helpdesk-stats-container"
-       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-       style="gap: var(--gutter);"
+  <div id="helpdesk-stats-container" class="kpi-grid"
        hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
        hx-trigger="load, every 30s"
        hx-swap="innerHTML">
-    {# Skeleton loader — 4 cards #}
     {% for _ in "1234" %}
       <div class="card flex flex-col gap-3">
-        <div class="skeleton" style="height: 12px; width: 96px;"></div>
+        <div class="skeleton" style="height: 11px; width: 90px;"></div>
         <div class="skeleton" style="height: 38px; width: 64px;"></div>
         <div class="skeleton" style="height: 34px; width: 100%;"></div>
       </div>
@@ -95,205 +121,156 @@
   </div>
 
   {% comment %}
-    Order, most actionable first:
-      1. "Nu"        — incidents, who is on call, this week's log.
-      2. "Åbne sager" — today's open tickets by technician, by category and by age.
-      3. "Udvikling" — the two trend charts (flow, open over time).
-      4. Latest changelog entry.
-    Density modes (static/src/input.css) act on whole rows:
-      Kompakt hides rows 2–3 and the changelog (js-dashboard-graphs /
-      js-dashboard-changelog); Dashboard hides row 1 and the changelog
-      (js-dashboard-extras), leaving KPIs + both chart rows.
+    Density modes act on whole sections (label + cards):
+      Kompakt hides 02, 03 and the changelog (js-dashboard-graphs /
+      js-dashboard-changelog); Dashboard hides 01 and the changelog
+      (js-dashboard-extras), leaving KPIs + 02 + 03.
   {% endcomment %}
 
-  {# === 1. Nu: incidents (wide) + on-call / current week ==================== #}
-  <div class="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.25fr)_minmax(0,1fr)] js-dashboard-extras"
-       style="gap: var(--gutter);">
-    {# Incidents: last 30 days; olderIncidents toggles the older rows and survives the poll #}
-    <div x-data="{ olderIncidents: false }" :class="{ 'incidents-expanded': olderIncidents }"
-         hx-get="{% url 'dashboard:partial-incidents' %}"
+  {# === 01 Nu: incidents + on-call / current week ========================== #}
+  <section class="dash-section js-dashboard-extras">
+    {% url 'admin:logbook_incident_changelist' as url_incidents %}
+    {% include 'components/section_label.html' with n="01" title="Nu" sub="Hændelser, vagt og ugens log" link_url=url_incidents link_label="Se alle hændelser" %}
+    <div class="now-grid">
+      {# Incidents: last 30 days; olderIncidents toggles the older rows and survives the poll #}
+      <div x-data="{ olderIncidents: false }" :class="{ 'incidents-expanded': olderIncidents }"
+           hx-get="{% url 'dashboard:partial-incidents' %}"
+           hx-trigger="load, every 60s"
+           hx-swap="innerHTML">
+        <div class="card" style="padding: 0;">
+          <div style="padding: 18px 24px 10px;">
+            <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
+            <div class="skeleton" style="height: 16px; width: 180px;"></div>
+          </div>
+          {% for _ in "1234" %}
+            <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
+              <div class="skeleton" style="height: 14px; width: 60%;"></div>
+              <div class="skeleton" style="height: 11px; width: 35%;"></div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="flex flex-col" style="gap: var(--gutter); min-width: 0;">
+        <div hx-get="{% url 'dashboard:partial-oncall' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card">
+            <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+            <div class="skeleton" style="height: 44px; width: 220px;"></div>
+          </div>
+        </div>
+
+        <div hx-get="{% url 'dashboard:partial-current-week' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card">
+            <div class="skeleton" style="height: 11px; width: 180px; margin-bottom: 10px;"></div>
+            <div class="skeleton" style="height: 16px; width: 80px; margin-bottom: 14px;"></div>
+            <div class="skeleton" style="height: 14px; width: 100%; margin-bottom: 8px;"></div>
+            <div class="skeleton" style="height: 14px; width: 90%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# === 02 Åbne sager: one bento card ===================================== #}
+  <section class="dash-section js-dashboard-graphs">
+    {% with sub=open_now_mirror|stringformat:"d"|add:" sager lige nu · fordelt på tekniker, kategori og liggetid" %}
+      {% include 'components/section_label.html' with n="02" title="Åbne sager" sub=sub %}
+    {% endwith %}
+    <div class="card bento"
+         hx-get="{% url 'dashboard:partial-open-breakdown' %}"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
-      <div class="card animate-pulse">
-        <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 8px;"></div>
-        <div class="skeleton" style="height: 60px; width: 100%;"></div>
-      </div>
+      {% for _ in "123" %}
+        <div class="bento-cell">
+          <div class="skeleton" style="height: 11px; width: 80px; margin-bottom: 16px;"></div>
+          <div class="skeleton" style="height: 128px; width: 100%;"></div>
+        </div>
+      {% endfor %}
     </div>
+  </section>
 
-    {# On-call + current week #}
-    <div class="flex flex-col" style="gap: var(--gutter);">
-      <div hx-get="{% url 'dashboard:partial-oncall' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card animate-pulse">
-          <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
-          <div class="skeleton" style="height: 44px; width: 220px;"></div>
+  {# === 03 Udvikling: flow + open tickets over time ======================= #}
+  <section class="dash-section js-dashboard-graphs">
+    {% with right="Kilde: ManageEngine · synk hver "|add:sync_minutes|add:". min" %}
+      {% include 'components/section_label.html' with n="03" title="Udvikling" sub="Helpdesk-flow over tid" right_eyebrow=right %}
+    {% endwith %}
+    <div class="trend-grid">
+      {# New vs. closed per week #}
+      <div class="card overflow-hidden" style="padding: 0;"
+           x-data="{
+             win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
+             set(n) {
+               this.win = n;
+               localStorage.setItem('flowChartWindow', String(n));
+               window.dispatchEvent(new CustomEvent('flow-chart-window', { detail: n }));
+             },
+             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+           }">
+        <div class="card-head" style="padding: 18px 24px 8px; margin: 0;">
+          <div>
+            <div class="label-eyebrow">{% sw_phrase "Ny vs. lukket" "Nye vs. fuldførte" "Oprørere vs. fanget" "Nye vs. hjembragte" trek="Nye vs. fuldførte" klingon="Nye vs. vundne" %} · <span x-text="label()">12 uger</span></div>
+            <h3>{% sw_phrase "Flow pr. uge" "Missioner pr. uge" "Oprørere pr. uge" "Kapringer pr. uge" trek="Missioner pr. uge" klingon="Kampe pr. uge" %}</h3>
+          </div>
+          <div class="segmented">
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 12 }" @click="set(12)">12U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 26 }" @click="set(26)">26U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 52 }" @click="set(52)">12M</button>
+          </div>
+        </div>
+        <div hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div style="padding: 0 24px;">
+            <div class="skeleton" style="height: 220px; width: 100%;"></div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <span><span class="chart-swatch chart-swatch-info"></span>Nye</span>
+          <span><span class="chart-swatch chart-swatch-good"></span>Lukkede</span>
         </div>
       </div>
 
-      <div hx-get="{% url 'dashboard:partial-current-week' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card animate-pulse">
-          <div class="skeleton" style="height: 11px; width: 130px; margin-bottom: 12px;"></div>
-          <div class="skeleton" style="height: 18px; width: 200px; margin-bottom: 10px;"></div>
-          <div class="skeleton" style="height: 14px; width: 100%;"></div>
+      {# Open tickets over time #}
+      <div class="card overflow-hidden" style="padding: 0;"
+           x-data="{
+             win: parseInt(localStorage.getItem('openChartWindow') || '12'),
+             set(n) {
+               this.win = n;
+               localStorage.setItem('openChartWindow', String(n));
+               window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
+             },
+             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+           }">
+        <div class="card-head" style="padding: 18px 24px 8px; margin: 0;">
+          <div>
+            <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" "Åbne kapringer" trek="Aktive missioner" klingon="Aktive kampe" %} · <span x-text="label()">12 uger</span></div>
+            <h3>Udvikling pr. uge</h3>
+          </div>
+          <div class="segmented">
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 12 }" @click="set(12)">12U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 26 }" @click="set(26)">26U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 52 }" @click="set(52)">12M</button>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  {# === 2. Åbne sager nu: by technician + by category, then by age ========= #}
-  <div class="grid grid-cols-1 lg:grid-cols-2 js-dashboard-graphs" style="gap: var(--gutter);">
-    {# Open tickets by technician #}
-    <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
-      <div>
-        <div class="label-eyebrow">Teknikere</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på tekniker</h2>
-      </div>
-      <div hx-get="{% url 'dashboard:partial-open-technicians' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="skeleton" style="height: 190px; width: 100%;"></div>
-      </div>
-    </div>
-
-    {# Open tickets by category #}
-    <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
-      <div>
-        <div class="label-eyebrow">Kategorier</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på kategori</h2>
-      </div>
-      <div hx-get="{% url 'dashboard:partial-open-categories' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="skeleton" style="height: 190px; width: 100%;"></div>
-      </div>
-    </div>
-
-    {# Open tickets by age (liggetid), full width under the donuts #}
-    <div class="card lg:col-span-2" style="display: flex; flex-direction: column; gap: 10px;">
-      <div>
-        <div class="label-eyebrow">Liggetid</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Åbne sager fordelt på liggetid</h2>
-      </div>
-      <div hx-get="{% url 'dashboard:partial-open-age' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="skeleton" style="height: 200px; width: 100%;"></div>
-      </div>
-    </div>
-  </div>
-
-  {# === 3. Udvikling: flow + open tickets over time ======================== #}
-  <div class="grid grid-cols-1 lg:grid-cols-2 js-dashboard-graphs" style="gap: var(--gutter);">
-    {# New vs. closed per week #}
-    <div class="card overflow-hidden" style="padding: 0;"
-         x-data="{
-           win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
-           set(n) {
-             this.win = n;
-             localStorage.setItem('flowChartWindow', String(n));
-             window.dispatchEvent(new CustomEvent('flow-chart-window', { detail: n }));
-           },
-           label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
-         }">
-      <div class="flex items-start justify-between" style="padding: 20px 24px 12px;">
-        <div>
-          <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
-          <h2 style="margin: 6px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-            {% sw_phrase "Ny vs. lukket — flow over tid" "Nye vs. fuldførte missioner" "Oprørere vs. fanget — over tid" "Nye vs. hjembragte kapringer" trek="Nye vs. fuldførte missioner" klingon="Nye vs. vundne kampe" %}
-          </h2>
-        </div>
-        <div class="segmented">
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 12 }"
-                  @click="set(12)">12U</button>
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 26 }"
-                  @click="set(26)">26U</button>
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 52 }"
-                  @click="set(52)">12M</button>
-        </div>
-      </div>
-
-      <div hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="animate-pulse" style="padding: 0 24px;">
-          <div class="skeleton" style="height: 220px; width: 100%;"></div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-6"
-           style="padding: 12px 24px 20px; border-top: 1px solid var(--hairline); margin-top: 4px; font-size: 12.5px; color: var(--ink-3);">
-        <div class="flex items-center gap-2">
-          <span class="chart-swatch chart-swatch-info"></span>
-          Nye sager
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="chart-swatch chart-swatch-good"></span>
-          Lukkede sager
-        </div>
-        <div class="ml-auto label-eyebrow" style="font-size: 10.5px;">
-          Kilde: ManageEngine · synk hver 30. min
+        <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div style="padding: 0 24px 20px;">
+            <div class="skeleton" style="height: 240px; width: 100%;"></div>
+          </div>
         </div>
       </div>
     </div>
+  </section>
 
-    {# Open tickets over time #}
-    <div class="card overflow-hidden" style="padding: 0;"
-         x-data="{
-           win: parseInt(localStorage.getItem('openChartWindow') || '12'),
-           set(n) {
-             this.win = n;
-             localStorage.setItem('openChartWindow', String(n));
-             window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
-           },
-           label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
-         }">
-      <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
-        <div>
-          <div class="label-eyebrow">{% sw_phrase "Helpdesk" "Alliance-rapport" "Imperial overvågning" "Skibslog-rapport" trek="Stjerneflåde-rapport" klingon="Empire-rapport" %} · <span x-text="label()">12 uger</span></div>
-          <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">
-            {% sw_phrase "Åbne sager — udvikling" "Aktive missioner — udvikling" "Aktive oprørere — udvikling" "Åbne kapringer — sø-trend" trek="Aktive missioner — over tid" klingon="Aktive kampe — over tid" %}
-          </h2>
-        </div>
-        <div class="segmented">
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 12 }"
-                  @click="set(12)">12U</button>
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 26 }"
-                  @click="set(26)">26U</button>
-          <button type="button" class="segmented-btn"
-                  :class="{ 'segmented-btn-active': win === 52 }"
-                  @click="set(52)">12M</button>
-        </div>
-      </div>
-      <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="animate-pulse" style="padding: 0 24px 20px;">
-          <div class="skeleton" style="height: 240px; width: 100%;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {# === 4. Latest changelog entry ========================================== #}
-  {% comment %}
-    Latest changelog entry — polled every 300s.
-    js-dashboard-extras: hidden in Dashboard mode.
-    js-dashboard-changelog: also hidden in Kompakt.
-  {% endcomment %}
-  <div class="card overflow-hidden js-dashboard-extras js-dashboard-changelog"
-       style="padding: 0;"
+  {# === Latest changelog entry: a flat dashed strip, polled every 300s ===== #}
+  <div class="changelog-strip js-dashboard-extras js-dashboard-changelog"
        hx-get="{% url 'dashboard:partial-latest-change' %}"
-       hx-trigger="load, every 300s"
+       hx-trigger="every 300s"
        hx-swap="innerHTML">
     {% include 'dashboard/partials/latest_change.html' %}
   </div>

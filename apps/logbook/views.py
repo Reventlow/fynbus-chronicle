@@ -7,6 +7,7 @@ for inline editing of priority items, absences, and incidents.
 
 import json
 import logging
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -115,11 +116,25 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["priority_form"] = PriorityItemForm()
         context["absence_form"] = AbsenceForm()
         context["incident_form"] = IncidentForm()
-        context["priority_appearances"] = (
+        appearances = list(
             self.object.priority_appearances.select_related("priority_item")
             .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
         )
+        done = sum(1 for a in appearances if a.priority_item.status == PriorityItem.Status.COMPLETED)
+        context["priority_appearances"] = appearances
+        context["task_total"] = len(appearances)
+        context["task_done"] = done
+        context["task_open"] = len(appearances) - done
+        incidents = list(self.object.incidents.all())
+        context["incidents"] = incidents
+        context["incident_critical"] = sum(1 for i in incidents if i.severity == "critical")
+        # The week before, for the "vs. uge N" line under each stat.
+        prev_monday = date.fromisocalendar(self.object.year, self.object.week_number, 1) - timedelta(days=7)
+        prev_iso = prev_monday.isocalendar()
+        context["prev_weeklog"] = WeekLog.objects.filter(
+            year=prev_iso.year, week_number=prev_iso.week
+        ).first()
         context["signoffs"] = self.object.signoffs.select_related("user").order_by(
             "created_at"
         )

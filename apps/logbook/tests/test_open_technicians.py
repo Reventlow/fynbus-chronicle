@@ -67,14 +67,6 @@ def test_weeklog_uses_the_week_end_for_a_past_week():
     assert WeekLog.objects.create(year=2026, week_number=13).helpdesk_open_by_technician()["total"] == 0
 
 
-def test_dashboard_card(client, open_tickets):
-    client.force_login(User.objects.create_user("u", password="x"))
-    assert reverse("dashboard:partial-open-technicians") in client.get(reverse("dashboard:index")).content.decode()
-    body = client.get(reverse("dashboard:partial-open-technicians")).content.decode()
-    assert "Peter Malmborg" in body
-    assert "open-technicians-chart" in body
-    assert "1 af 5 åbne sager er ikke tildelt en tekniker" in body
-
 
 def test_week_report_html_and_markdown(open_tickets):
     weeklog = WeekLog.get_or_create_current_week()

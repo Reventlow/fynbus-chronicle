@@ -1,0 +1,146 @@
+{% comment %}
+  Sidebar shell (v3): brand, primary nav, on-call mini card and a footer
+  with the user menu, settings (gear) and collapse toggle. Collapsed state
+  is the user's preference (localStorage.sidebarCollapsed), mirrored on
+  <html data-sidebar="collapsed"> by base.html so it applies before paint.
+  Hidden below 768px; the toolbar's menu button takes over there.
+{% endcomment %}
+{% load static %}
+{% url 'dashboard:index' as url_dashboard %}
+{% url 'logbook:weeklog-list' as url_weeklog %}
+{% url 'oncall:calendar' as url_oncall %}
+{% url 'feedback:board' as url_feedback %}
+{% url 'dashboard:docs-index' as url_docs %}
+{% url 'reports:list' as url_reports %}
+{% url 'dashboard:statistics' as url_statistics %}
+{% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
+<aside class="sidebar" x-data="{ settingsOpen: false, userOpen: false }"
+       @keydown.escape.window="settingsOpen = false; userOpen = false">
+
+  <a href="{{ url_dashboard }}" class="sidebar-brand" title="Chronicle">
+    <span class="brand-mark">C</span>
+    <span class="sidebar-lockup">
+      <span style="display: block; font-size: 14px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.02em;">Chronicle</span>
+      <span class="label-eyebrow" style="display: block; font-size: 10px;">FynBus IT</span>
+    </span>
+  </a>
+
+  <nav class="sidebar-nav" aria-label="Hovedmenu">
+    <a href="{{ url_dashboard }}" title="Kontrolpanel"
+       class="sidebar-link{% if app == 'dashboard' and name == 'index' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="sidebar-label">Kontrolpanel</span>
+    </a>
+    <a href="{{ url_weeklog }}" title="Ugelog"
+       class="sidebar-link{% if app == 'logbook' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5a2.5 2.5 0 0 0 0 5H20"/><path d="M4 4.5V21"/>
+      </svg>
+      <span class="sidebar-label">Ugelog</span>
+    </a>
+    <a href="{{ url_oncall }}" title="Rådighedsvagt"
+       class="sidebar-link{% if app == 'oncall' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>
+      </svg>
+      <span class="sidebar-label">Rådighedsvagt</span>
+    </a>
+    <a href="{{ url_feedback }}" title="Forslag"
+       class="sidebar-link{% if app == 'feedback' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3"/><path d="M12 16V3M9 6l3-3 3 3"/>
+      </svg>
+      <span class="sidebar-label">Forslag</span>
+      {% include 'feedback/_nav_badge.html' %}
+    </a>
+    <a href="{{ url_reports }}" title="Rapporter"
+       class="sidebar-link{% if app == 'reports' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/>
+      </svg>
+      <span class="sidebar-label">Rapporter</span>
+    </a>
+    <a href="{{ url_statistics }}" title="Statistik"
+       class="sidebar-link{% if name == 'statistics' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 20V10M12 20V4M6 20v-6"/>
+      </svg>
+      <span class="sidebar-label">Statistik</span>
+    </a>
+    <a href="{{ url_docs }}" title="Dokumentation"
+       class="sidebar-link{% if 'docs' in name %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/>
+      </svg>
+      <span class="sidebar-label">Dokumentation</span>
+    </a>
+  </nav>
+
+  <div style="flex: 1;"></div>
+
+  {# On-call mini card — same data as the dashboard card, polled every minute. #}
+  <div class="sidebar-oncall"
+       hx-get="{% url 'dashboard:partial-oncall-mini' %}"
+       hx-trigger="load, every 60s"
+       hx-swap="innerHTML">
+    <div class="label-eyebrow" style="font-size: 10px;">Rådighedsvagt nu</div>
+    <div class="skeleton" style="height: 26px; margin-top: 8px;"></div>
+  </div>
+
+  {% comment %}
+    Footer and its two popovers share one outside-click boundary, so the
+    buttons can toggle their popover without the outside handler racing them.
+  {% endcomment %}
+  <div @click.outside="settingsOpen = false; userOpen = false">
+  <div class="sidebar-foot">
+    <button type="button" class="sidebar-user" @click="userOpen = !userOpen; settingsOpen = false"
+            :aria-expanded="userOpen" title="{{ user.get_full_name|default:user.username }}">
+      <span class="sidebar-user-avatar">
+        {% with name=user.get_full_name|default:user.username %}{{ name|slice:":2"|upper }}{% endwith %}
+      </span>
+      <span class="sidebar-user-name">{{ user.get_short_name|default:user.username }}</span>
+    </button>
+    <button type="button" class="icon-btn" :class="{ 'is-open': settingsOpen }"
+            @click="settingsOpen = !settingsOpen; userOpen = false"
+            :aria-expanded="settingsOpen" title="Indstillinger" aria-label="Indstillinger">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+    <button type="button" class="icon-btn" @click="sidebarCollapsed = !sidebarCollapsed"
+            :title="sidebarCollapsed ? 'Udvid' : 'Skjul'" :aria-label="sidebarCollapsed ? 'Udvid menuen' : 'Skjul menuen'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>
+      </svg>
+    </button>
+  </div>
+
+  {# User menu #}
+  <div class="sidebar-pop sidebar-pop-menu animate-in" x-show="userOpen" x-cloak>
+    <div style="padding: 10px 12px; border-bottom: 1px solid var(--hairline); margin-bottom: 4px;">
+      <div style="font-size: 13px; font-weight: 500; color: var(--ink-1);">{{ user.username }}</div>
+      <div style="font-size: 11.5px; color: var(--ink-4); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis;">{{ user.email }}</div>
+    </div>
+    <a href="{% url 'accounts:api-keys' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">API-nøgler</a>
+    {% if user.is_staff %}
+      <a href="{% url 'admin:index' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Admin</a>
+    {% endif %}
+    <a href="{% url 'accounts:logout' %}" class="nav-link" style="width: 100%; padding: 8px 10px;">Log ud</a>
+  </div>
+
+  {# Settings: appearance, density, accent, theme #}
+  <div class="sidebar-pop animate-in" x-show="settingsOpen" x-cloak
+       role="dialog" aria-label="Indstillinger">
+    <div class="flex items-center justify-between" style="margin-bottom: 12px;">
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ink-1);">Indstillinger</span>
+      <button type="button" class="icon-btn" style="width: 24px; height: 24px;" @click="settingsOpen = false" aria-label="Luk">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    {% include 'components/settings_controls.html' %}
+  </div>
+  </div>
+</aside>
+{% endwith %}

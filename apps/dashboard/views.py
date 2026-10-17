@@ -25,8 +25,10 @@ from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from apps.accounts.permissions import editor_required
-from apps.logbook.models import Incident, WeekLog
-from apps.oncall.models import OnCallDuty, OnCallSegment
+from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
+from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
+
+from .overview import age_groups, changelog_strip, donut_segments, headline_delta, sync_state
 
 
 # Documentation configuration
@@ -62,13 +64,36 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/index.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Add dashboard data to context."""
+        """The header sentence and meta line; the cards load as partials."""
         context = super().get_context_data(**kwargs)
         weeklog = WeekLog.get_current_week()
+        now = timezone.localtime()
         context["current_week"] = weeklog
-        context["incident_count_week"] = (
-            weeklog.incidents.count() if weeklog else 0
-        )
+        context["iso_week"] = now.isocalendar().week
+
+        # Headline: open tickets from the week's ServiceDesk snapshot (the
+        # same number as the KPI card), else the live mirror — also when the
+        # week log exists but has not been synced yet (all zeros).
+        if weeklog and weeklog.helpdesk_open:
+            context["open_count"] = weeklog.helpdesk_open
+            context["open_delta"] = headline_delta(weeklog.helpdesk_delta)
+        else:
+            context["open_count"] = HelpdeskTicket.objects.filter(is_open=True).count()
+            context["open_delta"] = None
+        context["open_now_mirror"] = HelpdeskTicket.objects.filter(is_open=True).count()
+
+        incidents = weeklog.incidents.all() if weeklog else Incident.objects.none()
+        context["incident_count_week"] = incidents.count()
+        context["incident_critical_week"] = incidents.filter(
+            severity=Incident.Severity.CRITICAL
+        ).count()
+        if weeklog:
+            context["weeklog_task_count"] = weeklog.priority_appearances.filter(
+                priority_item__deleted_at__isnull=True
+            ).count()
+        context["sync"] = sync_state()
+        interval = getattr(settings, "SERVICEDESK_SYNC_INTERVAL", 300)
+        context["sync_minutes"] = str(max(1, round(interval / 60)))
         context["latest_change"] = _read_latest_changelog_entry()
         return context
 
@@ -284,6 +309,7 @@ def _read_latest_changelog_entry() -> dict | None:
     return {
         "title": title.strip(),
         "body_html": mark_safe(md.convert(rest.strip())),
+        "strip": changelog_strip(title, rest),
     }
 
 
@@ -302,14 +328,18 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
             # we read the appearance list — keeps the dashboard tidy.
             weeklog.auto_close_stale_priorities()
             context["weeklog"] = weeklog
-            # Show every appearance for the week, including completed tasks —
-            # done items render struck-through via the row template so they
-            # read as completed context.
-            context["priority_appearances"] = (
+            # Every appearance for the week (13 is a typical week), done
+            # ones included; the card fades those rather than striking them.
+            appearances = list(
                 weeklog.priority_appearances.select_related("priority_item")
                 .filter(priority_item__deleted_at__isnull=True)
-                .order_by("order", "id")[:8]
+                .order_by("order", "id")
             )
+            done = sum(1 for a in appearances if a.priority_item.status == "completed")
+            context["priority_appearances"] = appearances
+            context["task_total"] = len(appearances)
+            context["task_done"] = done
+            context["task_open"] = len(appearances) - done
             context["absences"] = weeklog.absences.all()[:5]
         else:
             now = timezone.now()
@@ -321,7 +351,11 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
 
 
 class HelpdeskStatsPartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial for helpdesk stats cards (polls for live updates)."""
+    """HTMX partial for helpdesk stats cards (polls for live updates).
+
+    When the ServiceDesk sync has stopped (``sync.stale``) the cards are
+    dimmed and marked "forældet".
+    """
 
     template_name = "dashboard/partials/helpdesk_stats.html"
 
@@ -329,6 +363,7 @@ class HelpdeskStatsPartialView(LoginRequiredMixin, TemplateView):
         """Get current week helpdesk stats."""
         context = super().get_context_data(**kwargs)
         context["weeklog"] = WeekLog.get_current_week()
+        context["sync"] = sync_state()
         return context
 
 
@@ -344,44 +379,32 @@ class HelpdeskFlowChartPartialView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/partials/helpdesk_flow_chart.html"
 
 
-class OpenAgePartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial: open helpdesk tickets by age (liggetid), as bars.
+class OpenBreakdownPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: the "Åbne sager" bento — open tickets by technician,
+    by category (SVG donut) and by age.
 
-    Uses the current week's ServiceDesk snapshot, the same numbers as the
-    small bar in the "Åbne sager" KPI card and the week report section.
+    Technicians and categories come from the live ServiceDesk mirror
+    (``HelpdeskTicket.open_by_*``, the same helpers as the week report);
+    the age groups from the current week's ServiceDesk snapshot.
     """
 
-    template_name = "dashboard/partials/open_age.html"
+    template_name = "dashboard/partials/open_breakdown.html"
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
-        context["weeklog"] = WeekLog.get_current_week()
-        return context
-
-
-class OpenCategoriesPartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial: open helpdesk tickets by category (donut)."""
-
-    template_name = "dashboard/partials/open_categories.html"
-
-    def get_context_data(self, **kwargs) -> dict:
-        from apps.logbook.models import HelpdeskTicket
-
-        context = super().get_context_data(**kwargs)
-        context["breakdown"] = HelpdeskTicket.open_by_category()
-        return context
-
-
-class OpenTechniciansPartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial: open helpdesk tickets by assigned technician (donut)."""
-
-    template_name = "dashboard/partials/open_technicians.html"
-
-    def get_context_data(self, **kwargs) -> dict:
-        from apps.logbook.models import HelpdeskTicket
-
-        context = super().get_context_data(**kwargs)
-        context["breakdown"] = HelpdeskTicket.open_by_technician()
+        technicians = HelpdeskTicket.open_by_technician()
+        categories = HelpdeskTicket.open_by_category()
+        top = max((t["count"] for t in technicians["technicians"]), default=0)
+        context["technicians"] = [
+            {**t, "bar": round(100 * t["count"] / top, 1) if top else 0,
+             "muted": t["label"] == HelpdeskTicket.NO_TECHNICIAN_LABEL}
+            for t in technicians["technicians"]
+        ]
+        context["open_total"] = technicians["total"]
+        context["category_total"] = categories["total"]
+        context["donut"] = donut_segments(categories["categories"])
+        context["uncategorised"] = categories.get("uncategorised", 0)
+        context["ages"] = age_groups(WeekLog.get_current_week())
         return context
 
 
@@ -409,6 +432,10 @@ class IncidentsPartialView(LoginRequiredMixin, TemplateView):
         context["older_count"] = older.count()
         context["recent_days"] = self.RECENT_DAYS
         context["unresolved_count"] = Incident.objects.filter(resolved=False).count()
+        weeklog = WeekLog.get_current_week()
+        week = weeklog.incidents.all() if weeklog else Incident.objects.none()
+        context["week_count"] = week.count()
+        context["week_critical"] = week.filter(severity=Incident.Severity.CRITICAL).count()
         return context
 
 
@@ -426,6 +453,18 @@ class OnCallPartialView(LoginRequiredMixin, TemplateView):
             list(OnCallSegment.for_week(oncall.year, oncall.week_number)) if oncall else []
         )
         context["oncall_segments"] = segments if len(segments) > 1 else []
+        context["watch"] = current_watch()
+        return context
+
+
+class OnCallMiniPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: the sidebar's small "Rådighedsvagt nu" card."""
+
+    template_name = "components/partials/oncall_mini.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["watch"] = current_watch()
         return context
 
 

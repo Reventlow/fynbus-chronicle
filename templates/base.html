@@ -12,18 +12,22 @@
         // Otherwise, the user's localStorage pick applies. 'auto' = no theme.
         serverTheme: '{{ ACTIVE_THEME|escapejs }}',
         userTheme:   localStorage.getItem('theme') || 'auto',
+        // Sidebar collapsed to icons (v3 shell); mirrored on data-sidebar.
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         init() {
           const fire = () => window.dispatchEvent(new CustomEvent('accent-change'));
           this.$watch('darkMode', v => { localStorage.setItem('darkMode', v); fire(); });
           this.$watch('density',  v => localStorage.setItem('density', v));
           this.$watch('accent',   v => { localStorage.setItem('accent', v);   fire(); });
           this.$watch('userTheme', v => { localStorage.setItem('theme', v); fire(); });
+          this.$watch('sidebarCollapsed', v => localStorage.setItem('sidebarCollapsed', v));
         }
       }"
       :class="{ 'dark': darkMode }"
       :data-density="density === 'comfortable' ? null : density"
       :data-accent="accent === 'gold' ? null : accent"
-      :data-event="serverTheme || (userTheme && userTheme !== 'auto' ? userTheme : null)">
+      :data-event="serverTheme || (userTheme && userTheme !== 'auto' ? userTheme : null)"
+      :data-sidebar="sidebarCollapsed ? 'collapsed' : null">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,6 +48,11 @@
 
   {% block extra_css %}{% endblock %}
 
+  {# Apply the collapsed sidebar before first paint (Alpine binds it after load). #}
+  <script>
+    try { if (localStorage.getItem('sidebarCollapsed') === 'true') document.documentElement.dataset.sidebar = 'collapsed'; } catch (e) {}
+  </script>
+
   <!-- HTMX -->
   <script src="{% static 'js/htmx.min.js' %}" defer></script>
 
@@ -55,45 +64,98 @@
 
   {% block extra_js_head %}{% endblock %}
 </head>
-<body class="min-h-screen flex flex-col"
+<body class="{% if user.is_authenticated %}app-shell{% else %}min-h-screen flex flex-col{% endif %}"
       style="background: var(--paper); color: var(--ink-2);"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
   {% if user.is_authenticated %}
-    {% include 'components/nav.html' %}
+    {% include 'components/sidebar.html' %}
   {% endif %}
 
-  {% comment %}
-    Banner always renders; CSS hides it unless data-event="star-wars" is
-    active (whether from a schedule, ?force-theme= preview, or the user's
-    localStorage pick).
-  {% endcomment %}
-  {% include 'components/read_only_friday_banner.html' %}
-  {% include 'components/touch_grass_weekend_banner.html' %}
-  {% include 'components/star_wars_banner.html' %}
-  {% include 'components/pirate_banner.html' %}
-  {% include 'components/star_trek_banner.html' %}
-  {% include 'components/alzheimer_banner.html' %}
+  <div class="app-main">
+    {% if user.is_authenticated %}
+      {% comment %}
+        Toolbar: breadcrumb (pages override the crumbs block), task search
+        and notifications. Below 768px it also carries the menu button,
+        since the sidebar is hidden there.
+      {% endcomment %}
+      <div x-data="{ mobileOpen: false }" style="display: contents;">
+        <header class="toolbar">
+          <button type="button" class="icon-btn md:hidden" @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen" aria-label="Åbn menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          </button>
+          <nav class="toolbar-crumbs" aria-label="Brødkrumme">
+            {% block crumbs %}
+              {% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
+                <a href="{% url 'dashboard:index' %}">Chronicle</a>
+                <span class="sep">/</span>
+                <span class="current">{% if app == 'logbook' %}Ugelog{% elif app == 'oncall' %}Rådighedsvagt{% elif app == 'feedback' %}Forslag{% elif app == 'reports' %}Rapporter{% elif name == 'statistics' %}Statistik{% elif 'docs' in name %}Dokumentation{% elif app == 'accounts' %}Konto{% elif app == 'themes' %}Temaer{% else %}Kontrolpanel{% endif %}</span>
+              {% endwith %}
+            {% endblock %}
+          </nav>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+            {# Searches the priority tasks (Opgavesøgning); Ctrl/⌘+K focuses it. #}
+            <form method="get" action="{% url 'logbook:priorities-search' %}" class="toolbar-search" role="search"
+                  x-data @keydown.window.prevent.ctrl.k="$refs.q.focus()" @keydown.window.prevent.meta.k="$refs.q.focus()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" name="q" x-ref="q" placeholder="Søg i opgaver" aria-label="Søg i opgaver">
+              <input type="hidden" name="status" value="all">
+              <span class="kbd" aria-hidden="true">⌘K</span>
+            </form>
+            {% include 'notifications/_bell.html' %}
+          </div>
+        </header>
 
-  <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">
-    {% block messages %}
-      {% if messages %}
-        <div class="space-y-2 mb-6">
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
-              {{ message }}
-            </div>
-          {% endfor %}
+        {# Mobile menu: the sidebar's links and settings as a sheet under the toolbar. #}
+        <div class="mobile-sheet md:hidden" x-show="mobileOpen" x-cloak @click.outside="mobileOpen = false">
+          <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
+          <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelog</a>
+          <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
+          <a href="{% url 'feedback:board' %}" class="nav-link">Forslag</a>
+          <a href="{% url 'reports:list' %}" class="nav-link">Rapporter</a>
+          <a href="{% url 'dashboard:statistics' %}" class="nav-link">Statistik</a>
+          <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
+          <hr class="hr-soft" style="margin: 8px 0;">
+          <div style="padding: 4px 4px 0;">{% include 'components/settings_controls.html' %}</div>
+          <hr class="hr-soft" style="margin: 8px 0;">
+          <a href="{% url 'accounts:api-keys' %}" class="nav-link">API-nøgler</a>
+          <a href="{% url 'accounts:logout' %}" class="nav-link">Log ud</a>
         </div>
-      {% endif %}
-    {% endblock %}
+      </div>
+    {% endif %}
 
-    {% block content %}{% endblock %}
-  </main>
+    {% comment %}
+      Day-theme banners render inside the right column, under the toolbar.
+      CSS hides each one unless its theme is active (schedule, ?force-theme=
+      preview, or the user's pick).
+    {% endcomment %}
+    {% include 'components/read_only_friday_banner.html' %}
+    {% include 'components/touch_grass_weekend_banner.html' %}
+    {% include 'components/star_wars_banner.html' %}
+    {% include 'components/pirate_banner.html' %}
+    {% include 'components/star_trek_banner.html' %}
+    {% include 'components/alzheimer_banner.html' %}
 
-  {% if user.is_authenticated %}
-    {% include 'components/footer.html' %}
-  {% endif %}
+    <main class="flex-grow w-full {% block main_class %}page-shell{% endblock %}">
+      {% block messages %}
+        {% if messages %}
+          <div class="space-y-2 mb-6">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    {% if user.is_authenticated %}
+      {% include 'components/footer.html' %}
+    {% endif %}
+  </div>
 
   {% comment %}
     HTMX does not swap on a 4xx/5xx response: no new markup, no message —

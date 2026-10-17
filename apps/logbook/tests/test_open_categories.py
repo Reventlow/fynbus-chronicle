@@ -74,18 +74,6 @@ def test_weeklog_uses_the_week_end_for_a_past_week():
     assert week_13.helpdesk_open_by_category()["total"] == 0
 
 
-def test_dashboard_card(client, open_tickets):
-    client.force_login(User.objects.create_user("u", password="x"))
-    assert reverse("dashboard:partial-open-categories") in client.get(reverse("dashboard:index")).content.decode()
-    body = client.get(reverse("dashboard:partial-open-categories")).content.decode()
-    assert "Hardware &amp; enheder" in body
-    assert "1 af 4 åbne sager har ingen kategori" in body
-
-
-def test_dashboard_card_without_data(client):
-    client.force_login(User.objects.create_user("u", password="x"))
-    body = client.get(reverse("dashboard:partial-open-categories")).content.decode()
-    assert "Ingen åbne sager" in body
 
 
 def test_week_report_html_and_markdown(open_tickets):

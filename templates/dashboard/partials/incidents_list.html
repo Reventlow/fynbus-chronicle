@@ -1,17 +1,20 @@
-{# Incidents list — colored severity rail on the left, mono timestamp + system + owner. #}
+{% comment %}
+  Incidents card (v3): eyebrow + this week's count, then rows with a
+  severity rail and a mono P-level (_incident_row.html), no pills.
+  Shows the last 30 days plus anything unresolved; older resolved ones sit
+  behind "Vis N ældre", whose state lives on the polling wrapper in
+  index.html (x-data "olderIncidents") so the 60-second refresh keeps it.
+{% endcomment %}
 {% load star_wars %}
 <div class="card overflow-hidden" style="padding: 0; height: 100%; display: flex; flex-direction: column;">
-  <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+  <div class="card-head" style="padding: 18px 24px 10px; margin: 0;">
     <div>
-      <div class="label-eyebrow">{% sw_phrase "Hændelser" "Indsatser" "Sith-aktioner" "Kapringer" trek="Anomalier" klingon="Kampe" %}</div>
+      <div class="label-eyebrow">{% sw_phrase "Hændelser" "Indsatser" "Sith-aktioner" "Kapringer" trek="Anomalier" klingon="Kampe" %} · {{ recent_days }} dage</div>
+      <h3>{% if week_count %}{{ week_count }} denne uge, {% if week_critical %}{{ week_critical }}{% else %}ingen{% endif %} kritisk{% else %}Ingen denne uge{% endif %}</h3>
     </div>
-    <div class="flex items-center gap-2">
-      {% if unresolved_count > 0 %}
-        <span class="pill pill-bad"><span class="num">{{ unresolved_count }}</span> uløst{{ unresolved_count|pluralize:"e" }}</span>
-      {% else %}
-        <span class="pill pill-good"><span class="pill-dot"></span>Alle løst</span>
-      {% endif %}
-    </div>
+    {% if unresolved_count %}
+      <span class="task-status" style="color: var(--bad-ink);"><span class="pill-dot" style="background: var(--bad);"></span>{{ unresolved_count }} uløst{{ unresolved_count|pluralize:"e" }}</span>
+    {% endif %}
   </div>
 
   {% if incidents or older_count %}
@@ -19,40 +22,25 @@
       {% for incident in incidents %}
         {% include "dashboard/partials/_incident_row.html" %}
       {% empty %}
-        <p style="padding: 20px 24px; border-top: 1px solid var(--hairline); margin: 0; font-size: 13px; color: var(--ink-3);">
-          Ingen hændelser de seneste {{ recent_days }} dage.
+        <p style="padding: 36px 24px; border-top: 1px solid var(--hairline); margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">
+          Ingen hændelser de sidste {{ recent_days }} dage.
         </p>
       {% endfor %}
       {% for incident in older_incidents %}
         {% include "dashboard/partials/_incident_row.html" with older=True %}
       {% endfor %}
     </div>
-    <div class="flex items-center justify-between gap-3" style="padding: 12px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px;">
-      {% if older_count %}
-        {% comment %}
-          The expanded state lives on the polling wrapper in index.html
-          (x-data "olderIncidents"), so the 60-second refresh keeps it.
-        {% endcomment %}
+    {% if older_count %}
+      <div style="padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px;">
         <button type="button" class="incident-toggle" @click="olderIncidents = !olderIncidents">
-          <span x-show="!olderIncidents">Vis ældre ({% if older_count > older_incidents|length %}{{ older_incidents|length }} af {{ older_count }}{% else %}{{ older_count }}{% endif %}) ↓</span>
+          <span x-show="!olderIncidents">Vis {% if older_count > older_incidents|length %}{{ older_incidents|length }} af {{ older_count }}{% else %}{{ older_count }}{% endif %} ældre →</span>
           <span x-show="olderIncidents" x-cloak>Kun de seneste {{ recent_days }} dage ↑</span>
         </button>
-      {% else %}
-        <span></span>
-      {% endif %}
-      <a href="{% url 'admin:logbook_incident_changelist' %}"
-         style="color: var(--ink-3); text-decoration: none;"
-         onmouseover="this.style.color='var(--ink-1)'"
-         onmouseout="this.style.color='var(--ink-3)'">
-        Se alle hændelser →
-      </a>
-    </div>
-  {% else %}
-    <div class="flex-grow flex items-center justify-center" style="padding: 32px 24px;">
-      <div class="text-center">
-        <span class="pill pill-good"><span class="pill-dot"></span>0 hændelser</span>
-        <p style="font-size: 13px; color: var(--ink-3); margin: 12px 0 0;">Alt kører som det skal.</p>
       </div>
-    </div>
+    {% endif %}
+  {% else %}
+    <p style="padding: 36px 24px; border-top: 1px solid var(--hairline); margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">
+      Ingen hændelser de sidste {{ recent_days }} dage.
+    </p>
   {% endif %}
 </div>

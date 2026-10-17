@@ -302,3 +302,45 @@ class OnCallChange(models.Model):
     def effective_label(self) -> str:
         """Compact Danish label for when the change takes effect."""
         return boundary_label(self.effective_at)
+
+
+#: Full Danish weekday names indexed by ``date.weekday()``.
+DAYS_LONG = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"]
+
+
+def current_watch(now: datetime | None = None) -> dict | None:
+    """Who is on call right now, until when, and who takes over next.
+
+    Used by the sidebar's on-call card and the dashboard. Returns None
+    when nobody covers ``now``. Otherwise a dict with ``user``, ``until``
+    (aware datetime, exclusive), ``until_long`` ("mandag 00:00"),
+    ``until_short`` ("man 00:00") and ``next_user`` (None when the next
+    period has no assignee yet).
+    """
+    now = now or timezone.now()
+    segment = OnCallSegment.covering(now)
+    if segment is not None:
+        user, until = segment.user, segment.end_at
+    else:
+        duty = OnCallDuty.get_current()
+        if duty is None:
+            return None
+        user, until = duty.user, week_span(duty.year, duty.week_number)[1]
+
+    following = OnCallSegment.covering(until)
+    if following is not None:
+        next_user = following.user
+    else:
+        iso = timezone.localtime(until).date().isocalendar()
+        next_duty = OnCallDuty.get_for_week(iso.year, iso.week)
+        next_user = next_duty.user if next_duty else None
+
+    local = timezone.localtime(until)
+    day = DAYS_LONG[local.weekday()]
+    return {
+        "user": user,
+        "until": until,
+        "until_long": f"{day} {local:%H:%M}",
+        "until_short": f"{day[:3]} {local:%H:%M}",
+        "next_user": next_user,
+    }

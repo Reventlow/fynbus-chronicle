@@ -1,4 +1,4 @@
-{# Incident card — collapsible. Severity pill + title + meta + caret. #}
+{# Incident card — collapsible. Severity rail + title + meta (mono P-level, type, owner, status) + caret. #}
 {% load markdown_extras %}
 <div x-data="{ open: {% if incident.severity == 'critical' %}true{% else %}false{% endif %} }"
      id="incident-{{ incident.id }}"
@@ -7,7 +7,7 @@
      style="border-top: 1px solid var(--hairline);">
 
   <div class="grid items-center gap-3 row-hoverable"
-       style="grid-template-columns: auto 1fr auto auto auto;
+       style="grid-template-columns: 4px 1fr auto auto auto;
               padding: 14px 24px;
               cursor: pointer;
               transition: background 0.12s;"
@@ -15,19 +15,18 @@
        onmouseover="this.style.background='var(--surface-2)'"
        onmouseout="this.style.background='transparent'">
 
-    <span class="pill {% if incident.severity == 'critical' %}pill-bad{% elif incident.severity == 'high' %}pill-warn{% else %}pill-neutral{% endif %}">
-      {% if incident.severity == 'critical' %}P1{% elif incident.severity == 'high' %}P2{% else %}P3{% endif %}
-    </span>
+    <span class="incident-rail" data-sev="{% if incident.severity == 'critical' %}P1{% elif incident.severity == 'high' %}P2{% else %}P3{% endif %}"></span>
 
     <div style="min-width: 0;">
       <div style="font-size: 13.5px; color: var(--ink-1); font-weight: 500;">{{ incident.title }}</div>
-      <div class="flex flex-wrap gap-3" style="margin-top: 4px; font-size: 11.5px; color: var(--ink-4);">
-        <span class="num">{{ incident.occurred_at|date:"D j. M · H:i" }}</span>
-        <span>{{ incident.get_incident_type_display }}</span>
+      <div class="incident-meta" style="margin-top: 4px;">
+        <span class="incident-sev" data-sev="{% if incident.severity == 'critical' %}P1{% elif incident.severity == 'high' %}P2{% else %}P3{% endif %}">{% if incident.severity == 'critical' %}P1{% elif incident.severity == 'high' %}P2{% else %}P3{% endif %}</span>
+        <span class="num" style="font-family: var(--font-mono);">{{ incident.occurred_at|date:"D j. M · H:i" }}</span>
+        <span>{{ incident.get_incident_type_display }}{% if incident.created_by %} · {{ incident.created_by.get_full_name|default:incident.created_by.username }}{% endif %}</span>
         {% if incident.resolved %}
-          <span class="pill pill-good"><span class="pill-dot"></span>Løst</span>
+          <span class="task-status"><span class="pill-dot" style="background: var(--good);"></span>Løst</span>
         {% else %}
-          <span class="pill pill-bad"><span class="pill-dot"></span>Uløst</span>
+          <span class="task-status" style="color: var(--bad-ink);"><span class="pill-dot" style="background: var(--bad);"></span>Uløst</span>
         {% endif %}
       </div>
     </div>

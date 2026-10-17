@@ -1,41 +1,38 @@
-{# Oncall card — gradient surface, gradient avatar, name + week, two buttons #}
+{% comment %}
+  On-call card (v3): eyebrow with "● Aktiv" as dot + text, 44px gradient
+  avatar, name, and "Til mandag 00:00 · næste: …" from oncall.current_watch.
+{% endcomment %}
 {% load star_wars %}
-<div class="card" style="position: relative; overflow: hidden; background: linear-gradient(180deg, var(--surface-1) 0%, color-mix(in oklch, var(--accent-soft) 50%, var(--surface-1)) 100%);">
-  <div class="label-eyebrow">{% sw_phrase "Rådighedsvagt" "Jedi på vagt" "Inkvisitor på vagt" "Kaptajn på vagt" trek="Kommandør på vagt" klingon="Krigsleder på vagt" %}</div>
-  {% if oncall %}
-    <div class="flex items-center gap-3" style="margin-top: 12px;">
-      <span class="avatar avatar-44 avatar-gradient" style="box-shadow: 0 4px 12px var(--accent-soft);">
-        {% with name=oncall.user.get_full_name|default:oncall.user.username %}{{ name|slice:":2"|upper }}{% endwith %}
+<div class="card" style="background: linear-gradient(180deg, var(--surface-1), color-mix(in oklch, var(--accent-soft) 45%, var(--surface-1)));">
+  <div class="card-head">
+    <div class="label-eyebrow">{% sw_phrase "Rådighedsvagt" "Jedi på vagt" "Inkvisitor på vagt" "Kaptajn på vagt" trek="Kommandør på vagt" klingon="Krigsleder på vagt" %}</div>
+    {% if watch %}
+      <span class="task-status" style="font-size: 12px; color: var(--ink-3);"><span class="pill-dot" style="background: var(--good);"></span>Aktiv</span>
+    {% endif %}
+  </div>
+  {% if watch %}
+    <a href="{% url 'oncall:calendar' %}" class="flex items-center gap-3" style="color: inherit; text-decoration: none;">
+      <span class="avatar avatar-44 avatar-gradient">
+        {% with name=watch.user.get_full_name|default:watch.user.username %}{{ name|slice:":2"|upper }}{% endwith %}
       </span>
-      <div>
-        <div style="font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
-          {{ oncall.user.get_full_name|default:oncall.user.username }}
-        </div>
-        <div style="font-size: 12.5px; color: var(--ink-3); margin-top: 2px;">
-          {{ oncall.week_label }}
-        </div>
-      </div>
-    </div>
+      <span style="min-width: 0;">
+        <span style="display: block; font-size: 16px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
+          {{ watch.user.get_full_name|default:watch.user.username }}
+        </span>
+        <span style="display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px;">
+          Til {{ watch.until_long }}{% if watch.next_user and watch.next_user != watch.user %} · næste: {{ watch.next_user.get_full_name|default:watch.next_user.username }}{% endif %}
+        </span>
+      </span>
+    </a>
     {% if oncall_segments %}
       <div style="font-size: 12px; color: var(--ink-3); margin-top: 10px;">
         Delt uge: {% for segment in oncall_segments %}{{ segment.user.get_full_name|default:segment.user.username }} ({{ segment.range_label }}){% if not forloop.last %} · {% endif %}{% endfor %}
       </div>
     {% endif %}
-    <div class="flex gap-2" style="margin-top: 16px;">
-      <a href="{% url 'oncall:calendar' %}" class="btn btn-sm flex-1" style="justify-content: center;">Se kalender</a>
-      {% if is_editor %}
-      <a href="{% url 'oncall:calendar' %}#oncall-week-{{ oncall.year }}-{{ oncall.week_number }}" class="btn btn-sm flex-1" style="justify-content: center;">Skift</a>
-      {% endif %}
-    </div>
   {% else %}
-    <div class="flex items-center gap-3" style="margin-top: 12px;">
+    <a href="{% url 'oncall:calendar' %}" class="flex items-center gap-3" style="color: inherit; text-decoration: none;">
       <span class="avatar avatar-44" style="background: var(--surface-2); color: var(--ink-4);">—</span>
-      <div style="font-size: 16px; font-weight: 500; color: var(--ink-3);">
-        Ikke tildelt
-      </div>
-    </div>
-    <div class="flex gap-2" style="margin-top: 16px;">
-      <a href="{% url 'oncall:calendar' %}" class="btn btn-sm flex-1" style="justify-content: center;">Se kalender</a>
-    </div>
+      <span style="font-size: 16px; font-weight: 500; color: var(--ink-3);">Ingen på vagt lige nu</span>
+    </a>
   {% endif %}
 </div>

@@ -39,22 +39,33 @@ def test_recent_unresolved_and_older(logged_in):
     assert [i.title for i in context["incidents"]] == ["Ny", "Gammel uløst"]
     assert [i.title for i in context["older_incidents"]] == ["Gammel løst"]
     assert body.count("incident-older") == 1
-    assert "Vis ældre (1)" in body
+    assert "Vis 1 ældre" in body
+    # Severity is a rail and a mono P-level, not a pill.
+    assert 'class="incident-sev" data-sev="P3"' in body
+    assert "pill-bad" not in body.split("card-head", 1)[1].split("</div>", 1)[0]
 
 
 def test_nothing_recent_still_offers_older(logged_in):
     incident("Gammel løst", 45)
     _, body = get_card(logged_in)
-    assert "Ingen hændelser de seneste 30 dage" in body
-    assert "Vis ældre (1)" in body
+    assert "Ingen hændelser de sidste 30 dage" in body
+    assert "Vis 1 ældre" in body
 
 
 def test_no_toggle_without_older(logged_in):
     incident("Ny", 1)
     _, body = get_card(logged_in)
-    assert "Vis ældre" not in body
+    assert "ældre →" not in body
 
 
 def test_empty(logged_in):
     _, body = get_card(logged_in)
-    assert "0 hændelser" in body
+    assert "Ingen denne uge" in body
+    assert "Ingen hændelser de sidste 30 dage" in body
+
+
+def test_heading_counts_this_week_and_critical(logged_in):
+    incident("Kritisk", 0).__class__.objects.filter(title="Kritisk").update(severity="critical")
+    incident("Lav", 0)
+    _, body = get_card(logged_in)
+    assert "2 denne uge, 1 kritisk" in body

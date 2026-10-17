@@ -3,31 +3,28 @@
 
 {% block title %}{{ weeklog.week_label }} — FynBus Chronicle{% endblock %}
 
+{% block crumbs %}
+  <a href="{% url 'logbook:weeklog-list' %}">Ugelogs</a>
+  <span class="sep">/</span>
+  <span class="num">{{ weeklog.year }}</span>
+  <span class="sep">/</span>
+  <span class="current">Uge {{ weeklog.week_number }}</span>
+{% endblock %}
+
 {% block content %}
 <div style="display: flex; flex-direction: column; gap: var(--gutter);">
 
-  {# === Breadcrumb ========================================================= #}
-  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
-    <a href="{% url 'logbook:weeklog-list' %}" style="color: inherit; text-decoration: none;"
-       onmouseover="this.style.color='var(--ink-2)'" onmouseout="this.style.color='var(--ink-4)'">
-      Ugelogs
-    </a>
-    <span style="color: var(--ink-5);">/</span>
-    <span class="num">{{ weeklog.year }}</span>
-    <span style="color: var(--ink-5);">/</span>
-    <span style="color: var(--ink-2);">Uge {{ weeklog.week_number }}</span>
-  </div>
-
   {# === Editorial header — bottom-bordered band =========================== #}
-  <div class="flex flex-wrap items-end justify-between gap-6"
-       style="border-bottom: 1px solid var(--hairline); padding-bottom: 24px;">
-    <div>
+  <div class="flex flex-wrap items-end justify-between"
+       style="gap: 16px 24px; border-bottom: 1px solid var(--hairline); padding-bottom: 24px;">
+    <div style="min-width: 0;">
       <div class="label-eyebrow" style="margin-bottom: 12px;">Ugentlig rapport · IT-afdelingen</div>
       <h1 class="display" style="margin: 0; font-size: 64px; line-height: 1; letter-spacing: -0.02em;">
         Uge <span class="num">{{ weeklog.week_number }}</span>,
         <span class="display-italic" style="color: var(--ink-3);">{{ weeklog.year }}</span>
       </h1>
-      <div class="flex flex-wrap items-center gap-3" style="margin-top: 14px; font-size: 13.5px; color: var(--ink-3);">
+      {# Meta line: wraps between segments, never inside one. #}
+      <div class="flex flex-wrap items-center" style="margin-top: 14px; gap: 4px 10px; font-size: 13.5px; color: var(--ink-3); white-space: nowrap;">
         {% if weeklog.created_by %}
           <span>Skrevet af <strong style="color: var(--ink-1); font-weight: 600;">{{ weeklog.created_by.get_full_name|default:weeklog.created_by.username }}</strong></span>
           <span style="color: var(--ink-5);">·</span>
@@ -71,23 +68,29 @@
     {% endif %}
   </div>
 
-  {# === KPI strip — helpdesk stats ========================================= #}
-  <div class="grid grid-cols-2 lg:grid-cols-4" style="gap: var(--gutter);">
+  {% comment %}
+    Helpdesk stats for the week, each with last week's figure under it.
+    auto-fit so the four cards reflow rather than squeeze on narrow screens.
+  {% endcomment %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap: var(--gutter);">
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow">Nye sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Nye sager</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_new }}</div>
+      {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_new }}</span></div>{% endif %}
     </div>
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow">Lukkede sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Lukkede sager</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_closed }}</div>
+      {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_closed }}</span></div>{% endif %}
     </div>
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow">Åbne sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Åbne sager</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_open }}</div>
+      {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_open }}</span></div>{% endif %}
     </div>
     <div class="card flex flex-col gap-2">
       <div class="flex items-start justify-between">
-        <div class="label-eyebrow">Netto ændring</div>
+        <div class="label-eyebrow" style="white-space: nowrap;">Netto ændring</div>
         {% if weeklog.helpdesk_delta < 0 %}
           <span class="pill-delta" style="background: var(--good-soft); color: var(--good-ink);">▼{{ weeklog.helpdesk_delta|stringformat:"d"|cut:"-" }}</span>
         {% elif weeklog.helpdesk_delta > 0 %}
@@ -99,6 +102,7 @@
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; line-height: 1; color: {% if weeklog.helpdesk_delta > 0 %}var(--bad-ink){% elif weeklog.helpdesk_delta < 0 %}var(--good-ink){% else %}var(--ink-1){% endif %};">
         {% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}
       </div>
+      {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{% if prev_weeklog.helpdesk_delta > 0 %}+{% endif %}{{ prev_weeklog.helpdesk_delta }}</span></div>{% endif %}
     </div>
   </div>
 
@@ -121,7 +125,7 @@
     <div class="flex items-start justify-between gap-3" style="padding: 20px 24px 14px;">
       <div>
         <div class="label-eyebrow">Prioriterede opgaver</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">I gang denne uge</h2>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if task_total %}{{ task_open }} åbne af {{ task_total }}{% else %}I gang denne uge{% endif %}</h2>
       </div>
       {% if is_editor %}
       <div class="flex gap-2">
@@ -167,6 +171,11 @@
         </p>
       {% endfor %}
     </div>
+    {% if task_total %}
+      <div style="padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-4); font-family: var(--font-mono);">
+        {{ task_done }} / {{ task_total }} afsluttet
+      </div>
+    {% endif %}
   </div>
 
   {# Modal targets — HTMX swaps the dialog HTML in here. #}
@@ -209,7 +218,7 @@
     <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
       <div>
         <div class="label-eyebrow">Hændelser</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Registrerede hændelser</h2>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if incidents %}{{ incidents|length }} denne uge · {% if incident_critical %}{{ incident_critical }}{% else %}ingen{% endif %} kritisk{% else %}Registrerede hændelser{% endif %}</h2>
       </div>
       {% if is_editor %}
       <button hx-get="{% url 'logbook:incident-create' %}?weeklog={{ weeklog.id }}"
@@ -225,7 +234,7 @@
     </div>
 
     <div id="incidents-list">
-      {% for incident in weeklog.incidents.all %}
+      {% for incident in incidents %}
         {% include 'logbook/partials/incident_row.html' %}
       {% empty %}
         <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-incidents">

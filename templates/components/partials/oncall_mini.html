@@ -1,0 +1,13 @@
+{# Sidebar "Rådighedsvagt nu" card body; polled by components/sidebar.html. #}
+<div class="label-eyebrow" style="font-size: 10px;">Rådighedsvagt nu</div>
+{% if watch %}
+  <a href="{% url 'oncall:calendar' %}" style="display: flex; align-items: center; gap: 9px; margin-top: 8px; color: inherit; text-decoration: none;">
+    <span class="sidebar-oncall-avatar">{% with name=watch.user.get_full_name|default:watch.user.username %}{{ name|slice:":2"|upper }}{% endwith %}</span>
+    <span style="line-height: 1.2; min-width: 0;">
+      <span style="display: block; font-size: 13px; font-weight: 500; color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ watch.user.get_full_name|default:watch.user.username }}</span>
+      <span style="display: block; font-size: 11px; color: var(--ink-4); font-family: var(--font-mono);">til {{ watch.until_short }}</span>
+    </span>
+  </a>
+{% else %}
+  <a href="{% url 'oncall:calendar' %}" style="display: block; margin-top: 8px; font-size: 12.5px; color: var(--ink-3); text-decoration: none;">Ingen på vagt lige nu</a>
+{% endif %}
