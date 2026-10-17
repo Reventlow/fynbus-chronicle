@@ -35,7 +35,7 @@
       </span>
     {% endif %}
     <div style="flex: 1; min-width: 0;">
-      <div style="font-size: 13.5px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.005em; {% if obj.is_solved %}text-decoration: line-through; color: var(--ink-3);{% endif %}">
+      <div style="font-size: 13.5px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.005em; {% if obj.is_solved %}color: var(--ink-3);{% endif %}">
         {{ obj.title }}
       </div>
       {% if obj.description %}

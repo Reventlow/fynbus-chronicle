@@ -1,7 +1,7 @@
 <tr id="task-{{ task.id }}" class="table-row">
   <td class="table-cell">
     <a href="{% url 'tasks:task-detail' task.pk %}"
-       class="font-medium text-sand-800 dark:text-sand-100 hover:text-sand-600 dark:hover:text-sand-300">
+       class="font-medium ink-1 hover:text-sand-600 dark:hover:text-sand-300">
       {{ task.title }}
     </a>
   </td>
@@ -18,16 +18,16 @@
     </span>
   </td>
   <td class="table-cell">
-    {% if task.planned_start %}{{ task.planned_start|date:"d. M Y" }}{% else %}<span class="text-sand-400 dark:text-sand-500">-</span>{% endif %}
+    {% if task.planned_start %}{{ task.planned_start|date:"d. M Y" }}{% else %}<span class="ink-5">-</span>{% endif %}
   </td>
   <td class="table-cell">
-    {% if task.planned_end %}{{ task.planned_end|date:"d. M Y" }}{% else %}<span class="text-sand-400 dark:text-sand-500">-</span>{% endif %}
+    {% if task.planned_end %}{{ task.planned_end|date:"d. M Y" }}{% else %}<span class="ink-5">-</span>{% endif %}
   </td>
   <td class="table-cell">
     {% for user in task.assigned_to.all %}
       <span class="text-sm">{{ user.first_name|default:user.username }}{% if not forloop.last %}, {% endif %}</span>
     {% empty %}
-      <span class="text-sand-400 dark:text-sand-500 text-sm">-</span>
+      <span class="ink-5 text-sm">-</span>
     {% endfor %}
   </td>
 </tr>

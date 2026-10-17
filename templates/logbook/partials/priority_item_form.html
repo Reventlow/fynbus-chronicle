@@ -1,4 +1,4 @@
-<div class="p-4 bg-sand-100 dark:bg-sand-700 rounded-lg border border-sand-300 dark:border-sand-600"
+<div class="inline-form"
      id="priority-item-form-container"
      hx-on:closePriorityItemForm="this.remove()"
      x-data x-init="$nextTick(() => { $el.scrollIntoView({behavior: 'smooth', block: 'center'}); $el.querySelector('input[type=text]')?.focus(); })">
@@ -51,17 +51,17 @@
               hx-get="{% url 'logbook:priority-item-row' appearance.pk %}"
               hx-target="#priority-item-form-container"
               hx-swap="outerHTML"
-              class="btn-secondary btn-sm">
+              class="btn btn-sm">
         Annuller
       </button>
       {% else %}
       <button type="button"
               onclick="this.closest('#priority-item-form-container').remove()"
-              class="btn-secondary btn-sm">
+              class="btn btn-sm">
         Annuller
       </button>
       {% endif %}
-      <button type="submit" class="btn-primary btn-sm">
+      <button type="submit" class="btn btn-primary btn-sm">
         {% if appearance %}Gem{% else %}Tilføj{% endif %}
       </button>
     </div>

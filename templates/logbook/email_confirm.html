@@ -10,15 +10,20 @@
 
 {% block title %}{{ heading }} - FynBus Chronicle{% endblock %}
 
+{% block crumbs %}
+  <a href="{{ back_url }}">Tilbage</a>
+  <span class="sep">/</span>
+  <span class="current">Send som email</span>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-2xl mx-auto">
-  <div class="mb-6">
-    <div class="flex items-center gap-2 text-sm text-sand-500 dark:text-sand-400 mb-1">
-      <a href="{{ back_url }}" class="hover:text-sand-700 dark:hover:text-sand-200">Tilbage</a>
-      <span>/</span>
+<div style="max-width: 760px;">
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px; margin-bottom: var(--gutter);">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
       <span>Send som email</span>
     </div>
-    <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">{{ heading }}</h1>
+    <h1 class="display" style="margin: 0; font-size: 38px; line-height: 1.05;">{{ heading }}</h1>
   </div>
 
   <div class="card">

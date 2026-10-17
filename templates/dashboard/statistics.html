@@ -125,6 +125,8 @@
     </div>
   </section>
 
+  {% include 'components/section_label.html' with n="01" title="Hvornår" sub="Hvornår kollegerne skriver, og hvor hurtigt sagerne bliver løst" %}
+
   {# === When do people write ============================================== #}
   <section class="stats-grid stats-grid-wide">
     <div class="card stats-card">
@@ -202,6 +204,8 @@
     <div class="stats-chart"><canvas id="chart-resolution"></canvas></div>
   </section>
 
+  {% include 'components/section_label.html' with n="02" title="Udvikling" sub="Åbne, oprettede og løste sager uge for uge" %}
+
   {# === Weekly flow ======================================================= #}
   <section class="stats-grid">
     <div class="card stats-card">
@@ -221,6 +225,8 @@
       </div>
     </div>
   </section>
+
+  {% include 'components/section_label.html' with n="03" title="Hvem og hvad" sub="Kategorier, teknikere, liggetid og afdelinger" %}
 
   {# === Who and what ====================================================== #}
   <section class="stats-grid stats-grid-3">
@@ -291,10 +297,7 @@
   </section>
 
   {# === Chronicle ========================================================= #}
-  <div style="margin-top: 12px;">
-    <div class="label-eyebrow">Chronicle</div>
-    <h2 class="display" style="margin: 6px 0 0; font-size: 30px;">Prioriterede opgaver og nedbrud</h2>
-  </div>
+  {% include 'components/section_label.html' with n="04" title="Chronicle" sub="Prioriterede opgaver og nedbrud" %}
 
   <section class="stats-grid">
     {% with p=chronicle.priorities %}

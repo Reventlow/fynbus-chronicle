@@ -3,14 +3,15 @@
 
 {% block title %}Opgavesøgning — FynBus Chronicle{% endblock %}
 
+{% block crumbs %}
+  <a href="{% url 'logbook:weeklog-list' %}">Ugelogs</a>
+  <span class="sep">/</span>
+  <span class="current">Opgavesøgning</span>
+{% endblock %}
+
 {% block content %}
 <div style="display: flex; flex-direction: column; gap: var(--gutter);">
 
-  <div style="font-size: 12.5px; color: var(--ink-4); display: flex; align-items: center; gap: 8px;">
-    <a href="{% url 'logbook:weeklog-list' %}" style="color: inherit; text-decoration: none;">Ugelogs</a>
-    <span style="color: var(--ink-5);">/</span>
-    <span style="color: var(--ink-2);">Opgavesøgning</span>
-  </div>
 
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
@@ -21,7 +22,7 @@
   </div>
 
   <form method="get" class="card">
-    <div class="grid items-end gap-3" style="grid-template-columns: 1fr 160px 140px auto;">
+    <div class="filter-row">
       <div>
         <label for="id_q" class="input-label">Tekstsøgning</label>
         <input type="text" id="id_q" name="q" value="{{ q }}" class="field"
@@ -102,10 +103,7 @@
           {% elif item.is_deleted %}
             <span class="pill pill-bad">slettet</span>
           {% else %}
-            <span class="pill {% if item.status == 'completed' %}pill-good{% elif item.status == 'blocked' %}pill-bad{% elif item.status == 'ongoing' %}pill-accent{% else %}pill-neutral{% endif %}">
-              {% if item.status != 'completed' %}<span class="pill-dot"></span>{% endif %}
-              {{ item.get_status_display }}
-            </span>
+            {% if item.status == 'blocked' %}<span class="pill pill-bad">{{ item.get_status_display }}</span>{% else %}<span class="task-status"><span class="pill-dot" style="background: {% if item.status == 'ongoing' %}var(--accent){% elif item.status == 'completed' %}var(--good){% else %}var(--ink-5){% endif %};"></span>{{ item.get_status_display }}</span>{% endif %}
           {% endif %}
           {% if item.auto_closed and not item.is_deleted %}
             <span class="pill pill-neutral" title="Auto-lukket efter 6 uger" style="font-size: 10px;">auto</span>

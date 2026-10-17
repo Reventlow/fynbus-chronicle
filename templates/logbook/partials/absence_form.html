@@ -1,4 +1,4 @@
-<div class="p-4 bg-sand-100 dark:bg-sand-700 rounded-lg border border-sand-300 dark:border-sand-600"
+<div class="inline-form"
      id="absence-form-container"
      hx-on:closeAbsenceForm="this.remove()">
   <form method="post"
@@ -58,17 +58,17 @@
               hx-get="{% url 'logbook:absence-row' object.pk %}"
               hx-target="#absence-form-container"
               hx-swap="outerHTML"
-              class="btn-secondary btn-sm">
+              class="btn btn-sm">
         Annuller
       </button>
       {% else %}
       <button type="button"
               onclick="this.closest('#absence-form-container').remove()"
-              class="btn-secondary btn-sm">
+              class="btn btn-sm">
         Annuller
       </button>
       {% endif %}
-      <button type="submit" class="btn-primary btn-sm">
+      <button type="submit" class="btn btn-primary btn-sm">
         {% if object %}Gem{% else %}Tilføj{% endif %}
       </button>
     </div>

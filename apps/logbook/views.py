@@ -64,8 +64,16 @@ class WeekLogListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        """Filter by year if specified."""
-        queryset = super().get_queryset()
+        """Filter by year if specified; count each week's tasks and incidents
+        in the same query so the list does not query per row."""
+        queryset = super().get_queryset().annotate(
+            task_count=db_models.Count(
+                "priority_appearances",
+                filter=db_models.Q(priority_appearances__priority_item__deleted_at__isnull=True),
+                distinct=True,
+            ),
+            incident_count=db_models.Count("incidents", distinct=True),
+        ).order_by("-year", "-week_number")  # aggregates drop Meta.ordering
         year = self.request.GET.get("year")
         if year:
             queryset = queryset.filter(year=year)
@@ -74,6 +82,8 @@ class WeekLogListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs) -> dict:
         """Add available years for filtering."""
         context = super().get_context_data(**kwargs)
+        current = WeekLog.get_current_week()
+        context["current_weeklog_pk"] = current.pk if current else None
         context["years"] = (
             WeekLog.objects.values_list("year", flat=True).distinct().order_by("-year")
         )

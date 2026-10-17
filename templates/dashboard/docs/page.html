@@ -1,228 +1,46 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ page_title }} - Dokumentation - FynBus Chronicle{% endblock %}
+{% block title %}{{ page_title }} — Dokumentation — FynBus Chronicle{% endblock %}
 
-{% block extra_css %}
-<style>
-  /* Markdown content styling */
-  .prose {
-    max-width: none;
-  }
-  .prose h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-sand-200, #E5E0D8);
-  }
-  .prose h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-  .prose h3 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-top: 1.25rem;
-    margin-bottom: 0.5rem;
-  }
-  .prose h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  .prose p {
-    margin-bottom: 1rem;
-    line-height: 1.625;
-  }
-  .prose ul, .prose ol {
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-  }
-  .prose ul {
-    list-style-type: disc;
-  }
-  .prose ol {
-    list-style-type: decimal;
-  }
-  .prose li {
-    margin-bottom: 0.25rem;
-  }
-  .prose a {
-    color: var(--color-gold-600, #8B7355);
-    text-decoration: none;
-  }
-  .prose a:hover {
-    text-decoration: underline;
-  }
-  .prose code {
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-  }
-  .prose pre {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin-bottom: 1rem;
-  }
-  .prose pre code {
-    background: transparent;
-    padding: 0;
-  }
-  .prose blockquote {
-    border-left: 4px solid var(--color-sand-300, #D5CFC5);
-    padding-left: 1rem;
-    font-style: italic;
-    margin: 1rem 0;
-  }
-  .prose table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-  }
-  .prose th {
-    font-weight: 600;
-    text-align: left;
-    padding: 0.75rem;
-  }
-  .prose td {
-    padding: 0.75rem;
-  }
-  .prose th, .prose td {
-    border: 1px solid var(--color-sand-200, #E5E0D8);
-  }
-  .prose hr {
-    margin: 2rem 0;
-  }
-  .prose strong {
-    font-weight: 600;
-  }
-
-  /* Light mode colors */
-  .prose h1, .prose h2 { color: var(--color-sand-800, #4A4540); }
-  .prose h3, .prose h4 { color: var(--color-sand-700, #6B635B); }
-  .prose p, .prose ul, .prose ol, .prose td { color: var(--color-sand-700, #6B635B); }
-  .prose strong { color: var(--color-sand-800, #4A4540); }
-  .prose blockquote { color: var(--color-sand-600, #8B7355); }
-  .prose code { background-color: var(--color-sand-100, #F0EDE8); color: #A65D57; }
-  .prose pre { background-color: var(--color-sand-800, #4A4540); color: var(--color-sand-100, #F0EDE8); }
-  .prose pre code { color: var(--color-sand-100, #F0EDE8); }
-  .prose th { background-color: var(--color-sand-100, #F0EDE8); color: var(--color-sand-800, #4A4540); }
-  .prose hr { border-color: var(--color-sand-200, #E5E0D8); }
-  .prose h1 { border-bottom-color: var(--color-sand-200, #E5E0D8); }
-
-  /* Dark mode colors */
-  .dark .prose h1, .dark .prose h2 { color: var(--color-sand-100, #F0EDE8); }
-  .dark .prose h3, .dark .prose h4 { color: var(--color-sand-200, #E5E0D8); }
-  .dark .prose p, .dark .prose ul, .dark .prose ol, .dark .prose li, .dark .prose td { color: var(--color-sand-300, #D5CFC5); }
-  .dark .prose strong { color: var(--color-sand-200, #E5E0D8); }
-  .dark .prose blockquote { color: var(--color-sand-400, #C4B8A8); border-left-color: var(--color-sand-600, #8B7355); }
-  .dark .prose a { color: var(--color-gold-500, #C4A35A); }
-  .dark .prose code { background-color: var(--color-sand-800, #4A4540); color: #E8A298; }
-  .dark .prose pre { background-color: #1a1816; color: var(--color-sand-100, #F0EDE8); }
-  .dark .prose pre code { background: transparent; color: var(--color-sand-100, #F0EDE8); }
-  .dark .prose th { background-color: var(--color-sand-800, #4A4540); color: var(--color-sand-200, #E5E0D8); }
-  .dark .prose th, .dark .prose td { border-color: var(--color-sand-700, #6B635B); }
-  .dark .prose hr { border-color: var(--color-sand-700, #6B635B); }
-  .dark .prose h1 { border-bottom-color: var(--color-sand-700, #6B635B); }
-
-  .license-text {
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    font-size: 0.875rem;
-    white-space: pre-wrap;
-    background-color: var(--color-sand-100, #F0EDE8);
-    color: var(--color-sand-700, #6B635B);
-  }
-  .dark .license-text {
-    background-color: var(--color-sand-800, #4A4540);
-    color: var(--color-sand-300, #D5CFC5);
-  }
-
-  /* Table of contents */
-  .toc {
-    font-size: 0.875rem;
-  }
-  .toc ul {
-    list-style: none;
-    padding-left: 0;
-  }
-  .toc ul ul {
-    padding-left: 1rem;
-  }
-  .toc a {
-    color: var(--color-sand-600, #8B7355);
-    text-decoration: none;
-  }
-  .toc a:hover {
-    color: var(--color-sand-800, #4A4540);
-  }
-  .dark .toc a {
-    color: var(--color-sand-400, #C4B8A8);
-  }
-  .dark .toc a:hover {
-    color: var(--color-sand-200, #E5E0D8);
-  }
-</style>
+{% block crumbs %}
+  <a href="{% url 'dashboard:docs-index' %}">Dokumentation</a>
+  <span class="sep">/</span>
+  <span class="current">{{ page_title }}</span>
 {% endblock %}
 
 {% block content %}
-<div class="flex flex-col lg:flex-row gap-8">
-  <!-- Sidebar navigation -->
-  <aside class="lg:w-64 flex-shrink-0">
-    <div class="lg:sticky lg:top-8">
-      <a href="{% url 'dashboard:docs-index' %}"
-         class="flex items-center text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200 mb-4">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        Alle dokumenter
-      </a>
-
-      <nav class="space-y-1">
+{% comment %}
+  One documentation page: the rendered Markdown (styled by .doc-prose in
+  static/src/input.css) beside a side column with every document and the
+  page's table of contents. The side column sticks under the toolbar.
+{% endcomment %}
+<div class="docs-layout">
+  <aside class="docs-side">
+    <div class="docs-side-inner">
+      <div class="label-eyebrow" style="margin-bottom: 8px;">Dokumenter</div>
+      <nav class="docs-nav" aria-label="Dokumenter">
         {% for slug, page in docs_pages.items %}
-        <a href="{% url 'dashboard:docs-page' slug=slug %}"
-           class="block px-3 py-2 rounded-lg text-sm transition-colors
-                  {% if slug == current_slug %}
-                  bg-sand-200 dark:bg-sand-700 text-sand-800 dark:text-sand-100 font-medium
-                  {% else %}
-                  text-sand-600 dark:text-sand-400 hover:bg-sand-100 dark:hover:bg-sand-800
-                  {% endif %}">
-          {{ page.title }}
-        </a>
+          <a href="{% url 'dashboard:docs-page' slug=slug %}" class="docs-nav-link{% if slug == current_slug %} is-active{% endif %}">{{ page.title }}</a>
         {% endfor %}
       </nav>
-
       {% if toc %}
-      <div class="mt-8 pt-8 border-t border-sand-200 dark:border-sand-700">
-        <h3 class="text-xs font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wider mb-3">
-          Indhold
-        </h3>
-        <div class="toc">
-          {{ toc|safe }}
-        </div>
-      </div>
+        <div class="label-eyebrow" style="margin: 18px 0 8px;">Indhold</div>
+        <div class="docs-toc">{{ toc|safe }}</div>
       {% endif %}
     </div>
   </aside>
 
-  <!-- Main content -->
-  <main class="flex-grow min-w-0">
-    <div class="card">
-      <h1 class="text-2xl font-bold text-sand-800 dark:text-sand-100 mb-6 pb-4 border-b border-sand-200 dark:border-sand-700">
-        {{ page_title }}
-      </h1>
-
-      <div class="prose">
-        {{ content|safe }}
+  <div style="min-width: 0; display: flex; flex-direction: column; gap: var(--gutter);">
+    <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>Dokumentation</span>
       </div>
+      <h1 class="display" style="margin: 0; font-size: 40px; line-height: 1.05;">{{ page_title }}</h1>
     </div>
-  </main>
+    <article class="card doc-prose">
+      {{ content|safe }}
+    </article>
+  </div>
 </div>
 {% endblock %}

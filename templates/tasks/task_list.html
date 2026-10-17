@@ -8,11 +8,11 @@
   <!-- Page header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Opgaver</h1>
-      <p class="text-sand-500 dark:text-sand-400 mt-1">Oversigt over IT-opgaver og projekter</p>
+      <h1 class="text-2xl font-semibold ink-1">Opgaver</h1>
+      <p class="ink-4 mt-1">Oversigt over IT-opgaver og projekter</p>
     </div>
     {% if is_editor %}
-    <a href="{% url 'tasks:task-create' %}" class="btn-primary">
+    <a href="{% url 'tasks:task-create' %}" class="btn btn-primary">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -24,14 +24,14 @@
   <!-- Sort controls -->
   <div class="card">
     <div class="flex flex-wrap items-center gap-3">
-      <span class="text-sm font-medium text-sand-600 dark:text-sand-300">Sorter:</span>
+      <span class="text-sm font-medium ink-3">Sorter:</span>
       {% with sorts="planned_start:Planlagt start,status:Status,title:Titel,created_at:Oprettet" %}
       {% for item in sorts|default:"" %}
       {% endfor %}
       {% endwith %}
 
       <a href="?sort=planned_start"
-         class="text-sm px-2 py-1 rounded {% if current_sort == 'planned_start' or not current_sort %}bg-sand-200 dark:bg-sand-700 font-medium text-sand-800 dark:text-sand-100{% else %}text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200{% endif %}">
+         class="text-sm px-2 py-1 rounded {% if current_sort == 'planned_start' or not current_sort %}bg-sand-200 dark:bg-sand-700 font-medium ink-1{% else %}ink-3 hover-ink-1{% endif %}">
         Planlagt start
         {% if current_sort == 'planned_start' or not current_sort %}
           <span class="text-xs">&uarr;</span>
@@ -44,7 +44,7 @@
       {% endif %}
 
       <a href="?sort=status"
-         class="text-sm px-2 py-1 rounded {% if current_sort == 'status' %}bg-sand-200 dark:bg-sand-700 font-medium text-sand-800 dark:text-sand-100{% else %}text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200{% endif %}">
+         class="text-sm px-2 py-1 rounded {% if current_sort == 'status' %}bg-sand-200 dark:bg-sand-700 font-medium ink-1{% else %}ink-3 hover-ink-1{% endif %}">
         Status
         {% if current_sort == 'status' %}
           <span class="text-xs">&uarr;</span>
@@ -57,7 +57,7 @@
       {% endif %}
 
       <a href="?sort=title"
-         class="text-sm px-2 py-1 rounded {% if current_sort == 'title' %}bg-sand-200 dark:bg-sand-700 font-medium text-sand-800 dark:text-sand-100{% else %}text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200{% endif %}">
+         class="text-sm px-2 py-1 rounded {% if current_sort == 'title' %}bg-sand-200 dark:bg-sand-700 font-medium ink-1{% else %}ink-3 hover-ink-1{% endif %}">
         Titel
         {% if current_sort == 'title' %}
           <span class="text-xs">&uarr;</span>
@@ -70,7 +70,7 @@
       {% endif %}
 
       <a href="?sort=-created_at"
-         class="text-sm px-2 py-1 rounded {% if current_sort == '-created_at' %}bg-sand-200 dark:bg-sand-700 font-medium text-sand-800 dark:text-sand-100{% elif current_sort == 'created_at' %}bg-sand-200 dark:bg-sand-700 font-medium text-sand-800 dark:text-sand-100{% else %}text-sand-600 dark:text-sand-400 hover:text-sand-800 dark:hover:text-sand-200{% endif %}">
+         class="text-sm px-2 py-1 rounded {% if current_sort == '-created_at' %}bg-sand-200 dark:bg-sand-700 font-medium ink-1{% elif current_sort == 'created_at' %}bg-sand-200 dark:bg-sand-700 font-medium ink-1{% else %}ink-3 hover-ink-1{% endif %}">
         Oprettet
         {% if current_sort == '-created_at' %}
           <span class="text-xs">&darr;</span>

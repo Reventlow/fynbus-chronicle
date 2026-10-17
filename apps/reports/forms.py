@@ -20,8 +20,8 @@ class ReportUploadForm(forms.ModelForm):
         model = Report
         fields = ["title", "description", "is_public"]
         widgets = {
-            "title": forms.TextInput(attrs={"class": "input", "placeholder": "Fx Oktober 2026 – et kig et år tilbage"}),
-            "description": forms.TextInput(attrs={"class": "input", "placeholder": "Én linje om, hvad rapporten viser"}),
+            "title": forms.TextInput(attrs={"class": "field", "placeholder": "Fx Oktober 2026 – et kig et år tilbage"}),
+            "description": forms.TextInput(attrs={"class": "field", "placeholder": "Én linje om, hvad rapporten viser"}),
         }
 
     def clean_file(self):

@@ -11,10 +11,10 @@
         <div class="absolute -left-4 top-1.5 w-3 h-3 rounded-full border-2 border-sand-300 dark:border-sand-500 bg-white dark:bg-sand-800"></div>
 
         <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-          <span class="text-xs text-sand-500 dark:text-sand-400 whitespace-nowrap">
+          <span class="text-xs ink-4 whitespace-nowrap">
             {{ change.changed_at|date:"d. M Y H:i" }}
           </span>
-          <span class="text-sm text-sand-600 dark:text-sand-300">
+          <span class="text-sm ink-3">
             {{ change.changed_by.get_full_name|default:change.changed_by.username }}
           </span>
           <div class="flex items-center gap-1.5">
@@ -29,11 +29,11 @@
               {% endif %}">
               {{ change.get_from_state_display }}
             </span>
-            <svg class="w-3 h-3 text-sand-400 dark:text-sand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3 h-3 ink-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
             {% else %}
-            <span class="text-xs text-sand-400 dark:text-sand-500">Oprettet som</span>
+            <span class="text-xs ink-5">Oprettet som</span>
             {% endif %}
             <span class="badge
               {% if change.to_state == 'todo' %}bg-sand-200 text-sand-700 dark:bg-sand-600 dark:text-sand-200
@@ -52,6 +52,6 @@
     </div>
   </div>
   {% else %}
-  <p class="text-sand-500 dark:text-sand-400 text-center py-4">Ingen statusændringer</p>
+  <p class="ink-4 text-center py-4">Ingen statusændringer</p>
   {% endif %}
 </div>

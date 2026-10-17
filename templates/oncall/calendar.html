@@ -1,38 +1,37 @@
 {% extends 'base.html' %}
 
-{% block title %}Rådighedsvagt - FynBus Chronicle{% endblock %}
+{% block title %}Rådighedsvagt — FynBus Chronicle{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-  <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Rådighedsvagt</h1>
-      <p class="text-sand-500 dark:text-sand-400 mt-1">Planlæg hvem der har rådighedsvagt de kommende uger</p>
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header with the window controls (past / ahead) #}
+  <div class="flex flex-wrap items-end justify-between" style="gap: 16px 24px; border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div style="min-width: 0;">
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>Planlæg vagten uge for uge</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 44px; line-height: 1.05;">
+        Rådighedsvagt <span class="display-italic" style="color: var(--ink-3);">i kalenderen.</span>
+      </h1>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="text-xs text-sand-500 dark:text-sand-400">Tidligere:</span>
-      <a href="?weeks={{ num_weeks }}&past=0"
-         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 0 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
-        Ingen
-      </a>
-      <a href="?weeks={{ num_weeks }}&past=4"
-         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 4 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
-        4 uger
-      </a>
-      <a href="?weeks={{ num_weeks }}&past=13"
-         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if past_weeks == 13 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
-        13 uger
-      </a>
-      <span class="text-xs text-sand-500 dark:text-sand-400" style="margin-left: 8px;">Fremad:</span>
-      <a href="?weeks=13&past={{ past_weeks }}"
-         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 13 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
-        13 uger
-      </a>
-      <a href="?weeks=56&past={{ past_weeks }}"
-         class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors {% if num_weeks == 56 %}bg-sky-600 text-white{% else %}bg-sand-200 text-sand-700 hover:bg-sand-300 dark:bg-sand-700 dark:text-sand-200 dark:hover:bg-sand-600{% endif %}">
-        56 uger
-      </a>
+    <div class="flex flex-wrap items-center" style="gap: 8px 14px;">
+      <div class="flex items-center gap-2">
+        <span class="label-eyebrow">Tidligere</span>
+        <div class="segmented">
+          <a href="?weeks={{ num_weeks }}&past=0" class="segmented-btn{% if past_weeks == 0 %} segmented-btn-active{% endif %}">Ingen</a>
+          <a href="?weeks={{ num_weeks }}&past=4" class="segmented-btn{% if past_weeks == 4 %} segmented-btn-active{% endif %}">4 uger</a>
+          <a href="?weeks={{ num_weeks }}&past=13" class="segmented-btn{% if past_weeks == 13 %} segmented-btn-active{% endif %}">13 uger</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="label-eyebrow">Fremad</span>
+        <div class="segmented">
+          <a href="?weeks=13&past={{ past_weeks }}" class="segmented-btn{% if num_weeks == 13 %} segmented-btn-active{% endif %}">13 uger</a>
+          <a href="?weeks=56&past={{ past_weeks }}" class="segmented-btn{% if num_weeks == 56 %} segmented-btn-active{% endif %}">56 uger</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -42,8 +41,7 @@
   {% endcomment %}
   <div id="oncall-history-panel"></div>
 
-  <!-- Calendar grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  <div class="oncall-grid">
     {% for week in weeks %}
       {% include 'oncall/partials/week_card.html' with week=week %}
     {% endfor %}

@@ -2,6 +2,20 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.21.3 — 2026-10-17
+
+### Changed
+- **Det nye design på resten af siderne.** Alle sider i menuen bruger nu samme udtryk som Kontrolpanelet: overskrift med rubrik, tynde kanter og temaets farver i lyst og mørkt.
+  - **Ugelogs:** én liste med uge, sammendrag og en linje med opgaver, hændelser og helpdesk-tal. Den aktuelle uge er markeret.
+  - **Rådighedsvagt:** nye ugekort med navn, vagtskifte og *nu* ved den, der har vagten. Den aktuelle uge har en farvet kant, tidligere uger er nedtonede. Vælg tidsrum med knapper i overskriften.
+  - **Dokumentation:** dokumenterne står i en kolonne ved siden af teksten med indholdsfortegnelse, og teksten følger temaet.
+  - **Statistik** er delt i nummererede afsnit: *Hvornår*, *Udvikling*, *Hvem og hvad* og *Chronicle*.
+  - Ugelog-formularen, email-bekræftelsen, login og *Adgang nægtet* har fået den nye overskrift.
+- **Brødkrummen står i bjælken øverst** på alle sider, ikke længere som en linje på selve siden.
+- **Status vises som en farvet prik med tekst** på Forslag, Rapporter, opgavesøgning, opgavehistorik, delte links og API-nøgler. Kun *Blokeret* og *slettet* har stadig et rødt mærke.
+- **Løste forslag er nedtonede** i stedet for overstreget.
+- Forslagstavlen og søgefelterne på Forslag og i opgavesøgningen folder pænt på mobil.
+
 ## 0.21.2 — 2026-10-17
 
 ### Added

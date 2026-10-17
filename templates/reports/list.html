@@ -39,11 +39,11 @@
           <div class="flex flex-wrap items-center gap-2" style="margin-bottom: 4px;">
             <a href="{{ r.get_absolute_url }}" style="font-size: 18px; font-weight: 600; color: var(--ink-1); text-decoration: none;">{{ r.title }}</a>
             {% if r.is_public %}
-              <span class="pill pill-good"><span class="pill-dot"></span>Offentligt link</span>
+              <span class="task-status"><span class="pill-dot" style="background: var(--good);"></span>Offentligt link</span>
             {% else %}
-              <span class="pill pill-neutral"><span class="pill-dot"></span>Kun indloggede</span>
+              <span class="task-status"><span class="pill-dot" style="background: var(--ink-5);"></span>Kun indloggede</span>
             {% endif %}
-            {% if r.video %}<span class="pill pill-accent"><span class="pill-dot"></span>Slides + video</span>{% endif %}
+            {% if r.video %}<span class="task-status"><span class="pill-dot" style="background: var(--accent);"></span>Slides + video</span>{% endif %}
           </div>
           {% if r.description %}<p style="margin: 0 0 6px; font-size: 14px; color: var(--ink-2);">{{ r.description }}</p>{% endif %}
           <div style="font-size: 12.5px; color: var(--ink-4);">
@@ -100,12 +100,12 @@
         <div>
           <label class="input-label" for="{{ form.file.id_for_label }}">HTML-fil</label>
           {{ form.file }}
-          <p class="input-hint">{{ form.file.help_text }}</p>
+          <p class="input-help">{{ form.file.help_text }}</p>
         </div>
         <div>
           <label class="input-label" for="{{ form.video.id_for_label }}">Video (valgfri)</label>
           {{ form.video }}
-          <p class="input-hint">{{ form.video.help_text }} Ved "Erstat" beholdes en eksisterende video, hvis feltet er tomt.</p>
+          <p class="input-help">{{ form.video.help_text }} Ved "Erstat" beholdes en eksisterende video, hvis feltet er tomt.</p>
         </div>
         {% if reports %}
           <div>
@@ -114,7 +114,7 @@
               <option value="">— Opret som ny —</option>
               {% for r in reports %}<option value="{{ r.slug }}">{{ r.title }}</option>{% endfor %}
             </select>
-            <p class="input-hint">Linket bevares, kun indholdet skiftes ud.</p>
+            <p class="input-help">Linket bevares, kun indholdet skiftes ud.</p>
           </div>
         {% endif %}
         <label class="flex items-center gap-2" style="font-size: 14px;">

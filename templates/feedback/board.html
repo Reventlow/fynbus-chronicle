@@ -45,7 +45,7 @@
 
   {# Filter row #}
   <form method="get" class="card">
-    <div class="grid items-end gap-3" style="grid-template-columns: 1fr 180px 160px auto;">
+    <div class="filter-row">
       <div>
         <label for="id_q" class="input-label">Søg</label>
         <input type="text" id="id_q" name="q" value="{{ q }}" class="field"
@@ -74,8 +74,7 @@
   </form>
 
   {# Three-column board #}
-  <div class="feedback-board grid"
-       style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--gutter);">
+  <div class="feedback-board">
 
     {# Open #}
     <div class="card" style="padding: 0; align-self: start;">
@@ -84,7 +83,7 @@
           <div class="label-eyebrow">Åbne</div>
           <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ open_items|length }}</div>
         </div>
-        <span class="pill pill-info"><span class="pill-dot"></span>queue</span>
+        <span class="task-status"><span class="pill-dot" style="background: var(--info);"></span>queue</span>
       </div>
       <div class="feedback-column"
            data-status="open"
@@ -106,7 +105,7 @@
           <div class="label-eyebrow">I gang</div>
           <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ in_progress_items|length }}</div>
         </div>
-        <span class="pill pill-accent"><span class="pill-dot"></span>aktiv</span>
+        <span class="task-status"><span class="pill-dot" style="background: var(--accent);"></span>aktiv</span>
       </div>
       <div class="feedback-column"
            data-status="in_progress"
@@ -128,7 +127,7 @@
           <div class="label-eyebrow">Løst</div>
           <div class="num" style="font-size: 16px; font-weight: 600; color: var(--ink-1); margin-top: 2px;">{{ total_solved }}</div>
         </div>
-        <span class="pill pill-good"><span class="pill-dot"></span>færdige</span>
+        <span class="task-status"><span class="pill-dot" style="background: var(--good);"></span>færdige</span>
       </div>
       <div class="feedback-column"
            data-status="solved"

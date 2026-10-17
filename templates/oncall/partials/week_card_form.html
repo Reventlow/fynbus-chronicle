@@ -6,16 +6,14 @@
   Annuller fetches it back via week-status.
 {% endcomment %}
 <div id="oncall-week-form-{{ week.year }}-{{ week.week }}"
-     class="card {% if week.is_current %}ring-2 ring-gold-400{% endif %}">
-  <div class="flex items-center justify-between mb-2">
-    <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
-      Uge {{ week.week }}, {{ week.year }}
-    </h3>
-    <span class="text-xs text-sand-500 dark:text-sand-400">Skift vagt</span>
+     class="card oncall-card{% if week.is_current %} is-current{% endif %}">
+  <div class="flex items-start justify-between gap-2" style="margin-bottom: 12px;">
+    <div>
+      <div style="font-size: 15px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">Uge {{ week.week }}<span style="color: var(--ink-4); font-weight: 400;">, {{ week.year }}</span></div>
+      <div class="num" style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); margin-top: 2px;">{{ week.monday|date:"d.m" }} – {{ week.sunday|date:"d.m" }}</div>
+    </div>
+    <span class="label-eyebrow">Skift vagt</span>
   </div>
-  <p class="text-xs text-sand-500 dark:text-sand-400 mb-3">
-    {{ week.monday|date:"d/m" }} - {{ week.sunday|date:"d/m" }}
-  </p>
 
   <form hx-post="{% url 'oncall:assign' week.year week.week %}"
         hx-target="#oncall-week-form-{{ week.year }}-{{ week.week }}"

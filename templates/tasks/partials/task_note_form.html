@@ -1,5 +1,5 @@
 <div class="card">
-  <h3 class="text-lg font-semibold text-sand-800 dark:text-sand-100 mb-4">Tilføj note</h3>
+  <h3 class="text-lg font-semibold ink-1 mb-4">Tilføj note</h3>
   <form hx-post="{% url 'tasks:task-note-create' task.pk %}"
         hx-target="#notes-list"
         hx-swap="afterbegin"
@@ -33,7 +33,7 @@
     </div>
 
     <div class="flex justify-end">
-      <button type="submit" class="btn-primary btn-sm">
+      <button type="submit" class="btn btn-primary btn-sm">
         Tilføj note
       </button>
     </div>

@@ -6,11 +6,11 @@
   never recorded, so older weeks only show coverage.
 {% endcomment %}
 <div class="card">
-  <div class="flex items-center justify-between mb-3">
-    <h3 class="text-sm font-semibold text-sand-800 dark:text-sand-100">
-      Historik — Uge {{ week }}, {{ year }}
-      <span class="text-xs font-normal text-sand-500 dark:text-sand-400">({{ monday|date:"d/m" }} - {{ sunday|date:"d/m" }})</span>
-    </h3>
+  <div class="card-head">
+    <div>
+      <div class="label-eyebrow">Historik · {{ monday|date:"d.m" }} – {{ sunday|date:"d.m" }}</div>
+      <h3>Uge {{ week }}, {{ year }}</h3>
+    </div>
     <button onclick="document.getElementById('oncall-history-panel').innerHTML=''"
             class="icon-btn"
             aria-label="Luk historik">
@@ -20,41 +20,41 @@
     </button>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 20px;">
     <div>
-      <div class="text-xs font-semibold uppercase tracking-wide text-sand-500 dark:text-sand-400 mb-2">Dækning</div>
+      <div class="label-eyebrow" style="margin-bottom: 8px;">Dækning</div>
       {% for segment in segments %}
-        <div class="flex items-center gap-2 text-sm text-sand-700 dark:text-sand-200 py-0.5">
-          <span class="text-xs text-sand-500 dark:text-sand-400" style="min-width: 88px;">{{ segment.range_label }}</span>
-          <span class="font-medium">{{ segment.user.get_full_name|default:segment.user.username }}</span>
+        <div class="flex items-center gap-2" style="font-size: 13px; color: var(--ink-2); padding: 2px 0;">
+          <span style="min-width: 88px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-4);">{{ segment.range_label }}</span>
+          <span style="color: var(--ink-1); font-weight: 500;">{{ segment.user.get_full_name|default:segment.user.username }}</span>
         </div>
       {% empty %}
-        <p class="text-sm text-sand-400 dark:text-sand-500 italic">Ingen dækning registreret.</p>
+        <p style="margin: 0; font-size: 13px; color: var(--ink-4);">Ingen dækning registreret.</p>
       {% endfor %}
     </div>
 
     <div>
-      <div class="text-xs font-semibold uppercase tracking-wide text-sand-500 dark:text-sand-400 mb-2">Ændringer</div>
+      <div class="label-eyebrow" style="margin-bottom: 8px;">Ændringer</div>
       {% for change in changes %}
-        <div class="text-sm text-sand-700 dark:text-sand-200 py-0.5">
+        <div style="font-size: 13px; color: var(--ink-2); padding: 3px 0;">
           {% if change.from_user and change.to_user %}
-            <span class="font-medium">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>
+            <span style="color: var(--ink-1); font-weight: 500;">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>
             →
-            <span class="font-medium">{{ change.to_user.get_full_name|default:change.to_user.username }}</span>
+            <span style="color: var(--ink-1); font-weight: 500;">{{ change.to_user.get_full_name|default:change.to_user.username }}</span>
           {% elif change.to_user %}
-            <span class="font-medium">{{ change.to_user.get_full_name|default:change.to_user.username }}</span> tog vagten
+            <span style="color: var(--ink-1); font-weight: 500;">{{ change.to_user.get_full_name|default:change.to_user.username }}</span> tog vagten
           {% else %}
-            Vagten frigivet{% if change.from_user %} fra <span class="font-medium">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>{% endif %}
+            Vagten frigivet{% if change.from_user %} fra <span style="color: var(--ink-1); font-weight: 500;">{{ change.from_user.get_full_name|default:change.from_user.username }}</span>{% endif %}
           {% endif %}
           {% if not change.is_whole_week %}
-            <span class="text-xs text-sand-500 dark:text-sand-400">· gældende fra {{ change.effective_label }}</span>
+            <span style="font-size: 11.5px; color: var(--ink-4);">· gældende fra {{ change.effective_label }}</span>
           {% endif %}
-          <div class="text-xs text-sand-500 dark:text-sand-400">
+          <div style="font-size: 11.5px; color: var(--ink-4); font-family: var(--font-mono);">
             {{ change.changed_at|date:"j. M Y · H:i" }} · af {% if change.changed_by %}{{ change.changed_by.get_full_name|default:change.changed_by.username }}{% else %}ukendt{% endif %}
           </div>
         </div>
       {% empty %}
-        <p class="text-sm text-sand-400 dark:text-sand-500 italic">Ingen registrerede ændringer.</p>
+        <p style="margin: 0; font-size: 13px; color: var(--ink-4);">Ingen registrerede ændringer.</p>
       {% endfor %}
     </div>
   </div>

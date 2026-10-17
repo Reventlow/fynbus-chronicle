@@ -26,7 +26,7 @@
 
       if (!data.tasks || data.tasks.length === 0) {
         container.innerHTML =
-          '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Ingen aktive opgaver</p>';
+          '<p class="text-center ink-4 py-8">Ingen aktive opgaver</p>';
         return;
       }
 
@@ -37,7 +37,7 @@
 
       if (tasks.length === 0) {
         container.innerHTML =
-          '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Ingen opgaver med planlagte datoer</p>';
+          '<p class="text-center ink-4 py-8">Ingen opgaver med planlagte datoer</p>';
         return;
       }
 
@@ -279,7 +279,7 @@
     .catch(function(error) {
       console.error('Error loading task timeline data:', error);
       document.getElementById('task-timeline-container').innerHTML =
-        '<p class="text-center text-sand-500 dark:text-sand-400 py-8">Kunne ikke indlæse data</p>';
+        '<p class="text-center ink-4 py-8">Kunne ikke indlæse data</p>';
     });
   }, 50);
 })();

@@ -2,12 +2,12 @@
 
 <div id="meeting-minutes-card" class="card">
   <div class="flex items-center justify-between mb-3">
-    <h2 class="text-lg font-semibold text-sand-800 dark:text-sand-100">Referat af mandags møde</h2>
+    <h2 style="margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink-1);">Referat af mandags møde</h2>
     {% if is_editor %}
     <button hx-get="{% url 'logbook:meeting-minutes-edit' weeklog.pk %}"
             hx-target="#meeting-minutes-card"
             hx-swap="outerHTML"
-            class="btn-secondary btn-sm">
+            class="btn btn-sm">
       <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -19,24 +19,24 @@
 
   {% if weeklog.meeting_skipped %}
     <div class="flex items-start gap-3 py-3">
-      <svg class="w-5 h-5 text-sand-400 dark:text-sand-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5 ink-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
       </svg>
       <div>
-        <p class="text-sand-600 dark:text-sand-300 font-medium">Mødet blev ikke afholdt denne uge</p>
+        <p class="ink-3 font-medium">Mødet blev ikke afholdt denne uge</p>
         {% if weeklog.meeting_skipped_reason %}
-          <p class="text-sand-500 dark:text-sand-400 text-sm mt-1">{{ weeklog.meeting_skipped_reason }}</p>
+          <p class="ink-4 text-sm mt-1">{{ weeklog.meeting_skipped_reason }}</p>
         {% endif %}
       </div>
     </div>
   {% else %}
     {% if weeklog.meeting_attendees %}
       <div class="mb-3">
-        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-2">Deltagere</h3>
+        <h3 class="text-sm font-medium ink-3 mb-2">Deltagere</h3>
         <div class="flex flex-wrap gap-1.5">
           {% for name in weeklog.meeting_attendees|split_commas %}
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-sand-200 dark:bg-sand-800 text-sand-700 dark:text-sand-100">
+            <span class="inline-flex items-center chip">
               {{ name }}
             </span>
           {% endfor %}
@@ -46,13 +46,13 @@
 
     {% if weeklog.meeting_minutes %}
       <div>
-        <h3 class="text-sm font-medium text-sand-600 dark:text-sand-400 mb-1">Referat</h3>
-        <div class="prose prose-sand dark:prose-invert prose-sm max-w-none text-sand-700 dark:text-sand-300">
+        <h3 class="text-sm font-medium ink-3 mb-1">Referat</h3>
+        <div class="md ink-2">
           {{ weeklog.meeting_minutes|render_markdown }}
         </div>
       </div>
     {% elif not weeklog.meeting_attendees %}
-      <p class="text-sand-500 dark:text-sand-400 text-center py-4">
+      <p class="ink-4 text-center py-4">
         Intet referat tilføjet endnu.
       </p>
     {% endif %}

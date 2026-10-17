@@ -1,47 +1,44 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Ugelogs - FynBus Chronicle{% endblock %}
+{% block title %}Ugelogs — FynBus Chronicle{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-  <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold text-sand-800 dark:text-sand-100">Ugelogs</h1>
-      <p class="text-sand-500 dark:text-sand-400 mt-1">Oversigt over alle IT-ugelogs</p>
-    </div>
-    {% if is_editor %}
-    <a href="{% url 'logbook:weeklog-create' %}" class="btn-primary">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      Ny ugelog
-    </a>
-    {% endif %}
-  </div>
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
 
-  <!-- Filters -->
-  <div class="card">
-    <div class="flex flex-wrap items-center gap-4">
-      <label class="input-label mb-0">Filtrer efter år:</label>
-      <select class="select-field w-auto"
-              hx-get="{% url 'logbook:weeklog-list' %}"
-              hx-target="#weeklog-list"
-              hx-swap="innerHTML"
-              name="year">
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between" style="gap: 16px 24px; border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div style="min-width: 0;">
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>{{ paginator.count }} ugelog{{ paginator.count|pluralize:"s" }}</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 44px; line-height: 1.05;">
+        Ugelogs <span class="display-italic" style="color: var(--ink-3);">uge for uge.</span>
+      </h1>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <select class="select-field" style="width: auto;" aria-label="Filtrér på år"
+              hx-get="{% url 'logbook:weeklog-list' %}" hx-target="#weeklog-list" hx-swap="innerHTML" name="year">
         <option value="">Alle år</option>
         {% for year in years %}
-          <option value="{{ year }}" {% if selected_year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>
-            {{ year }}
-          </option>
+          <option value="{{ year }}" {% if selected_year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
         {% endfor %}
       </select>
+      <a href="{% url 'logbook:priorities-search' %}" class="btn btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Opgavesøgning
+      </a>
+      {% if is_editor %}
+        <a href="{% url 'logbook:weeklog-create' %}" class="btn btn-primary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Ny ugelog
+        </a>
+      {% endif %}
     </div>
   </div>
 
-  <!-- Week logs list -->
-  <div id="weeklog-list" class="space-y-4">
+  <div id="weeklog-list">
     {% include 'logbook/partials/weeklog_list_items.html' %}
   </div>
 </div>
