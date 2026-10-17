@@ -56,7 +56,7 @@ def test_category_donut_is_svg_with_total(logged_in):
     assert "Ingen kategori" in body
 
 
-def test_age_groups_and_over_three_months_pill(logged_in):
+def test_age_buckets_and_over_one_month_pill(logged_in):
     weeklog = WeekLog.get_or_create_current_week()
     weeklog.helpdesk_open_0_7 = 5
     weeklog.helpdesk_open_15_30 = 10
@@ -64,11 +64,11 @@ def test_age_groups_and_over_three_months_pill(logged_in):
     weeklog.helpdesk_open_over_365 = 2
     weeklog.save()
     groups = age_groups(weeklog)
-    assert [g["count"] for g in groups["groups"]] == [5, 10, 0, 5]
-    assert groups["over_3_months"] == 5
+    assert [g["count"] for g in groups["groups"]] == [5, 0, 10, 0, 3, 0, 2]
+    assert groups["stale"] == 5
     body = get_bento(logged_in)
-    assert "5 over 3 mdr" in body
-    assert "1–4 uger" in body
+    assert "5 over 1 måned" in body
+    assert "2 uger – 1 måned" in body and "Over 12 måneder" in body
 
 
 def test_without_data(logged_in):
@@ -82,3 +82,46 @@ def test_donut_segments_cover_the_circle():
     segs = donut_segments([{"count": 1, "color": "a"}, {"count": 3, "color": "b"}])
     assert [s["offset"] for s in segs] == ["-0.00", "-75.40"]
     assert donut_segments([]) == []
+
+
+# --- Newest and oldest open tickets -------------------------------------------
+
+
+def test_newest_and_oldest_open_tickets_link_to_servicedesk(logged_in, settings):
+    settings.SERVICEDESK_URL = "https://servicedesk.example/"
+    now = timezone.now()
+    for i in range(1, 9):
+        HelpdeskTicket.objects.create(
+            sdp_id=100 + i, created_at=now - timedelta(days=i), is_open=True,
+            status="Åben", subject=f"Sag {i}",
+        )
+    HelpdeskTicket.objects.create(  # closed: never listed
+        sdp_id=999, created_at=now - timedelta(days=50), closed_at=now, is_open=False,
+        status="Lukket", subject="Lukket sag",
+    )
+    response = logged_in.get(reverse("dashboard:partial-open-ticket-lists"))
+    assert [t.sdp_id for t in response.context["newest"]] == [101, 102, 103, 104, 105, 106]
+    assert [t.sdp_id for t in response.context["oldest"]] == [108, 107, 106, 105, 104, 103]
+    body = response.content.decode()
+    assert 'href="https://servicedesk.example/WorkOrder.do?woMode=viewWO&amp;woID=101"' in body
+    assert "Sag 8" in body and "Lukket sag" not in body
+    assert "8 d" in body
+
+
+def test_mirror_copies_the_subject():
+    from apps.logbook.services.ticket_mirror import ticket_values
+
+    values = ticket_values({
+        "id": "15869", "created_time": {"value": "1760000000000"}, "status": {"name": "Åben"},
+        "subject": "  Julespeak  ",
+    })
+    assert values["subject"] == "Julespeak"
+
+
+def test_age_label():
+    from apps.dashboard.overview import age_label
+
+    now = timezone.now()
+    assert [age_label(now - d, now) for d in (
+        timedelta(minutes=5), timedelta(hours=5), timedelta(days=12), timedelta(days=210),
+    )] == ["5 min", "5 t", "12 d", "7 mdr"]

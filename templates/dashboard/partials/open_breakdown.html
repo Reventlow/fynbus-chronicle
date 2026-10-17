@@ -4,8 +4,9 @@
     Tekniker — horizontal bars, unassigned muted, scaled to the largest.
     Kategori — SVG donut (overview.donut_segments) plus legend; colours
                from the server, the same as the week report.
-    Liggetid — one stacked bar and four age groups (overview.age_groups)
-               from the current week's ServiceDesk snapshot.
+    Liggetid — one stacked bar and the week report's seven age buckets
+               (overview.age_groups) from the current week's ServiceDesk
+               snapshot, with the "over 1 måned" count.
 {% endcomment %}
 <div class="bento-cell">
   <div class="card-head"><div class="label-eyebrow">Tekniker</div></div>
@@ -52,7 +53,7 @@
 <div class="bento-cell">
   <div class="card-head">
     <div class="label-eyebrow">Liggetid</div>
-    {% if ages.over_3_months %}<span class="pill pill-warn">{{ ages.over_3_months }} over 3 mdr</span>{% endif %}
+    {% if ages.stale %}<span class="pill pill-warn">{{ ages.stale }} over 1 måned</span>{% endif %}
   </div>
   {% if ages %}
     <div class="age-stack" aria-hidden="true">
@@ -60,11 +61,10 @@
         {% if g.count %}<span style="width: {{ g.share|floatformat:'1u' }}%; background: {{ g.color }};" title="{{ g.label }}: {{ g.count }}"></span>{% endif %}
       {% endfor %}
     </div>
-    <div class="age-grid">
+    <div class="age-list">
       {% for g in ages.groups %}
-        <div>
-          <div class="k"><span style="width: 6px; height: 6px; border-radius: 999px; background: {{ g.color }};"></span>{{ g.label }}</div>
-          <div class="v num">{{ g.count }}</div>
+        <div title="{{ g.label }}: {{ g.count }} ({{ g.share|floatformat:0 }}%)">
+          <span class="swatch" style="background: {{ g.color }};"></span><span class="name">{{ g.label }}</span><span class="num">{{ g.count }}</span>
         </div>
       {% endfor %}
     </div>

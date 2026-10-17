@@ -215,7 +215,6 @@ class TestReportOutput:
         for template in (
             "logbook/exports/weekly_report.html",
             "logbook/exports/email_body.html",
-            "dashboard/partials/helpdesk_stats.html",
         ):
             html = render_to_string(template, {"weeklog": weeklog})
             assert "12.5%" in html, template

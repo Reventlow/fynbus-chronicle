@@ -1,0 +1,16 @@
+{# Rows of open tickets: number, subject, technician and age; each links to ServiceDesk. #}
+{% if tickets %}
+  <div class="ticket-list">
+    {% for t in tickets %}
+      <a class="ticket-row" {% if t.servicedesk_url %}href="{{ t.servicedesk_url }}" target="_blank" rel="noopener"{% endif %}
+         title="#{{ t.sdp_id }}{% if t.subject %}: {{ t.subject }}{% endif %} · {{ t.status }}{% if t.technician %} · {{ t.technician }}{% endif %}">
+        <span class="ticket-id num">#{{ t.sdp_id }}</span>
+        <span class="ticket-subject">{{ t.subject|default:t.category|default:"(intet emne)" }}</span>
+        <span class="ticket-who">{% if t.technician %}{{ t.technician }}{% else %}Ikke tildelt{% endif %}</span>
+        <span class="ticket-age num">{{ t.age }}</span>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="stats-note">Ingen åbne sager.</p>
+{% endif %}

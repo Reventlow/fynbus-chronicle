@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 0.21.2 — 2026-10-17
+
+### Added
+- **Nyeste og ældste uløste sager på Kontrolpanelet.** Under *Åbne sager* står de seks nyeste og de seks ældste åbne sager med nummer, emne, tekniker og alder. Hver linje åbner sagen direkte i ServiceDesk.
+  - Chronicle gemmer nu sagens emne fra ServiceDesk. Eksisterende sager får emnet ved den fulde synkronisering, som kører, når synkroniseringen starter.
+
+### Changed
+- **Statistik følger temaets farver.** Graferne, varmekortet og søjlerne bruger accentfarven og de øvrige temafarver, også i mørk tilstand og med dagens tema, og tegnes om, når du skifter.
+- **Liggetid på Kontrolpanelet bruger igen de syv aldersgrupper** fra ugerapporten (*Under 1 uge* … *Over 12 måneder*) og tallet *over 1 måned*, med den nye stablede søjle og en kompakt liste.
+- **Nøgletallene fylder mindre.** Liggetidssøjlen er fjernet fra *Åbne sager*, da den nu står under *Åbne sager*-afsnittet, og kortene er lavere.
+
 ## 0.21.1 — 2026-10-17
 
 ### Changed

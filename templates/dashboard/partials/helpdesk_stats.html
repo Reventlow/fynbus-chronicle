@@ -5,7 +5,7 @@
 {% load static %}
 {% load star_wars %}
 
-<div class="card flex flex-col gap-3{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
+<div class="card kpi-card flex flex-col{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
     <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" "Åbne kapringer" trek="Aktive missioner" klingon="Aktive kampe" %}</div>
     {% if sync.stale %}<span class="kpi-stale-tag" style="margin-left: auto; margin-right: 6px;">forældet</span>{% endif %}
@@ -21,7 +21,7 @@
     </button>
   </div>
   <div class="num"
-       style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
+       style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_open|default:"—" }}
   </div>
   {% if sync.stale %}
@@ -35,53 +35,36 @@
   {% else %}
     <div style="font-size: 11.5px; color: var(--ink-4);">Ingen ugelog</div>
   {% endif %}
-  {% comment %}
-    Liggetid — how the open cases split by age. One stacked bar plus the
-    "older than a month" number, so the card still reads at a glance.
-  {% endcomment %}
-  {% if weeklog.has_helpdesk_age_breakdown %}
-    <div style="display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--surface-2);">
-      {% for bucket in weeklog.helpdesk_age_buckets %}
-        {% if bucket.share %}
-          <div title="{{ bucket.label }}: {{ bucket.count }} ({{ bucket.share|floatformat:0 }}%)"
-               style="width: {{ bucket.share|floatformat:"1u" }}%; background: {{ bucket.color }};"></div>
-        {% endif %}
-      {% endfor %}
-    </div>
-    <div style="font-size: 11.5px; color: var(--ink-3);">
-      {{ weeklog.helpdesk_open_stale }} over 1 måned
-    </div>
-  {% endif %}
   {% if sync_error %}
     <div class="pill pill-bad">{{ sync_error }}</div>
   {% endif %}
 </div>
 
-<div class="card flex flex-col gap-3{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
+<div class="card kpi-card flex flex-col{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between gap-2">
     <div class="label-eyebrow">{% sw_phrase "Nye sager (uge)" "Nye missioner (uge)" "Nye oprørere (uge)" "Nye kapringer (uge)" trek="Nye missioner (uge)" klingon="Nye kampe (uge)" %}</div>
     {% if sync.stale %}<span class="kpi-stale-tag">forældet</span>{% endif %}
   </div>
   <div class="num"
-       style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
+       style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_new|default:"—" }}
   </div>
   <div style="font-size: 11.5px; color: var(--ink-3);">indkomne sager</div>
 </div>
 
-<div class="card flex flex-col gap-3{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
+<div class="card kpi-card flex flex-col{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between gap-2">
     <div class="label-eyebrow">{% sw_phrase "Lukkede sager" "Fuldførte missioner" "Rebel agents fanget" "Skat hjembragt" trek="Fuldførte missioner" klingon="Æresfulde sejre" %}</div>
     {% if sync.stale %}<span class="kpi-stale-tag">forældet</span>{% endif %}
   </div>
   <div class="num"
-       style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
+       style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {{ weeklog.helpdesk_closed|default:"—" }}
   </div>
   <div style="font-size: 11.5px; color: var(--ink-3);">løste sager</div>
 </div>
 
-<div class="card flex flex-col gap-3{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
+<div class="card kpi-card flex flex-col{% if sync.stale %} is-stale{% endif %}" style="position: relative; overflow: hidden;">
   <div class="flex items-start justify-between">
     <div class="label-eyebrow">{% sw_phrase "Netto" "Alliance-balance" "Imperial kontrol" "Skattekiste-balance" trek="Federation-balance" klingon="Empire-balance" %}</div>
     {% if sync.stale %}<span class="kpi-stale-tag">forældet</span>{% elif weeklog %}
@@ -95,7 +78,7 @@
     {% endif %}
   </div>
   <div class="num"
-       style="font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
+       style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1; font-family: var(--font-ui);">
     {% if weeklog %}{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}{% else %}—{% endif %}
   </div>
   <div style="font-size: 11.5px; color: var(--ink-3);">åbne sager, ændring</div>

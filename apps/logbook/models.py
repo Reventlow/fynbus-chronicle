@@ -960,6 +960,7 @@ class HelpdeskTicket(models.Model):
     department = models.CharField(verbose_name="Afdeling", max_length=120, blank=True)
     category = models.CharField(verbose_name="Kategori", max_length=120, blank=True)
     technician = models.CharField(verbose_name="Tekniker", max_length=120, blank=True)
+    subject = models.CharField(verbose_name="Emne", max_length=255, blank=True)
     sdp_updated_at = models.DateTimeField(
         verbose_name="Sidst ændret i ServiceDesk",
         null=True,
@@ -974,6 +975,14 @@ class HelpdeskTicket(models.Model):
 
     def __str__(self) -> str:
         return f"#{self.sdp_id} ({self.status})"
+
+    @property
+    def servicedesk_url(self) -> str:
+        """Direct link to the request in ServiceDesk Plus, or "" without SERVICEDESK_URL."""
+        from django.conf import settings
+
+        base = (getattr(settings, "SERVICEDESK_URL", "") or "").rstrip("/")
+        return f"{base}/WorkOrder.do?woMode=viewWO&woID={self.sdp_id}" if base else ""
 
     # Category colours, assigned largest category first; shared by the
     # dashboard chart and the week report so a category keeps its colour

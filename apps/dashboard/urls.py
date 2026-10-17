@@ -41,6 +41,11 @@ urlpatterns = [
         name="partial-open-breakdown",
     ),
     path(
+        "partials/open-ticket-lists/",
+        views.OpenTicketListsPartialView.as_view(),
+        name="partial-open-ticket-lists",
+    ),
+    path(
         "partials/oncall-mini/",
         views.OnCallMiniPartialView.as_view(),
         name="partial-oncall-mini",

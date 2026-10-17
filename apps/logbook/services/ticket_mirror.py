@@ -54,6 +54,7 @@ TICKET_FIELDS = [
     "requester",
     "category",
     "technician",
+    "subject",
 ]
 
 CANCELLED_STATUSES = {"Annulleret"}
@@ -114,6 +115,7 @@ def ticket_values(row: dict) -> dict | None:
         "department": _name(requester.get("department"))[:120],
         "category": _name(row.get("category"))[:120],
         "technician": _name(row.get("technician"))[:120],
+        "subject": str(row.get("subject") or "").strip()[:255],
         "sdp_updated_at": updated_at,
     }
 

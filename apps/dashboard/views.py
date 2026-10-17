@@ -28,7 +28,14 @@ from apps.accounts.permissions import editor_required
 from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
 from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
 
-from .overview import age_groups, changelog_strip, donut_segments, headline_delta, sync_state
+from .overview import (
+    age_groups,
+    changelog_strip,
+    donut_segments,
+    headline_delta,
+    open_ticket_lists,
+    sync_state,
+)
 
 
 # Documentation configuration
@@ -405,6 +412,18 @@ class OpenBreakdownPartialView(LoginRequiredMixin, TemplateView):
         context["donut"] = donut_segments(categories["categories"])
         context["uncategorised"] = categories.get("uncategorised", 0)
         context["ages"] = age_groups(WeekLog.get_current_week())
+        return context
+
+
+class OpenTicketListsPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: the six newest and six oldest open helpdesk tickets,
+    each linking straight to the request in ServiceDesk."""
+
+    template_name = "dashboard/partials/open_ticket_lists.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context.update(open_ticket_lists())
         return context
 
 

@@ -352,42 +352,58 @@
     if (v / max > 0.55) td.classList.add("is-hot");
   });
 
+  // Theme colours: read the live design tokens (--accent, --info, …), so
+  // the charts follow light/dark, the accent pick and day themes. Tokens
+  // are oklch(); painting one pixel turns any CSS colour into rgb, which
+  // Chart.js and the alpha helper below can use everywhere.
+  var probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  function rgb(token) {
+    var value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+    probe.clearRect(0, 0, 1, 1);
+    probe.fillStyle = "#000";
+    probe.fillStyle = value || "#888";
+    probe.fillRect(0, 0, 1, 1);
+    var d = probe.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  }
+  function color(token, alpha) {
+    var c = rgb(token);
+    return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (alpha == null ? 1 : alpha) + ")";
+  }
+
+  var charts = [];
+
   function draw() {
     if (!window.Chart) return setTimeout(draw, 50);
+    charts.forEach(function (c) { c.destroy(); });
+    charts = [];
     var data = JSON.parse(document.getElementById("stats-data").textContent);
-    var cs = getComputedStyle(document.documentElement);
-    var css = function (name, fallback) { return cs.getPropertyValue(name).trim() || fallback; };
-    var dark = document.documentElement.classList.contains("dark");
 
     var C = {
-      info: css("--chart-info", "rgb(40,110,210)"),
-      good: css("--chart-good", "rgb(70,142,102)"),
-      accent: css("--chart-accent", "rgb(180,132,56)"),
-      ink: dark ? "rgb(150,152,158)" : "rgb(110,115,124)",
-      grid: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+      info: color("--info"),
+      good: color("--good"),
+      accent: color("--accent"),
+      bad: color("--bad"),
+      ink: color("--ink-4"),
+      grid: color("--hairline"),
     };
-    // Categorical palette for the doughnut; matches the .stats-dot swatches.
-    var SERIES = [C.info, C.good, C.accent, "#A65D57", "#7D8471", "#8B7355", "#9AA083", "#C08A4A"];
+    // Categorical palette for the doughnut; also paints the .stats-dot swatches.
+    var SERIES = [C.accent, C.info, C.good, color("--warn"), C.bad, color("--ink-3"), color("--accent-ink"), color("--ink-5")];
     document.querySelectorAll(".stats-dot").forEach(function (dot) {
       dot.style.background = SERIES[parseInt(dot.dataset.series, 10) % SERIES.length];
     });
 
-    // Translucent version of a colour for bar fills.
-    function soft(color, alpha) {
-      var c = document.createElement("canvas").getContext("2d");
-      c.fillStyle = color;
-      var hex = c.fillStyle.match(/^#([0-9a-f]{6})$/i);
-      if (!hex) return color;
-      var n = parseInt(hex[1], 16);
-      return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + alpha + ")";
+    // Translucent version of an rgba() colour for bar fills.
+    function soft(rgba, alpha) {
+      return rgba.replace(/,\s*[\d.]+\)$/, "," + alpha + ")");
     }
 
     var font = { family: "JetBrains Mono", size: 10 };
     var tooltip = {
-      backgroundColor: dark ? "rgba(44,48,56,0.98)" : "rgba(255,255,255,0.98)",
-      titleColor: dark ? "#f0f0f0" : "#191e26",
-      bodyColor: dark ? "#cdd0d6" : "#3c424c",
-      borderColor: dark ? "#4a505a" : "#dadce2",
+      backgroundColor: color("--surface-1", 0.98),
+      titleColor: color("--ink-1"),
+      bodyColor: color("--ink-2"),
+      borderColor: color("--hairline-strong"),
       borderWidth: 1, padding: 10, cornerRadius: 8,
       titleFont: { family: "JetBrains Mono", size: 11 },
       bodyFont: { family: "Inter Tight", size: 12 },
@@ -407,7 +423,7 @@
         interaction: { mode: "index", intersect: false },
         plugins: { legend: { display: false }, tooltip: tooltip },
       }, config.options || {});
-      new Chart(el.getContext("2d"), config);
+      charts.push(new Chart(el.getContext("2d"), config));
     }
 
     // Weekdays — average new tickets on such a day.
@@ -489,7 +505,7 @@
       type: "bar",
       data: {
         labels: data.incidents.months,
-        datasets: [{ label: "Hændelser", data: data.incidents.by_month, backgroundColor: soft("#A65D57", 0.8), borderRadius: 3, maxBarThickness: 36 }],
+        datasets: [{ label: "Hændelser", data: data.incidents.by_month, backgroundColor: soft(C.bad, 0.8), borderRadius: 3, maxBarThickness: 36 }],
       },
       options: { scales: axes() },
     });
@@ -497,6 +513,8 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", draw);
   else draw();
+  // Light/dark, accent and theme changes (base.html) repaint the charts.
+  window.addEventListener("accent-change", function () { requestAnimationFrame(draw); });
 })();
 </script>
 {% endblock %}

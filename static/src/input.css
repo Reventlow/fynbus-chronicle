@@ -1799,6 +1799,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .kpi-grid .label-eyebrow { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kpi-grid .card.is-stale { opacity: 0.7; }
   .kpi-grid .card.is-stale .num { color: var(--ink-3) !important; }
+  .kpi-card { gap: 8px; padding: 18px 22px; }
   .kpi-stale-tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--bad-ink); white-space: nowrap; }
   .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--gutter); }
   @media (min-width: 1100px) { .now-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
@@ -1852,9 +1853,29 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .bento-legend .name { color: var(--ink-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bento-legend .num { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }
   .age-stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; margin-bottom: 14px; }
-  .age-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-  .age-grid .k { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-4); white-space: nowrap; }
-  .age-grid .v { font-size: 22px; font-weight: 500; color: var(--ink-1); letter-spacing: -0.03em; margin-top: 4px; }
+  /* Seven age buckets as a compact two-column legend (label · count). */
+  .age-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; }
+  .age-list > div { display: flex; align-items: center; gap: 8px; font-size: 12.5px; min-width: 0; }
+  .age-list .swatch { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .age-list .name { color: var(--ink-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .age-list .num { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }
+
+  /* Two-cell bento (newest / oldest open tickets). */
+  .bento.bento-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bento.bento-2 .bento-cell:last-child { grid-column: auto; }
+  @media (max-width: 900px) { .bento.bento-2 { grid-template-columns: minmax(0, 1fr); } }
+  .ticket-list { display: flex; flex-direction: column; margin: -4px -10px; }
+  .ticket-row {
+    display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 44px; align-items: baseline; gap: 10px;
+    padding: 6px 10px; border-radius: 7px; font-size: 13px;
+    color: inherit; text-decoration: none; transition: background 0.12s ease;
+  }
+  a.ticket-row[href]:hover { background: var(--surface-2); }
+  .ticket-id { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-ink); }
+  .ticket-subject { color: var(--ink-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ticket-who { font-size: 11.5px; color: var(--ink-4); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+  .ticket-age { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); text-align: right; }
+  @media (max-width: 520px) { .ticket-row { grid-template-columns: 54px minmax(0, 1fr) 44px; } .ticket-who { display: none; } }
 
   /* Changelog: a flat dashed strip instead of a card. */
   .changelog-strip:empty { display: none; }
@@ -2439,7 +2460,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .stats-bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 4px; }
   .stats-bar-label .num { color: var(--ink-3); white-space: nowrap; }
   .stats-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
-  .stats-bar > div { height: 100%; border-radius: 4px; background: var(--chart-info); min-width: 2px; }
+  .stats-bar > div { height: 100%; border-radius: 4px; background: var(--accent); min-width: 2px; }
 
   /* Category list under the doughnut. */
   .stats-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
@@ -2465,20 +2486,20 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     --heat: 0;
     height: 24px;
     border-radius: 3px;
-    background: color-mix(in srgb, var(--chart-info) calc(var(--heat) * 100%), var(--surface-2));
+    background: color-mix(in oklch, var(--accent) calc(var(--heat) * 100%), var(--surface-2));
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 10.5px;
     font-variant-numeric: tabular-nums;
     text-align: center;
     color: var(--ink-2);
   }
-  .stats-heatmap td.is-hot { color: #fff; }
+  .stats-heatmap td.is-hot { color: var(--paper); }
   .stats-heat-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-4); }
   .stats-heat-scale {
     width: 90px;
     height: 8px;
     border-radius: 4px;
-    background: linear-gradient(to right, var(--surface-2), var(--chart-info));
+    background: linear-gradient(to right, var(--surface-2), var(--accent));
   }
 
   /* Statistics share links (templates/dashboard/statistics_share.html). */

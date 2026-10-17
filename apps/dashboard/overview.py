@@ -68,34 +68,34 @@ def sync_state(now: datetime | None = None) -> dict:
     return {"last_sync": last, "label": label, "stale": last is None or now - last > limit}
 
 
-# The bento's four age groups, built from the week log's seven buckets:
-# (label, bucket fields, colour token).
-AGE_GROUPS = (
-    ("< 1 uge", ("helpdesk_open_0_7",), "var(--good)"),
-    ("1–4 uger", ("helpdesk_open_8_14", "helpdesk_open_15_30"), "var(--accent)"),
-    ("1–3 mdr", ("helpdesk_open_31_90",), "var(--warn)"),
-    ("> 3 mdr", ("helpdesk_open_91_180", "helpdesk_open_181_365", "helpdesk_open_over_365"), "var(--bad)"),
+# Theme colours for the week log's seven age buckets, fresh to oldest, so
+# the bento follows the accent and day themes: sage → accent → warn → bad.
+AGE_COLORS = (
+    "var(--good)",
+    "color-mix(in oklch, var(--good) 50%, var(--accent))",
+    "var(--accent)",
+    "color-mix(in oklch, var(--accent) 50%, var(--warn))",
+    "var(--warn)",
+    "color-mix(in oklch, var(--warn) 50%, var(--bad))",
+    "var(--bad)",
 )
 
 
 def age_groups(weeklog: WeekLog | None) -> dict | None:
-    """Open tickets in four age groups for the bento, or None without data.
+    """Open tickets per age bucket for the bento, or None without data.
 
-    Returns ``{groups: [{label, count, share, color}], total, over_3_months}``.
+    The same seven buckets and "over 1 måned" figure as the week report
+    (``WeekLog.helpdesk_age_buckets`` / ``helpdesk_open_stale``), coloured
+    from the theme. Returns ``{groups: [{label, count, share, color}],
+    total, stale}``.
     """
     if weeklog is None or not weeklog.has_helpdesk_age_breakdown:
         return None
-    total = weeklog.helpdesk_open_bucketed
-    groups = []
-    for label, fields, color in AGE_GROUPS:
-        count = sum(getattr(weeklog, f) or 0 for f in fields)
-        groups.append({
-            "label": label,
-            "count": count,
-            "share": round(100 * count / total, 1) if total else 0,
-            "color": color,
-        })
-    return {"groups": groups, "total": total, "over_3_months": groups[-1]["count"]}
+    groups = [
+        {**bucket, "color": color}
+        for bucket, color in zip(weeklog.helpdesk_age_buckets, AGE_COLORS)
+    ]
+    return {"groups": groups, "total": weeklog.helpdesk_open_bucketed, "stale": weeklog.helpdesk_open_stale}
 
 
 # Donut geometry (SVG units): radius and the gap between slices.
@@ -147,3 +147,38 @@ def changelog_strip(title: str, body: str, today: date | None = None) -> dict:
     # Drop the entry's inline *emphasis* markers; the strip is plain text.
     summary = bold.group(1).replace("*", "").rstrip(".") + "." if bold else ""
     return {"version": version, "summary": summary, "when": when}
+
+
+def age_label(created: datetime, now: datetime | None = None) -> str:
+    """Compact Danish age of a ticket: "45 min", "5 t", "12 d", "7 mdr"."""
+    now = now or timezone.now()
+    minutes = max(0, int((now - created).total_seconds() // 60))
+    if minutes < 60:
+        return f"{minutes} min"
+    if minutes < 24 * 60:
+        return f"{minutes // 60} t"
+    days = minutes // (24 * 60)
+    if days < 60:
+        return f"{days} d"
+    return f"{days // 30} mdr"
+
+
+def open_ticket_lists(limit: int = 6, now: datetime | None = None) -> dict:
+    """The newest and the oldest open helpdesk tickets, ``limit`` of each.
+
+    Each ticket carries ``age`` (``age_label``) for the template.
+    """
+    now = now or timezone.now()
+    open_tickets = HelpdeskTicket.objects.filter(is_open=True)
+
+    def tag(tickets):
+        tickets = list(tickets)
+        for t in tickets:
+            t.age = age_label(t.created_at, now)
+        return tickets
+
+    return {
+        "newest": tag(open_tickets.order_by("-created_at")[:limit]),
+        "oldest": tag(open_tickets.order_by("created_at")[:limit]),
+        "total": open_tickets.count(),
+    }

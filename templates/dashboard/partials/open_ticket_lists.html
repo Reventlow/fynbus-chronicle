@@ -1,0 +1,13 @@
+{% comment %}
+  Two bento cells: the six newest and the six oldest open helpdesk tickets
+  (overview.open_ticket_lists). Each row opens the request in ServiceDesk
+  in a new tab. Polled every minute by dashboard/index.html.
+{% endcomment %}
+<div class="bento-cell">
+  <div class="card-head"><div class="label-eyebrow">Nyeste uløste</div></div>
+  {% include "dashboard/partials/_ticket_list.html" with tickets=newest %}
+</div>
+<div class="bento-cell">
+  <div class="card-head"><div class="label-eyebrow">Ældste uløste</div></div>
+  {% include "dashboard/partials/_ticket_list.html" with tickets=oldest %}
+</div>

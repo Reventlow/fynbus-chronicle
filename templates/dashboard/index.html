@@ -196,6 +196,18 @@
         </div>
       {% endfor %}
     </div>
+    {# Newest and oldest open tickets, each a link into ServiceDesk. #}
+    <div class="card bento bento-2"
+         hx-get="{% url 'dashboard:partial-open-ticket-lists' %}"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+      {% for _ in "12" %}
+        <div class="bento-cell">
+          <div class="skeleton" style="height: 11px; width: 110px; margin-bottom: 16px;"></div>
+          <div class="skeleton" style="height: 150px; width: 100%;"></div>
+        </div>
+      {% endfor %}
+    </div>
   </section>
 
   {# === 03 Udvikling: flow + open tickets over time ======================= #}
