@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.1 — 2026-10-19
+
+### Fixed
+- **"Prøv igen" og opdateringsknappen på Kontrolpanelet virker igen.** En manuel synk opdaterede kun ugens tal, ikke kopien af sagerne, som "Synk fejlede"/"forældet" læses fra — så siden så uændret ud efter klikket. Knappen kører nu hele synken, og fejler den, står det på kortet i stedet for at intet sker.
+
 ## 1.0.0 — 2026-10-17
 
 🎉 **Chronicle 1.0.** Fra første commit den 1. februar 2026 til i dag: 254 commits, 126 udgivelser, 431 tests — og et værktøj, IT-afdelingen bruger hver uge.

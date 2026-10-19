@@ -510,9 +510,20 @@ class LatestChangePartialView(LoginRequiredMixin, TemplateView):
 
 @login_required
 def sync_servicedesk_stats(request):
-    """HTMX endpoint to manually trigger ServiceDesk sync and return updated stats."""
+    """HTMX endpoint: run a ServiceDesk sync now and return the KPI cards.
+
+    Runs both halves of the scheduled sync — the weeklog counters *and*
+    an incremental ticket-mirror update. The "synk fejlede"/"forældet"
+    state (``sync_state``) is read from the mirror, so refreshing only
+    the counters left the dashboard looking stale after a manual sync.
+
+    The cards are returned with an error pill when the sync fails. With
+    ``reload=1`` (the headline's "Prøv igen" button) a successful sync
+    answers ``HX-Refresh`` so the whole page picks up the fresh state.
+    """
     import logging
 
+    from apps.logbook.services import ticket_mirror
     from apps.logbook.services.servicedesk import ServiceDeskClient
 
     logger = logging.getLogger(__name__)
@@ -521,40 +532,33 @@ def sync_servicedesk_stats(request):
         return JsonResponse({"error": "POST required"}, status=405)
 
     client = ServiceDeskClient()
+    sync_error = None
     if not client.enabled:
         logger.warning("ServiceDesk sync triggered but disabled")
-        weeklog = WeekLog.get_current_week()
-        from django.template.loader import render_to_string
-
-        html = render_to_string(
-            "dashboard/partials/helpdesk_stats.html",
-            {"weeklog": weeklog, "sync_error": "ServiceDesk sync er deaktiveret"},
-            request=request,
-        )
-        from django.http import HttpResponse
-
-        return HttpResponse(html)
-
-    try:
-        weeklog = WeekLog.get_or_create_current_week()
-        stats = client.get_week_stats(weeklog.year, weeklog.week_number)
-        weeklog.apply_helpdesk_stats(stats)
-        logger.info("Manual sync: %s new=%d closed=%d open=%d by_age=%s",
-                     weeklog.week_label, stats["created"], stats["closed"], stats["open"],
-                     stats.get("open_by_age") or "n/a")
-    except Exception:
-        logger.exception("Manual ServiceDesk sync failed")
-        weeklog = WeekLog.get_current_week()
-
-    from django.http import HttpResponse
-    from django.template.loader import render_to_string
+        sync_error = "ServiceDesk sync er deaktiveret"
+    else:
+        try:
+            weeklog = WeekLog.get_or_create_current_week()
+            stats = client.get_week_stats(weeklog.year, weeklog.week_number)
+            weeklog.apply_helpdesk_stats(stats)
+            logger.info("Manual sync: %s new=%d closed=%d open=%d by_age=%s",
+                        weeklog.week_label, stats["created"], stats["closed"], stats["open"],
+                        stats.get("open_by_age") or "n/a")
+            if ticket_mirror.sync_incremental(client) is None:
+                sync_error = "Synk med ServiceDesk fejlede"
+        except Exception:
+            logger.exception("Manual ServiceDesk sync failed")
+            sync_error = "Synk med ServiceDesk fejlede"
 
     html = render_to_string(
         "dashboard/partials/helpdesk_stats.html",
-        {"weeklog": weeklog},
+        {"weeklog": WeekLog.get_current_week(), "sync": sync_state(), "sync_error": sync_error},
         request=request,
     )
-    return HttpResponse(html)
+    response = HttpResponse(html)
+    if sync_error is None and request.POST.get("reload"):
+        response["HX-Refresh"] = "true"
+    return response
 
 
 @login_required

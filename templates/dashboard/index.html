@@ -67,8 +67,8 @@
             <span class="pill-dot" style="background: var(--bad);"></span>
             Synk med ServiceDesk fejlede{% if sync.last_sync %} · sidst <span class="num">{{ sync.label }}</span>{% endif %}
             <button type="button" class="btn btn-sm" style="margin-left: 6px; padding: 2px 8px; font-size: 12px;"
-                    hx-post="{% url 'dashboard:sync-servicedesk' %}" hx-swap="none"
-                    hx-on::after-request="window.location.reload()">Prøv igen</button>
+                    hx-post="{% url 'dashboard:sync-servicedesk' %}" hx-vals='{"reload": "1"}'
+                    hx-target="#helpdesk-stats-container" hx-swap="innerHTML">Prøv igen</button>
           </span>
         {% else %}
           <span class="inline-flex items-center" style="gap: 6px;">
