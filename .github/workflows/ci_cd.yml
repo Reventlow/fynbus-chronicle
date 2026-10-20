@@ -35,6 +35,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/dev.txt
 
+      # Some tests read the compiled stylesheet (theme skins, purge-safe
+      # classes), so build it like the Docker image does.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Build CSS
+        run: |
+          npm ci
+          npm run build:css
+
       - name: Run Django checks
         run: |
           python manage.py check
