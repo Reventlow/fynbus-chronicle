@@ -22,5 +22,4 @@ urlpatterns = [
     ),
     path("partials/row/<int:pk>/", views.task_row, name="task-row"),
     path("partials/list/", views.task_list_partial, name="task-list-partial"),
-    path("api/chart-data/", views.task_chart_data, name="api-chart-data"),
 ]

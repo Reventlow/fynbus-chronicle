@@ -43,9 +43,11 @@ jobs:
           DEBUG: 'False'
           ALLOWED_HOSTS: localhost
 
+      # pytest, not "manage.py test": most test modules are pytest-style
+      # (plain functions + fixtures), which Django's runner never discovers.
       - name: Run tests
         run: |
-          python manage.py test
+          python -m pytest -q
         env:
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: 'False'

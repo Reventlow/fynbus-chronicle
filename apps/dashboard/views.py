@@ -13,14 +13,15 @@ from pathlib import Path
 import markdown
 import markdown.extensions.toc
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
-from django.contrib import messages
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
@@ -38,7 +39,6 @@ from .overview import (
     sync_state,
 )
 
-
 # Documentation configuration
 DOCS_DIR = Path(settings.BASE_DIR) / "docs"
 LICENSE_FILE = Path(settings.BASE_DIR) / "LICENSE"
@@ -48,6 +48,25 @@ CHANGELOG_FILE = Path(settings.BASE_DIR) / "CHANGELOG.md"
 # Heading anchors keep Danish letters ("#opgavesøgning"), like GitHub does,
 # so the documents' own contents links work both there and in Chronicle.
 DOCS_TOC_CONFIG = {"toc": {"slugify": markdown.extensions.toc.slugify_unicode}}
+
+# Links between the Markdown files ("DEPLOYMENT.md#rolling-back") point at
+# files that only exist on GitHub; inside Chronicle they become docs pages.
+_DOC_LINK_RE = re.compile(r'href="(?:\.\./|docs/)?([A-Za-z_]+(?:\.md)?)(#[^"]*)?"')
+
+
+def link_docs(html: str) -> str:
+    """Rewrite links to other documentation files to their docs pages,
+    keeping the anchor. Links to anything else are left alone."""
+    by_file = {page["file"]: slug for slug, page in DOCS_PAGES.items() if page["file"]}
+    by_file.update({"CHANGELOG.md": "changelog", "LICENSE": "license"})
+
+    def swap(match: re.Match) -> str:
+        slug = by_file.get(match.group(1))
+        if slug is None:
+            return match.group(0)
+        return f'href="{reverse("dashboard:docs-page", args=[slug])}{match.group(2) or ""}"'
+
+    return _DOC_LINK_RE.sub(swap, html)
 
 DOCS_PAGES = {
     "changelog": {"file": None, "title": "Changelog", "icon": "clock"},  # Special case
@@ -592,9 +611,6 @@ def helpdesk_chart_data(request) -> JsonResponse:
 
     Returns JSON data for the last 52 weeks of helpdesk statistics.
     """
-    # Get current week info
-    now = timezone.now()
-    iso_cal = now.isocalendar()
 
     # Fetch last 52 weeks of data
     weeks_data = []
@@ -640,86 +656,6 @@ def helpdesk_chart_data(request) -> JsonResponse:
     )
 
 
-class TaskTimelinePartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial view for task timeline chart."""
-
-    template_name = "dashboard/partials/task_timeline_chart.html"
-
-
-@login_required
-def task_timeline_chart_data(request) -> JsonResponse:
-    """
-    JSON API endpoint for task timeline chart data.
-
-    Returns active tasks plus recently completed tasks (within 7 days)
-    with planned dates, status, assignees, and approvers for Gantt chart.
-    """
-    import logging
-    from datetime import timedelta
-
-    from django.db.models import Q
-    from django.utils import timezone
-
-    from apps.tasks.models import Task
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        one_week_ago = timezone.now() - timedelta(days=7)
-        tasks = (
-            Task.objects.filter(
-                Q(~Q(status=Task.Status.COMPLETE))
-                | Q(
-                    status=Task.Status.COMPLETE,
-                    state_changes__to_state="complete",
-                    state_changes__changed_at__gte=one_week_ago,
-                )
-            )
-            .distinct()
-            .select_related("created_by")
-            .prefetch_related("state_changes", "assigned_to")
-            .order_by("planned_start", "created_at")
-        )
-
-        data = []
-        for task in tasks:
-            data.append(
-                {
-                    "id": task.pk,
-                    "title": task.title,
-                    "planned_start": (
-                        task.planned_start.isoformat() if task.planned_start else None
-                    ),
-                    "planned_end": (
-                        task.planned_end.isoformat() if task.planned_end else None
-                    ),
-                    "status": task.status,
-                    "state_changes": [
-                        {
-                            "changed_at": sc.changed_at.isoformat(),
-                            "from_state": sc.from_state,
-                            "to_state": sc.to_state,
-                        }
-                        for sc in task.state_changes.all()
-                    ],
-                    "approvers": [
-                        name.strip()
-                        for name in task.approvers.split(",")
-                        if name.strip()
-                    ] if task.approvers else [],
-                    "assignees": [
-                        u.get_full_name() or u.username
-                        for u in task.assigned_to.all()
-                    ],
-                }
-            )
-
-        return JsonResponse({"tasks": data})
-    except Exception:
-        logger.exception("Error in task_timeline_chart_data")
-        return JsonResponse({"error": "Internal server error"}, status=500)
-
-
 class DocsIndexView(LoginRequiredMixin, TemplateView):
     """Documentation index page listing all available docs."""
 
@@ -758,7 +694,7 @@ class DocsPageView(LoginRequiredMixin, TemplateView):
                     extensions=["fenced_code", "tables", "toc", "sane_lists"],
                     extension_configs=DOCS_TOC_CONFIG,
                 )
-                context["content"] = md.convert(md_content)
+                context["content"] = link_docs(md.convert(md_content))
                 context["toc"] = md.toc
             else:
                 context["content"] = "<p>Changelog not found.</p>"
@@ -787,7 +723,7 @@ class DocsPageView(LoginRequiredMixin, TemplateView):
                 ],
                 extension_configs=DOCS_TOC_CONFIG,
             )
-            context["content"] = md.convert(md_content)
+            context["content"] = link_docs(md.convert(md_content))
             context["toc"] = md.toc
 
         return context

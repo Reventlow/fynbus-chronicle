@@ -72,3 +72,20 @@ def test_user_guide_contents_links_resolve(editor):
     links = set(re.findall(r'href="#([^"]+)"', body))
     assert "opgavesøgning" in ids and "api-nøgler" in ids
     assert links - ids == set()
+
+
+def test_links_between_docs_open_the_docs_pages():
+    from apps.dashboard.views import link_docs
+
+    html = ('<a href="DEPLOYMENT.md#rolling-back">a</a> <a href="../CHANGELOG.md">b</a> '
+            '<a href="https://example.com/x.md">c</a> <a href="#local">d</a>')
+    out = link_docs(html)
+    assert reverse("dashboard:docs-page", args=["deployment"]) + "#rolling-back" in out
+    assert reverse("dashboard:docs-page", args=["changelog"]) in out
+    assert 'href="https://example.com/x.md"' in out and 'href="#local"' in out
+
+
+def test_development_guide_links_resolve_in_app(editor):
+    body = editor.get(reverse("dashboard:docs-page", args=["development"])).content.decode()
+    assert 'href="DEPLOYMENT.md' not in body
+    assert reverse("dashboard:docs-page", args=["deployment"]) in body

@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.4 — 2026-10-20
+
+### Fixed
+- **CI kører nu alle tests.** Byggeriet brugte `manage.py test`, som ikke finder de pytest-baserede tests, så en stor del af dem blev aldrig kørt. Nu køres `pytest`, og en fejlende test stopper udgivelsen, før der bygges images.
+- **Synk-containeren venter på databasen.** Efter en udgivelse venter den, til web-containeren har kørt alle migreringer, i stedet for at synkronisere mod et gammelt skema.
+- **Links mellem dokumenterne virker i Chronicle.** Et link som *DEPLOYMENT.md#rolling-back* åbner nu den rigtige side under Dokumentation.
+
+### Changed
+- `docker-compose.prod.yml` følger nu produktionens opsætning: de to rigtige images, env-filer og fælles datavolumen. Versionen vælges med `CHRONICLE_VERSION`.
+- `pyproject.toml` læser versionen fra `version.txt`, så der kun er ét sted at opdatere den.
+- Rester af den gamle opgavetidslinje på kontrolpanelet er fjernet.
+
 ## 1.0.3 — 2026-10-20
 
 ### Changed

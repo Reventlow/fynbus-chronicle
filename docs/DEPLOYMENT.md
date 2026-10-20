@@ -14,7 +14,7 @@ How FynBus Chronicle runs in production and how a new version gets there. Buildi
 
 Both images are built from the same commit and tagged with the same version, so **both tags are always bumped together**. A sync container running older code writes stale statistics.
 
-The `docker-compose.prod.yml` and `docker-compose.sqlite.yml` files in this repo are standalone examples, not what production runs — production is defined only in `infrastructure-as-code`.
+Production is defined only in `infrastructure-as-code`, deployed as the Portainer stack **chronicle**, which follows that file through GitOps polling. `docker-compose.prod.yml` in this repo mirrors its shape (same two images, env files, shared data volume) and runs with `CHRONICLE_VERSION=<version> docker compose -f docker-compose.prod.yml up -d`; `docker-compose.sqlite.yml` is a standalone example.
 
 > **Read-only Friday:** no production changes on Fridays — no deploys, no config changes. Chronicle shows a red banner on Fridays as a reminder.
 
@@ -34,7 +34,7 @@ The `docker-compose.prod.yml` and `docker-compose.sqlite.yml` files in this repo
 
    Both must return `200`. Bumping the compose file to a tag that does not exist once made the host recreate `chronicle-web` without an image, and the site returned 502 until it was fixed.
 3. **Bump both image tags** in `infrastructure-as-code/docker-compose/chronicle/compose.yml` to the new version, commit and push.
-4. **Wait.** `fbdocker01` picks up the change by itself within a few minutes; there is nothing to run on the host.
+4. **Wait.** Portainer polls the repository and redeploys the stack on `fbdocker01` within a few minutes; there is nothing to run on the host.
 5. **Verify** on the host:
 
    ```bash
@@ -52,7 +52,7 @@ The `docker-compose.prod.yml` and `docker-compose.sqlite.yml` files in this repo
 3. `python manage.py collectstatic --noinput --clear` (static files are served by WhiteNoise).
 4. Starts gunicorn on port 8000 with 2 workers.
 
-**`chronicle-sync`** (`docker/Dockerfile.sync`) has no entrypoint script and does not migrate — it relies on the web container for that. It runs `python manage.py run_scheduler`:
+**`chronicle-sync`** (`docker/Dockerfile.sync`) has no entrypoint script and does not migrate — the web container does that. It runs `python manage.py run_scheduler`, which **first waits until the database has every migration its code expects** (logged once a minute while waiting), so a sync container that starts before `chronicle-web` has migrated never writes into an old schema. Then:
 
 - Exits immediately with a warning if `SERVICEDESK_SYNC_ENABLED` is not `True`.
 - Every `SERVICEDESK_SYNC_INTERVAL` seconds (default 300): syncs this week's ServiceDesk counts onto the current week log, then updates the `HelpdeskTicket` mirror (Statistik and the open-ticket cards on the Kontrolpanel).

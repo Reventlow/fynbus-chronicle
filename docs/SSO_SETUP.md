@@ -74,8 +74,8 @@ MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 If using Docker:
 
 ```bash
-# Rebuild and restart
-docker compose -f docker-compose.prod.yml up -d --build
+# Restart with the new settings (production: redeploy the Portainer stack)
+CHRONICLE_VERSION=<version> docker compose -f docker-compose.prod.yml up -d
 ```
 
 ## Step 7: Configure Django Sites

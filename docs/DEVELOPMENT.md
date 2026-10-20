@@ -200,7 +200,7 @@ Management commands (all in `apps/logbook/management/commands/`):
 
 ## Testing
 
-pytest with pytest-django (`DJANGO_SETTINGS_MODULE = chronicle.settings.dev` from `pyproject.toml`). Tests live in `apps/<app>/tests/` (about 434 tests).
+pytest with pytest-django (`DJANGO_SETTINGS_MODULE = chronicle.settings.dev` from `pyproject.toml`). Tests live in `apps/<app>/tests/` (about 440 tests).
 
 ```bash
 .venv/bin/python -m pytest -q                 # everything
@@ -208,13 +208,13 @@ pytest with pytest-django (`DJANGO_SETTINGS_MODULE = chronicle.settings.dev` fro
 .venv/bin/python -m pytest -q -k signoff      # by name
 ```
 
-CI runs `python manage.py check` and `python manage.py test` (see below). Django's test runner only discovers `unittest`/`TestCase` classes, so the pytest-style tests (plain `test_` functions with fixtures) run only under pytest — always run pytest locally before pushing.
+CI runs `python manage.py check` and the same `python -m pytest -q` (see below), so a failing test stops the release before any image is built. Run it locally before pushing.
 
 ## Releasing
 
 Work is committed to `main`. Every push to `main` builds and pushes Docker images tagged with the version in `version.txt`, so a push that ships code must carry a new version.
 
-1. **Bump `version.txt`.** CI tags both Docker images from this file, not from the changelog. Forgetting it once made CI overwrite the previous version's tag.
+1. **Bump `version.txt`** — the only place the version lives (`pyproject.toml` reads it too). CI tags both Docker images from this file, not from the changelog. Forgetting it once made CI overwrite the previous version's tag.
 2. **Add a CHANGELOG.md entry at the top**, in Danish:
 
    ```markdown
@@ -240,7 +240,7 @@ Work is committed to `main`. Every push to `main` builds and pushes Docker image
 
 `.github/workflows/ci_cd.yml`:
 
-- **On push and pull request to `main`:** `test` job — Python 3.12, `pip install -r requirements/dev.txt`, `python manage.py check`, `python manage.py test`.
+- **On push and pull request to `main`:** `test` job — Python 3.12, `pip install -r requirements/dev.txt`, `python manage.py check`, `python -m pytest -q`.
 - **On push to `main` only, after tests pass:** `build` job — builds and pushes
   - `elohite/chronicle:<version.txt>` and `:latest` from `docker/Dockerfile`
   - `elohite/chronicle_sync_servicedesk:<version.txt>` and `:latest` from `docker/Dockerfile.sync`

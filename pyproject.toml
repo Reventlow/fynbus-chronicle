@@ -1,6 +1,7 @@
 [project]
 name = "fynbus-chronicle"
-version = "0.1.0"
+# The version lives in version.txt (CI tags the images from it).
+dynamic = ["version"]
 description = "FynBus IT weekly logbook application"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -45,6 +46,10 @@ prod = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "version.txt"
+pattern = "(?P<version>[^\\s]+)"
 
 [tool.ruff]
 line-length = 88

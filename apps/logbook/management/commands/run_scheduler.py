@@ -10,6 +10,11 @@ seconds (default: 300). The dashboard sync button works independently.
 Each cycle also updates the ticket mirror behind the statistics page:
 a full sync on start-up and then once every FULL_MIRROR_SYNC_EVERY, an
 incremental one (changed tickets only) in between.
+
+The web container applies migrations when it starts; this container
+does not. After a release the two can start in either order, so the
+loop first waits until the database schema matches this code
+(``wait_for_migrations``) instead of syncing into an old schema.
 """
 
 import logging
@@ -18,6 +23,8 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
 
 from apps.logbook.tasks import sync_current_week_tickets, sync_ticket_mirror
 
@@ -25,6 +32,37 @@ logger = logging.getLogger(__name__)
 
 # How often the statistics mirror is rebuilt from scratch.
 FULL_MIRROR_SYNC_EVERY = timedelta(hours=24)
+
+# How often to re-check for unapplied migrations while waiting.
+MIGRATION_POLL_SECONDS = 10
+
+
+def pending_migrations() -> list[str]:
+    """Migrations this code has that the database has not applied yet."""
+    executor = MigrationExecutor(connection)
+    targets = executor.loader.graph.leaf_nodes()
+    return [f"{m.app_label}.{m.name}" for m, _backwards in executor.migration_plan(targets)]
+
+
+def wait_for_migrations(sleep=time.sleep, poll: int = MIGRATION_POLL_SECONDS) -> None:
+    """Block until the web container has migrated the database.
+
+    Logs the pending migrations once a minute while waiting. Never runs
+    ``migrate`` itself: two containers migrating at once is worse than a
+    short wait.
+    """
+    waited = 0
+    while True:
+        pending = pending_migrations()
+        if not pending:
+            return
+        if waited % 60 == 0:
+            logger.warning(
+                "Waiting for %d unapplied migration(s) before syncing: %s",
+                len(pending), ", ".join(pending[:5]),
+            )
+        sleep(poll)
+        waited += poll
 
 
 class Command(BaseCommand):
@@ -51,6 +89,8 @@ class Command(BaseCommand):
                 "Press Ctrl+C to stop."
             )
         )
+
+        wait_for_migrations()
 
         # Monotonic time of the last successful full mirror sync; None
         # forces one on the first cycle.

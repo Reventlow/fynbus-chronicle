@@ -10,7 +10,7 @@ import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
@@ -19,7 +19,6 @@ from apps.accounts.permissions import EditorRequiredMixin, editor_required
 
 from .forms import TaskForm, TaskNoteForm, TaskStatusForm
 from .models import Task, TaskNote, TaskNoteAttachment, TaskStateChange
-
 
 # Valid sort fields and their ORM ordering expressions
 SORT_OPTIONS = {
@@ -247,37 +246,3 @@ def task_list_partial(request):
     return render(request, "tasks/partials/task_list_body.html", {"tasks": tasks})
 
 
-@login_required
-def task_chart_data(request):
-    """API endpoint returning task data for Gantt chart rendering."""
-    if request.method != "GET":
-        return HttpResponse(status=405)
-
-    tasks = (
-        Task.objects.exclude(status=Task.Status.COMPLETE)
-        .prefetch_related("state_changes", "assigned_to")
-    )
-
-    data = []
-    for task in tasks:
-        data.append({
-            "id": task.pk,
-            "title": task.title,
-            "planned_start": task.planned_start.isoformat() if task.planned_start else None,
-            "planned_end": task.planned_end.isoformat() if task.planned_end else None,
-            "status": task.status,
-            "state_changes": [
-                {
-                    "changed_at": sc.changed_at.isoformat(),
-                    "from_state": sc.from_state,
-                    "to_state": sc.to_state,
-                }
-                for sc in task.state_changes.all()
-            ],
-            "approvers": task.approvers,
-            "assignees": [
-                u.get_full_name() or u.username for u in task.assigned_to.all()
-            ],
-        })
-
-    return JsonResponse(data, safe=False)
