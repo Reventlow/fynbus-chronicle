@@ -61,3 +61,14 @@ def test_solved_feedback_is_faded_not_struck(editor):
     body = editor.get(reverse("feedback:detail", args=[fr.pk])).content.decode()
     assert "line-through" not in body
     assert 'class="task-status"' in body
+
+
+def test_user_guide_contents_links_resolve(editor):
+    """Heading anchors keep Danish letters, so every contents link works."""
+    import re
+
+    body = editor.get(reverse("dashboard:docs-page", args=["user-guide"])).content.decode()
+    ids = set(re.findall(r'id="([^"]+)"', body))
+    links = set(re.findall(r'href="#([^"]+)"', body))
+    assert "opgavesøgning" in ids and "api-nøgler" in ids
+    assert links - ids == set()

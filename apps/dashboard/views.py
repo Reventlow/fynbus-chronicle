@@ -11,6 +11,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import markdown
+import markdown.extensions.toc
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -43,6 +44,10 @@ DOCS_DIR = Path(settings.BASE_DIR) / "docs"
 LICENSE_FILE = Path(settings.BASE_DIR) / "LICENSE"
 
 CHANGELOG_FILE = Path(settings.BASE_DIR) / "CHANGELOG.md"
+
+# Heading anchors keep Danish letters ("#opgavesøgning"), like GitHub does,
+# so the documents' own contents links work both there and in Chronicle.
+DOCS_TOC_CONFIG = {"toc": {"slugify": markdown.extensions.toc.slugify_unicode}}
 
 DOCS_PAGES = {
     "changelog": {"file": None, "title": "Changelog", "icon": "clock"},  # Special case
@@ -750,7 +755,8 @@ class DocsPageView(LoginRequiredMixin, TemplateView):
             if CHANGELOG_FILE.exists():
                 md_content = CHANGELOG_FILE.read_text(encoding="utf-8")
                 md = markdown.Markdown(
-                    extensions=["fenced_code", "tables", "toc", "sane_lists"]
+                    extensions=["fenced_code", "tables", "toc", "sane_lists"],
+                    extension_configs=DOCS_TOC_CONFIG,
                 )
                 context["content"] = md.convert(md_content)
                 context["toc"] = md.toc
@@ -778,7 +784,8 @@ class DocsPageView(LoginRequiredMixin, TemplateView):
                     "toc",
                     "nl2br",
                     "sane_lists",
-                ]
+                ],
+                extension_configs=DOCS_TOC_CONFIG,
             )
             context["content"] = md.convert(md_content)
             context["toc"] = md.toc

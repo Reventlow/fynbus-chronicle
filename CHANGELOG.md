@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.3 — 2026-10-20
+
+### Changed
+- **Dokumentationen er opdateret til version 1.0.**
+  - *Brugervejledningen* beskriver sidemenuen, søgning med Ctrl+K, indstillingerne under tandhjulet, det nye Kontrolpanel, opgavesøgning, Statistik med valgfri periode og delte links, Forslag, notifikationer, API-nøgler, billeder med Ctrl+V og Touch-Grass-Weekend. Det gamle Opgaver-afsnit er fjernet.
+  - *README* og de tekniske vejledninger (*Setup*, *Development*, *Deployment*) følger, hvordan Chronicle bygges, udgives og kører i dag. *Development* har fået et afsnit om udgivelser.
+  - *Opgaver* er markeret som det gamle opgavemodul.
+- Overskrifter med æ, ø og å i dokumentationen kan nu linkes til, så indholdsfortegnelsen i brugervejledningen virker.
+
 ## 1.0.2 — 2026-10-20
 
 ### Changed

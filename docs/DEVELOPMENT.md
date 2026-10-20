@@ -1,206 +1,154 @@
 # Development Guide
 
-This guide covers development practices and patterns used in FynBus Chronicle.
+This guide covers the structure, patterns and release routine of FynBus Chronicle. For a first local install, see [SETUP.md](SETUP.md).
 
 ## Project Structure
 
 ```
 fynbus-chronicle/
-├── chronicle/              # Django project settings
-│   ├── settings/
-│   │   ├── base.py        # Common settings
-│   │   ├── dev.py         # Development settings
-│   │   └── prod.py        # Production settings
-│   ├── urls.py            # Root URL configuration
-│   └── wsgi.py            # WSGI application
+├── chronicle/                  # Django project
+│   ├── settings/               # base.py, dev.py, prod.py
+│   ├── context_processors.py   # version, day theme, Read-only Friday, Touch-Grass-Weekend
+│   ├── email_backends/graph.py # Microsoft Graph sendMail backend
+│   └── urls.py                 # Root URL configuration
 ├── apps/
-│   ├── logbook/           # Core logbook functionality
-│   │   ├── models.py      # WeekLog, PriorityItem, Absence, Incident
-│   │   ├── views.py       # HTMX views for inline CRUD
-│   │   ├── admin.py       # Admin with inlines and exports
-│   │   ├── forms.py       # Django forms
-│   │   └── exports/       # PDF, Markdown, Email export modules
-│   ├── accounts/          # Authentication & permissions
-│   │   ├── models.py      # LoginLog (login/logout tracking)
-│   │   ├── admin.py       # Read-only LoginLog admin
-│   │   ├── signals.py     # Login/logout signal handlers
-│   │   ├── views.py       # Custom login/logout
-│   │   ├── urls.py
-│   │   ├── permissions.py # is_editor(), EditorRequiredMixin, @editor_required
-│   │   └── context_processors.py  # Adds is_editor to template context
-│   └── dashboard/         # Dashboard views
-│       └── views.py       # Dashboard and chart API
-├── templates/             # Global templates
-│   ├── base.html          # Base template with HTMX/Alpine
-│   └── components/        # Reusable UI components
+│   ├── accounts/       # Login/logout, LoginLog, Viewer role, API keys (api_auth.py, mint_api_key)
+│   ├── api/            # JSON API under /api/v1/ (Bearer API keys)
+│   ├── dashboard/      # Kontrolpanel (overview.py), Statistik (statistics.py, exports.py), docs pages
+│   ├── feedback/       # Forslag board (feature requests)
+│   ├── images/         # Images pasted into descriptions, served by a login-gated view
+│   ├── logbook/        # Week logs, priority tasks, incidents, absences, meeting minutes, sign-off
+│   │   ├── exports/    # PDF, HTML, Markdown, email
+│   │   ├── services/   # servicedesk.py (API client), ticket_mirror.py (HelpdeskTicket mirror)
+│   │   ├── tasks.py    # Sync jobs run by run_scheduler
+│   │   └── management/commands/
+│   ├── notifications/  # In-app notifications (bell badge)
+│   ├── oncall/         # On-call calendar: duties, segments, handovers, current_watch()
+│   ├── reports/        # Standalone HTML reports, optional MP4 video, public token links
+│   ├── tasks/          # LEGACY Opgaver app — still routed at /tasks/, not in the menu
+│   └── themes/         # Day themes and schedules
+├── templates/
+│   ├── base.html       # Shell: sidebar, toolbar with {% block crumbs %}, HTMX error toast
+│   └── components/     # sidebar.html, settings_controls.html, banners, pills, KPI cards …
 ├── static/
-│   ├── src/input.css      # Tailwind source
-│   └── css/output.css     # Compiled Tailwind
-└── docs/                  # Documentation
+│   ├── src/input.css   # Tailwind source: design tokens + @layer components
+│   ├── css/output.css  # Built CSS (npm run build:css)
+│   └── js/             # htmx, Alpine.js, Chart.js, Sortable, description-images.js
+├── docker/             # Dockerfile (web), Dockerfile.sync (scheduler), Dockerfile.dev, entrypoint.sh
+├── docs/               # These docs — also rendered in the app under Dokumentation
+├── CHANGELOG.md        # Danish release notes, newest first
+└── version.txt         # Release version; CI tags the Docker images from it
 ```
+
+### Apps at a glance
+
+| App | What it does |
+|-----|--------------|
+| `logbook` | `WeekLog` per ISO week with priority tasks (`PriorityItem` lives across weeks, shown on each week through `PriorityItemAppearance`), incidents, absences, meeting minutes and sign-off (`WeekLogSignoff`). Exports the week report as PDF, HTML, Markdown and email. Holds the ServiceDesk integration and the `HelpdeskTicket` mirror. |
+| `dashboard` | Kontrolpanel (`/dashboard/`), its HTMX partials and the helpers in `overview.py`; Statistik (`/dashboard/statistik/`) with exports (PDF/HTML/Markdown/JSON) and token share links; the docs pages (`/dashboard/docs/`). |
+| `api` | REST endpoints for week logs, priority items, incidents, on-call, helpdesk data, changelog, feature requests and reports. |
+| `accounts` | Login, `LoginLog`, the Viewer role (`permissions.py`) and `APIKey` (read/write scope). |
+| `oncall` | `OnCallDuty`, `OnCallSegment`, `OnCallChange`; `current_watch()` returns who is on call now. |
+| `feedback` | `FeatureRequest` — the Forslag board. |
+| `reports` | `Report` with an optional video; files live in `REPORT_FILES_DIR`. |
+| `images` | `PastedImage`; files live in `IMAGE_FILES_DIR`. |
+| `themes` | `Theme`, `ThemeSchedule`, `ThemeBannerMessage`. Read-only Friday and Touch-Grass-Weekend are weekday-driven context processors in `chronicle/context_processors.py`. |
+| `notifications` | `Notification` and the bell badge context processor. |
+| `tasks` | Legacy, see [TASKS.md](TASKS.md). Priority tasks on the week logs replace it. |
 
 ## Code Style
 
 ### Python
 
-- Follow PEP 8
-- Use type hints for function signatures
-- Document modules, classes, and complex functions
-- Code and comments in English
+- Follow PEP 8; type hints on function signatures.
+- Document modules, classes and non-trivial functions. Code and comments in English; UI text in Danish.
+- Lint with ruff (`pyproject.toml` selects E, F, I, N, W, UP). The tree is not ruff-clean or ruff-formatted as a whole, so run it on the files you touch rather than reformatting everything:
 
-Example:
-
-```python
-def get_weeklog_stats(weeklog: WeekLog) -> dict[str, int]:
-    """
-    Calculate statistics for a week log.
-
-    Args:
-        weeklog: The WeekLog instance to analyze.
-
-    Returns:
-        Dictionary with ticket counts and delta.
-    """
-    return {
-        "new": weeklog.helpdesk_new,
-        "closed": weeklog.helpdesk_closed,
-        "open": weeklog.helpdesk_open,
-        "delta": weeklog.helpdesk_new - weeklog.helpdesk_closed,
-    }
+```bash
+.venv/bin/ruff check path/to/changed_file.py
 ```
 
 ### Templates
 
-- Use Tailwind CSS classes (no custom CSS unless necessary)
-- Prefer component includes over duplication
-- HTMX attributes for dynamic interactions
+- Django templates + HTMX + Alpine.js; Tailwind classes and the component classes from `input.css`.
+- **`{# … #}` comments are single-line only.** A multi-line `{# … #}` is rendered as text on the page. Use `{% comment %} … {% endcomment %}` for anything longer than one line.
+- Pages set their breadcrumb by overriding `{% block crumbs %}` from `base.html`; it is shown in the toolbar, not on the page.
+- Hide write controls from viewers with `{% if is_editor %}` (see Permissions).
 
 ### JavaScript
 
-- Minimal JavaScript; prefer HTMX + Alpine.js
-- Chart.js for data visualization only
+- Keep it minimal: HTMX for server round-trips, Alpine.js for local state.
+- Chart.js for charts. The vendored libraries live in `static/js/`.
+
+## Frontend
+
+### Tailwind and design tokens
+
+`static/src/input.css` holds the v3 design system:
+
+- `:root` design tokens as OKLCH CSS variables (`--paper`, `--surface-*`, `--ink-*`, `--accent`, `--good`, `--warn`, `--bad`, `--info`, shadows, density), redefined under `html.dark`.
+- Accent variants via `html[data-accent="…"]` and day-theme skins via `html[data-event="…"]`.
+- Component classes in `@layer components` (`.card`, `.pill`, `.btn`, `.btn-primary`, `.nav-link`, `.tab-link` …).
+
+The `sand-*`, `sage-*`, `gold-*` and `terracotta-*` palettes in `tailwind.config.js` remain for older components; new components use the CSS variables.
+
+Build the CSS after changing `input.css` or adding classes to templates:
+
+```bash
+npm run build:css   # minified build into static/css/output.css
+npm run watch:css   # rebuild on change while developing
+```
+
+### Shell and settings
+
+- `templates/components/sidebar.html` — the v3 sidebar (Kontrolpanel, Ugelog, Rådighedsvagt, Forslag, Rapporter, Statistik, Dokumentation), collapsible to icons.
+- `templates/base.html` — toolbar with the crumbs block, mobile menu, messages and the HTMX error toast (failed requests show a toast with the status instead of failing silently).
+- `templates/components/settings_controls.html` — the settings popover. Dark mode, density, accent, theme and sidebar state are Alpine state on `<html>`, persisted in `localStorage`.
+
+### Day themes
+
+A day theme is a seed migration in `apps/themes/migrations/` (Theme + ThemeSchedule + ThemeBannerMessage), a banner partial in `templates/components/<slug>_banner.html` included from `base.html`, an `html[data-event="<slug>"]` skin block in `input.css`, and a footer line in `components/footer.html`. Preview any theme with `?force-theme=<slug>`.
 
 ## HTMX Patterns
 
-### Inline CRUD
+### CSRF
 
-The application uses HTMX for inline create/read/update/delete operations without full page reloads.
-
-**Pattern: Adding items**
-
-```html
-<!-- Trigger button -->
-<button hx-get="{% url 'logbook:priority-item-create' %}?weeklog={{ weeklog.id }}"
-        hx-target="#priority-items-list"
-        hx-swap="beforeend">
-  Tilføj
-</button>
-
-<!-- List container -->
-<div id="priority-items-list">
-  {% for item in items %}
-    {% include 'logbook/partials/priority_item_row.html' %}
-  {% endfor %}
-</div>
-```
-
-**Pattern: Inline editing**
-
-```html
-<!-- Row with edit/delete -->
-<div id="item-{{ item.id }}" hx-target="this" hx-swap="outerHTML">
-  {{ item.title }}
-  <button hx-get="{% url 'logbook:priority-item-edit' item.pk %}">Edit</button>
-  <button hx-delete="{% url 'logbook:priority-item-delete' item.pk %}"
-          hx-confirm="Delete?">Delete</button>
-</div>
-```
-
-**View pattern:**
-
-```python
-class PriorityItemCreateView(LoginRequiredMixin, CreateView):
-    model = PriorityItem
-    form_class = PriorityItemForm
-    template_name = "logbook/partials/priority_item_form.html"
-
-    def form_valid(self, form):
-        form.instance.weeklog_id = self.request.GET.get("weeklog")
-        self.object = form.save()
-        return TemplateResponse(
-            self.request,
-            "logbook/partials/priority_item_row.html",
-            {"item": self.object},
-        )
-```
-
-### CSRF Token
-
-The base template includes CSRF token for all HTMX requests:
+`base.html` sends the CSRF token with every HTMX request:
 
 ```html
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 ```
 
-## Tailwind CSS
+### Inline CRUD
 
-### Custom Components
+Rows are swapped in place. Priority tasks are the reference implementation:
 
-Defined in `static/src/input.css`:
+- `logbook:priority-item-create` (`?weeklog=<id>`) returns the form; on success it creates the `PriorityItem` and its first `PriorityItemAppearance` and returns `logbook/partials/priority_item_row.html`, plus an out-of-band delete of the form container.
+- `priority-item-edit`, `priority-item-delete` and `priority-item-row` take the **appearance** pk, not the `PriorityItem` pk.
+- On validation errors the view sets `HX-Retarget` to `#priority-item-form-container`.
 
-```css
-@layer components {
-  .btn-primary { @apply ...; }
-  .card { @apply ...; }
-  .input-field { @apply ...; }
-}
-```
+**Edit forms must target their own container**, e.g. `#incident-form-container`, not the row id they replaced — that element no longer exists after the swap. See `priority_item_form.html` and `absence_form.html`.
 
-### Color Palette
+### Dates in forms
 
-Scandinavian earth tones:
-- `sand-*`: Primary neutral colors
-- `sage-*`: Success/completed states
-- `gold-*`: Warning/ongoing states
-- `terracotta-*`: Error/blocked states
+Fields rendered with `<input type="datetime-local">` need `localize=False` on the form field; Django's localisation otherwise ignores the widget's format and the input stays empty.
 
-### Dark Mode
+## Permissions
 
-Uses class-based dark mode with Alpine.js:
-
-```html
-<html x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
-      :class="{ 'dark': darkMode }">
-```
-
-## Permissions / Role-Based Access Control
-
-The app uses a "Viewer" group to restrict users to read-only access. Users **not** in the Viewer group have full access (the default). Staff users always bypass the check.
-
-### Key components
+Users in the **Viewer** group are read-only. Everyone else is an editor; staff always are. The group is created by migration `accounts/0001_create_viewer_group`.
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| `is_editor(user)` | `apps/accounts/permissions.py` | Returns `False` if user is in the Viewer group |
-| `EditorRequiredMixin` | `apps/accounts/permissions.py` | CBV mixin — raises `PermissionDenied` for viewers |
-| `@editor_required` | `apps/accounts/permissions.py` | FBV decorator — same behavior |
-| `editor_context` | `apps/accounts/context_processors.py` | Adds `is_editor` boolean to template context |
-
-### Protecting a new write view
-
-**Class-based view:** Replace `LoginRequiredMixin` with `EditorRequiredMixin`:
+| `is_editor(user)` | `apps/accounts/permissions.py` | `False` for Viewer members (staff always `True`) |
+| `EditorRequiredMixin` | `apps/accounts/permissions.py` | CBV mixin — 403 for viewers, checked *before* the view runs |
+| `@editor_required` | `apps/accounts/permissions.py` | FBV decorator — same check |
+| `editor_context` | `apps/accounts/context_processors.py` | `is_editor` in every template |
 
 ```python
-from apps.accounts.permissions import EditorRequiredMixin
+from apps.accounts.permissions import EditorRequiredMixin, editor_required
 
 class MyCreateView(EditorRequiredMixin, CreateView):
     ...
-```
-
-**Function-based view:** Stack `@editor_required` after `@login_required`:
-
-```python
-from apps.accounts.permissions import editor_required
 
 @login_required
 @editor_required
@@ -208,78 +156,93 @@ def my_write_view(request):
     ...
 ```
 
-### Hiding UI elements from viewers
+## API
 
-Use the `is_editor` context variable in templates:
+- Endpoints in `apps/api/urls.py`, mounted at `/api/v1/`.
+- Auth: `Authorization: Bearer <key>`, handled by `@api_auth(scope="read"|"write")` in `apps/accounts/api_auth.py`. Read endpoints accept read and write keys; write endpoints need a write key. API views are CSRF-exempt.
+- Users create, re-roll and revoke keys at `/accounts/api-keys/`. For scripts or break-glass: `python manage.py mint_api_key <username> --scope=write --label="…"` (prints the key once).
+- The API under `/api/v1/` changes only backwards-compatibly (promise since 1.0).
 
-```html
-{% if is_editor %}
-  <button>Tilføj</button>
-{% endif %}
-```
+The Statistik share links (`/dashboard/statistik/delt/<token>/data.json` and `vejledning.md`) live in the dashboard app, not in the API, and use the token in the URL instead of an API key.
 
-This hides the element for viewers while the server-side mixin/decorator still blocks direct URL access.
+## ServiceDesk integration
 
-## Adding New Features
+- `apps/logbook/services/servicedesk.py` — `ServiceDeskClient`, configured by `SERVICEDESK_URL` and `SERVICEDESK_API_KEY`.
+- `apps/logbook/services/ticket_mirror.py` — keeps the `HelpdeskTicket` mirror in step (`sync_full`, `sync_incremental`). Statistik and the open-ticket cards on the Kontrolpanel read from it.
+- `apps/logbook/tasks.py` — `sync_current_week_tickets()` and `sync_ticket_mirror(full=…)`, run by `run_scheduler`. The Kontrolpanel sync button (`sync_servicedesk_stats` in `apps/dashboard/views.py`) does the same work inline, with an incremental mirror update.
+- Every sync path is a no-op unless `SERVICEDESK_SYNC_ENABLED=True`.
 
-### New Model
+Management commands (all in `apps/logbook/management/commands/`):
 
-1. Create model in `apps/logbook/models.py`
-2. Create form in `apps/logbook/forms.py`
-3. Add admin configuration in `apps/logbook/admin.py`
-4. Create views for CRUD operations
-5. Create templates (row.html, form.html partials)
-6. Add URL patterns
-7. Run `python manage.py makemigrations && python manage.py migrate`
+| Command | Purpose |
+|---------|---------|
+| `run_scheduler` | Loop used by the sync container (see [DEPLOYMENT.md](DEPLOYMENT.md)) |
+| `sync_servicedesk [--all]` | Sync week ticket counts for the current week, or all week logs |
+| `sync_helpdesk_tickets [--full]` | Refresh the ticket mirror (changed tickets, or full rebuild) |
+| `backfill_liggetid <year> <week> [--dry-run]` / `--all-missing` | Rebuild a past week's open-ticket age breakdown |
 
-### New Dashboard Widget
+## Adding features
 
-1. Create view in `apps/dashboard/views.py`
-2. Create partial template in `templates/dashboard/partials/`
-3. Add URL for the partial
-4. Add HTMX loader in dashboard index.html
+### New model
+
+1. Model in the app's `models.py`, form in `forms.py`, admin in `admin.py`.
+2. Views — protect writes with `EditorRequiredMixin` / `@editor_required`.
+3. Templates: page plus `partials/` row and form for HTMX.
+4. URL patterns.
+5. `python manage.py makemigrations && python manage.py migrate` and commit the migration.
+
+### New Kontrolpanel card
+
+1. View in `apps/dashboard/views.py` (logic that can be tested on its own goes in `overview.py`).
+2. Partial in `templates/dashboard/partials/`.
+3. URL in `apps/dashboard/urls.py`.
+4. An `hx-get` loader in `templates/dashboard/index.html`.
 
 ## Testing
 
-```bash
-# Run all tests
-pytest
-
-# Run specific app tests
-pytest apps/logbook/
-
-# Run with coverage
-pytest --cov=apps --cov-report=html
-```
-
-### Test Organization
-
-```
-apps/logbook/
-├── tests/
-│   ├── test_models.py
-│   ├── test_views.py
-│   ├── test_forms.py
-│   └── test_exports.py
-```
-
-## Code Quality
+pytest with pytest-django (`DJANGO_SETTINGS_MODULE = chronicle.settings.dev` from `pyproject.toml`). Tests live in `apps/<app>/tests/` (about 434 tests).
 
 ```bash
-# Format code
-ruff format .
-
-# Check linting
-ruff check .
-
-# Fix auto-fixable issues
-ruff check --fix .
+.venv/bin/python -m pytest -q                 # everything
+.venv/bin/python -m pytest -q apps/logbook    # one app
+.venv/bin/python -m pytest -q -k signoff      # by name
 ```
 
-## Git Workflow
+CI runs `python manage.py check` and `python manage.py test` (see below). Django's test runner only discovers `unittest`/`TestCase` classes, so the pytest-style tests (plain `test_` functions with fixtures) run only under pytest — always run pytest locally before pushing.
 
-1. Create feature branch from main
-2. Make changes with descriptive commits
-3. Run tests and linting
-4. Create pull request
-5. Merge after review
+## Releasing
+
+Work is committed to `main`. Every push to `main` builds and pushes Docker images tagged with the version in `version.txt`, so a push that ships code must carry a new version.
+
+1. **Bump `version.txt`.** CI tags both Docker images from this file, not from the changelog. Forgetting it once made CI overwrite the previous version's tag.
+2. **Add a CHANGELOG.md entry at the top**, in Danish:
+
+   ```markdown
+   ## X.Y.Z — YYYY-MM-DD
+
+   ### Added
+   - …
+
+   ### Changed
+   - …
+
+   ### Fixed
+   - …
+   ```
+
+   Use only the sections you need. Check that the heading matches `version.txt`.
+3. **Pick the version:** patch bump (X.Y.Z+1) for follow-ups within a feature, minor bump (X.Y+1.0) for a new feature line.
+4. Run the tests: `.venv/bin/python -m pytest -q`.
+5. **Commit GPG-signed** (`git commit -S`, or with `commit.gpgsign` set) and push to `main`.
+6. CI builds and pushes the images. Deploy as described in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+### CI
+
+`.github/workflows/ci_cd.yml`:
+
+- **On push and pull request to `main`:** `test` job — Python 3.12, `pip install -r requirements/dev.txt`, `python manage.py check`, `python manage.py test`.
+- **On push to `main` only, after tests pass:** `build` job — builds and pushes
+  - `elohite/chronicle:<version.txt>` and `:latest` from `docker/Dockerfile`
+  - `elohite/chronicle_sync_servicedesk:<version.txt>` and `:latest` from `docker/Dockerfile.sync`
+
+Docker Hub credentials come from the repository secrets `DOCKER_HUB_USERNAME` and `DOCKER_HUB_ACCESS_TOKEN`.

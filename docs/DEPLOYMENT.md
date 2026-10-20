@@ -1,422 +1,126 @@
 # Deployment Guide
 
-This guide covers deploying FynBus Chronicle to production.
+How FynBus Chronicle runs in production and how a new version gets there. Building a release (version bump, changelog, CI) is described in [DEVELOPMENT.md](DEVELOPMENT.md#releasing).
 
-## Docker Deployment (Recommended)
+## Production at a glance
 
-### Prerequisites
+| | |
+|---|---|
+| URL | https://chronicle.fynbus.net |
+| Host | `fbdocker01` |
+| Deploy method | GitOps — the compose file in the `FynBus/infrastructure-as-code` repo, `docker-compose/chronicle/compose.yml` |
+| Containers | `chronicle-web` (`elohite/chronicle`) and `chronicle-sync` (`elohite/chronicle_sync_servicedesk`) |
+| Configuration | Environment files on the host, not in this repo |
 
-- Docker and Docker Compose installed
-- Domain name configured (optional but recommended)
-- SSL certificate (Let's Encrypt recommended)
+Both images are built from the same commit and tagged with the same version, so **both tags are always bumped together**. A sync container running older code writes stale statistics.
 
-### Quick Deploy
+The `docker-compose.prod.yml` and `docker-compose.sqlite.yml` files in this repo are standalone examples, not what production runs — production is defined only in `infrastructure-as-code`.
 
-```bash
-# Clone repository
-git clone <repository-url>
-cd fynbus-chronicle
+> **Read-only Friday:** no production changes on Fridays — no deploys, no config changes. Chronicle shows a red banner on Fridays as a reminder.
 
-# Create production environment file
-cp .env.example .env.prod
+## Deploying a new version
 
-# Edit .env.prod with production settings
-nano .env.prod
+1. **Release** — push the version bump to `main` (see [Releasing](DEVELOPMENT.md#releasing)) and wait for the CI `build` job to finish.
+2. **Gate: check that both tags exist on Docker Hub.** Do this as a separate step, and stop if either is missing:
 
-# Start services
-docker compose -f docker-compose.prod.yml up -d
-```
+   ```bash
+   V=$(cat version.txt)
+   for img in chronicle chronicle_sync_servicedesk; do
+     printf '%s:%s -> ' "$img" "$V"
+     curl -s -o /dev/null -w '%{http_code}\n' \
+       "https://hub.docker.com/v2/repositories/elohite/$img/tags/$V/"
+   done
+   ```
 
-### Production Environment Variables
+   Both must return `200`. Bumping the compose file to a tag that does not exist once made the host recreate `chronicle-web` without an image, and the site returned 502 until it was fixed.
+3. **Bump both image tags** in `infrastructure-as-code/docker-compose/chronicle/compose.yml` to the new version, commit and push.
+4. **Wait.** `fbdocker01` picks up the change by itself within a few minutes; there is nothing to run on the host.
+5. **Verify** on the host:
 
-```env
-# Required
-SECRET_KEY=<generate-strong-key>
-DEBUG=False
-ALLOWED_HOSTS=chronicle.fynbus.dk
+   ```bash
+   docker inspect -f '{{.Config.Image}}' chronicle-web chronicle-sync
+   ```
 
-# Database
-POSTGRES_DB=fynbus_chronicle
-POSTGRES_USER=chronicle
-POSTGRES_PASSWORD=<strong-password>
-DATABASE_URL=postgres://chronicle:<password>@db:5432/fynbus_chronicle
+   Both lines should show the new version. The version is also shown in the app (footer and Dokumentation → Changelog).
 
-# Security
-# List EVERY origin the app is reached on, including the port when it is not
-# 443. Django rejects a POST whose Origin header is not an exact match —
-# scheme, host AND port — which shows up as a 403 on every form submit while
-# GET pages look completely normal. Reaching the site through an SSH tunnel
-# on e.g. :8443 therefore needs that origin listed here too.
-CSRF_TRUSTED_ORIGINS=https://chronicle.fynbus.dk,https://chronicle.fynbus.dk:8443
-SECURE_SSL_REDIRECT=True
+### What happens when the containers start
 
-# Email (Optional - choose SMTP or Graph)
-# Option A: Microsoft Graph API (recommended, see docs/GRAPH_EMAIL_SETUP.md)
-EMAIL_USE_GRAPH=True
+**`chronicle-web`** (`docker/Dockerfile`, entrypoint `docker/entrypoint.sh`):
 
-# Option B: SMTP (set EMAIL_USE_GRAPH=False)
-EMAIL_HOST=smtp.office365.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=it@fynbus.dk
-EMAIL_HOST_PASSWORD=<password>
+1. If `DATABASE_URL` is set, waits up to 30 seconds for the database port.
+2. `python manage.py migrate --noinput` — upgrades need no manual steps.
+3. `python manage.py collectstatic --noinput --clear` (static files are served by WhiteNoise).
+4. Starts gunicorn on port 8000 with 2 workers.
 
-DEFAULT_FROM_EMAIL=it@fynbus.dk
-CHRONICLE_EMAIL_RECIPIENTS=manager@fynbus.dk,team@fynbus.dk
+**`chronicle-sync`** (`docker/Dockerfile.sync`) has no entrypoint script and does not migrate — it relies on the web container for that. It runs `python manage.py run_scheduler`:
 
-# SSO (Optional)
-SSO_ENABLED=True
-MICROSOFT_CLIENT_ID=<app-id>
-MICROSOFT_CLIENT_SECRET=<secret>
-MICROSOFT_TENANT_ID=<tenant-id>
+- Exits immediately with a warning if `SERVICEDESK_SYNC_ENABLED` is not `True`.
+- Every `SERVICEDESK_SYNC_INTERVAL` seconds (default 300): syncs this week's ServiceDesk counts onto the current week log, then updates the `HelpdeskTicket` mirror (Statistik and the open-ticket cards on the Kontrolpanel).
+- The mirror is synced **in full on start and then every 24 hours**, incrementally (changed tickets only) in between. A failure in one sync does not stop the other.
+- On start it logs `Starting ServiceDesk sync loop (every 300s).`
 
-# ServiceDesk Plus Integration (Optional)
-SERVICEDESK_URL=https://servicedesk.fynbus.dk
-SERVICEDESK_API_KEY=<your-api-key>
-SERVICEDESK_SYNC_ENABLED=True
-SERVICEDESK_SYNC_INTERVAL=300
-```
+The sync image contains only `requirements/base.txt` and the app code (no templates, static files or gunicorn). Its Docker health check only verifies that Django and the ServiceDesk client load.
 
-Generate a secure secret key:
+Both containers must use the same database: the same `DATABASE_URL`, or the same volume mounted at `SQLITE_DIR`.
 
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(50))"
-```
+### Rolling back
 
-### Build and Start
+Set both tags back to the previous version in `infrastructure-as-code` and push. Migrations are not reversed automatically: if the release added migrations, check that the older code still runs against the newer schema, or migrate back by hand (`docker exec chronicle-web python manage.py migrate <app> <migration>`) **before** switching the image.
 
-```bash
-# Build images
-docker compose -f docker-compose.prod.yml build
+## Configuration
 
-# Start services
-docker compose -f docker-compose.prod.yml up -d
+Production settings are `chronicle.settings.prod` (set in both images). They force `DEBUG=False`, trust `X-Forwarded-Proto` from the reverse proxy, enable HSTS and secure cookies, and log to stdout. All variables are listed in [SETUP.md](SETUP.md#environment-variables); the ones that matter in production:
 
-# View logs
-docker compose -f docker-compose.prod.yml logs -f web
+| Container | Variables |
+|-----------|-----------|
+| web | `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `SECURE_SSL_REDIRECT`, `DATABASE_URL` or `SQLITE_DIR`, `SSO_ENABLED`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID`, `EMAIL_USE_GRAPH` (or the `EMAIL_*` SMTP variables), `DEFAULT_FROM_EMAIL`, `CHRONICLE_EMAIL_RECIPIENTS`, `SERVICEDESK_URL`, `SERVICEDESK_API_KEY`, `SERVICEDESK_SYNC_ENABLED=True` (for the Kontrolpanel sync button) |
+| sync | `SECRET_KEY`, `DATABASE_URL` or `SQLITE_DIR`, `SERVICEDESK_URL`, `SERVICEDESK_API_KEY`, `SERVICEDESK_SYNC_ENABLED=True`, `SERVICEDESK_SYNC_INTERVAL` |
 
-# Create superuser
-docker compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
-```
+Never put secrets in this repo or in `infrastructure-as-code`; they belong in the environment files on the host.
 
-## Nginx Reverse Proxy
+**`CSRF_TRUSTED_ORIGINS` must list every origin the site is reached on**, including the port when it is not 443. Django compares scheme, host and port exactly; a missing origin shows up as a 403 on every form submit while GET pages look normal. Reaching the site through an SSH tunnel on e.g. `:8443` needs that origin listed too — or browse without the port.
 
-Example nginx configuration:
+See [SSO_SETUP.md](SSO_SETUP.md) and [GRAPH_EMAIL_SETUP.md](GRAPH_EMAIL_SETUP.md) for the Azure app registration.
 
-```nginx
-server {
-    listen 80;
-    server_name chronicle.fynbus.dk;
-    return 301 https://$server_name$request_uri;
-}
+## Data and backup
 
-server {
-    listen 443 ssl http2;
-    server_name chronicle.fynbus.dk;
+With SQLite, everything lives in `SQLITE_DIR` (`/app/data` in the images' compose examples):
 
-    ssl_certificate /etc/letsencrypt/live/chronicle.fynbus.dk/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/chronicle.fynbus.dk/privkey.pem;
+- `db.sqlite3` — the database
+- `report_files/` — report videos (`REPORT_FILES_DIR`)
+- `image_files/` — pasted images (`IMAGE_FILES_DIR`)
 
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
+Back up that whole directory. With PostgreSQL, back up the database with `pg_dump` and the two file directories separately.
 
-    location /static/ {
-        alias /var/www/chronicle/static/;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
+## Operations
 
-    location /media/ {
-        alias /var/www/chronicle/media/;
-        expires 7d;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # WebSocket support (if needed)
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
-
-## Database Backup
-
-### Automated Backup Script
-
-Create `/opt/chronicle/backup.sh`:
+Run management commands inside the containers on `fbdocker01`:
 
 ```bash
-#!/bin/bash
-set -e
+# Create an admin user
+docker exec -it chronicle-web python manage.py createsuperuser
 
-BACKUP_DIR="/var/backups/chronicle"
-DATE=$(date +%Y%m%d_%H%M%S)
-CONTAINER="fynbus-chronicle-db-1"
+# Mint an API key for scripts / MCP (printed once)
+docker exec chronicle-web python manage.py mint_api_key <username> --scope=read --label="<label>"
 
-mkdir -p $BACKUP_DIR
+# ServiceDesk: manual syncs and backfill (in the sync container, which has the ServiceDesk settings)
+docker exec chronicle-sync python manage.py sync_servicedesk
+docker exec chronicle-sync python manage.py sync_helpdesk_tickets --full
+docker exec chronicle-sync python manage.py backfill_liggetid --all-missing --dry-run
 
-# Dump database
-docker exec $CONTAINER pg_dump -U chronicle fynbus_chronicle | gzip > "$BACKUP_DIR/db_$DATE.sql.gz"
-
-# Keep only last 7 days
-find $BACKUP_DIR -type f -mtime +7 -delete
-
-echo "Backup completed: db_$DATE.sql.gz"
+# Logs
+docker logs --tail 100 chronicle-web
+docker logs --tail 100 chronicle-sync
 ```
 
-Add to crontab:
-
-```bash
-0 2 * * * /opt/chronicle/backup.sh >> /var/log/chronicle-backup.log 2>&1
-```
-
-### Restore from Backup
-
-```bash
-# Stop web container
-docker compose -f docker-compose.prod.yml stop web
-
-# Restore database
-gunzip -c backup.sql.gz | docker exec -i fynbus-chronicle-db-1 psql -U chronicle fynbus_chronicle
-
-# Start web container
-docker compose -f docker-compose.prod.yml start web
-```
-
-## SQLite Deployment (Simple)
-
-For smaller installations, SQLite is sufficient:
-
-1. Remove `db` service from docker-compose.prod.yml
-2. Remove `DATABASE_URL` from environment
-3. Mount a persistent volume for the SQLite file:
-
-```yaml
-volumes:
-  - ./data:/app/data
-```
-
-Update settings to use `/app/data/db.sqlite3`.
-
-## Monitoring
-
-### Health Check Endpoint
-
-Add to `chronicle/urls.py`:
-
-```python
-from django.http import JsonResponse
-
-def health_check(request):
-    return JsonResponse({"status": "healthy"})
-
-urlpatterns = [
-    path("health/", health_check),
-    # ... other urls
-]
-```
-
-### Log Aggregation
-
-Configure Django logging in `settings/prod.py`:
-
-```python
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-}
-```
-
-Docker logs can be collected with your preferred log aggregator.
-
-## Updates
-
-```bash
-# Pull latest code
-git pull origin main
-
-# Rebuild and restart
-docker compose -f docker-compose.prod.yml build
-docker compose -f docker-compose.prod.yml up -d
-
-# Run migrations
-docker compose -f docker-compose.prod.yml exec web python manage.py migrate
-```
+Logged-in users can also trigger a sync from the Kontrolpanel (refresh / *Prøv igen*): this week's counts plus an incremental mirror update. It runs in the web container, so the web container needs the three `SERVICEDESK_*` variables above as well; otherwise the card shows *ServiceDesk sync er deaktiveret*.
 
 ## Troubleshooting
 
-### Container Won't Start
+**Site returns 502 after a deploy** — check that both image tags exist on Docker Hub and that `chronicle-web` is running (`docker ps`, `docker logs chronicle-web`). A failing migration stops the entrypoint before gunicorn starts.
 
-```bash
-# Check logs
-docker compose -f docker-compose.prod.yml logs web
+**Every form submit returns 403** — the browser's origin is missing from `CSRF_TRUSTED_ORIGINS` (see Configuration). Since failed HTMX requests show an error toast, "the button does nothing" plus a 403 toast points here.
 
-# Check container status
-docker compose -f docker-compose.prod.yml ps
-```
+**Helpdesk numbers or Statistik are stale** — check `docker logs chronicle-sync`. If the container keeps exiting, `SERVICEDESK_SYNC_ENABLED` is probably not `True`. Test the API key with `docker exec chronicle-sync python manage.py sync_servicedesk`.
 
-### Database Connection Issues
-
-```bash
-# Verify database is running
-docker compose -f docker-compose.prod.yml exec db pg_isready
-
-# Check connection from web container
-docker compose -f docker-compose.prod.yml exec web python -c "
-import django
-django.setup()
-from django.db import connection
-connection.ensure_connection()
-print('Database connected!')
-"
-```
-
-### Static Files Not Loading
-
-```bash
-# Collect static files manually
-docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput
-
-# Check static files directory
-docker compose -f docker-compose.prod.yml exec web ls -la /app/staticfiles
-```
-
-## ServiceDesk Plus Integration
-
-FynBus Chronicle can automatically sync helpdesk ticket counts from ManageEngine ServiceDesk Plus. This provides real-time statistics on the dashboard.
-
-### Prerequisites
-
-- ServiceDesk Plus instance with API access enabled
-- API technician key (generated in ServiceDesk Plus admin)
-
-### Configuration
-
-1. Generate an API key in ServiceDesk Plus:
-   - Log in to ServiceDesk Plus as admin
-   - Go to Admin > API > Technicians
-   - Generate a new API key for a technician account
-
-2. Add environment variables to your `.env.prod`:
-
-```env
-SERVICEDESK_URL=https://servicedesk.fynbus.dk
-SERVICEDESK_API_KEY=<your-api-key>
-SERVICEDESK_SYNC_ENABLED=True
-SERVICEDESK_SYNC_INTERVAL=300
-```
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SERVICEDESK_URL` | Base URL of your ServiceDesk Plus instance | `https://servicedesk.fynbus.dk` |
-| `SERVICEDESK_API_KEY` | API technician key | Required for sync |
-| `SERVICEDESK_SYNC_ENABLED` | Enable/disable automatic sync | `False` |
-| `SERVICEDESK_SYNC_INTERVAL` | Sync interval in seconds | `300` (5 minutes) |
-
-### Docker Deployment
-
-The production docker-compose includes a dedicated `sync` service that runs the scheduler:
-
-```yaml
-# In docker-compose.prod.yml
-sync:
-  image: elohite/chronicle_sync_servicedesk:latest
-  environment:
-    - SERVICEDESK_URL=${SERVICEDESK_URL}
-    - SERVICEDESK_API_KEY=${SERVICEDESK_API_KEY}
-    - SERVICEDESK_SYNC_ENABLED=${SERVICEDESK_SYNC_ENABLED:-True}
-    - SERVICEDESK_SYNC_INTERVAL=${SERVICEDESK_SYNC_INTERVAL:-300}
-    # ... other settings
-  volumes:
-    - sqlite_data:/app/data  # Share database with web service
-```
-
-The sync service:
-- Runs as a separate container to avoid blocking the web server
-- Shares the SQLite database volume with the web service
-- Automatically syncs ticket counts at the configured interval (default: 5 minutes)
-- Updates the current week's WeekLog with new, closed, and open ticket counts
-
-### Management Commands
-
-Two management commands are available for ServiceDesk integration:
-
-**Run the scheduler (for production)**
-```bash
-python manage.py run_scheduler
-```
-Starts a blocking scheduler that syncs tickets at regular intervals. Used by the Docker sync service.
-
-**Manual sync (for testing/debugging)**
-```bash
-# Sync current week only
-python manage.py sync_servicedesk
-
-# Sync all existing WeekLogs
-python manage.py sync_servicedesk --all
-```
-
-### Verify Integration
-
-Check if the sync service is running:
-
-```bash
-docker compose -f docker-compose.prod.yml logs sync
-```
-
-Expected output:
-```
-Added ServiceDesk sync job (every 300 seconds)
-Starting scheduler...
-```
-
-### Disable Integration
-
-To disable ServiceDesk sync:
-
-1. Set `SERVICEDESK_SYNC_ENABLED=False` in your environment
-2. Optionally stop the sync container:
-   ```bash
-   docker compose -f docker-compose.prod.yml stop sync
-   ```
-
-When disabled, helpdesk statistics can still be entered manually in the WeekLog form.
-
-### Troubleshooting
-
-**Sync not working**
-
-1. Check sync service logs:
-   ```bash
-   docker compose -f docker-compose.prod.yml logs sync
-   ```
-
-2. Verify API key works:
-   ```bash
-   docker compose -f docker-compose.prod.yml exec sync python manage.py sync_servicedesk
-   ```
-
-3. Check ServiceDesk Plus API is accessible from the container
-
-**Database locked errors (SQLite)**
-
-This can occur if both web and sync services access SQLite simultaneously. The sync service includes retry logic, but consider:
-- Using PostgreSQL for production environments
-- Increasing `SERVICEDESK_SYNC_INTERVAL` to reduce frequency
+**"Database is locked" (SQLite)** — web and sync write to the same file. Occasional locks resolve on the next cycle; if they persist, raise `SERVICEDESK_SYNC_INTERVAL` or move to PostgreSQL.

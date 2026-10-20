@@ -1,14 +1,21 @@
 # FynBus Chronicle
 
-IT Weekly Logbook System for FynBus IT department.
+The weekly log and dashboard of the FynBus IT department — **version 1.0**.
 
-## Overview
+Chronicle is where the IT department plans, records and looks back on its work: the week log with priority tasks, incidents and staffing, live helpdesk figures from ManageEngine ServiceDesk Plus, the on-call rota, statistics and shareable reports.
 
-FynBus Chronicle is a Django-based application for tracking weekly IT activities including:
-- Helpdesk ticket statistics
-- Priority tasks and projects
-- Staff absences
-- Security and system incidents
+## Features
+
+- **Kontrolpanel**: a live dashboard — open tickets and the change since last week, incidents, the current week's tasks, open tickets by technician, category and age, the newest and oldest unsolved tickets (linked into ServiceDesk), and trends. Refreshes itself; flags a failing sync.
+- **Week logs**: priority tasks that live across weeks (Markdown, pasted images, merge, reopen, auto-close after six weeks), incidents, absences, meeting minutes and sign-off. Task search across all weeks.
+- **Exports**: the week report and a task's history as PDF, HTML, Markdown and email (Microsoft Graph), with a confirmation step before sending.
+- **ServiceDesk Plus integration**: weekly helpdesk figures and age buckets, plus a local mirror of every ticket (subject, category, technician, department) kept in sync by a separate container.
+- **Statistik**: helpdesk and Chronicle statistics for any period, exportable as PDF/HTML/Markdown/JSON, with expiring share links for tools that cannot log in.
+- **Rådighedsvagt**: on-call calendar with split weeks, mid-week handovers, history and notifications.
+- **Forslag**: a feature-request board; **Rapporter**: standalone HTML reports with optional video and public links.
+- **REST API** under `/api/v1/` with per-user read or read/write API keys (used by the Claude MCP connector).
+- **v3 design**: sidebar shell, light and dark mode, accent colours, density modes, and day themes (Star Wars, Pirate Day, Star Trek, World Alzheimer's Day, Read-only Friday, Touch-Grass-Weekend).
+- **Office 365 SSO** (optional) and two roles: editor and read-only viewer.
 
 ## Tech Stack
 
@@ -17,7 +24,9 @@ FynBus Chronicle is a Django-based application for tracking weekly IT activities
 - **Database**: SQLite (default) / PostgreSQL (production)
 - **PDF Export**: WeasyPrint
 - **Auth**: Django Allauth with Office 365 SSO support
-- **Containerization**: Docker
+- **Charts**: Chart.js (web), matplotlib (PDF/email)
+- **Tests**: pytest
+- **Containerization**: Docker (web + ServiceDesk sync), images built by GitHub Actions
 
 ## Quick Start
 
@@ -60,32 +69,18 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## Features
-
-- **Dashboard**: Overview of current week, helpdesk chart, recent incidents
-- **Live Updates**: Dashboard auto-refreshes every 30-60 seconds without page reload
-- **ServiceDesk Integration**: Automatic sync of ticket counts from ManageEngine ServiceDesk Plus
-- **HTMX Forms**: Inline add/edit/delete without page reloads
-- **Exports**: PDF, Markdown, and Email reports
-- **Dark Mode**: Scandinavian-themed light/dark mode
-- **Office 365 SSO**: Optional Microsoft authentication
-
 ## Documentation
 
-- [Setup Guide](docs/SETUP.md) - Detailed installation instructions
-- [Development Guide](docs/DEVELOPMENT.md) - Development workflow
-- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
-- [User Guide](docs/USER_GUIDE.md) - End-user documentation (Danish)
-- [SSO Setup](docs/SSO_SETUP.md) - Office 365 configuration
+- [User Guide](docs/USER_GUIDE.md) — for colleagues (Danish)
+- [Setup Guide](docs/SETUP.md) — local installation
+- [Development Guide](docs/DEVELOPMENT.md) — structure, conventions, tests and the release routine
+- [Deployment Guide](docs/DEPLOYMENT.md) — Docker images, GitOps deploy and the sync container
+- [SSO Setup](docs/SSO_SETUP.md) — Office 365 sign-in
+- [Email Setup](docs/GRAPH_EMAIL_SETUP.md) — SMTP or Microsoft Graph
+- [CHANGELOG](CHANGELOG.md) — every release (Danish)
 
-## Screenshots
-
-### Dashboard (Light Mode)
-The dashboard provides an overview of the current week's activities with helpdesk statistics and recent incidents.
-
-### Week Log Detail (Dark Mode)
-Detailed view of a weekly log with inline editing of priority items, absences, and incidents.
+The same documents are available inside Chronicle under **Dokumentation**.
 
 ## License
 
-MIT License - FynBus IT 2024
+MIT License — see [LICENSE](LICENSE).

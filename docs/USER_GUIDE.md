@@ -1,18 +1,23 @@
-# Brugervejledning - FynBus Chronicle
+# Brugervejledning — FynBus Chronicle
 
-Denne vejledning forklarer hvordan du bruger FynBus Chronicle til at registrere og følge IT-afdelingens ugentlige aktiviteter.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser og rådighedsvagt. Denne vejledning gælder version 1.0.
 
 ## Indhold
 
 1. [Log ind](#log-ind)
 2. [Brugerroller](#brugerroller)
-3. [Kontrolpanel](#kontrolpanel)
-4. [Ugelogs](#ugelogs)
-5. [Opgaver](#opgaver)
-6. [Vagtkalender](#vagtkalender)
-7. [Eksporter rapporter](#eksporter-rapporter)
-8. [Rapporter](#rapporter)
-9. [Mørk tilstand](#mørk-tilstand)
+3. [Navigation](#navigation)
+4. [Kontrolpanel](#kontrolpanel)
+5. [Ugelogs](#ugelogs)
+6. [Opgavesøgning](#opgavesøgning)
+7. [Vagtkalender](#vagtkalender)
+8. [Statistik](#statistik)
+9. [Forslag](#forslag)
+10. [Eksporter rapporter](#eksporter-rapporter)
+11. [Rapporter](#rapporter)
+12. [Notifikationer](#notifikationer)
+13. [API-nøgler](#api-nøgler)
+14. [Udseende og temaer](#udseende-og-temaer)
 
 ---
 
@@ -41,7 +46,6 @@ FynBus Chronicle har to brugerroller:
 Alle brugere er redaktører som standard og har fuld adgang til at:
 
 - Oprette, redigere og slette ugelogs
-- Oprette og styre opgaver med statusworkflow, noter og vedhæftede filer
 - Tilføje og administrere prioriterede opgaver, fravær og hændelser
 - Redigere mødereferater
 - Eksportere rapporter (PDF, Markdown, HTML, email)
@@ -52,7 +56,7 @@ Alle brugere er redaktører som standard og har fuld adgang til at:
 
 Brugere der er tilføjet til gruppen "Viewer" har kun læseadgang:
 
-- **Kan se**: Kontrolpanel, ugelogs, vagtkalender og dokumentation
+- **Kan se**: Kontrolpanel, ugelogs, vagtkalender, statistik, forslag, rapporter og dokumentation
 - **Kan ikke**: Oprette, redigere, slette, sortere eller eksportere noget
 
 Læsere ser ikke nogen handlingsknapper (Tilføj, Rediger, Slet, Eksporter osv.). Forsøg på at tilgå skrivebeskyttede funktioner direkte via URL returnerer en fejlside.
@@ -63,39 +67,63 @@ Kontakt din administrator for at ændre din brugerrolle.
 
 ---
 
+## Navigation
+
+**Sidemenuen** til venstre fører til Kontrolpanel, Ugelog, Rådighedsvagt, Forslag, Rapporter, Statistik og Dokumentation. Tallet ved *Forslag* er antallet af åbne og igangværende forslag.
+
+- Nederst står **Rådighedsvagt nu**: hvem der har vagten, til hvornår, og hvem der er den næste.
+- I bunden finder du din profil (API-nøgler, Admin, Log ud), **tandhjulet** med indstillinger og knappen, der **klapper menuen sammen** til ikoner. Valget huskes i din browser.
+
+**Bjælken øverst** viser, hvor du er (fx *Ugelogs / 2026 / Uge 42*), og har:
+- **Søg i opgaver**: søger i de prioriterede opgaver på tværs af alle uger. Tryk **Ctrl+K** (⌘K på Mac) for at hoppe direkte til feltet.
+- **Klokken** med dine notifikationer.
+
+På mobil er sidemenuen skjult: tryk på menuknappen øverst til venstre for at få menu og indstillinger frem.
+
+---
+
 ## Kontrolpanel
 
-Kontrolpanelet giver et overblik over den aktuelle uges aktiviteter.
+Kontrolpanelet viser ugen lige nu. Alt opdaterer sig selv, mens siden er åben: overskriften og kortene hentes igen hvert minut, nøgletallene hvert 30. sekund.
 
-### Live opdateringer
+### Overskrift
 
-Kontrolpanelet opdateres automatisk uden at du behøver genindlæse siden:
-- **Helpdesk statistik**: Opdateres hvert 30. sekund
-- **Aktuel uge**: Opdateres hvert minut
-- **Graf og hændelser**: Opdateres hvert minut
+Overskriften siger, hvor mange sager der er åbne, og om det er flere eller færre end ved udgangen af sidste uge — fx *"28 åbne sager, én flere end sidste uge."* Linjen under viser:
+- **Live · synk kl …**: hvornår sagerne sidst blev hentet fra ServiceDesk.
+- Ugens hændelser og hvor mange der er kritiske.
+- Ugeloggen for ugen og antallet af opgaver på den.
 
-Hvis ServiceDesk-integration er aktiveret, hentes helpdesk-tal automatisk fra ServiceDesk Plus.
+Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
 
-### Komponenter
+### Nøgletal
 
-**Aktuel uge**
-- Viser sammenfatning af den aktuelle ugelog
-- Aktive prioriterede opgaver
-- Planlagt fravær
+Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen på *Åbne sager* starter en synkronisering.
 
-**Helpdesk statistik**
-- Graf over de sidste 52 ugers sager
-- Gennemsnitlige nye og lukkede sager
-- Antal åbne sager lige nu, med en farvet bjælke der viser hvor længe de har ligget (grøn = nye, rød = over 12 måneder)
-- Opdateres automatisk hvis ServiceDesk-integration er aktiv
+### 01 Nu
 
-**Seneste hændelser**
-- Liste over nylige hændelser
-- Markering af uløste hændelser
+- **Hændelser** fra de sidste 30 dage plus alle uløste, nyeste først. Den farvede kant og P1/P2/P3 viser alvoren (P1 kritisk, P2 høj, P3 lavere), og hver linje siger **Løst** eller **Uløst**. *Vis ældre* folder ældre, løste hændelser ud.
+- **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
+- **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
 
-### Hurtige handlinger
+### 02 Åbne sager
 
-Klik på "Ny ugelog" for at oprette en ny ugelog.
+- **Tekniker**: hvor mange åbne sager hver tekniker har; *Ikke tildelt* er grå.
+- **Kategori**: åbne sager fordelt på ServiceDesk-kategori.
+- **Liggetid**: hvor længe de åbne sager har ligget, i de samme syv grupper som ugerapporten, og hvor mange der har ligget i over 1 måned.
+- **Nyeste uløste** og **Ældste uløste**: de seks nyeste og de seks ældste åbne sager med nummer, emne, tekniker og alder. Klik på en linje for at åbne sagen i ServiceDesk.
+
+### 03 Udvikling
+
+To grafer: nye mod lukkede sager pr. uge og antallet af åbne sager ved ugens udgang. Vælg 12 uger, 26 uger eller 12 måneder over hver graf.
+
+Nederst står den **seneste ændring** i Chronicle; klik for at se hele ændringsloggen.
+
+### Densitet
+
+Under tandhjulet → **Densitet**:
+- **Komfort** viser alt.
+- **Kompakt** er tættere og skjuler graferne og afsnittet *Åbne sager*.
+- **Dashboard** viser kun nøgletal og grafer — godt til en skærm på væggen.
 
 ---
 
@@ -103,32 +131,23 @@ Klik på "Ny ugelog" for at oprette en ny ugelog.
 
 ### Oversigt
 
-Gå til "Ugelogs" i navigationen for at se alle ugelogs.
-
-**Filtrering**
-- Brug dropdown-menuen til at filtrere efter år
+**Ugelog** i menuen viser alle uger som en liste: uge, sammendrag og en linje med antal opgaver, hændelser og helpdesk-tal. Den aktuelle uge er markeret. Filtrér på år i overskriften, eller klik på en uge for at åbne den.
 
 ### Opret ny ugelog
 
-1. Klik på "Ny ugelog"
+1. Klik **Ny ugelog**
 2. Udfyld:
-   - **År og uge**: Udfyldes automatisk med aktuel uge
-   - **Helpdesk statistik**: Nye, lukkede og åbne sager
-   - **Åbne sager fordelt på liggetid**: Hvor mange af de åbne sager der er under 1 uge, 1-2 uger, 2 uger-1 måned, 1-3 måneder, 3-6 måneder, 6-12 måneder og over 12 måneder gamle. Felterne udfyldes automatisk af ServiceDesk-synkroniseringen; udfylder du dem i hånden, skal de summe til antallet af åbne sager (eller stå på 0, hvis ugen ikke skal have en opdeling)
-   - **Ugeoversigt**: Kort beskrivelse af ugens aktiviteter
-3. Klik "Opret ugelog"
+   - **År og uge**: udfyldes automatisk med den aktuelle uge
+   - **Helpdesk statistik**: nye, lukkede og åbne sager
+   - **Åbne sager fordelt på liggetid**: under 1 uge, 1–2 uger, 2 uger–1 måned, 1–3 måneder, 3–6 måneder, 6–12 måneder og over 12 måneder. Felterne udfyldes automatisk af ServiceDesk-synkroniseringen; udfylder du dem i hånden, skal de summe til antallet af åbne sager (eller stå på 0)
+   - **Ugeoversigt**: kort beskrivelse af ugens aktiviteter
+3. Klik **Opret ugelog**
 
-### Se ugelog detaljer
+### Ugeloggen
 
-Klik på "Se detaljer" for at åbne en ugelog.
+Adressen på en ugelog er `/logbook/<år>/<uge>/` — fx <https://chronicle.fynbus.net/logbook/2026/34/>. Ældre links med et id (`/logbook/39/`) sender dig videre til den rigtige uge.
 
-Adressen på en ugelog er `/logbook/<år>/<uge>/` — fx <https://chronicle.fynbus.net/logbook/2026/34/> for uge 34, 2026. Du kan skrive den direkte i browseren. Ældre links med et id (`/logbook/39/`) sender dig automatisk videre til den rigtige uge.
-
-Her kan du:
-- Se helpdesk-statistik
-- Administrere prioriterede opgaver
-- Registrere fravær
-- Dokumentere hændelser
+Øverst står ugens helpdesk-tal med forrige uges tal under hvert. Derunder: klarmelding, sammendrag, mødereferat, prioriterede opgaver (*N åbne af M*), fravær og hændelser (*N denne uge · M kritisk*).
 
 ### Klarmelding — "ikke mere at tilføje"
 
@@ -147,11 +166,11 @@ er personlig — den påvirker ikke dine kollegers markeringer.
 
 ### Prioriterede opgaver
 
-**Genåbn en afsluttet opgave**
+En prioriteret opgave lever på tværs af uger: den lægges på den uge, den opstår, og kan føres videre med **Fra åbne**, som viser alle åbne opgaver fra tidligere uger. Afsluttede opgaver vises nedtonede. En opgave, der ikke er beskrevet i 6 uger, lukkes automatisk.
 
-På opgavesøgningen (Ugelogs → Opgavesøgning) har hver afsluttet opgave en ↺-knap.
-Den genåbner opgaven og lægger den på indeværende uge, så den dukker op i ugeloggen
-igen. Du bliver stående i søgningen med de filtre, du havde.
+**Billeder i beskrivelsen**
+
+Sæt et skærmbillede ind med **Ctrl+V** (eller træk en billedfil ind) i beskrivelsen på en opgave eller et forslag. Billedet uploades med det samme (højst 15 MB), og en forhåndsvisning under feltet viser resultatet, hvor du kan justere billedets størrelse. Billederne kommer med i PDF, HTML og email.
 
 **Markdown i beskrivelser**
 
@@ -168,8 +187,12 @@ Formateringen følger med i alle eksporter: PDF, HTML, email og Markdown-filen.
    - Titel
    - Prioritet (Høj/Medium/Lav)
    - Status (Ikke startet/Igangværende/Blokeret/Afsluttet)
-   - Beskrivelse og noter
+   - Beskrivelse
 3. Klik "Tilføj"
+
+**Flet opgaver**
+
+Er den samme opgave oprettet to gange, flettes den ene ind i den anden med flet-ikonet på opgaven: vælg den opgave, den skal flettes ind i. Ugerne og beskrivelserne flyttes over, og den flettede opgave peger videre til den, den blev flettet ind i.
 
 **Rediger opgave**
 - Klik på blyant-ikonet
@@ -211,23 +234,14 @@ Brug hændelser til at dokumentere:
 
 ---
 
-## Opgaver
+---
 
-Opgaver-modulet bruges til at registrere og følge IT-opgaver og projekter.
+## Opgavesøgning
 
-### Grundlæggende funktioner
+**Ugelog → Opgavesøgning** (eller feltet *Søg i opgaver* øverst) søger i alle prioriterede opgaver på tværs af uger: titel, beskrivelse og ugebeskrivelser. Filtrér på status (åbne, lukkede, slettede, flettede) og år.
 
-- **Opret opgaver** med titel, beskrivelse, planlagte datoer, ansvarlige og godkendere
-- **Statusworkflow**: Todo → I gang → Test → Godkendelse → Færdig
-- **Skift status** direkte fra opgavedetaljer via klik på statusbadget
-- **Tilføj noter** med emne, tekst og vedhæftede filer
-- **Statushistorik**: Alle statusændringer logges automatisk med tidspunkt og bruger
-
-### Tidslinjevisning
-
-Kontrolpanelet viser en Gantt-lignende tidslinje over aktive opgaver med farvekodning efter status. Klik på en opgave i tidslinjen for at se detaljer.
-
-Se den fulde dokumentation under [Dokumentation > Opgaver](/dashboard/docs/tasks/).
+- Klik på en opgave for at se dens **historik**: alle uger, den har været med i, og hvad der blev skrevet hver uge. Historikken kan eksporteres og sendes som email ligesom ugeloggen.
+- **Genåbn en afsluttet opgave** med ↺-knappen: den sættes til igangværende og lægges på indeværende uge. Du bliver stående i søgningen med de filtre, du havde.
 
 ---
 
@@ -269,7 +283,7 @@ Peter har vagten i denne uge, og du overtager den fra nu af:
 
 ### Historik og audit-log
 
-Uger med ændringer viser et lille ur-ikon. Klik på det for at se panelet med:
+Uger med ændringer viser et lille ur-ikon på ugekortet. Klik på det for at se panelet med:
 
 - **Dækning**: Hvem der havde ansvaret hvilke dage (og klokkeslæt).
 - **Ændringer**: Hvem der ændrede vagten, hvornår, og fra/til hvem.
@@ -278,11 +292,38 @@ Uger med ændringer viser et lille ur-ikon. Klik på det for at se panelet med:
 
 ### Tidligere uger
 
-Brug "Tidligere"-knapperne øverst til at vise 4, 13 eller 26 afsluttede uger. Redaktører kan rette dækningen for en afsluttet uge via blyanten — rettelsen registreres i audit-loggen.
+Brug knapperne **Tidligere** (ingen, 4 eller 13 uger) og **Fremad** (13 eller 56 uger) i overskriften til at vælge, hvor mange uger kalenderen viser. Redaktører kan rette dækningen for en afsluttet uge via blyanten — rettelsen registreres i audit-loggen.
 
-### Notifikationer
+Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu er markeret med **nu**. Hvem der har vagten, står også nederst i sidemenuen, sammen med hvornår vagten skifter, og hvem der er den næste.
 
-Sættes du på vagt af en kollega, får du besked via klokken øverst til højre. Det samme gælder hvis din vagt overtages eller frigives af andre. Notifikationer markeres som læst når du åbner klokken.
+---
+
+---
+
+## Statistik
+
+**Statistik** i menuen viser helpdesk- og Chronicle-tal for de seneste 12 måneder:
+
+1. **Hvornår**: nye sager pr. ugedag, et varmekort over ugedag og time, og hvor hurtigt sagerne bliver løst (median, gennemsnit og fordeling).
+2. **Udvikling**: åbne sager ved hver uges udgang og oprettet mod løst pr. uge.
+3. **Hvem og hvad**: kategorier, løste sager pr. tekniker, åbne sager efter alder og sager pr. afdeling.
+4. **Chronicle**: prioriterede opgaver og hændelser.
+
+**Vælg periode.** Felterne **Fra** og **Til** øverst vælger et andet tidsrum (begge dage er med). *Seneste 12 måneder* nulstiller. Slutter perioden før i dag, vises åbne sager, som de stod ved periodens slutning. Perioden står i adressen, så den kan bogmærkes eller deles.
+
+**Eksportér** (redaktører) henter siden som PDF, HTML, Markdown eller JSON for den valgte periode. **Del som link** laver et hemmeligt link til tallene som JSON — til værktøjer, der ikke kan logge ind, fx Claude Motion. Linket udløber efter 7, 30 eller 90 dage eller 1 år og kan tilbagekaldes når som helst.
+
+---
+
+## Forslag
+
+**Forslag** er udviklingstavlen for Chronicle og IT: forslag til ny funktionalitet, UI-ændringer, integrationer og fejl.
+
+1. Klik **Nyt forslag**, giv det en titel og en beskrivelse, og vælg kategori (Teknisk, UI / brugerflade, Integration, Fejl, Andet) og vigtighed (Lav, Medium, Høj, Kritisk).
+2. Tavlen har tre kolonner: **Åbne**, **I gang** og **Løst**. Træk et forslag for at omprioritere det eller flytte det til en anden kolonne.
+3. Når et forslag markeres som løst, får den der indsendte det besked via klokken.
+
+Søg og filtrér på kategori og vigtighed over tavlen.
 
 ---
 
@@ -315,6 +356,8 @@ Intet sendes, før du trykker Send på bekræftelsessiden.
 
 > **Bemærk:** Modtagerlisten er fælles for alle rapporter og sættes af administratoren (`CHRONICLE_EMAIL_RECIPIENTS`). Er den tom, er Send-knappen slået fra, og siden fortæller hvorfor. Afsenderen er den bruger der er logget ind.
 
+---
+
 ## Rapporter
 
 Menuen **Rapporter** samler selvstændige sider med egen grafik, fx den animerede årsgennemgang "Oktober 2026 – et kig et år tilbage". Siderne vises uden Chronicles menu og farver; de har deres eget udseende.
@@ -338,20 +381,43 @@ Rapporter kan også lægges op og opdateres via API'et: `PUT /api/v1/reports/<sl
 
 ---
 
-## Mørk tilstand
+---
 
-FynBus Chronicle understøtter mørk tilstand for at reducere øjentræthed.
+## Notifikationer
 
-### Skift tema
+Klokken i bjælken øverst viser dine notifikationer, med en prik når der er nye:
+- når en kollega sætter dig på vagt, overtager eller frigiver din vagt;
+- når et forslag, du har indsendt, bliver løst.
 
-1. Find sol/måne-ikonet i navigationsbjælken
-2. Klik for at skifte mellem lys og mørk tilstand
-3. Din præference gemmes automatisk
+Notifikationer markeres som læst, når du åbner klokken.
+
+---
+
+## API-nøgler
+
+Under din profil nederst i sidemenuen → **API-nøgler** opretter du nøgler til at hente eller skrive Chronicle-data fra andre programmer, fx Claude-integrationen (MCP) eller scripts.
+
+- **Læs** kan kun hente data; **Læs+skriv** kan også oprette ugelogs, opgaver og hændelser.
+- Den fulde nøgle vises kun én gang, når den oprettes — gem den i en adgangskodemanager.
+- En nøgle kan tilbagekaldes eller udskiftes når som helst.
+
+API'et ligger under `/api/v1/`.
+
+---
+
+## Udseende og temaer
+
+Tandhjulet nederst i sidemenuen samler indstillingerne. De gemmes i din browser.
+
+- **Udseende**: lyst eller mørkt.
+- **Densitet**: Komfort, Kompakt eller Dashboard (se [Kontrolpanel](#kontrolpanel)).
+- **Accent**: Guld, Salvie, Blæk eller Saber.
+- **Tema**: *Auto* følger kalenderen; du kan også vælge et tema fast.
 
 ### Dagstemaer
 
 På bestemte dage skifter sitet udseende af sig selv — farver, logo-mærke og et
-banner øverst. Temaet kan også vælges manuelt under tandhjulet → Tema, og
+banner øverst. Temaet kan også vælges manuelt under tandhjulet nederst i sidemenuen → **Tema**, og
 administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
 
 | Dato | Tema |
@@ -367,34 +433,31 @@ venter til mandag. Det er en regel, ikke et tema, så det kan ikke slås fra i
 tema-panelet og vises oven i et eventuelt dagstema. Forhåndsvisning på andre
 dage: tilføj `?force-friday=1` til adressen.
 
+**Touch-Grass-Weekend.** Søsteren til Read-only Friday: hver lørdag og
+søndag viser sitet et grønt banner — "Det er weekend. Gå udenfor." Det er
+også en regel og vises oven i et eventuelt dagstema.
+
 Vil du se et tema uden at vente på dagen, kan du tilføje `?force-theme=<navn>`
 til adressen, fx `?force-theme=alzheimer`.
 
 ---
 
+---
+
 ## Tips og tricks
 
-### Tastatur genveje
-
-- `Tab`: Naviger mellem felter
-- `Enter`: Gem formular
-- `Esc`: Annuller redigering
-
-### Bedste praksis
-
-1. **Opdater ugentligt**: Opret ugelogs løbende for nøjagtig historik
-2. **Dokumenter hændelser**: Registrer hændelser med det samme mens detaljerne er friske
-3. **Brug noter**: Tilføj kontekst til opgaver og fravær
-4. **Eksporter regelmæssigt**: Send ugentlige rapporter til interessenter
+- **Ctrl+K** (⌘K) hopper til søgefeltet.
+- **Esc** lukker dialoger og menuer.
+- Registrér hændelser med det samme, mens detaljerne er friske.
+- Meld klar på ugeloggen, når du er færdig, så den der afslutter ugen ved det.
 
 ---
 
 ## Hjælp og support
 
-Kontakt IT-afdelingen ved spørgsmål eller problemer:
+Kontakt IT-afdelingen ved spørgsmål eller problemer, eller opret et forslag under **Forslag**.
 
 - Email: it@fynbus.dk
-- Internt telefonnummer: [telefonnummer]
 
 For tekniske fejl, beskriv venligst:
 1. Hvad du forsøgte at gøre
