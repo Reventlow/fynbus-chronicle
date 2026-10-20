@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.2 — 2026-10-20
+
+### Changed
+- **Overskriften på Kontrolpanelet opdaterer sig selv.** Antal åbne sager, *Live · synk kl …*, ugens hændelser og ugeloggen hentes igen hvert minut, ligesom kortene nedenunder. Efter *Prøv igen* opdateres den med det samme.
+
 ## 1.0.1 — 2026-10-19
 
 ### Fixed

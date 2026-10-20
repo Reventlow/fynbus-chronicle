@@ -73,35 +73,54 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs) -> dict:
         """The header sentence and meta line; the cards load as partials."""
         context = super().get_context_data(**kwargs)
-        weeklog = WeekLog.get_current_week()
-        now = timezone.localtime()
-        context["current_week"] = weeklog
-        context["iso_week"] = now.isocalendar().week
-
-        # Headline: open tickets from the week's ServiceDesk snapshot (the
-        # same number as the KPI card), else the live mirror — also when the
-        # week log exists but has not been synced yet (all zeros).
-        if weeklog and weeklog.helpdesk_open:
-            context["open_count"] = weeklog.helpdesk_open
-            context["open_delta"] = headline_delta(weeklog.helpdesk_delta)
-        else:
-            context["open_count"] = HelpdeskTicket.objects.filter(is_open=True).count()
-            context["open_delta"] = None
-        context["open_now_mirror"] = HelpdeskTicket.objects.filter(is_open=True).count()
-
-        incidents = weeklog.incidents.all() if weeklog else Incident.objects.none()
-        context["incident_count_week"] = incidents.count()
-        context["incident_critical_week"] = incidents.filter(
-            severity=Incident.Severity.CRITICAL
-        ).count()
-        if weeklog:
-            context["weeklog_task_count"] = weeklog.priority_appearances.filter(
-                priority_item__deleted_at__isnull=True
-            ).count()
-        context["sync"] = sync_state()
+        context.update(headline_context())
         interval = getattr(settings, "SERVICEDESK_SYNC_INTERVAL", 300)
         context["sync_minutes"] = str(max(1, round(interval / 60)))
         context["latest_change"] = _read_latest_changelog_entry()
+        return context
+
+
+def headline_context() -> dict:
+    """Context for the Kontrolpanel headline and its meta line, shared by the
+    page and the partial that refreshes it every minute."""
+    weeklog = WeekLog.get_current_week()
+    now = timezone.localtime()
+    context = {"current_week": weeklog, "iso_week": now.isocalendar().week}
+
+    # Headline: open tickets from the week's ServiceDesk snapshot (the
+    # same number as the KPI card), else the live mirror — also when the
+    # week log exists but has not been synced yet (all zeros).
+    open_mirror = HelpdeskTicket.objects.filter(is_open=True).count()
+    if weeklog and weeklog.helpdesk_open:
+        context["open_count"] = weeklog.helpdesk_open
+        context["open_delta"] = headline_delta(weeklog.helpdesk_delta)
+    else:
+        context["open_count"] = open_mirror
+        context["open_delta"] = None
+    context["open_now_mirror"] = open_mirror
+
+    incidents = weeklog.incidents.all() if weeklog else Incident.objects.none()
+    context["incident_count_week"] = incidents.count()
+    context["incident_critical_week"] = incidents.filter(
+        severity=Incident.Severity.CRITICAL
+    ).count()
+    if weeklog:
+        context["weeklog_task_count"] = weeklog.priority_appearances.filter(
+            priority_item__deleted_at__isnull=True
+        ).count()
+    context["sync"] = sync_state()
+    return context
+
+
+class HeadlinePartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: the Kontrolpanel headline and meta line (open tickets,
+    sync time, incidents, week log), polled every minute."""
+
+    template_name = "dashboard/partials/headline.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context.update(headline_context())
         return context
 
 

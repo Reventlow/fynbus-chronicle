@@ -36,6 +36,11 @@ urlpatterns = [
         name="partial-helpdesk-flow-chart",
     ),
     path(
+        "partials/headline/",
+        views.HeadlinePartialView.as_view(),
+        name="partial-headline",
+    ),
+    path(
         "partials/open-breakdown/",
         views.OpenBreakdownPartialView.as_view(),
         name="partial-open-breakdown",

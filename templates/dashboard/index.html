@@ -48,45 +48,7 @@
         <span>{% now "j N Y" %}</span>
       </div>
 
-      {% comment %}
-        The headline states the key number: open tickets and the change
-        since the end of last week (good = fewer). With a failing sync the
-        italic part says how old the numbers are instead.
-      {% endcomment %}
-      <h1 class="display" style="margin: 0; font-size: 40px; line-height: 1.05;">
-        <span class="num">{{ open_count }}</span> {% if open_count == 1 %}åben sag{% else %}åbne sager{% endif %}{% if sync.stale %},
-          <span class="display-italic" style="color: var(--ink-3);">{% if sync.last_sync %}tal fra {{ sync.label }}.{% else %}endnu ikke synkroniseret.{% endif %}</span>
-        {% elif open_delta %},
-          <span class="display-italic" style="color: {% if open_delta.tone == 'good' %}var(--good-ink){% elif open_delta.tone == 'bad' %}var(--bad-ink){% else %}var(--ink-3){% endif %};">{{ open_delta.text }}</span>{% if open_delta.tone == 'flat' %} siden sidste uge.{% else %} end sidste uge.{% endif %}
-        {% else %} lige nu.{% endif %}
-      </h1>
-
-      <div style="margin-top: 10px; color: var(--ink-3); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;">
-        {% if sync.stale %}
-          <span class="inline-flex items-center flex-wrap" style="gap: 6px; color: var(--bad-ink);">
-            <span class="pill-dot" style="background: var(--bad);"></span>
-            Synk med ServiceDesk fejlede{% if sync.last_sync %} · sidst <span class="num">{{ sync.label }}</span>{% endif %}
-            <button type="button" class="btn btn-sm" style="margin-left: 6px; padding: 2px 8px; font-size: 12px;"
-                    hx-post="{% url 'dashboard:sync-servicedesk' %}" hx-vals='{"reload": "1"}'
-                    hx-target="#helpdesk-stats-container" hx-swap="innerHTML">Prøv igen</button>
-          </span>
-        {% else %}
-          <span class="inline-flex items-center" style="gap: 6px;">
-            <span class="pill-dot animate-pulse-glow" style="background: var(--good);"></span>
-            {% sw_phrase "Live" "Holocron" "Imperial holonet" "Skibslog" trek="Stjerneflåde-net" klingon="Klingon kampnet" %} · synk <span class="num">{{ sync.label }}</span>
-          </span>
-        {% endif %}
-        <span style="color: var(--ink-5);">·</span>
-        <span><span class="num">{{ incident_count_week }}</span> {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %} denne uge, {% if incident_critical_week %}<span class="num">{{ incident_critical_week }}</span>{% else %}ingen{% endif %} kritisk</span>
-        <span style="color: var(--ink-5);">·</span>
-        <span>Ugelog {{ iso_week }}:
-          {% if current_week %}
-            <a href="{% url 'logbook:weeklog-detail' current_week.year current_week.week_number %}" style="color: var(--ink-1); text-decoration: none; font-weight: 500;"><span class="num">{{ weeklog_task_count }}</span> opgave{{ weeklog_task_count|pluralize:"r" }}</a>
-          {% else %}
-            <span style="color: var(--ink-4);">ikke oprettet</span>
-          {% endif %}
-        </span>
-      </div>
+      {% include 'dashboard/partials/headline.html' %}
     </div>
     {% if is_editor %}
     <div class="flex gap-2">

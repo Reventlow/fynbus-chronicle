@@ -111,3 +111,12 @@ def test_current_watch_names_the_next_person():
     assert watch["user"] == a and watch["next_user"] == b
     assert watch["until_long"] == "mandag 00:00"
     assert watch["until_short"] == "man 00:00"
+
+
+def test_headline_refreshes_itself(logged_in):
+    page = logged_in.get(reverse("dashboard:index")).content.decode()
+    assert 'id="dash-headline"' in page
+    assert reverse("dashboard:partial-headline") in page and "every 60s, refresh" in page
+    partial = logged_in.get(reverse("dashboard:partial-headline")).content.decode()
+    assert 'id="dash-headline"' in partial
+    assert "åbne sager" in partial or "åben sag" in partial
