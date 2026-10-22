@@ -12,17 +12,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.http import HttpRequest, HttpResponse
+from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from apps.accounts.permissions import EditorRequiredMixin, editor_required
 
-from .forms import CVECommentForm, CVECreateForm, CVEEditForm, CVELinkForm
-from .models import CVE, CVEComment, CVELink, normalise_cve_id
+from .forms import CVEAttachmentForm, CVECommentForm, CVECreateForm, CVEEditForm, CVELinkForm
+from .models import CVE, CVEAttachment, CVEComment, CVELink, normalise_cve_id
 
 # Solved CVEs older than this drop off the list unless "Alle" is picked.
 SOLVED_WINDOW_DAYS = 90
@@ -72,6 +73,8 @@ class CVEDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context["links"] = self.object.links.select_related("added_by")
+        context["attachments"] = self.object.attachments.select_related("uploaded_by")
+        context["attachment_form"] = CVEAttachmentForm()
         context["comments"] = self.object.comments.select_related("author")
         context["link_form"] = CVELinkForm()
         context["comment_form"] = CVECommentForm()
@@ -220,6 +223,67 @@ def link_delete(request: HttpRequest, pk: int, link_pk: int) -> HttpResponse:
     cve = link.cve
     link.delete()
     cve.touch()
+    return HttpResponse("")
+
+
+@login_required
+@editor_required
+@require_POST
+def attachment_create(request: HttpRequest, pk: int) -> HttpResponse:
+    """Attach a PDF (HTMX multipart POST); returns the new row like links do."""
+    cve = get_object_or_404(CVE, pk=pk)
+    form = CVEAttachmentForm(request.POST, request.FILES)
+    if form.is_valid():
+        upload = form.cleaned_data["file"]
+        form.instance.cve = cve
+        form.instance.uploaded_by = request.user
+        form.instance.original_name = upload.name[:255]
+        form.instance.size = upload.size
+        form.save()
+    return _inline_add(
+        request,
+        cve,
+        form=form,
+        row_template="cves/partials/cve_attachment_row.html",
+        row_name="attachment",
+        form_template="cves/partials/cve_attachment_form.html",
+        container_id="cve-attachment-form-container",
+        empty_id="no-cve-attachments",
+    )
+
+
+@login_required
+@require_GET
+@xframe_options_sameorigin  # the CVE page shows it in a lightbox (same-origin iframe)
+def attachment_view(request: HttpRequest, pk: int, key: str) -> HttpResponse:
+    """Serve a CVE's PDF to any logged-in user (viewers included).
+
+    Inline by default for the lightbox; ``?download=1`` forces a download.
+    ``no-store``: these can be TLP:AMBER advisories, so no copies are kept in
+    shared or browser caches.
+    """
+    attachment = get_object_or_404(CVEAttachment, cve_id=pk, key=key)
+    try:
+        handle = attachment.file.open("rb")
+    except FileNotFoundError:
+        raise Http404
+    response = FileResponse(
+        handle,
+        content_type="application/pdf",
+        as_attachment=request.GET.get("download") == "1",
+        filename=attachment.original_name or f"{attachment.key}.pdf",
+    )
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@login_required
+@editor_required
+@require_http_methods(["DELETE", "POST"])
+def attachment_delete(request: HttpRequest, pk: int, key: str) -> HttpResponse:
+    attachment = get_object_or_404(CVEAttachment, cve_id=pk, key=key)
+    attachment.delete()  # removes the file from disk too
     return HttpResponse("")
 
 

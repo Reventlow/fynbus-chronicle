@@ -1,0 +1,5 @@
+{% comment %}
+  TLP badge for an attachment, FIRST TLP 2.0 colours (black background, coloured
+  text). Inline styles on purpose: no new Tailwind classes needed.
+{% endcomment %}
+{% if attachment.tlp %}<span class="num" title="Traffic Light Protocol: hvem må se dokumentet" style="display: inline-block; padding: 1px 7px; border-radius: 4px; background: #000; font-size: 11px; font-weight: 700; letter-spacing: .02em; color: {% if attachment.tlp == 'red' %}#FF2B2B{% elif attachment.tlp == 'amber' or attachment.tlp == 'amber_strict' %}#FFC000{% elif attachment.tlp == 'green' %}#33FF00{% else %}#FFFFFF{% endif %};">{{ attachment.get_tlp_display }}</span>{% endif %}

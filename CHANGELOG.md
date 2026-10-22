@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.2.0 — 2026-10-22
+
+### Added
+- **PDF'er på CVE'er.** CVE'ens side har fået et kort, *Vedhæftninger*, hvor redaktører kan vedhæfte PDF'er, fx advisories fra FE-CSIRT (CSIRT@fe-ddis.dk).
+  - Hver PDF får en **TLP-markering** (TLP:CLEAR, GREEN, AMBER, AMBER+STRICT eller RED), som vises med de officielle farver, så ingen kommer til at sende et AMBER-dokument videre ved en fejl. Titel og kilde er valgfri.
+  - **Klik på en PDF** for at åbne den i en visning oven på siden, med TLP-mærket i toppen og knapper til *Åbn i ny fane*, *Hent* og *Luk*.
+  - Kun ægte PDF'er accepteres (tjekkes på indholdet, ikke kun filnavnet), højst 25 MB. Filerne gemmes ved siden af databasen og vises kun for brugere, der er logget ind. Browseren må ikke gemme kopier.
+  - Sletter man en PDF, slettes filen også fra serveren.
+
 ## 1.1.0 — 2026-10-22
 
 ### Added

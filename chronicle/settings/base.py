@@ -154,6 +154,10 @@ REPORT_FILES_DIR = Path(config("REPORT_FILES_DIR", default=str(Path(config("SQLI
 # Images pasted into descriptions (tasks, feature requests). Same reasoning:
 # persisted volume, served by a login-gated view.
 IMAGE_FILES_DIR = Path(config("IMAGE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "image_files")))
+# PDFs attached to CVEs (e.g. FE-CSIRT advisories). Same rule as images:
+# beside the database on the persisted volume, served only by a login-gated view.
+CVE_FILES_DIR = Path(config("CVE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "cve_files")))
+CVE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

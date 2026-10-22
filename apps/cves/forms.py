@@ -2,7 +2,9 @@
 
 from django import forms
 
-from .models import CVE, CVEComment, CVELink, normalise_cve_id
+from django.conf import settings
+
+from .models import CVE, CVEAttachment, CVEComment, CVELink, normalise_cve_id
 
 
 class CVECreateForm(forms.ModelForm):
@@ -99,3 +101,36 @@ class CVECommentForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class CVEAttachmentForm(forms.ModelForm):
+    """Upload one PDF (e.g. an FE-CSIRT advisory) with title, source and TLP."""
+
+    class Meta:
+        model = CVEAttachment
+        fields = ["file", "title", "source", "tlp"]
+        widgets = {
+            "file": forms.ClearableFileInput(attrs={"class": "input-field", "accept": "application/pdf,.pdf"}),
+            "title": forms.TextInput(attrs={"class": "input-field", "placeholder": "Titel (valgfri, ellers filnavnet)"}),
+            "source": forms.TextInput(attrs={"class": "input-field", "placeholder": "Kilde, fx FE-CSIRT"}),
+            "tlp": forms.Select(attrs={"class": "input-field"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tlp"].choices = [("", "TLP: ikke angivet")] + list(CVEAttachment.TLP.choices)
+
+    def clean_file(self):
+        upload = self.cleaned_data.get("file")
+        if not upload:
+            raise forms.ValidationError("Vælg en PDF-fil.")
+        if not upload.name.lower().endswith(".pdf"):
+            raise forms.ValidationError("Kun PDF-filer kan vedhæftes.")
+        limit = settings.CVE_ATTACHMENT_MAX_BYTES
+        if upload.size > limit:
+            raise forms.ValidationError(f"Filen er for stor (maks. {limit // (1024 * 1024)} MB).")
+        head = upload.read(5)
+        upload.seek(0)
+        if head != b"%PDF-":  # the extension alone proves nothing
+            raise forms.ValidationError("Filen er ikke en gyldig PDF.")
+        return upload

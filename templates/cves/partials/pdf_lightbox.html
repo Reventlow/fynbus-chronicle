@@ -1,0 +1,28 @@
+{% comment %}
+  PDF lightbox for the CVE page. Rows dispatch `open-pdf` {src, title, tlp,
+  tlpKey}; this listens on window, so rows added later by HTMX work too.
+  The browser's own PDF viewer renders it in a same-origin iframe (the view
+  sends X-Frame-Options: SAMEORIGIN). Esc or the backdrop closes it.
+{% endcomment %}
+<div id="pdf-lightbox" x-data="{ open: false, src: '', title: '', tlp: '', tlpKey: '' }"
+     x-on:open-pdf.window="src = $event.detail.src; title = $event.detail.title; tlp = $event.detail.tlp; tlpKey = $event.detail.tlpKey; open = true; $nextTick(() => $refs.close.focus())"
+     x-on:keydown.escape.window="if (open) { open = false; src = '' }"
+     x-show="open" x-cloak
+     role="dialog" aria-modal="true" x-bind:aria-label="title"
+     style="position: fixed; inset: 0; z-index: 60; background: rgba(15, 15, 15, .72); display: flex; align-items: center; justify-content: center; padding: 24px;"
+     x-on:click.self="open = false; src = ''">
+  <div style="width: min(1100px, 100%); height: min(92vh, 100%); background: var(--surface-1, #fff); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(0,0,0,.35);">
+    <div class="flex items-center gap-3" style="padding: 10px 14px; border-bottom: 1px solid var(--hairline);">
+      <div style="min-width: 0; flex: 1; font-size: 14px; font-weight: 600; color: var(--ink-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="title"></div>
+      {# One bound style string: a bound style replaces a static one rather than merging #}
+      <span x-show="tlp" x-text="tlp" class="num"
+            x-bind:style="'padding: 1px 7px; border-radius: 4px; background: #000; font-size: 11px; font-weight: 700; color: ' + ({red: '#FF2B2B', amber: '#FFC000', amber_strict: '#FFC000', green: '#33FF00'}[tlpKey] || '#FFFFFF')"></span>
+      <a x-bind:href="src" target="_blank" rel="noopener" class="btn btn-sm">Åbn i ny fane</a>
+      <a x-bind:href="src + '?download=1'" class="btn btn-sm">Hent</a>
+      <button type="button" x-ref="close" class="btn btn-sm" x-on:click="open = false; src = ''">Luk</button>
+    </div>
+    <template x-if="open">
+      <iframe x-bind:src="src" x-bind:title="title" style="flex: 1; width: 100%; border: 0; background: #525659;"></iframe>
+    </template>
+  </div>
+</div>

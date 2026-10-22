@@ -1,0 +1,22 @@
+{% comment %}
+  Inline "attach PDF" form (multipart via HTMX). Replaced out-of-band with a
+  fresh copy after a successful upload (oob=True), re-rendered with errors.
+{% endcomment %}
+<div id="cve-attachment-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
+     style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2);">
+  <form hx-post="{% url 'cves:attachment-create' cve.pk %}"
+        hx-target="#cve-attachments"
+        hx-swap="beforeend"
+        hx-encoding="multipart/form-data"
+        class="flex flex-wrap items-start gap-2">
+    {% csrf_token %}
+    <div style="flex: 2 1 240px; min-width: 0;">
+      {{ form.file }}
+      {% if form.file.errors %}<p class="input-error-message">{{ form.file.errors.0 }}</p>{% endif %}
+    </div>
+    <div style="flex: 2 1 200px; min-width: 0;">{{ form.title }}</div>
+    <div style="flex: 1 1 140px; min-width: 0;">{{ form.source }}</div>
+    <div style="flex: 1 1 150px; min-width: 0;">{{ form.tlp }}</div>
+    <button type="submit" class="btn btn-sm">Vedhæft PDF</button>
+  </form>
+</div>

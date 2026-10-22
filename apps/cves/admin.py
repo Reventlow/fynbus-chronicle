@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import CVE, CVEComment, CVELink
+from .models import CVE, CVEAttachment, CVEComment, CVELink
 
 
 class CVELinkInline(admin.TabularInline):
@@ -19,13 +19,20 @@ class CVECommentInline(admin.StackedInline):
     readonly_fields = ("created_at",)
 
 
+class CVEAttachmentInline(admin.TabularInline):
+    model = CVEAttachment
+    extra = 0
+    fields = ["title", "original_name", "source", "tlp", "size", "uploaded_by", "uploaded_at"]
+    readonly_fields = ["original_name", "size", "uploaded_by", "uploaded_at"]
+
+
 @admin.register(CVE)
 class CVEAdmin(admin.ModelAdmin):
     list_display = ("cve_id", "subject", "cvss", "severity", "state", "source", "updated_at")
     list_filter = ("state", "severity", "source")
     search_fields = ("cve_id", "subject")
     readonly_fields = ("updated_at", "solved_at", "solved_by")
-    inlines = [CVELinkInline, CVECommentInline]
+    inlines = [CVEAttachmentInline, CVELinkInline, CVECommentInline]
     fieldsets = (
         (None, {"fields": ("cve_id", "subject", "cvss", "severity", "cvefeed_url")}),
         ("Status", {"fields": ("state", "solved_at", "solved_by")}),
@@ -45,3 +52,11 @@ class CVECommentAdmin(admin.ModelAdmin):
     list_display = ("cve", "kind", "author", "created_at")
     list_filter = ("kind",)
     search_fields = ("cve__cve_id", "text")
+
+
+@admin.register(CVEAttachment)
+class CVEAttachmentAdmin(admin.ModelAdmin):
+    list_display = ["display_title", "cve", "tlp", "source", "size", "uploaded_by", "uploaded_at"]
+    list_filter = ["tlp"]
+    search_fields = ["title", "original_name", "source", "cve__cve_id"]
+    readonly_fields = ["key", "file", "original_name", "size", "uploaded_by", "uploaded_at"]

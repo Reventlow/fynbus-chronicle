@@ -14,10 +14,13 @@ unsolved at some point during the week (``CVE.objects.open_during``).
 """
 
 import re
+import secrets
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Case, IntegerField, Q, Value, When
@@ -360,3 +363,93 @@ def weeklog_cves(weeklog) -> dict:
     for cve in cves:
         cve.solved_this_week = cve.solved_within(start, end)
     return {"week_cves": cves}
+
+
+class CVEFileStorage(FileSystemStorage):
+    """Storage rooted at CVE_FILES_DIR, resolved at run time so tests and
+    Docker can point it elsewhere (same pattern as apps.images)."""
+
+    @property
+    def base_location(self):  # type: ignore[override]
+        return str(settings.CVE_FILES_DIR)
+
+    @property
+    def location(self):  # type: ignore[override]
+        return str(settings.CVE_FILES_DIR)
+
+
+def _attachment_path(instance: "CVEAttachment", filename: str) -> str:
+    # Random key, not the uploaded name: the original name is kept in
+    # ``original_name`` for display/download only.
+    return f"{instance.uploaded_at:%Y/%m}/{instance.key}.pdf"
+
+
+def _new_key() -> str:
+    return secrets.token_hex(16)
+
+
+class CVEAttachment(models.Model):
+    """A PDF attached to a CVE, e.g. an FE-CSIRT advisory, with its TLP marking.
+
+    PDF only: checked by extension and by the ``%PDF-`` magic bytes. Served
+    inline to logged-in users (viewers included) so the CVE page can show it
+    in a lightbox; never from static/media.
+    """
+
+    class TLP(models.TextChoices):
+        # FIRST TLP 2.0. Empty = not marked.
+        CLEAR = "clear", "TLP:CLEAR"
+        GREEN = "green", "TLP:GREEN"
+        AMBER = "amber", "TLP:AMBER"
+        AMBER_STRICT = "amber_strict", "TLP:AMBER+STRICT"
+        RED = "red", "TLP:RED"
+
+    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, related_name="attachments", verbose_name="CVE")
+    key = models.CharField(max_length=32, unique=True, default=_new_key, editable=False)
+    file = models.FileField(storage=CVEFileStorage(), upload_to=_attachment_path, max_length=200)
+    original_name = models.CharField(verbose_name="Filnavn", max_length=255)
+    title = models.CharField(
+        verbose_name="Titel", max_length=200, blank=True,
+        help_text="Fx \"FE-CSIRT advisory 2026-0142\". Tom = filnavnet.",
+    )
+    source = models.CharField(
+        verbose_name="Kilde", max_length=100, blank=True, help_text="Fx FE-CSIRT (CSIRT@fe-ddis.dk).",
+    )
+    tlp = models.CharField(verbose_name="TLP", max_length=20, choices=TLP.choices, blank=True)
+    size = models.PositiveIntegerField(verbose_name="Størrelse (bytes)", default=0)
+    uploaded_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Uploadet af",
+    )
+    uploaded_at = models.DateTimeField(verbose_name="Uploadet", default=timezone.now)
+
+    class Meta:
+        ordering = ["uploaded_at"]
+        verbose_name = "Vedhæftet PDF"
+        verbose_name_plural = "Vedhæftede PDF'er"
+
+    def __str__(self) -> str:
+        return self.display_title
+
+    @property
+    def display_title(self) -> str:
+        return self.title or self.original_name
+
+    @property
+    def tlp_badge_class(self) -> str:
+        """CSS modifier for the TLP badge (colours follow FIRST TLP 2.0)."""
+        return f"tlp-{self.tlp}" if self.tlp else ""
+
+    def get_absolute_url(self) -> str:
+        return reverse("cves:attachment", kwargs={"pk": self.cve_id, "key": self.key})
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.cve.touch()
+
+    def delete(self, *args, **kwargs):
+        storage, name = self.file.storage, self.file.name
+        result = super().delete(*args, **kwargs)
+        if name:
+            storage.delete(name)  # don't leave an orphaned (possibly TLP:AMBER) file on disk
+        self.cve.touch()
+        return result

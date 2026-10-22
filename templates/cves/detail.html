@@ -60,6 +60,26 @@
     {% endif %}
   </div>
 
+  {# Attachments: PDFs such as FE-CSIRT advisories, with TLP; open in a lightbox #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Dokumenter</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Vedhæftninger</h2>
+    </div>
+    {# x-data: makes the rows an Alpine scope so their $dispatch('open-pdf') works, incl. rows HTMX adds later #}
+    <div id="cve-attachments" x-data>
+      {% for attachment in attachments %}
+        {% include "cves/partials/cve_attachment_row.html" %}
+      {% empty %}
+        <p id="no-cve-attachments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen PDF'er endnu.</p>
+      {% endfor %}
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_attachment_form.html" with form=attachment_form %}
+    {% endif %}
+  </div>
+  {% include "cves/partials/pdf_lightbox.html" %}
+
   {# Links #}
   <div class="card overflow-hidden" style="padding: 0;">
     <div style="padding: 20px 24px 14px;">
