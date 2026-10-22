@@ -184,3 +184,33 @@ class TestRead:
     def test_list_bad_state_400(self, client, read_key):
         response = client.get(reverse("api:cve-list"), {"state": "x"}, HTTP_AUTHORIZATION=f"Bearer {read_key}")
         assert response.status_code == 400
+
+
+class TestCreateRace:
+    """Two senders racing on one cve_id: the loser gets the winner's CVE (200), not a 500."""
+
+    def test_integrity_error_falls_back_to_existing(self, client, write_key, monkeypatch):
+        from django.db import IntegrityError
+
+        winner = CVE.objects.create(cve_id="CVE-2026-0007", subject="Created by the other request")
+        real_filter = CVE.objects.filter
+        calls = {"n": 0}
+
+        def filter_hiding_winner_once(*args, **kwargs):
+            # First lookup happens "before" the other request committed.
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return real_filter(pk=-1)
+            return real_filter(*args, **kwargs)
+
+        def create_loses_race(**kwargs):
+            raise IntegrityError("UNIQUE constraint failed: cves_cve.cve_id")
+
+        monkeypatch.setattr(CVE.objects, "filter", filter_hiding_winner_once)
+        monkeypatch.setattr(CVE.objects, "create", create_loses_race)
+        response = post(client, write_key, {"cve_id": "CVE-2026-0007", "subject": "x", "comment": "Sendt fra Harbinger"})
+        assert response.status_code == 200
+        body = response.json()
+        assert body["created"] is False
+        assert body["id"] == winner.pk
+        assert CVEComment.objects.filter(cve=winner, text="Sendt fra Harbinger").exists()

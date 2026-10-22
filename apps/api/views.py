@@ -14,6 +14,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.db import IntegrityError, transaction
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -675,23 +676,33 @@ def cve_create(request: HttpRequest) -> JsonResponse:
             return _invalid(field, f"{field} must be an http(s) URL, or null")
         urls[field] = value
 
-    existing = CVE.objects.filter(cve_id=cve_id).first()
-    if existing is not None:
+    def existing_response(existing: CVE) -> JsonResponse:
         if comment:
             CVEComment.objects.create(cve=existing, text=comment, author=request.api_user)
             existing.refresh_from_db()
         return JsonResponse({**_cve_payload(request, existing), "created": False}, status=200)
 
-    cve = CVE.objects.create(
-        cve_id=cve_id,
-        subject=subject,
-        cvss=cvss,
-        severity=severity or "",
-        cvefeed_url=urls["cvefeed_url"],
-        source_url=urls["source_url"],
-        source="harbinger" if urls["source_url"] else "api",
-        created_by=request.api_user,
-    )
+    existing = CVE.objects.filter(cve_id=cve_id).first()
+    if existing is not None:
+        return existing_response(existing)
+
+    try:
+        # Atomic so a lost race leaves the outer transaction usable.
+        with transaction.atomic():
+            cve = CVE.objects.create(
+                cve_id=cve_id,
+                subject=subject,
+                cvss=cvss,
+                severity=severity or "",
+                cvefeed_url=urls["cvefeed_url"],
+                source_url=urls["source_url"],
+                source="harbinger" if urls["source_url"] else "api",
+                created_by=request.api_user,
+            )
+    except IntegrityError:
+        # Two senders raced on the same cve_id (e.g. two colleagues pressing
+        # "Send to Chronicle" at once): the other request created it first.
+        return existing_response(CVE.objects.get(cve_id=cve_id))
     if comment:
         CVEComment.objects.create(cve=cve, text=comment, author=request.api_user)
         cve.refresh_from_db()
