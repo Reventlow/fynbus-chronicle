@@ -6,6 +6,7 @@ dj-database-url>=2.1.0
 # Authentication
 django-allauth>=0.61.0
 requests>=2.31.0  # Required by allauth
+certifi>=2026.10.19  # requests' CA bundle; drops the compromised eMudhra roots
 
 # HTMX integration
 django-htmx>=1.17.0

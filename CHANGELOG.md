@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.0.5 — 2026-10-22
+
+### Security
+- **Kompromitterede eMudhra-rodcertifikater er ikke længere betroet.** Begge images bygges nu med den aktuelle `ca-certificates` fra Debian og kræver `certifi>=2026.10.19`, så *emSign ECC Root CA - G3* og *Comodo AAA Services root* er fjernet. Uden det kunne en angriber med en falsk certifikatkæde udgive sig for ServiceDesk eller andre tjenester, som Chronicle henter data fra.
+
 ## 1.0.4 — 2026-10-20
 
 ### Fixed
