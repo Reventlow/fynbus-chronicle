@@ -89,7 +89,7 @@
               {% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
                 <a href="{% url 'dashboard:index' %}">Chronicle</a>
                 <span class="sep">/</span>
-                <span class="current">{% if app == 'logbook' %}Ugelog{% elif app == 'oncall' %}Rådighedsvagt{% elif app == 'feedback' %}Forslag{% elif app == 'reports' %}Rapporter{% elif name == 'statistics' %}Statistik{% elif 'docs' in name %}Dokumentation{% elif app == 'accounts' %}Konto{% elif app == 'themes' %}Temaer{% else %}Kontrolpanel{% endif %}</span>
+                <span class="current">{% if app == 'logbook' %}Ugelog{% elif app == 'oncall' %}Rådighedsvagt{% elif app == 'feedback' %}Forslag{% elif app == 'cves' %}CVE'er{% elif app == 'reports' %}Rapporter{% elif name == 'statistics' %}Statistik{% elif 'docs' in name %}Dokumentation{% elif app == 'accounts' %}Konto{% elif app == 'themes' %}Temaer{% else %}Kontrolpanel{% endif %}</span>
               {% endwith %}
             {% endblock %}
           </nav>

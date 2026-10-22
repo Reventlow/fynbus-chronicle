@@ -49,6 +49,12 @@ class TestList:
         assert reverse("cves:create") not in body
 
 
+    def test_breadcrumb_names_the_section(self, editor_client, cve):
+        html = editor_client.get(reverse("cves:list")).content.decode()
+        assert '<span class="current">CVE\'er</span>' in html
+        assert '<span class="current">Kontrolpanel</span>' not in html
+
+
 class TestDetail:
     def test_renders_timeline(self, editor_client, cve, editor):
         CVEComment.objects.create(cve=cve, text="**Fed** kommentar", author=editor)
