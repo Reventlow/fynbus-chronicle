@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.2.1 — 2026-10-22
+
+### Changed
+- **Sårbarheder er flyttet på kontrolpanelet.** Kortet med CVE'er fra de sidste 30 dage står nu under *Hændelser* i venstre kolonne, så sikkerhedshændelser og sårbarheder kan ses samlet. Højre kolonne viser rådighedsvagten og den aktuelle ugelog. Hændelseskortet fylder den resterende højde, så kolonnerne slutter i samme højde.
+
 ## 1.2.0 — 2026-10-22
 
 ### Added
