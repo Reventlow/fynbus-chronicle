@@ -1,0 +1,42 @@
+{% comment %}
+  CVE card: CVEs created or updated in the last 30 days, open ones first
+  (patching, then identified), then solved. Headline counts every open CVE
+  and those solved in the window. Rows link to the CVE's page.
+{% endcomment %}
+<div class="card overflow-hidden" style="padding: 0; display: flex; flex-direction: column;">
+  <div class="card-head" style="padding: 18px 24px 10px; margin: 0;">
+    <div>
+      <div class="label-eyebrow">Sårbarheder · {{ window_days }} dage</div>
+      <h3>{% if open_count %}{{ open_count }} åben{{ open_count|pluralize:"e" }}{% else %}Ingen åbne{% endif %}, {{ solved_count }} løst</h3>
+    </div>
+    <a href="{% url 'cves:list' %}" class="incident-toggle" style="font-size: 12.5px;">Se alle CVE'er →</a>
+  </div>
+
+  {% if cves %}
+    <div class="scrollbar-thin" style="overflow-y: auto;">
+      {% for cve in cves %}
+        <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
+          <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
+          <div style="min-width: 0;">
+            <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:70 }}</div>
+            <div class="incident-meta">
+              <span class="incident-sev" style="color: var(--{% if cve.severity == 'critical' %}bad-ink{% elif cve.severity == 'high' %}warn-ink{% else %}ink-3{% endif %});">CVSS {% if cve.cvss is not None %}{{ cve.cvss }}{% else %}–{% endif %}</span>
+              {% include "cves/partials/state_badge.html" %}
+              <span class="num">{{ cve.updated_at|timesince }} siden</span>
+            </div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      {% endfor %}
+    </div>
+    {% if cve_total > cves|length %}
+      <div style="padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-4);">
+        {{ cves|length }} af {{ cve_total }} vist · <a href="{% url 'cves:list' %}" class="incident-toggle">se resten</a>
+      </div>
+    {% endif %}
+  {% else %}
+    <p style="padding: 36px 24px; border-top: 1px solid var(--hairline); margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">
+      Ingen CVE'er de sidste {{ window_days }} dage.
+    </p>
+  {% endif %}
+</div>

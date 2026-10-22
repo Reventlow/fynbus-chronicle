@@ -1,0 +1,21 @@
+{# One link on a CVE; editors can delete it in place. #}
+<div id="cve-link-{{ link.pk }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);">
+  <div style="min-width: 0; flex: 1;">
+    <a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; word-break: break-all;">{{ link.label|default:link.url }}</a>
+    <div style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
+      {% if link.label %}<span style="word-break: break-all;">{{ link.url|truncatechars:80 }}</span> · {% endif %}
+      {% if link.added_by %}{{ link.added_by.get_full_name|default:link.added_by.username }} · {% endif %}<span class="num">{{ link.added_at|date:"d. M Y H:i" }}</span>
+    </div>
+  </div>
+  {% if is_editor %}
+    <button hx-post="{% url 'cves:link-delete' cve.pk link.pk %}"
+            hx-target="#cve-link-{{ link.pk }}"
+            hx-swap="outerHTML"
+            hx-confirm="Slet dette link?"
+            class="icon-btn" style="width: 26px; height: 26px;" title="Slet">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  {% endif %}
+</div>

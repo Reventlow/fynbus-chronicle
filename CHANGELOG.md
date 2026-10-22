@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.1.0 — 2026-10-22
+
+### Added
+- **Sårbarheder (CVE'er).** Et nyt punkt i sidemenuen samler de CVE'er, der rammer os.
+  - **Listen** viser åbne CVE'er øverst og løste i 90 dage, med CVSS farvet efter alvorlighed, status og link til cvefeed.io. Søg på id eller emne, eller filtrér på status.
+  - **CVE'ens side** har status-knapper (*Identificeret*, *Patcher*, *Løst*), links til advisories og sager og en tidslinje med kommentarer i Markdown. Hvert statusskift skrives i tidslinjen.
+  - **Ny CVE** udleder alvorligheden af CVSS og udfylder cvefeed.io-linket. Formularen kan forudfyldes fra et link, og et id, der allerede findes, fører til den eksisterende CVE i stedet for en dublet.
+  - **Kontrolpanelet** har fået et kort under *01 Nu* med CVE'er fra de sidste 30 dage og antallet af åbne og løste.
+  - **Ugeloggen** viser af sig selv de CVE'er, der var åbne i løbet af ugen, og markerer dem, der blev løst. Afsnittet kommer også med i HTML- og PDF-eksporten.
+  - **API** til Harbinger: `GET`/`POST /api/v1/cves/` og `GET /api/v1/cves/<cve-id>/`. Findes CVE'en allerede, tilføjes kun kommentaren.
+
 ## 1.0.5 — 2026-10-22
 
 ### Security

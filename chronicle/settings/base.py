@@ -44,6 +44,7 @@ LOCAL_APPS = [
     "apps.tasks",
     "apps.api",
     "apps.feedback",
+    "apps.cves",
     "apps.themes",
     "apps.notifications",
     "apps.reports",

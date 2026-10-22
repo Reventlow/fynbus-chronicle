@@ -1,6 +1,6 @@
 """
 Helpers behind the v3 Kontrolpanel: the headline sentence, sync freshness,
-the "Åbne sager" bento and the changelog strip.
+the "Åbne sager" bento, the CVE card and the changelog strip.
 
 Kept free of request handling so the views stay thin and the wording
 rules can be tested on their own.
@@ -13,6 +13,7 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
 
+from apps.cves.models import CVE
 from apps.logbook.models import HelpdeskTicket, WeekLog
 
 # Danish words for small counts, as the headline spells them out ("fire færre").
@@ -181,4 +182,24 @@ def open_ticket_lists(limit: int = 6, now: datetime | None = None) -> dict:
         "newest": tag(open_tickets.order_by("-created_at")[:limit]),
         "oldest": tag(open_tickets.order_by("created_at")[:limit]),
         "total": open_tickets.count(),
+    }
+
+
+def cve_overview(days: int = 30, limit: int = 8) -> dict:
+    """The CVE card: CVEs created or updated in the last ``days`` days,
+    open ones first (patching, then identified), then solved.
+
+    ``open_count`` counts every open CVE however old, so an untouched one
+    is not forgotten; ``solved_count`` counts those solved in the window.
+    """
+    cutoff = timezone.now() - timedelta(days=days)
+    active = CVE.objects.active_in_last(days).open_first()
+    return {
+        "cves": list(active[:limit]),
+        "cve_total": active.count(),
+        "open_count": CVE.objects.open().count(),
+        "solved_count": CVE.objects.filter(
+            state=CVE.State.SOLVED, solved_at__gte=cutoff
+        ).count(),
+        "window_days": days,
     }

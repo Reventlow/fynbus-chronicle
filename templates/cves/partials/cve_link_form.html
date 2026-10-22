@@ -1,0 +1,22 @@
+{% comment %}
+  Inline "add link" form. Replaced out-of-band with a fresh copy after a
+  successful add (oob=True), and re-rendered in place with errors.
+{% endcomment %}
+<div id="cve-link-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
+     style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2);">
+  <form hx-post="{% url 'cves:link-create' cve.pk %}"
+        hx-target="#cve-links"
+        hx-swap="beforeend"
+        class="flex flex-wrap items-start gap-2">
+    {% csrf_token %}
+    <div style="flex: 2 1 260px; min-width: 0;">
+      {{ form.url }}
+      {% if form.url.errors %}<p class="input-error-message">{{ form.url.errors.0 }}</p>{% endif %}
+    </div>
+    <div style="flex: 1 1 180px; min-width: 0;">
+      {{ form.label }}
+      {% if form.label.errors %}<p class="input-error-message">{{ form.label.errors.0 }}</p>{% endif %}
+    </div>
+    <button type="submit" class="btn btn-sm">Tilføj link</button>
+  </form>
+</div>

@@ -14,6 +14,7 @@ fynbus-chronicle/
 ├── apps/
 │   ├── accounts/       # Login/logout, LoginLog, Viewer role, API keys (api_auth.py, mint_api_key)
 │   ├── api/            # JSON API under /api/v1/ (Bearer API keys)
+│   ├── cves/           # Sårbarheder: CVEs with links, comment timeline and state
 │   ├── dashboard/      # Kontrolpanel (overview.py), Statistik (statistics.py, exports.py), docs pages
 │   ├── feedback/       # Forslag board (feature requests)
 │   ├── images/         # Images pasted into descriptions, served by a login-gated view
@@ -101,7 +102,7 @@ npm run watch:css   # rebuild on change while developing
 
 ### Shell and settings
 
-- `templates/components/sidebar.html` — the v3 sidebar (Kontrolpanel, Ugelog, Rådighedsvagt, Forslag, Rapporter, Statistik, Dokumentation), collapsible to icons.
+- `templates/components/sidebar.html` — the v3 sidebar (Kontrolpanel, Ugelog, Rådighedsvagt, CVE'er, Forslag, Rapporter, Statistik, Dokumentation), collapsible to icons.
 - `templates/base.html` — toolbar with the crumbs block, mobile menu, messages and the HTMX error toast (failed requests show a toast with the status instead of failing silently).
 - `templates/components/settings_controls.html` — the settings popover. Dark mode, density, accent, theme and sidebar state are Alpine state on `<html>`, persisted in `localStorage`.
 
@@ -162,6 +163,28 @@ def my_write_view(request):
 - Auth: `Authorization: Bearer <key>`, handled by `@api_auth(scope="read"|"write")` in `apps/accounts/api_auth.py`. Read endpoints accept read and write keys; write endpoints need a write key. API views are CSRF-exempt.
 - Users create, re-roll and revoke keys at `/accounts/api-keys/`. For scripts or break-glass: `python manage.py mint_api_key <username> --scope=write --label="…"` (prints the key once).
 - The API under `/api/v1/` changes only backwards-compatibly (promise since 1.0).
+
+### CVE endpoints
+
+Used by Harbinger. They validate every field (choices included) and answer `400 {"error", "field"?, "detail"}` on bad input; `error` is `invalid_body`, `missing_field` or `invalid_field`.
+
+| Method | Path | Scope | Purpose |
+|--------|------|-------|---------|
+| `GET` | `/api/v1/cves/` | read | All CVEs, open first. `?state=identified\|patching\|solved` |
+| `POST` | `/api/v1/cves/` | write | Create a CVE — or, if the id exists, leave its fields alone and add `comment` |
+| `GET` | `/api/v1/cves/<cve_id>/` | read | One CVE (id case-insensitive) with `links` and `comments`; 404 if unknown |
+
+`POST` body: `cve_id` and `subject` (≤ 300 chars) are required; `cvss` (number 0–10), `severity` (`critical`, `high`, `medium`, `low`, `none`; derived from `cvss` when null), `cvefeed_url`, `source_url` (http(s)) and `comment` (Markdown) may be null. `source` is set to `harbinger` when `source_url` is given, else `api`. Answers `201` when created and `200` when the CVE existed, both with:
+
+```json
+{"id": 7, "cve_id": "CVE-2026-109618", "subject": "OpenSSH regreSSHion igen",
+ "cvss": 9.8, "severity": "critical", "state": "identified",
+ "url": "https://chronicle.fynbus.net/cves/7/", "created": true}
+```
+
+The `GET` detail adds `state_display`, `severity_display`, `cvefeed_url`, `source`, `source_url`, `created_at`, `updated_at`, `solved_at`, `links` (`url`, `label`, `added_at`) and `comments` (`text`, `kind` = `comment`|`state`, `author`, `created_at`; newest first). The list items have the `POST` shape without `created`.
+
+The new-CVE form can also be prefilled by a link: `/cves/new/?cve_id=…&subject=…&cvss=…&severity=…&cvefeed_url=…&source_url=…` (an existing id redirects to that CVE).
 
 The Statistik share links (`/dashboard/statistik/delt/<token>/data.json` and `vejledning.md`) live in the dashboard app, not in the API, and use the token in the URL instead of an API key.
 

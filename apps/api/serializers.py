@@ -7,6 +7,7 @@ tight and the contract obvious.
 
 from typing import Any
 
+from apps.cves.models import CVE
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Absence,
@@ -229,3 +230,51 @@ def serialize_oncall(duty: OnCallDuty | None) -> dict[str, Any] | None:
         "created_at": duty.created_at.isoformat() if duty.created_at else None,
         "updated_at": duty.updated_at.isoformat() if duty.updated_at else None,
     }
+
+
+def serialize_cve(cve: CVE, *, url: str, full: bool = False) -> dict[str, Any]:
+    """A CVE as the Harbinger integration sees it.
+
+    ``url`` is the absolute address of the CVE's page in Chronicle (built
+    by the view, which has the request). ``full`` adds links and comments.
+    """
+    data = {
+        "id": cve.id,
+        "cve_id": cve.cve_id,
+        "subject": cve.subject,
+        "cvss": float(cve.cvss) if cve.cvss is not None else None,
+        "severity": cve.severity,
+        "state": cve.state,
+        "url": url,
+    }
+    if full:
+        data.update(
+            {
+                "state_display": cve.get_state_display(),
+                "severity_display": cve.get_severity_display(),
+                "cvefeed_url": cve.cvefeed_url,
+                "source": cve.source,
+                "source_url": cve.source_url,
+                "created_at": cve.created_at.isoformat() if cve.created_at else None,
+                "updated_at": cve.updated_at.isoformat() if cve.updated_at else None,
+                "solved_at": cve.solved_at.isoformat() if cve.solved_at else None,
+                "links": [
+                    {
+                        "url": link.url,
+                        "label": link.label,
+                        "added_at": link.added_at.isoformat() if link.added_at else None,
+                    }
+                    for link in cve.links.all()
+                ],
+                "comments": [
+                    {
+                        "text": c.text,
+                        "kind": c.kind,
+                        "author": c.author.username if c.author_id else None,
+                        "created_at": c.created_at.isoformat() if c.created_at else None,
+                    }
+                    for c in cve.comments.select_related("author")
+                ],
+            }
+        )
+    return data

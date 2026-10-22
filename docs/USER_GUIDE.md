@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser og rådighedsvagt. Denne vejledning gælder version 1.0.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.1.
 
 ## Indhold
 
@@ -12,12 +12,13 @@ Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi u
 6. [Opgavesøgning](#opgavesøgning)
 7. [Vagtkalender](#vagtkalender)
 8. [Statistik](#statistik)
-9. [Forslag](#forslag)
-10. [Eksporter rapporter](#eksporter-rapporter)
-11. [Rapporter](#rapporter)
-12. [Notifikationer](#notifikationer)
-13. [API-nøgler](#api-nøgler)
-14. [Udseende og temaer](#udseende-og-temaer)
+9. [Sårbarheder (CVE'er)](#sårbarheder-cveer)
+10. [Forslag](#forslag)
+11. [Eksporter rapporter](#eksporter-rapporter)
+12. [Rapporter](#rapporter)
+13. [Notifikationer](#notifikationer)
+14. [API-nøgler](#api-nøgler)
+15. [Udseende og temaer](#udseende-og-temaer)
 
 ---
 
@@ -104,6 +105,7 @@ Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen p�
 - **Hændelser** fra de sidste 30 dage plus alle uløste, nyeste først. Den farvede kant og P1/P2/P3 viser alvoren (P1 kritisk, P2 høj, P3 lavere), og hver linje siger **Løst** eller **Uløst**. *Vis ældre* folder ældre, løste hændelser ud.
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
+- **Sårbarheder**: CVE'er, der er oprettet eller ændret de sidste 30 dage — dem der patches først, så de identificerede, til sidst de løste. Overskriften tæller alle åbne CVE'er og dem, der er løst i perioden. *Se alle CVE'er* åbner listen.
 
 ### 02 Åbne sager
 
@@ -315,6 +317,21 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 ---
 
+## Sårbarheder (CVE'er)
+
+**CVE'er** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
+
+- Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
+- Status er **Identificeret**, **Patcher** eller **Løst**. Skift den med knapperne på CVE'ens side; hvert skift skrives i tidslinjen med navn og tidspunkt.
+- Under **Links** samles advisories, leverandørnoter og sager. Under **Kommentarer** skrives noter (Markdown virker), nyeste øverst.
+- Listen viser åbne CVE'er øverst og løste i 90 dage. Søg på id eller emne, eller vælg *Alle* for ældre.
+- Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
+- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *løst denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
+
+Læsere kan se alt, men ikke oprette eller ændre.
+
+---
+
 ## Forslag
 
 **Forslag** er udviklingstavlen for Chronicle og IT: forslag til ny funktionalitet, UI-ændringer, integrationer og fejl.
@@ -397,7 +414,7 @@ Notifikationer markeres som læst, når du åbner klokken.
 
 Under din profil nederst i sidemenuen → **API-nøgler** opretter du nøgler til at hente eller skrive Chronicle-data fra andre programmer, fx Claude-integrationen (MCP) eller scripts.
 
-- **Læs** kan kun hente data; **Læs+skriv** kan også oprette ugelogs, opgaver og hændelser.
+- **Læs** kan kun hente data; **Læs+skriv** kan også oprette ugelogs, opgaver, hændelser og CVE'er.
 - Den fulde nøgle vises kun én gang, når den oprettes — gem den i en adgangskodemanager.
 - En nøgle kan tilbagekaldes eller udskiftes når som helst.
 

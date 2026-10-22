@@ -6,6 +6,7 @@ Uses WeasyPrint to generate PDF documents from HTML templates.
 
 from django.template.loader import render_to_string
 
+from apps.cves.models import weeklog_cves
 from apps.images.embedding import embed_as_data_uris
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
@@ -66,6 +67,7 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
         "avg_closed": avgs["avg_closed"],
     }
 
+    context.update(weeklog_cves(weeklog))
     html_content = render_to_string("logbook/exports/weekly_report.html", context)
     # Pasted images sit behind a login; carry the bytes in the document.
     html_content = embed_as_data_uris(html_content, max_width=PDF_IMAGE_MAX_WIDTH)

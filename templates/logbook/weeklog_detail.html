@@ -244,6 +244,38 @@
     </div>
   </div>
 
+  {# === CVEs: computed — every CVE unsolved at some point this week ======== #}
+  <div class="card overflow-hidden" style="padding: 0;" id="weeklog-cves">
+    <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Sårbarheder</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">CVE'er{% if week_cves %} · {{ week_cves|length }} åben{{ week_cves|length|pluralize:"e" }} i ugens løb{% endif %}</h2>
+      </div>
+      <a href="{% url 'cves:list' %}" class="btn btn-sm btn-ghost">Alle CVE'er</a>
+    </div>
+
+    <div>
+      {% for cve in week_cves %}
+        <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
+          <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
+          <div style="min-width: 0;">
+            <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject }}</div>
+            <div class="incident-meta">
+              {% include "cves/partials/cvss_pill.html" %}
+              {% include "cves/partials/state_badge.html" %}
+              {% if cve.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Løst denne uge</span>{% endif %}
+            </div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      {% empty %}
+        <p style="text-align: center; color: var(--ink-4); padding: 24px; margin: 0;" id="no-weeklog-cves">
+          Ingen åbne CVE'er i denne uge.
+        </p>
+      {% endfor %}
+    </div>
+  </div>
+
   {# === Footer metadata ==================================================== #}
   <div style="font-size: 12px; color: var(--ink-4); font-family: var(--font-mono); padding-top: 8px;">
     Oprettet <span class="num">{{ weeklog.created_at|date:"j. M Y · H:i" }}</span>

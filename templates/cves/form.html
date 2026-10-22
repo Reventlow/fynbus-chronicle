@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Rediger {{ object.cve_id }}{% else %}Ny CVE{% endif %} — FynBus Chronicle{% endblock %}
+
+{% block crumbs %}
+  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <span class="sep">/</span>
+  {% if object %}
+    <a href="{% url 'cves:detail' object.pk %}">{{ object.cve_id }}</a>
+    <span class="sep">/</span>
+    <span class="current">Rediger</span>
+  {% else %}
+    <span class="current">Ny CVE</span>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 720px;">
+
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 16px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>{% if object %}Rediger CVE{% else %}Registrér en sårbarhed{% endif %}</span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">
+      {% if object %}<span style="font-family: var(--font-mono);">{{ object.cve_id }}</span>{% else %}Ny CVE{% endif %}
+    </h1>
+  </div>
+
+  <form method="post" class="card" style="display: flex; flex-direction: column; gap: 14px;">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if form.cve_id %}
+      <div>
+        <label for="{{ form.cve_id.id_for_label }}" class="input-label">CVE-id</label>
+        {{ form.cve_id }}
+        {% if form.cve_id.errors %}<p class="input-error-message">{{ form.cve_id.errors.0 }}</p>{% endif %}
+      </div>
+    {% endif %}
+
+    <div>
+      <label for="{{ form.subject.id_for_label }}" class="input-label">Emne</label>
+      {{ form.subject }}
+      {% if form.subject.errors %}<p class="input-error-message">{{ form.subject.errors.0 }}</p>{% endif %}
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="{{ form.cvss.id_for_label }}" class="input-label">CVSS</label>
+        {{ form.cvss }}
+        {% if form.cvss.errors %}<p class="input-error-message">{{ form.cvss.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label for="{{ form.severity.id_for_label }}" class="input-label">Alvorlighed</label>
+        {{ form.severity }}
+        {% if form.severity.errors %}<p class="input-error-message">{{ form.severity.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div>
+      <label for="{{ form.cvefeed_url.id_for_label }}" class="input-label">cvefeed.io-link</label>
+      {{ form.cvefeed_url }}
+      <p class="input-help">Tom = https://cvefeed.io/vuln/detail/&lt;CVE-id&gt;.</p>
+      {% if form.cvefeed_url.errors %}<p class="input-error-message">{{ form.cvefeed_url.errors.0 }}</p>{% endif %}
+    </div>
+
+    {% if form.comment %}
+      <div>
+        <label for="{{ form.comment.id_for_label }}" class="input-label">{{ form.comment.label }}</label>
+        {{ form.comment }}
+      </div>
+    {% endif %}
+
+    {% if form.source_url %}{{ form.source_url }}{% endif %}
+
+    <div class="flex items-center justify-end gap-2">
+      <a href="{% if object %}{% url 'cves:detail' object.pk %}{% else %}{% url 'cves:list' %}{% endif %}" class="btn btn-sm">Annullér</a>
+      <button type="submit" class="btn btn-primary btn-sm">{% if object %}Gem{% else %}Opret{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

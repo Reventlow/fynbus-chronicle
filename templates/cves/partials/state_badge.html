@@ -1,0 +1,2 @@
+{# State as dot + text, like task statuses elsewhere. #}
+<span class="task-status"{% if cve.state == 'identified' %} style="color: var(--bad-ink);"{% elif cve.state == 'patching' %} style="color: var(--warn-ink);"{% endif %}><span class="pill-dot" style="background: {{ cve.state_color }};"></span>{{ cve.get_state_display }}</span>

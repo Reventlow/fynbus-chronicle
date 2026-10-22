@@ -60,6 +60,10 @@ urlpatterns = [
     path("feature-requests/<int:pk>/", views.feature_request_detail, name="feature-request-detail"),
     path("feature-requests/<int:pk>/update/", views.feature_request_update, name="feature-request-update"),
     path("feature-requests/<int:pk>/solve/", views.feature_request_solve, name="feature-request-solve"),
+    # CVEs (Harbinger). One route, two names: GET lists, POST creates.
+    path("cves/", views.cve_collection, name="cve-list"),
+    path("cves/", views.cve_collection, name="cve-create"),
+    path("cves/<str:cve_id>/", views.cve_detail, name="cve-detail"),
     # Reports
     path("reports/", views.reports_list, name="reports-list"),
     path("reports/<slug:slug>/", views.report_upsert, name="report-upsert"),

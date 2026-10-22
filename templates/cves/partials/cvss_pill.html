@@ -1,0 +1,2 @@
+{# CVSS score as a pill coloured by severity; "–" when no score is known. #}
+<span class="pill pill-{{ cve.severity_pill }}" title="{{ cve.get_severity_display }}" style="font-family: var(--font-mono);">{% if cve.cvss is not None %}{{ cve.cvss }}{% else %}–{% endif %} · {{ cve.get_severity_display }}</span>

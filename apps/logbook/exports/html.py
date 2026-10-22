@@ -10,6 +10,7 @@ renders well in web browsers (the PDF export is unaffected).
 from django.conf import settings
 from django.template.loader import render_to_string
 
+from apps.cves.models import weeklog_cves
 from apps.images.embedding import embed_as_data_uris
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
@@ -142,6 +143,7 @@ def generate_html(weeklog: WeekLog) -> str:
         "avg_closed": avgs["avg_closed"],
     }
 
+    context.update(weeklog_cves(weeklog))
     html_content = render_to_string("logbook/exports/weekly_report.html", context)
     # Pasted images sit behind a login; the downloaded file must carry them.
     html_content = embed_as_data_uris(html_content, max_width=HTML_IMAGE_MAX_WIDTH)

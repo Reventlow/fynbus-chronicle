@@ -12,12 +12,17 @@ from datetime import datetime
 from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.api_auth import api_auth
+from apps.cves.models import CVE, CVEComment, normalise_cve_id
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Incident,
@@ -29,6 +34,7 @@ from apps.oncall.models import OnCallDuty
 from apps.reports.models import Report
 
 from .serializers import (
+    serialize_cve,
     serialize_feature_request,
     serialize_incident,
     serialize_oncall,
@@ -579,3 +585,134 @@ def report_video_upload(request: HttpRequest, slug: str) -> JsonResponse:
         report.video.delete(save=False)
     report.video.save("video.mp4", File(tmp), save=True)
     return JsonResponse({"report": _report_payload(request, report)})
+
+
+# -------------------------------------------------------------------------
+# CVEs (Harbinger, server-to-server)
+#
+# Unlike the older write endpoints these validate every field, choices
+# included, and answer 400 with {"error", "detail"} on bad input.
+# -------------------------------------------------------------------------
+
+
+def _cve_payload(request: HttpRequest, cve: CVE, *, full: bool = False) -> dict:
+    url = request.build_absolute_uri(reverse("cves:detail", kwargs={"pk": cve.pk}))
+    return serialize_cve(cve, url=url, full=full)
+
+
+def _invalid(field: str, detail: str) -> JsonResponse:
+    return JsonResponse({"error": "invalid_field", "field": field, "detail": detail}, status=400)
+
+
+@require_GET
+@api_auth(scope="read")
+def cve_list(request: HttpRequest) -> JsonResponse:
+    """All CVEs, open ones first. Optional ``?state=identified|patching|solved``."""
+    qs = CVE.objects.all()
+    state = request.GET.get("state")
+    if state:
+        if state not in CVE.State.values:
+            return _invalid("state", f"state must be one of {', '.join(CVE.State.values)}")
+        qs = qs.filter(state=state)
+    return JsonResponse({"cves": [_cve_payload(request, c) for c in qs.open_first()[:500]]})
+
+
+@api_auth(scope="write")
+def cve_create(request: HttpRequest) -> JsonResponse:
+    """Create a CVE, or add a comment to the one that already exists.
+
+    201 when created, 200 when it existed (its fields are left untouched).
+    The whole body is validated either way, so bad input is always a 400.
+    Body: ``cve_id`` and ``subject`` required; ``cvss``, ``severity``,
+    ``cvefeed_url``, ``source_url`` and ``comment`` optional.
+    """
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+
+    raw_id = data.get("cve_id")
+    if not isinstance(raw_id, str) or not raw_id.strip():
+        return JsonResponse({"error": "missing_field", "detail": "cve_id is required"}, status=400)
+    try:
+        cve_id = normalise_cve_id(raw_id)
+    except ValidationError:
+        return _invalid("cve_id", "cve_id must look like CVE-YYYY-NNNN (four or more digits)")
+
+    comment = data.get("comment")
+    if comment is not None and not isinstance(comment, str):
+        return _invalid("comment", "comment must be a string or null")
+    comment = (comment or "").strip()
+
+    subject = data.get("subject")
+    if not isinstance(subject, str) or not subject.strip():
+        return JsonResponse({"error": "missing_field", "detail": "subject is required"}, status=400)
+    subject = subject.strip()
+    if len(subject) > 300:
+        return _invalid("subject", "subject must be at most 300 characters")
+
+    cvss = data.get("cvss")
+    if cvss is not None:
+        if isinstance(cvss, bool) or not isinstance(cvss, (int, float)) or not 0 <= cvss <= 10:
+            return _invalid("cvss", "cvss must be a number between 0 and 10, or null")
+        cvss = round(float(cvss), 1)
+
+    severity = data.get("severity")
+    if severity is not None and severity not in CVE.Severity.values:
+        return _invalid("severity", f"severity must be one of {', '.join(CVE.Severity.values)}, or null")
+
+    urls = {}
+    for field in ("cvefeed_url", "source_url"):
+        value = data.get(field)
+        if value is None or value == "":
+            urls[field] = ""
+            continue
+        try:
+            if not isinstance(value, str):
+                raise ValidationError("not a string")
+            URLValidator(schemes=["http", "https"])(value)
+        except ValidationError:
+            return _invalid(field, f"{field} must be an http(s) URL, or null")
+        urls[field] = value
+
+    existing = CVE.objects.filter(cve_id=cve_id).first()
+    if existing is not None:
+        if comment:
+            CVEComment.objects.create(cve=existing, text=comment, author=request.api_user)
+            existing.refresh_from_db()
+        return JsonResponse({**_cve_payload(request, existing), "created": False}, status=200)
+
+    cve = CVE.objects.create(
+        cve_id=cve_id,
+        subject=subject,
+        cvss=cvss,
+        severity=severity or "",
+        cvefeed_url=urls["cvefeed_url"],
+        source_url=urls["source_url"],
+        source="harbinger" if urls["source_url"] else "api",
+        created_by=request.api_user,
+    )
+    if comment:
+        CVEComment.objects.create(cve=cve, text=comment, author=request.api_user)
+        cve.refresh_from_db()
+    return JsonResponse({**_cve_payload(request, cve), "created": True}, status=201)
+
+
+@csrf_exempt
+def cve_collection(request: HttpRequest) -> JsonResponse:
+    """``/api/v1/cves/``: GET lists (read key), POST creates (write key)."""
+    if request.method == "GET":
+        return cve_list(request)
+    if request.method == "POST":
+        return cve_create(request)
+    return JsonResponse({"error": "method_not_allowed"}, status=405, headers={"Allow": "GET, POST"})
+
+
+@require_GET
+@api_auth(scope="read")
+def cve_detail(request: HttpRequest, cve_id: str) -> JsonResponse:
+    """One CVE by its id (case-insensitive), with links and comments."""
+    cve = CVE.objects.filter(cve_id=cve_id.strip().upper()).first()
+    if cve is None:
+        return JsonResponse({"error": "not_found", "detail": f"No CVE {cve_id}"}, status=404)
+    return JsonResponse(_cve_payload(request, cve, full=True))

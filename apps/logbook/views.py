@@ -27,6 +27,7 @@ from django.views.generic import (
 )
 
 from apps.accounts.permissions import EditorRequiredMixin, editor_required
+from apps.cves.models import weeklog_cves
 
 from .exports.email import EMAIL_FORMATS, email_summary, send_weeklog_email
 from .exports.html import generate_html
@@ -145,6 +146,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["prev_weeklog"] = WeekLog.objects.filter(
             year=prev_iso.year, week_number=prev_iso.week
         ).first()
+        context.update(weeklog_cves(self.object))
         context["signoffs"] = self.object.signoffs.select_related("user").order_by(
             "created_at"
         )

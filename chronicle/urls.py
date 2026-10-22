@@ -25,6 +25,7 @@ urlpatterns = [
     path("oncall/", include("apps.oncall.urls")),
     path("tasks/", include("apps.tasks.urls")),
     path("feedback/", include("apps.feedback.urls")),
+    path("cves/", include("apps.cves.urls")),
     path("themes/", include("apps.themes.urls")),
     path("notifications/", include("apps.notifications.urls")),
     path("reports/", include("apps.reports.urls")),

@@ -1,0 +1,19 @@
+{% comment %}
+  One CVE in a hairline list (Sårbarheder list, Kontrolpanel card): a rail
+  in the state colour, id + subject, then CVSS, state and last activity.
+  The cvefeed.io link sits outside the row link so it opens on its own.
+{% endcomment %}
+<div class="incident-row" style="grid-template-columns: auto minmax(0, 1fr) auto;">
+  <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
+  <a href="{% url 'cves:detail' cve.pk %}" style="min-width: 0; color: inherit; text-decoration: none;">
+    <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:90 }}</div>
+    <div class="incident-meta">
+      {% include "cves/partials/cvss_pill.html" %}
+      {% include "cves/partials/state_badge.html" %}
+      <span class="num" title="{{ cve.updated_at|date:'d. M Y H:i' }}">{{ cve.updated_at|timesince }} siden</span>
+    </div>
+  </a>
+  {% if cve.cvefeed_url %}
+    <a href="{{ cve.cvefeed_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost" title="Åbn på cvefeed.io">cvefeed.io ↗</a>
+  {% endif %}
+</div>

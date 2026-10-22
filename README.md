@@ -1,6 +1,6 @@
 # FynBus Chronicle
 
-The weekly log and dashboard of the FynBus IT department — **version 1.0**.
+The weekly log and dashboard of the FynBus IT department — **version 1.1**.
 
 Chronicle is where the IT department plans, records and looks back on its work: the week log with priority tasks, incidents and staffing, live helpdesk figures from ManageEngine ServiceDesk Plus, the on-call rota, statistics and shareable reports.
 
@@ -12,6 +12,7 @@ Chronicle is where the IT department plans, records and looks back on its work: 
 - **ServiceDesk Plus integration**: weekly helpdesk figures and age buckets, plus a local mirror of every ticket (subject, category, technician, department) kept in sync by a separate container.
 - **Statistik**: helpdesk and Chronicle statistics for any period, exportable as PDF/HTML/Markdown/JSON, with expiring share links for tools that cannot log in.
 - **Rådighedsvagt**: on-call calendar with split weeks, mid-week handovers, history and notifications.
+- **CVE'er (Sårbarheder)**: tracked vulnerabilities with CVSS, state (identified → patching → solved), links and a comment timeline; a Kontrolpanel card, an automatic section in each week log, and API endpoints for Harbinger.
 - **Forslag**: a feature-request board; **Rapporter**: standalone HTML reports with optional video and public links.
 - **REST API** under `/api/v1/` with per-user read or read/write API keys (used by the Claude MCP connector).
 - **v3 design**: sidebar shell, light and dark mode, accent colours, density modes, and day themes (Star Wars, Pirate Day, Star Trek, World Alzheimer's Day, Read-only Friday, Touch-Grass-Weekend).

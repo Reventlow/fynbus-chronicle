@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load markdown_extras %}
+
+{% block title %}{{ cve.cve_id }} — FynBus Chronicle{% endblock %}
+
+{% block crumbs %}
+  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <span class="sep">/</span>
+  <span class="current">{{ cve.cve_id }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+
+  {# Header: id, subject, CVSS, state, outbound links, state buttons #}
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span>
+      <span style="color: var(--ink-5);">·</span>
+      <span>
+        Registreret {{ cve.created_at|date:"j. M Y · H:i" }}
+        {% if cve.created_by %}af {{ cve.created_by.get_full_name|default:cve.created_by.username }}{% endif %}
+        {% if cve.source %}via {{ cve.source|capfirst }}{% endif %}
+      </span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 32px; line-height: 1.15; {% if not cve.is_open %}color: var(--ink-3);{% endif %}">
+      {{ cve.subject }}
+    </h1>
+    <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
+      {% include "cves/partials/cvss_pill.html" %}
+      {% include "cves/partials/state_badge.html" %}
+      {% if cve.solved_at %}
+        <span class="task-status num">Løst {{ cve.solved_at|date:"j. M Y · H:i" }}{% if cve.solved_by %} af {{ cve.solved_by.get_full_name|default:cve.solved_by.username }}{% endif %}</span>
+      {% endif %}
+      <span style="flex: 1;"></span>
+      {% if cve.cvefeed_url %}
+        <a href="{{ cve.cvefeed_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">cvefeed.io ↗</a>
+      {% endif %}
+      {% if cve.source_url %}
+        <a href="{{ cve.source_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">{% if cve.source == 'harbinger' %}Harbinger{% else %}Kilde{% endif %} ↗</a>
+      {% endif %}
+      {% if is_editor %}
+        <a href="{% url 'cves:edit' cve.pk %}" class="btn btn-sm">Rediger</a>
+      {% endif %}
+    </div>
+
+    {% if is_editor %}
+      <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
+        <span class="label-eyebrow">Skift status</span>
+        {% for value, label in states %}
+          <form method="post" action="{% url 'cves:state' cve.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="state" value="{{ value }}">
+            <button type="submit" class="btn btn-sm{% if value == cve.state %} btn-primary{% endif %}"
+                    {% if value == cve.state %}disabled aria-current="true"{% endif %}>{{ label }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {# Links #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Referencer</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Links</h2>
+    </div>
+    <div id="cve-links">
+      {% for link in links %}
+        {% include "cves/partials/cve_link_row.html" %}
+      {% empty %}
+        <p id="no-cve-links" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen links endnu.</p>
+      {% endfor %}
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_link_form.html" with form=link_form %}
+    {% endif %}
+  </div>
+
+  {# Comments: a timeline, newest first; state changes are marked #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Tidslinje</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Kommentarer</h2>
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_comment_form.html" with form=comment_form %}
+    {% endif %}
+    <div id="cve-comments">
+      {% for comment in comments %}
+        {% include "cves/partials/cve_comment_row.html" %}
+      {% empty %}
+        <p id="no-cve-comments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen kommentarer endnu.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: var(--ink-4); font-family: var(--font-mono);">
+    Sidst opdateret <span class="num">{{ cve.updated_at|date:"j. M Y · H:i" }}</span>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}CVE'er — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>{{ open_count }} åbne · {{ patching_count }} patches i gang</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Sårbarheder <span class="display-italic" style="color: var(--ink-3);">vi holder øje med.</span>
+      </h1>
+      <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
+        CVE'er, der rammer os: fra de bliver identificeret, mens vi patcher, til de er løst.
+        Åbne står øverst; løste vises i {{ solved_window_days }} dage — vælg <em>Alle</em> for at se ældre.
+      </p>
+    </div>
+    {% if is_editor %}
+    <div class="flex gap-2">
+      <a href="{% url 'cves:create' %}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Ny CVE
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  {# Filter row #}
+  <form method="get" class="card">
+    <div class="filter-row">
+      <div>
+        <label for="id_q" class="input-label">Søg</label>
+        <input type="text" id="id_q" name="q" value="{{ q }}" class="field" placeholder="CVE-id eller emne…">
+      </div>
+      <div>
+        <label for="id_state" class="input-label">Status</label>
+        <select id="id_state" name="state" class="select-field">
+          <option value="">Åbne + løste ({{ solved_window_days }} dage)</option>
+          {% for value, label in states %}
+            <option value="{{ value }}" {% if state == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+          <option value="all" {% if state == 'all' %}selected{% endif %}>Alle</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Filtrér</button>
+    </div>
+  </form>
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    {% for cve in cves %}
+      {% include "cves/partials/cve_row.html" %}
+    {% empty %}
+      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">
+        {% if q or state %}Ingen CVE'er matcher filteret.{% else %}Ingen CVE'er registreret endnu.{% endif %}
+      </p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

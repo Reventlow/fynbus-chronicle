@@ -33,6 +33,7 @@ from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
 from .overview import (
     age_groups,
     changelog_strip,
+    cve_overview,
     donut_segments,
     headline_delta,
     open_ticket_lists,
@@ -498,6 +499,17 @@ class IncidentsPartialView(LoginRequiredMixin, TemplateView):
         week = weeklog.incidents.all() if weeklog else Incident.objects.none()
         context["week_count"] = week.count()
         context["week_critical"] = week.filter(severity=Incident.Severity.CRITICAL).count()
+        return context
+
+
+class CVEsPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: CVEs active in the last 30 days, open ones first."""
+
+    template_name = "dashboard/partials/cves_list.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context.update(cve_overview())
         return context
 
 

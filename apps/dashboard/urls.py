@@ -61,6 +61,11 @@ urlpatterns = [
         name="partial-incidents",
     ),
     path(
+        "partials/cves/",
+        views.CVEsPartialView.as_view(),
+        name="partial-cves",
+    ),
+    path(
         "partials/oncall/",
         views.OnCallPartialView.as_view(),
         name="partial-oncall",
