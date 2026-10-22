@@ -94,25 +94,52 @@
     {% url 'admin:logbook_incident_changelist' as url_incidents %}
     {% include 'components/section_label.html' with n="01" title="Nu" sub="Hændelser, ugens log og sårbarheder" link_url=url_incidents link_label="Se alle hændelser" %}
     <div class="now-grid">
-      {# Incidents: last 30 days; olderIncidents toggles the older rows and survives the poll #}
-      <div x-data="{ olderIncidents: false }" :class="{ 'incidents-expanded': olderIncidents }"
-           hx-get="{% url 'dashboard:partial-incidents' %}"
-           hx-trigger="load, every 60s"
-           hx-swap="innerHTML">
-        <div class="card" style="padding: 0;">
-          <div style="padding: 18px 24px 10px;">
-            <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
-            <div class="skeleton" style="height: 16px; width: 180px;"></div>
-          </div>
-          {% for _ in "1234" %}
-            <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
-              <div class="skeleton" style="height: 14px; width: 60%;"></div>
-              <div class="skeleton" style="height: 11px; width: 35%;"></div>
+      {# Left column: incidents on top, CVEs (security events) below them #}
+      <div class="flex flex-col" style="gap: var(--gutter); min-width: 0;">
+        {% comment %}
+          Incidents: last 30 days; olderIncidents toggles the older rows and
+          survives the poll. flex: 1 lets the card take the height left over,
+          so both columns end level.
+        {% endcomment %}
+        <div x-data="{ olderIncidents: false }" :class="{ 'incidents-expanded': olderIncidents }"
+             style="flex: 1 1 auto; min-height: 0;"
+             hx-get="{% url 'dashboard:partial-incidents' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card" style="padding: 0;">
+            <div style="padding: 18px 24px 10px;">
+              <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
+              <div class="skeleton" style="height: 16px; width: 180px;"></div>
             </div>
-          {% endfor %}
+            {% for _ in "1234" %}
+              <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
+                <div class="skeleton" style="height: 14px; width: 60%;"></div>
+                <div class="skeleton" style="height: 11px; width: 35%;"></div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# CVEs active in the last 30 days, open ones first #}
+        <div hx-get="{% url 'dashboard:partial-cves' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card" style="padding: 0;">
+            <div style="padding: 18px 24px 10px;">
+              <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
+              <div class="skeleton" style="height: 16px; width: 160px;"></div>
+            </div>
+            {% for _ in "123" %}
+              <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
+                <div class="skeleton" style="height: 14px; width: 70%;"></div>
+                <div class="skeleton" style="height: 11px; width: 40%;"></div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
 
+      {# Right column: on-call (when the sidebar hides it) and the current week #}
       <div class="flex flex-col" style="gap: var(--gutter); min-width: 0;">
         {% comment %}
           The sidebar shows who is on call, so this card only appears when
@@ -136,24 +163,6 @@
             <div class="skeleton" style="height: 16px; width: 80px; margin-bottom: 14px;"></div>
             <div class="skeleton" style="height: 14px; width: 100%; margin-bottom: 8px;"></div>
             <div class="skeleton" style="height: 14px; width: 90%;"></div>
-          </div>
-        </div>
-
-        {# CVEs active in the last 30 days, open ones first #}
-        <div hx-get="{% url 'dashboard:partial-cves' %}"
-             hx-trigger="load, every 60s"
-             hx-swap="innerHTML">
-          <div class="card" style="padding: 0;">
-            <div style="padding: 18px 24px 10px;">
-              <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
-              <div class="skeleton" style="height: 16px; width: 160px;"></div>
-            </div>
-            {% for _ in "123" %}
-              <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
-                <div class="skeleton" style="height: 14px; width: 70%;"></div>
-                <div class="skeleton" style="height: 11px; width: 40%;"></div>
-              </div>
-            {% endfor %}
           </div>
         </div>
       </div>
