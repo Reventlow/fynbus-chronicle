@@ -1,28 +1,34 @@
-{# One attached PDF; opens in the page's lightbox, editors can delete it. #}
-<div id="cve-attachment-{{ attachment.key }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-3); flex: none;" aria-hidden="true">
-    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>
-  </svg>
+{# One attachment (PDF or Outlook mail); opens in the page's lightbox, editors can delete it. #}
+<div id="cve-attachment-{{ attachment.key }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);{% if attachment.parent_id %} padding-left: 44px;{% endif %}">
+  {% if attachment.is_msg %}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-3); flex: none;" aria-label="Outlook-mail">
+      <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+    </svg>
+  {% else %}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-3); flex: none;" aria-label="PDF">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>
+    </svg>
+  {% endif %}
   <div style="min-width: 0; flex: 1;">
     <button type="button"
-            x-on:click="$dispatch('open-pdf', { src: '{{ attachment.get_absolute_url|escapejs }}', title: '{{ attachment.display_title|escapejs }}', tlp: '{{ attachment.get_tlp_display|default:''|escapejs }}', tlpKey: '{{ attachment.tlp|escapejs }}' })"
+            x-on:click="$dispatch('open-pdf', { src: '{{ attachment.get_view_url|escapejs }}', dl: '{{ attachment.get_download_url|escapejs }}', title: '{{ attachment.display_title|escapejs }}', tlp: '{{ attachment.get_tlp_display|default:''|escapejs }}', tlpKey: '{{ attachment.tlp|escapejs }}' })"
             style="background: none; border: 0; padding: 0; text-align: left; cursor: pointer; font-size: 13.5px; color: var(--ink-1); font-weight: 500; word-break: break-word;">
       {{ attachment.display_title }}
     </button>
     {% include "cves/partials/tlp_badge.html" %}
     <div style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
-      {% if attachment.source %}{{ attachment.source }} · {% endif %}{{ attachment.size|filesizeformat }} ·
+      {% if attachment.is_msg %}Mail{% if attachment.email_sent %} fra <span class="num">{{ attachment.email_sent|date:"d. M Y" }}</span>{% endif %} · {% elif attachment.parent_id %}Pakket ud af mailen · {% endif %}{% if attachment.source %}{{ attachment.source }} · {% endif %}{{ attachment.size|filesizeformat }} ·
       {% if attachment.uploaded_by %}{{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }} · {% endif %}<span class="num">{{ attachment.uploaded_at|date:"d. M Y H:i" }}</span>
     </div>
   </div>
-  <a href="{{ attachment.get_absolute_url }}?download=1" class="icon-btn" style="width: 26px; height: 26px;" title="Hent PDF">
+  <a href="{{ attachment.get_download_url }}" class="icon-btn" style="width: 26px; height: 26px;" title="Hent {% if attachment.is_msg %}.msg{% else %}PDF{% endif %}">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
   </a>
   {% if is_editor %}
     <button hx-post="{% url 'cves:attachment-delete' cve.pk attachment.key %}"
             hx-target="#cve-attachment-{{ attachment.key }}"
             hx-swap="outerHTML"
-            hx-confirm="Slet denne PDF?"
+            hx-confirm="Slet denne vedhæftning?{% if attachment.is_msg %} PDF'er pakket ud af mailen beholdes.{% endif %}"
             class="icon-btn" style="width: 26px; height: 26px;" title="Slet">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>

@@ -381,7 +381,7 @@ class CVEFileStorage(FileSystemStorage):
 def _attachment_path(instance: "CVEAttachment", filename: str) -> str:
     # Random key, not the uploaded name: the original name is kept in
     # ``original_name`` for display/download only.
-    return f"{instance.uploaded_at:%Y/%m}/{instance.key}.pdf"
+    return f"{instance.uploaded_at:%Y/%m}/{instance.key}.{instance.kind or 'pdf'}"
 
 
 def _new_key() -> str:
@@ -389,12 +389,20 @@ def _new_key() -> str:
 
 
 class CVEAttachment(models.Model):
-    """A PDF attached to a CVE, e.g. an FE-CSIRT advisory, with its TLP marking.
+    """A PDF or Outlook mail (.msg) attached to a CVE, with its TLP marking.
 
-    PDF only: checked by extension and by the ``%PDF-`` magic bytes. Served
-    inline to logged-in users (viewers included) so the CVE page can show it
-    in a lightbox; never from static/media.
+    PDFs are served inline for the lightbox. A .msg can't be shown by a
+    browser, so its headers and plain-text body are extracted at upload
+    (``email_*``) and shown as a preview; the original is offered as a
+    download. PDFs found inside a mail are stored as their own attachments
+    with ``parent`` pointing at it. Content is checked, not just the name:
+    ``%PDF-`` for PDFs, an OLE compound file with MAPI properties for .msg.
+    Never served from static/media.
     """
+
+    class Kind(models.TextChoices):
+        PDF = "pdf", "PDF"
+        MSG = "msg", "Outlook-mail"
 
     class TLP(models.TextChoices):
         # FIRST TLP 2.0. Empty = not marked.
@@ -421,9 +429,20 @@ class CVEAttachment(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Uploadet af",
     )
     uploaded_at = models.DateTimeField(verbose_name="Uploadet", default=timezone.now)
+    kind = models.CharField(verbose_name="Type", max_length=3, choices=Kind.choices, default=Kind.PDF)
+    # For .msg: what the mail said, extracted once at upload (shown escaped).
+    email_subject = models.CharField(verbose_name="Mail: emne", max_length=500, blank=True)
+    email_from = models.CharField(verbose_name="Mail: fra", max_length=300, blank=True)
+    email_to = models.TextField(verbose_name="Mail: til", blank=True)
+    email_sent = models.DateTimeField(verbose_name="Mail: sendt", null=True, blank=True)
+    email_body = models.TextField(verbose_name="Mail: tekst", blank=True)
+    parent = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="extracted",
+        verbose_name="Fra mail", help_text="Sat på PDF'er, der blev pakket ud af en vedhæftet mail.",
+    )
 
     class Meta:
-        ordering = ["uploaded_at"]
+        ordering = ["uploaded_at", "pk"]
         verbose_name = "Vedhæftet PDF"
         verbose_name_plural = "Vedhæftede PDF'er"
 
@@ -432,7 +451,20 @@ class CVEAttachment(models.Model):
 
     @property
     def display_title(self) -> str:
-        return self.title or self.original_name
+        return self.title or (self.email_subject if self.kind == self.Kind.MSG else "") or self.original_name
+
+    @property
+    def is_msg(self) -> bool:
+        return self.kind == self.Kind.MSG
+
+    def get_download_url(self) -> str:
+        return self.get_absolute_url() + "?download=1"
+
+    def get_view_url(self) -> str:
+        """What the lightbox shows: the PDF itself, or the mail preview page."""
+        if self.is_msg:
+            return reverse("cves:attachment-preview", kwargs={"pk": self.cve_id, "key": self.key})
+        return self.get_absolute_url()
 
     @property
     def tlp_badge_class(self) -> str:

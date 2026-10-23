@@ -7,6 +7,15 @@ All notable changes to FynBus Chronicle are documented here.
 ### Changed
 - **Sårbarheder er flyttet på kontrolpanelet.** Kortet med CVE'er fra de sidste 30 dage står nu under *Hændelser* i venstre kolonne, så sikkerhedshændelser og sårbarheder kan ses samlet. Højre kolonne viser rådighedsvagten og den aktuelle ugelog. Hændelseskortet fylder den resterende højde, så kolonnerne slutter i samme højde.
 
+## 1.3.0 — 2026-10-23
+
+### Added
+- **Outlook-mails (.msg) på CVE'er.** Under *Vedhæftninger* kan man nu også vedhæfte en mail, fx en advarsel fra FE-CSIRT, direkte fra Outlook.
+  - **Klik på mailen** for at læse den: afsender, modtagere, dato, emne og teksten vises i samme visning som PDF'erne. Mailens egen HTML vises aldrig, kun teksten, så intet i mailen kan køre. *Hent* giver den oprindelige .msg-fil til Outlook.
+  - **PDF'er i mailen pakkes ud** og lægges som egne vedhæftninger under mailen, så advisory'en kan åbnes med det samme. De får samme TLP som mailen.
+  - **TLP findes automatisk:** vælger man ingen TLP, bruges markeringen fra mailens emne eller tekst (fx *TLP:AMBER*). Afsenderen bruges som kilde, hvis der ikke er angivet en.
+  - Kun ægte Outlook-mails accepteres (tjekkes på indholdet), højst 25 MB. Sletter man mailen, beholdes de PDF'er, der blev pakket ud af den.
+
 ## 1.2.0 — 2026-10-22
 
 ### Added

@@ -131,4 +131,4 @@ class TestDeleteAndPage:
         upload(editor_client, cve, title="Advisory")
         body = viewer_client.get(reverse("cves:detail", args=[cve.pk])).content.decode()
         assert "Advisory" in body
-        assert "Vedhæft PDF" not in body
+        assert "Vedhæft</button>" not in body

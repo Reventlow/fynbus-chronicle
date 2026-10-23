@@ -71,7 +71,7 @@
       {% for attachment in attachments %}
         {% include "cves/partials/cve_attachment_row.html" %}
       {% empty %}
-        <p id="no-cve-attachments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen PDF'er endnu.</p>
+        <p id="no-cve-attachments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen vedhæftninger endnu.</p>
       {% endfor %}
     </div>
     {% if is_editor %}

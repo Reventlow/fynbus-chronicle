@@ -104,14 +104,18 @@ class CVECommentForm(forms.ModelForm):
 
 
 class CVEAttachmentForm(forms.ModelForm):
-    """Upload one PDF (e.g. an FE-CSIRT advisory) with title, source and TLP."""
+    """Upload one PDF or Outlook mail (.msg), with title, source and TLP.
+
+    After ``is_valid()``, ``kind`` is "pdf" or "msg" and, for a mail,
+    ``msg_info`` holds what was read from it (see apps.cves.msg).
+    """
 
     class Meta:
         model = CVEAttachment
         fields = ["file", "title", "source", "tlp"]
         widgets = {
-            "file": forms.ClearableFileInput(attrs={"class": "input-field", "accept": "application/pdf,.pdf"}),
-            "title": forms.TextInput(attrs={"class": "input-field", "placeholder": "Titel (valgfri, ellers filnavnet)"}),
+            "file": forms.ClearableFileInput(attrs={"class": "input-field", "accept": "application/pdf,.pdf,.msg,application/vnd.ms-outlook"}),
+            "title": forms.TextInput(attrs={"class": "input-field", "placeholder": "Titel (valgfri)"}),
             "source": forms.TextInput(attrs={"class": "input-field", "placeholder": "Kilde, fx FE-CSIRT"}),
             "tlp": forms.Select(attrs={"class": "input-field"}),
         }
@@ -119,18 +123,33 @@ class CVEAttachmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["tlp"].choices = [("", "TLP: ikke angivet")] + list(CVEAttachment.TLP.choices)
+        self.kind = CVEAttachment.Kind.PDF
+        self.msg_info = None
 
     def clean_file(self):
+        from . import msg as msg_reader
+
         upload = self.cleaned_data.get("file")
         if not upload:
-            raise forms.ValidationError("Vælg en PDF-fil.")
-        if not upload.name.lower().endswith(".pdf"):
-            raise forms.ValidationError("Kun PDF-filer kan vedhæftes.")
+            raise forms.ValidationError("Vælg en PDF eller en Outlook-mail (.msg).")
+        name = upload.name.lower()
+        if not name.endswith((".pdf", ".msg")):
+            raise forms.ValidationError("Kun PDF-filer og Outlook-mails (.msg) kan vedhæftes.")
         limit = settings.CVE_ATTACHMENT_MAX_BYTES
         if upload.size > limit:
             raise forms.ValidationError(f"Filen er for stor (maks. {limit // (1024 * 1024)} MB).")
-        head = upload.read(5)
+        head = upload.read(8)
         upload.seek(0)
-        if head != b"%PDF-":  # the extension alone proves nothing
-            raise forms.ValidationError("Filen er ikke en gyldig PDF.")
+        if name.endswith(".pdf"):
+            if head[:5] != b"%PDF-":  # the extension alone proves nothing
+                raise forms.ValidationError("Filen er ikke en gyldig PDF.")
+            self.kind = CVEAttachment.Kind.PDF
+            return upload
+        try:
+            self.msg_info = msg_reader.parse(upload)
+        except msg_reader.MsgError:
+            raise forms.ValidationError("Filen er ikke en Outlook-mail (.msg), der kan læses.") from None
+        finally:
+            upload.seek(0)
+        self.kind = CVEAttachment.Kind.MSG
         return upload

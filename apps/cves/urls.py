@@ -18,4 +18,5 @@ urlpatterns = [
     path("<int:pk>/attachments/", views.attachment_create, name="attachment-create"),
     path("<int:pk>/attachments/<str:key>/", views.attachment_view, name="attachment"),
     path("<int:pk>/attachments/<str:key>/delete/", views.attachment_delete, name="attachment-delete"),
+    path("<int:pk>/attachments/<str:key>/preview/", views.attachment_preview, name="attachment-preview"),
 ]

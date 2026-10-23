@@ -1,5 +1,5 @@
 {% comment %}
-  Inline "attach PDF" form (multipart via HTMX). Replaced out-of-band with a
+  Inline "attach PDF / .msg" form (multipart via HTMX). Replaced out-of-band with a
   fresh copy after a successful upload (oob=True), re-rendered with errors.
 {% endcomment %}
 <div id="cve-attachment-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
@@ -17,6 +17,6 @@
     <div style="flex: 2 1 200px; min-width: 0;">{{ form.title }}</div>
     <div style="flex: 1 1 140px; min-width: 0;">{{ form.source }}</div>
     <div style="flex: 1 1 150px; min-width: 0;">{{ form.tlp }}</div>
-    <button type="submit" class="btn btn-sm">Vedhæft PDF</button>
+    <button type="submit" class="btn btn-sm">Vedhæft</button>
   </form>
 </div>

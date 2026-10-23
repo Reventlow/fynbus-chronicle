@@ -7,6 +7,7 @@ get 403 before anything is written).
 
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -230,51 +231,107 @@ def link_delete(request: HttpRequest, pk: int, link_pk: int) -> HttpResponse:
 @editor_required
 @require_POST
 def attachment_create(request: HttpRequest, pk: int) -> HttpResponse:
-    """Attach a PDF (HTMX multipart POST); returns the new row like links do."""
+    """Attach a PDF or an Outlook mail (HTMX multipart POST).
+
+    For a mail, its headers and text are stored for the preview, a TLP
+    found in it is used when none was chosen, and every PDF inside it is
+    stored as its own attachment (same TLP, ``parent`` = the mail). The
+    response holds a row per created attachment, like the links' add form.
+    """
+    from django.core.files.base import ContentFile
+
     cve = get_object_or_404(CVE, pk=pk)
     form = CVEAttachmentForm(request.POST, request.FILES)
-    if form.is_valid():
-        upload = form.cleaned_data["file"]
-        form.instance.cve = cve
-        form.instance.uploaded_by = request.user
-        form.instance.original_name = upload.name[:255]
-        form.instance.size = upload.size
-        form.save()
-    return _inline_add(
-        request,
-        cve,
-        form=form,
-        row_template="cves/partials/cve_attachment_row.html",
-        row_name="attachment",
-        form_template="cves/partials/cve_attachment_form.html",
-        container_id="cve-attachment-form-container",
-        empty_id="no-cve-attachments",
+    if not form.is_valid():
+        return _inline_add(request, cve, form=form, row_template="cves/partials/cve_attachment_row.html",
+                           row_name="attachment", form_template="cves/partials/cve_attachment_form.html",
+                           container_id="cve-attachment-form-container", empty_id="no-cve-attachments")
+    upload = form.cleaned_data["file"]
+    attachment = form.instance
+    attachment.cve = cve
+    attachment.uploaded_by = request.user
+    attachment.original_name = upload.name[:255]
+    attachment.size = upload.size
+    attachment.kind = form.kind
+    info = form.msg_info
+    if info is not None:
+        attachment.email_subject = info.subject[:500]
+        attachment.email_from = info.sender[:300]
+        attachment.email_to = "; ".join(x for x in (info.to, info.cc and f"Cc: {info.cc}") if x)
+        attachment.email_sent = info.sent
+        attachment.email_body = info.body
+        if not attachment.tlp:
+            from .msg import detect_tlp
+
+            attachment.tlp = detect_tlp(info.subject, info.body)
+        if not attachment.source and info.sender:
+            attachment.source = info.sender[:100]
+    attachment.save()
+    created = [attachment]
+    for part in (info.attachments if info else []):
+        if not part.is_pdf or len(part.data) > settings.CVE_ATTACHMENT_MAX_BYTES:
+            continue
+        child = CVEAttachment(
+            cve=cve, kind=CVEAttachment.Kind.PDF, parent=attachment, uploaded_by=request.user,
+            title=part.filename[:200], original_name=part.filename[:255], size=len(part.data),
+            source=attachment.source, tlp=attachment.tlp,
+        )
+        child.file.save("part.pdf", ContentFile(part.data), save=True)
+        created.append(child)
+    rows = "".join(
+        render_to_string("cves/partials/cve_attachment_row.html", {"cve": cve, "attachment": a}, request=request)
+        for a in created
     )
+    fresh_form = render_to_string(
+        "cves/partials/cve_attachment_form.html", {"cve": cve, "form": CVEAttachmentForm(), "oob": True}, request=request
+    )
+    return HttpResponse(rows + fresh_form + '<p id="no-cve-attachments" hx-swap-oob="delete"></p>')
 
 
 @login_required
 @require_GET
 @xframe_options_sameorigin  # the CVE page shows it in a lightbox (same-origin iframe)
 def attachment_view(request: HttpRequest, pk: int, key: str) -> HttpResponse:
-    """Serve a CVE's PDF to any logged-in user (viewers included).
+    """Serve a CVE's attachment to any logged-in user (viewers included).
 
-    Inline by default for the lightbox; ``?download=1`` forces a download.
-    ``no-store``: these can be TLP:AMBER advisories, so no copies are kept in
-    shared or browser caches.
+    PDFs inline by default for the lightbox; ``?download=1`` forces a
+    download. A .msg is always a download (the lightbox shows the preview
+    page instead). ``no-store``: these can be TLP:AMBER advisories, so no
+    copies are kept in shared or browser caches.
     """
     attachment = get_object_or_404(CVEAttachment, cve_id=pk, key=key)
     try:
         handle = attachment.file.open("rb")
     except FileNotFoundError:
         raise Http404
+    is_msg = attachment.is_msg
     response = FileResponse(
         handle,
-        content_type="application/pdf",
-        as_attachment=request.GET.get("download") == "1",
-        filename=attachment.original_name or f"{attachment.key}.pdf",
+        content_type="application/vnd.ms-outlook" if is_msg else "application/pdf",
+        as_attachment=is_msg or request.GET.get("download") == "1",
+        filename=attachment.original_name or f"{attachment.key}.{attachment.kind}",
     )
     response["Cache-Control"] = "private, no-store"
     response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@login_required
+@require_GET
+@xframe_options_sameorigin  # shown inside the lightbox iframe
+def attachment_preview(request: HttpRequest, pk: int, key: str) -> HttpResponse:
+    """Readable preview of an attached Outlook mail for the lightbox.
+
+    Headers and the plain-text body that were extracted at upload, always
+    escaped (the mail's own HTML is never rendered), plus links to the PDFs
+    that were unpacked from it.
+    """
+    attachment = get_object_or_404(CVEAttachment, cve_id=pk, key=key, kind=CVEAttachment.Kind.MSG)
+    response = render(request, "cves/attachment_preview.html", {
+        "attachment": attachment,
+        "parts": attachment.extracted.all(),
+    })
+    response["Cache-Control"] = "private, no-store"
     return response
 
 

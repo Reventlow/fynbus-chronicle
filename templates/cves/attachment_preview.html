@@ -1,0 +1,26 @@
+{% load static %}<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{{ attachment.display_title }}</title>
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+  {% comment %}
+    Shown inside the CVE page's lightbox iframe. Everything from the mail is
+    plain text and auto-escaped: the mail's own HTML is never rendered.
+  {% endcomment %}
+</head>
+<body style="margin: 0; background: var(--surface-1, #fff); color: var(--ink-1); font-size: 14px;">
+  <div style="padding: 18px 22px; border-bottom: 1px solid var(--hairline); background: var(--surface-2);">
+    <div style="font-size: 17px; font-weight: 600; margin-bottom: 8px; word-break: break-word;">{{ attachment.email_subject|default:attachment.original_name }}</div>
+    <table style="font-size: 13px; border-collapse: collapse;">
+      {% if attachment.email_from %}<tr><td style="color: var(--ink-4); padding: 1px 12px 1px 0; vertical-align: top;">Fra</td><td style="word-break: break-word;">{{ attachment.email_from }}</td></tr>{% endif %}
+      {% if attachment.email_to %}<tr><td style="color: var(--ink-4); padding: 1px 12px 1px 0; vertical-align: top;">Til</td><td style="word-break: break-word;">{{ attachment.email_to }}</td></tr>{% endif %}
+      {% if attachment.email_sent %}<tr><td style="color: var(--ink-4); padding: 1px 12px 1px 0;">Sendt</td><td class="num">{{ attachment.email_sent|date:"d. M Y H:i" }}</td></tr>{% endif %}
+      {% if parts %}<tr><td style="color: var(--ink-4); padding: 1px 12px 1px 0; vertical-align: top;">PDF'er</td><td>{% for p in parts %}<a href="{{ p.get_absolute_url }}" target="_blank" rel="noopener">{{ p.display_title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %} <span style="color: var(--ink-4);">(ligger også som vedhæftninger på CVE'en)</span></td></tr>{% endif %}
+    </table>
+  </div>
+  <pre style="margin: 0; padding: 18px 22px; white-space: pre-wrap; word-break: break-word; font-family: inherit; line-height: 1.55;">{{ attachment.email_body|default:"(Mailen har ingen tekst.)" }}</pre>
+</body>
+</html>
