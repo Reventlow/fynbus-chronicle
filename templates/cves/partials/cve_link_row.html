@@ -1,9 +1,11 @@
 {# One link on a CVE; editors can delete it in place. #}
 <div id="cve-link-{{ link.pk }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);">
   <div style="min-width: 0; flex: 1;">
-    <a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; word-break: break-all;">{{ link.label|default:link.url }}</a>
+    {# Styled as a link (accent, underline, ↗) so it reads as clickable; opens in a new tab. #}
+    <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" title="{{ link.url }}"
+       style="font-size: 13.5px; color: var(--accent-ink); font-weight: 500; word-break: break-all; text-decoration: underline; text-underline-offset: 2px;">{{ link.label|default:link.url }}<span aria-hidden="true" style="text-decoration: none; display: inline-block; margin-left: 3px;">↗</span></a>
     <div style="font-size: 11.5px; color: var(--ink-4); margin-top: 2px;">
-      {% if link.label %}<span style="word-break: break-all;">{{ link.url|truncatechars:80 }}</span> · {% endif %}
+      {% if link.label %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" style="color: inherit; word-break: break-all; text-decoration: underline; text-decoration-color: var(--hairline); text-underline-offset: 2px;">{{ link.url|truncatechars:80 }}</a> · {% endif %}
       {% if link.added_by %}{{ link.added_by.get_full_name|default:link.added_by.username }} · {% endif %}<span class="num">{{ link.added_at|date:"d. M Y H:i" }}</span>
     </div>
   </div>

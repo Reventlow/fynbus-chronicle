@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.3.2 — 2026-10-23
+
+### Fixed
+- **Links på en CVE er nu tydeligt klikbare.** Under *Links* står titlen som et link med ↗, og adressen under den kan også klikkes. Begge åbner i en ny fane, så CVE'en bliver stående.
+- **Adresser i kommentarer bliver til links**, også når de skrives uden *https://* (fx *www.fortinet.com*), og de åbner i en ny fane.
+
 ## 1.3.1 — 2026-10-23
 
 ### Fixed

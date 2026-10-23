@@ -2,7 +2,7 @@
   One timeline entry. State changes are a single muted line with a
   coloured dot; comments show author, time and the Markdown text.
 {% endcomment %}
-{% load markdown_extras %}
+{% load cve_extras %}
 {% if comment.is_state_change %}
 <div id="cve-comment-{{ comment.pk }}" class="flex items-center gap-2" style="padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-3); background: var(--surface-2);">
   <span class="pill-dot" style="background: var(--accent);"></span>
@@ -15,6 +15,6 @@
     <strong style="color: var(--ink-2); font-weight: 500;">{% if comment.author %}{{ comment.author.get_full_name|default:comment.author.username }}{% else %}Ukendt{% endif %}</strong>
     · <span class="num">{{ comment.created_at|date:"d. M Y H:i" }}</span>
   </div>
-  <div class="md" style="font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ comment.text|render_markdown }}</div>
+  <div class="md" style="font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ comment.text|cve_markdown }}</div>
 </div>
 {% endif %}
