@@ -2,10 +2,10 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
-## 1.2.1 — 2026-10-22
+## 1.3.1 — 2026-10-23
 
-### Changed
-- **Sårbarheder er flyttet på kontrolpanelet.** Kortet med CVE'er fra de sidste 30 dage står nu under *Hændelser* i venstre kolonne, så sikkerhedshændelser og sårbarheder kan ses samlet. Højre kolonne viser rådighedsvagten og den aktuelle ugelog. Hændelseskortet fylder den resterende højde, så kolonnerne slutter i samme højde.
+### Fixed
+- **Ændringsloggen stod i forkert rækkefølge.** 1.3.0 var sorteret under 1.2.1, så Kontrolpanelet viste 1.2.1 som *Seneste ændring*. Nu står den nyeste version øverst igen.
 
 ## 1.3.0 — 2026-10-23
 
@@ -15,6 +15,11 @@ All notable changes to FynBus Chronicle are documented here.
   - **PDF'er i mailen pakkes ud** og lægges som egne vedhæftninger under mailen, så advisory'en kan åbnes med det samme. De får samme TLP som mailen.
   - **TLP findes automatisk:** vælger man ingen TLP, bruges markeringen fra mailens emne eller tekst (fx *TLP:AMBER*). Afsenderen bruges som kilde, hvis der ikke er angivet en.
   - Kun ægte Outlook-mails accepteres (tjekkes på indholdet), højst 25 MB. Sletter man mailen, beholdes de PDF'er, der blev pakket ud af den.
+
+## 1.2.1 — 2026-10-22
+
+### Changed
+- **Sårbarheder er flyttet på kontrolpanelet.** Kortet med CVE'er fra de sidste 30 dage står nu under *Hændelser* i venstre kolonne, så sikkerhedshændelser og sårbarheder kan ses samlet. Højre kolonne viser rådighedsvagten og den aktuelle ugelog. Hændelseskortet fylder den resterende højde, så kolonnerne slutter i samme højde.
 
 ## 1.2.0 — 2026-10-22
 
