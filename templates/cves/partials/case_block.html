@@ -1,0 +1,29 @@
+{% comment %}
+  One case on the Sager tab with every CVE it holds underneath, so the
+  case → CVE link is visible without opening the case. The case row and
+  each CVE row are separate links (no nesting). A case without CVEs (e.g. a
+  CFCS warning) shows its source and reference instead.
+{% endcomment %}
+<div style="border-top: 1px solid var(--hairline);">
+  <a href="{{ case.get_absolute_url }}" class="incident-row" style="grid-template-columns: auto minmax(0, 1fr) auto; border-top: 0;">
+    <span class="incident-rail" style="background: {{ case.state_color }};"></span>
+    <div style="min-width: 0;">
+      <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title }}</div>
+      <div class="incident-meta">
+        {% include "cves/partials/case_state_badge.html" %}
+        {% if case.source or case.reference %}<span class="task-status">{{ case.source_label }}{% if case.source and case.reference %} · {% endif %}{{ case.reference }}</span>{% endif %}
+        {% with n=case.cves.all|length %}<span class="task-status num">{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endwith %}
+        <span class="num" title="{{ case.updated_at|date:'d. M Y H:i' }}">{{ case.updated_at|timesince }} siden</span>
+      </div>
+    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+  </a>
+  {% for cve in case.cves.all %}
+    <a href="{% url 'cves:detail' cve.pk %}" class="incident-row" style="grid-template-columns: minmax(0, 1fr) auto auto; border-top: 0; padding-top: 6px; padding-bottom: 6px; padding-left: 64px;">
+      <div class="incident-title" style="font-weight: 400; font-size: 13px;"><span style="color: var(--ink-5);" aria-hidden="true">↳</span> <span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:80 }}</div>
+      {% include "cves/partials/cvss_pill.html" %}
+      {% include "cves/partials/state_badge.html" %}
+    </a>
+  {% endfor %}
+  {% if case.cves.all %}<div style="height: 8px;"></div>{% endif %}
+</div>

@@ -22,7 +22,6 @@
       </p>
     </div>
     <div class="flex gap-2">
-      <a href="{% url 'cves:case-list' %}" class="btn btn-sm">Sager</a>
     {% if is_editor %}
       <a href="{% url 'cves:create' %}" class="btn btn-primary btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -33,6 +32,8 @@
     {% endif %}
     </div>
   </div>
+
+  {% include "components/tabs.html" %}
 
   {# Filter row #}
   <form method="get" class="card">
@@ -54,16 +55,6 @@
       <button type="submit" class="btn btn-primary">Filtrér</button>
     </div>
   </form>
-
-  {% if open_cases and not q and not state %}
-    <div class="card overflow-hidden" style="padding: 0;">
-      <div style="padding: 18px 24px 10px;">
-        <div class="label-eyebrow">Åbne sager</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">CVE'er med samme løsning</h2>
-      </div>
-      {% for case in open_cases %}{% include "cves/partials/case_row.html" %}{% endfor %}
-    </div>
-  {% endif %}
 
   <div class="card overflow-hidden" style="padding: 0;">
     {% for cve in cves %}

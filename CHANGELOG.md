@@ -2,6 +2,16 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.6.0 — 2026-10-26
+
+### Added
+- **Fanerne *CVE'er* og *Sager* øverst under Sårbarheder**, hver med antallet af åbne.
+  - **Sager** viser hver sag med alle dens CVE'er nedenunder: id, emne, CVSS og status. Hver CVE er et link. En sag uden CVE'er viser kilde og reference.
+  - **CVE'er** viser for en CVE i en sag linjen *↳ Sag #n · titel*, som fører til sagen.
+
+### Changed
+- Kortet *Åbne sager* over CVE-listen er fjernet. Sagerne har nu deres egen fane.
+
 ## 1.5.0 — 2026-10-26
 
 ### Added

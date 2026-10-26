@@ -334,15 +334,16 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
 
-- Klik **Sager** på CVE-listen og **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
+- Vælg fanen **Sager** og klik **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
 - Fra en CVE's side: **Føj til sag** vælger en åben sag, og **Ny sag med denne CVE** starter en ny.
 - **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Løst — patchet* og *Løst — ikke berørt*. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
 - Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
 - **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.
-- Åbne sager står øverst på CVE-listen, og CVE'er i en sag har mærket *Sag #n* i lister og ugeloggen. Harbinger kan sende en hel sag på én gang.
+- CVE'er i en sag har mærket *Sag #n* i ugeloggen. Harbinger kan sende en hel sag på én gang.
 - **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
 - **Ugeloggen og Kontrolpanelet** viser sagerne over CVE'erne. Ugeloggen viser hver sag, der var åben i løbet af ugen; Kontrolpanelet viser de åbne. En sag uden CVE'er kommer derfor med i ugens dokumentation.
 - Søgefeltet på **Sager** finder titel, kilde, reference og CVE-id, også i løste sager.
+- **Fanerne *CVE'er* og *Sager*** øverst under Sårbarheder viser sammenhængen begge veje. *Sager* viser hver sag med alle dens CVE'er. *CVE'er* viser for hver CVE i en sag et link til sagen (*↳ Sag #n · titel*).
 
 Læsere kan se alt, men ikke oprette eller ændre.
 

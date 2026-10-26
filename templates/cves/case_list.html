@@ -31,6 +31,8 @@
     {% endif %}
   </div>
 
+  {% include "components/tabs.html" %}
+
   <form method="get" class="card">
     <div class="filter-row">
       <div>
@@ -43,7 +45,7 @@
 
   <div class="card overflow-hidden" style="padding: 0;">
     {% for case in cases %}
-      {% include "cves/partials/case_row.html" %}
+      {% include "cves/partials/case_block.html" %}
     {% empty %}
       <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">{% if q %}Ingen sager matcher “{{ q }}”.{% else %}Ingen sager endnu.{% endif %}</p>
     {% endfor %}

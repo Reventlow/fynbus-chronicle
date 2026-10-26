@@ -197,11 +197,29 @@ class TestCasePages:
         cve.refresh_from_db()
         assert cve.case is None
 
-    def test_list(self, editor_client, case):
+    def test_list(self, editor_client, case, kernel):
+        """The Sager tab shows each case with every CVE it holds, each a link."""
         body = editor_client.get(reverse("cves:case-list")).content.decode()
-        assert f"Sag #{case.pk}" in body and "CVE-2026-93228" in body
-        body = editor_client.get(reverse("cves:list")).content.decode()
-        assert "Åbne sager" in body and "Linux-kerne, oktober 2026" in body
+        assert f"Sag #{case.pk}" in body
+        for cve in kernel:
+            assert cve.cve_id in body
+            assert f'href="{reverse("cves:detail", args=[cve.pk])}"' in body
+        # In cve_id order, under the case
+        assert body.index(case.get_absolute_url()) < body.index("CVE-2026-93207") < body.index("CVE-2026-93228")
+
+    def test_case_without_cves_shows_source(self, editor_client, editor):
+        CVECase.objects.create(title="CFCS-advarsel", source="CFCS", reference="CERT-1", created_by=editor)
+        body = editor_client.get(reverse("cves:case-list")).content.decode()
+        assert "CFCS · CERT-1" in body and "Ingen CVE" in body
+
+    def test_tabs_on_both_lists(self, editor_client, case):
+        for name, active in (("cves:list", "CVE&#x27;er"), ("cves:case-list", "Sager")):
+            response = editor_client.get(reverse(name))
+            assert response.context["current_tab"] == ("cves" if name == "cves:list" else "cases")
+            body = response.content.decode()
+            assert f'href="{reverse("cves:list")}"' in body and f'href="{reverse("cves:case-list")}"' in body
+            assert "tab-link-active" in body
+        assert [t["count"] for t in response.context["tabs"]] == [2, 1]  # open CVEs, open cases
 
     def test_viewer_can_read_but_not_write(self, viewer_client, case):
         assert viewer_client.get(case.get_absolute_url()).status_code == 200
@@ -267,9 +285,11 @@ class TestCVEPageInACase:
         cve.refresh_from_db()
         assert cve.case == case
 
-    def test_list_row_has_case_chip(self, editor_client, case, kernel):
+    def test_list_row_links_to_its_case(self, editor_client, case, kernel, cve):
         body = editor_client.get(reverse("cves:list")).content.decode()
-        assert f"Sag #{case.pk}" in body
+        assert body.count(f'href="{case.get_absolute_url()}"') == 2  # one per member CVE
+        assert f"Sag #{case.pk} · {case.title}" in body
+        assert body.count("↳ Sag #") == 2  # the free CVE has no case line
 
 
 # -------------------------------------------------------------------------
