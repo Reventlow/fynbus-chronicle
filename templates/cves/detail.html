@@ -45,7 +45,21 @@
       {% endif %}
     </div>
 
-    {% if is_editor %}
+    {% if cve.case %}
+      {# In a case: the case holds the assessment, fix and documents, and owns the state #}
+      <a href="{{ cve.case.get_absolute_url }}" class="card flex items-center gap-3"
+         style="margin-top: 14px; padding: 12px 16px; text-decoration: none; color: inherit; border-left: 3px solid var(--accent);">
+        <div style="min-width: 0; flex: 1;">
+          <div class="label-eyebrow">Del af sag #{{ cve.case.pk }}</div>
+          <div style="font-size: 14.5px; font-weight: 600; margin-top: 2px;">{{ cve.case.title }}</div>
+          <div style="font-size: 12.5px; color: var(--ink-3); margin-top: 2px;">
+            {% with case=cve.case %}{% include "cves/partials/case_state_badge.html" %}{% endwith %}
+            · Vurdering, løsning og dokumenter står på sagen, og status skiftes dér.
+          </div>
+        </div>
+        <span style="color: var(--accent-ink); font-size: 13px;">Åbn sag →</span>
+      </a>
+    {% elif is_editor %}
       <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
         <span class="label-eyebrow">Skift status</span>
         {% for value, label in states %}
@@ -56,6 +70,20 @@
                     {% if value == cve.state %}disabled aria-current="true"{% endif %}>{{ label }}</button>
           </form>
         {% endfor %}
+      </div>
+      <div class="flex items-center flex-wrap gap-2" style="margin-top: 10px;">
+        <span class="label-eyebrow">Sag</span>
+        {% if open_cases %}
+          <form method="post" action="{% url 'cves:join-case' cve.pk %}" class="flex items-center gap-2" style="margin: 0;">
+            {% csrf_token %}
+            <select name="case" class="select-field" style="max-width: 320px;" aria-label="Åben sag">
+              {% for c in open_cases %}<option value="{{ c.pk }}">#{{ c.pk }} · {{ c.title|truncatechars:50 }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm">Føj til sag</button>
+          </form>
+          <span style="color: var(--ink-4); font-size: 12.5px;">eller</span>
+        {% endif %}
+        <a href="{% url 'cves:case-create' %}?cve_ids={{ cve.cve_id }}" class="btn btn-sm">Ny sag med denne CVE</a>
       </div>
     {% endif %}
   </div>

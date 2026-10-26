@@ -1,3 +1,4 @@
+{% load cve_extras %}
 {% comment %}
   Inline "add comment" form above the timeline. Replaced out-of-band with a
   fresh copy after a successful add (oob=True), and re-rendered in place
@@ -5,7 +6,7 @@
 {% endcomment %}
 <div id="cve-comment-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
      style="padding: 0 24px 16px;">
-  <form hx-post="{% url 'cves:comment-create' cve.pk %}"
+  <form hx-post="{% owner_url owner 'comment-create' %}"
         hx-target="#cve-comments"
         hx-swap="afterbegin"
         style="display: flex; flex-direction: column; gap: 8px;">

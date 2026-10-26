@@ -10,6 +10,7 @@
     <div class="incident-meta">
       {% include "cves/partials/cvss_pill.html" %}
       {% include "cves/partials/state_badge.html" %}
+      {% include "cves/partials/case_chip.html" %}
       <span class="num" title="{{ cve.updated_at|date:'d. M Y H:i' }}">{{ cve.updated_at|timesince }} siden</span>
     </div>
   </a>

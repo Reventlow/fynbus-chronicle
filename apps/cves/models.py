@@ -11,6 +11,13 @@ CVEs are created by hand or by Harbinger through the API
 
 Nothing is carried from week to week: the week log shows every CVE that was
 unsolved at some point during the week (``CVE.objects.open_during``).
+
+A ``CVECase`` ("sag") groups CVEs that share one assessment and one fix —
+e.g. four kernel CVEs closed by the same kernel update. A CVE belongs to at
+most one case; while it does, its state follows the case's. The case keeps
+the shared documentation: assessment, solution, links, attachments and its
+own timeline. Links, comments and attachments therefore belong to either a
+CVE or a case (exactly one of the two foreign keys is set).
 """
 
 import re
@@ -149,6 +156,15 @@ class CVE(models.Model):
         help_text='"harbinger" eller "api" når CVE\'en er oprettet via API\'et; tom ved manuel oprettelse.',
     )
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
+    case = models.ForeignKey(
+        "CVECase",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cves",
+        verbose_name="Sag",
+        help_text="Sagen, der samler vurdering og løsning for denne CVE. Status følger sagen.",
+    )
 
     created_by = models.ForeignKey(
         User,
@@ -185,6 +201,15 @@ class CVE(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("cves:detail", kwargs={"pk": self.pk})
+
+    def owner_url(self, name: str, *args) -> str:
+        """URL of a per-owner view (links, comments, attachments) for this CVE.
+
+        The same views serve cases under ``case-<name>``; see CVECase.owner_url.
+        """
+        return reverse(f"cves:{name}", args=(self.pk, *args))
+
+    is_case = False
 
     # -- derived values ------------------------------------------------------
 
@@ -251,12 +276,13 @@ class CVE(models.Model):
         self.updated_at = timezone.now()
         CVE.objects.filter(pk=self.pk).update(updated_at=self.updated_at)
 
-    def set_state(self, new_state: str, user=None) -> bool:
+    def set_state(self, new_state: str, user=None, *, note: str = "") -> bool:
         """Move to ``new_state`` and record it on the timeline.
 
         Moving to solved stamps ``solved_at``/``solved_by``; leaving solved
-        clears them. Returns False (and records nothing) when the state does
-        not change.
+        clears them. ``note`` is appended to the timeline line (the case
+        passes "via sag …"). Returns False (and records nothing) when the
+        state does not change.
         """
         if new_state not in self.State.values:
             raise ValueError(f"Unknown CVE state: {new_state!r}")
@@ -274,16 +300,188 @@ class CVE(models.Model):
         CVEComment.objects.create(
             cve=self,
             kind=CVEComment.Kind.STATE,
-            text=f"Status: {self.State(old_state).label} → {self.State(new_state).label}",
+            text=f"Status: {self.State(old_state).label} → {self.State(new_state).label}{note}",
             author=user,
         )
         return True
 
 
-class CVELink(models.Model):
+class CaseConflict(Exception):
+    """A CVE is already in another case (a CVE belongs to at most one)."""
+
+    def __init__(self, cves: list["CVE"]):
+        self.cves = cves
+        super().__init__(", ".join(f"{c.cve_id} (sag #{c.case_id})" for c in cves))
+
+
+class CVECaseQuerySet(models.QuerySet):
+    def open(self) -> "CVECaseQuerySet":
+        return self.exclude(state=CVE.State.SOLVED)
+
+    def open_first(self) -> "CVECaseQuerySet":
+        rank = Case(
+            When(state=CVE.State.PATCHING, then=Value(0)),
+            When(state=CVE.State.IDENTIFIED, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+        return self.annotate(state_rank=rank).order_by("state_rank", "-updated_at")
+
+
+class CVECase(models.Model):
+    """A case: CVEs that share one assessment, one fix and one set of documents.
+
+    The case's state is the truth for its CVEs: changing it moves every
+    member CVE too (each CVE's timeline notes that it came via the case),
+    and a CVE added to a case takes the case's state. When solved, the
+    ``resolution`` says how: patched, or not affected at all.
+    """
+
+    State = CVE.State
+
+    class Resolution(models.TextChoices):
+        PATCHED = "patched", "Patchet"
+        NOT_AFFECTED = "not_affected", "Ikke berørt"
+
+    title = models.CharField(verbose_name="Titel", max_length=200,
+                             help_text="Fx \"eMudhra CA-kompromittering\" eller \"Linux-kerne, oktober 2026\".")
+    assessment = models.TextField(verbose_name="Vurdering", blank=True,
+                                  help_text="Er vi berørt, og hvorfor (ikke)? Markdown virker.")
+    solution = models.TextField(verbose_name="Løsning / handling", blank=True,
+                                help_text="Hvad er gjort eller skal gøres. Markdown virker.")
+    state = models.CharField(verbose_name="Status", max_length=12, choices=CVE.State.choices,
+                             default=CVE.State.IDENTIFIED)
+    resolution = models.CharField(verbose_name="Udfald", max_length=16, choices=Resolution.choices, blank=True)
+    source = models.CharField(verbose_name="Kilde", max_length=40, blank=True)
+    source_url = models.URLField(verbose_name="Kildelink", blank=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="cve_cases_created", verbose_name="Oprettet af")
+    created_at = models.DateTimeField(verbose_name="Oprettet", default=timezone.now)
+    updated_at = models.DateTimeField(verbose_name="Opdateret", auto_now=True)
+    solved_at = models.DateTimeField(verbose_name="Løst", null=True, blank=True)
+    solved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name="cve_cases_solved", verbose_name="Løst af")
+
+    objects = CVECaseQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "CVE-sag"
+        verbose_name_plural = "CVE-sager"
+        ordering = ["-updated_at"]
+
+    def __str__(self) -> str:
+        return f"Sag #{self.pk}: {self.title}"
+
+    is_case = True
+
+    def get_absolute_url(self) -> str:
+        return reverse("cves:case-detail", kwargs={"pk": self.pk})
+
+    def owner_url(self, name: str, *args) -> str:
+        return reverse(f"cves:case-{name}", args=(self.pk, *args))
+
+    @property
+    def is_open(self) -> bool:
+        return self.state != self.State.SOLVED
+
+    state_color = CVE.state_color
+
+    @property
+    def outcome_label(self) -> str:
+        """"Løst — patchet", "Løst — ikke berørt", or the plain state label."""
+        if self.state == self.State.SOLVED and self.resolution:
+            return f"{self.get_state_display()} — {self.get_resolution_display().lower()}"
+        return self.get_state_display()
+
+    def touch(self) -> None:
+        self.updated_at = timezone.now()
+        CVECase.objects.filter(pk=self.pk).update(updated_at=self.updated_at)
+
+    def _log(self, text: str, user=None, *, state: bool = True) -> None:
+        CVEComment.objects.create(case=self, kind=CVEComment.Kind.STATE if state else CVEComment.Kind.COMMENT,
+                                  text=text, author=user)
+
+    def set_state(self, new_state: str, user=None, *, resolution: str = "") -> bool:
+        """Move the case (and every CVE in it) to ``new_state``.
+
+        ``resolution`` only applies when solving; leaving solved clears it.
+        Returns False when neither the state nor the resolution changed.
+        """
+        if new_state not in self.State.values:
+            raise ValueError(f"Unknown CVE state: {new_state!r}")
+        if resolution and resolution not in self.Resolution.values:
+            raise ValueError(f"Unknown resolution: {resolution!r}")
+        if new_state != self.State.SOLVED:
+            resolution = ""
+        old_label = self.outcome_label
+        if new_state == self.state and resolution == self.resolution:
+            return False
+        if new_state != self.state:
+            if new_state == self.State.SOLVED:
+                self.solved_at, self.solved_by = timezone.now(), user
+            else:
+                self.solved_at, self.solved_by = None, None
+        self.state, self.resolution = new_state, resolution
+        self.save(update_fields=["state", "resolution", "solved_at", "solved_by", "updated_at"])
+        self._log(f"Status: {old_label} → {self.outcome_label}", user)
+        for cve in self.cves.all():
+            cve.set_state(new_state, user, note=f" (via sag #{self.pk})")
+        return True
+
+    def add_cves(self, cves, user=None) -> list["CVE"]:
+        """Add CVEs to the case; they take the case's state.
+
+        Raises CaseConflict (adding nothing) if any is in another case.
+        Returns the CVEs that were actually added (not already members).
+        """
+        cves = list(cves)
+        taken = [c for c in cves if c.case_id and c.case_id != self.pk]
+        if taken:
+            raise CaseConflict(taken)
+        added = [c for c in cves if c.case_id != self.pk]
+        for cve in added:
+            cve.case = self
+            cve.save(update_fields=["case", "updated_at"])
+            CVEComment.objects.create(cve=cve, kind=CVEComment.Kind.STATE, author=user,
+                                      text=f"Føjet til sag #{self.pk}: {self.title}")
+            cve.set_state(self.state, user, note=f" (via sag #{self.pk})")
+        if added:
+            self._log("Tilføjet: " + ", ".join(c.cve_id for c in added), user)
+        return added
+
+    def remove_cve(self, cve: "CVE", user=None) -> bool:
+        """Take a CVE out of the case. Its state stays as it is."""
+        if cve.case_id != self.pk:
+            return False
+        cve.case = None
+        cve.save(update_fields=["case", "updated_at"])
+        CVEComment.objects.create(cve=cve, kind=CVEComment.Kind.STATE, author=user,
+                                  text=f"Fjernet fra sag #{self.pk}: {self.title}")
+        self._log(f"Fjernet: {cve.cve_id}", user)
+        return True
+
+
+class _OwnedMixin:
+    """Shared by links, comments and attachments, which belong to a CVE or a case."""
+
+    @property
+    def owner(self):
+        return self.cve if self.cve_id else self.case
+
+
+def _exactly_one_owner(name: str) -> models.CheckConstraint:
+    return models.CheckConstraint(
+        condition=(Q(cve__isnull=False, case__isnull=True) | Q(cve__isnull=True, case__isnull=False)),
+        name=name,
+    )
+
+
+class CVELink(_OwnedMixin, models.Model):
     """A reference for a CVE — advisory, vendor note, ticket, …"""
 
-    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, related_name="links", verbose_name="CVE")
+    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, null=True, blank=True, related_name="links", verbose_name="CVE")
+    case = models.ForeignKey(CVECase, on_delete=models.CASCADE, null=True, blank=True, related_name="links", verbose_name="Sag")
     url = models.URLField(verbose_name="Link", max_length=500)
     label = models.CharField(verbose_name="Beskrivelse", max_length=200, blank=True)
     added_by = models.ForeignKey(
@@ -300,23 +498,25 @@ class CVELink(models.Model):
         verbose_name = "CVE-link"
         verbose_name_plural = "CVE-links"
         ordering = ["added_at"]
+        constraints = [_exactly_one_owner("cvelink_one_owner")]
 
     def __str__(self) -> str:
         return self.label or self.url
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.cve.touch()
+        self.owner.touch()
 
 
-class CVEComment(models.Model):
+class CVEComment(_OwnedMixin, models.Model):
     """One entry on a CVE's timeline: a comment or a state change."""
 
     class Kind(models.TextChoices):
         COMMENT = "comment", "Kommentar"
         STATE = "state", "Statusændring"
 
-    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, related_name="comments", verbose_name="CVE")
+    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, null=True, blank=True, related_name="comments", verbose_name="CVE")
+    case = models.ForeignKey(CVECase, on_delete=models.CASCADE, null=True, blank=True, related_name="comments", verbose_name="Sag")
     text = models.TextField(verbose_name="Tekst", help_text="Markdown.")
     kind = models.CharField(
         verbose_name="Type",
@@ -338,9 +538,11 @@ class CVEComment(models.Model):
         verbose_name = "CVE-kommentar"
         verbose_name_plural = "CVE-kommentarer"
         ordering = ["-created_at", "-id"]
+        constraints = [_exactly_one_owner("cvecomment_one_owner")]
 
     def __str__(self) -> str:
-        return f"{self.cve.cve_id}: {self.text[:40]}"
+        label = self.cve.cve_id if self.cve_id else f"Sag #{self.case_id}"
+        return f"{label}: {self.text[:40]}"
 
     @property
     def is_state_change(self) -> bool:
@@ -348,7 +550,7 @@ class CVEComment(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.cve.touch()
+        self.owner.touch()
 
 
 def weeklog_cves(weeklog) -> dict:
@@ -359,7 +561,7 @@ def weeklog_cves(weeklog) -> dict:
     uge" mark. Shared by the week log page and the HTML/PDF export.
     """
     start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
-    cves = list(CVE.objects.open_during(start, end).open_first())
+    cves = list(CVE.objects.open_during(start, end).select_related("case").open_first())
     for cve in cves:
         cve.solved_this_week = cve.solved_within(start, end)
     return {"week_cves": cves}
@@ -388,7 +590,7 @@ def _new_key() -> str:
     return secrets.token_hex(16)
 
 
-class CVEAttachment(models.Model):
+class CVEAttachment(_OwnedMixin, models.Model):
     """A PDF or Outlook mail (.msg) attached to a CVE, with its TLP marking.
 
     PDFs are served inline for the lightbox. A .msg can't be shown by a
@@ -412,7 +614,8 @@ class CVEAttachment(models.Model):
         AMBER_STRICT = "amber_strict", "TLP:AMBER+STRICT"
         RED = "red", "TLP:RED"
 
-    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, related_name="attachments", verbose_name="CVE")
+    cve = models.ForeignKey(CVE, on_delete=models.CASCADE, null=True, blank=True, related_name="attachments", verbose_name="CVE")
+    case = models.ForeignKey(CVECase, on_delete=models.CASCADE, null=True, blank=True, related_name="attachments", verbose_name="Sag")
     key = models.CharField(max_length=32, unique=True, default=_new_key, editable=False)
     file = models.FileField(storage=CVEFileStorage(), upload_to=_attachment_path, max_length=200)
     original_name = models.CharField(verbose_name="Filnavn", max_length=255)
@@ -445,6 +648,7 @@ class CVEAttachment(models.Model):
         ordering = ["uploaded_at", "pk"]
         verbose_name = "Vedhæftet PDF"
         verbose_name_plural = "Vedhæftede PDF'er"
+        constraints = [_exactly_one_owner("cveattachment_one_owner")]
 
     def __str__(self) -> str:
         return self.display_title
@@ -463,7 +667,7 @@ class CVEAttachment(models.Model):
     def get_view_url(self) -> str:
         """What the lightbox shows: the PDF itself, or the mail preview page."""
         if self.is_msg:
-            return reverse("cves:attachment-preview", kwargs={"pk": self.cve_id, "key": self.key})
+            return self.owner.owner_url("attachment-preview", self.key)
         return self.get_absolute_url()
 
     @property
@@ -472,16 +676,16 @@ class CVEAttachment(models.Model):
         return f"tlp-{self.tlp}" if self.tlp else ""
 
     def get_absolute_url(self) -> str:
-        return reverse("cves:attachment", kwargs={"pk": self.cve_id, "key": self.key})
+        return self.owner.owner_url("attachment", self.key)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.cve.touch()
+        self.owner.touch()
 
     def delete(self, *args, **kwargs):
         storage, name = self.file.storage, self.file.name
         result = super().delete(*args, **kwargs)
         if name:
             storage.delete(name)  # don't leave an orphaned (possibly TLP:AMBER) file on disk
-        self.cve.touch()
+        self.owner.touch()
         return result

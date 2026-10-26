@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.4.0 — 2026-10-26
+
+### Added
+- **Sager: flere CVE'er med samme løsning.** Når flere CVE'er har samme vurdering og samme løsning, kan de samles i en sag, så dokumentationen kun skrives én gang. Eksempler er fire kerne-CVE'er, der lukkes af samme kerneopdatering, eller Python- og Go-CVE'erne om den kompromitterede eMudhra-certifikatudsteder.
+  - En sag har **titel**, **vurdering** og **løsning / handling** (Markdown virker) og har sine egne vedhæftninger med TLP, links og tidslinje, ligesom en CVE.
+  - **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Løst — patchet* og *Løst — ikke berørt*. Hver CVE får skiftet i sin egen tidslinje.
+  - En CVE kan kun være i én sag. På CVE'ens side står et link til sagen i stedet for statusknapperne. En fri CVE kan *føjes til en åben sag* eller starte en *ny sag*.
+  - Opret en sag under **CVE'er → Sager → Ny sag** med CVE-id'erne adskilt af komma. Ukendte id'er oprettes med sagens titel.
+  - Åbne sager står øverst på CVE-listen. CVE'er i en sag har mærket *Sag #n* i lister og ugeloggen. Søgning finder også sagens titel.
+  - **API** til Harbinger: `GET`/`POST /api/v1/cve-cases/` og `GET /api/v1/cve-cases/<id>/`. Harbinger kan sende en hel sag på én gang og senere tilføje flere CVE'er til den. CVE'ers API-data viser nu, hvilken sag de er i.
+
 ## 1.3.2 — 2026-10-23
 
 ### Fixed

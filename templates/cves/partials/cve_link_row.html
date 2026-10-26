@@ -1,3 +1,4 @@
+{% load cve_extras %}
 {# One link on a CVE; editors can delete it in place. #}
 <div id="cve-link-{{ link.pk }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);">
   <div style="min-width: 0; flex: 1;">
@@ -10,7 +11,7 @@
     </div>
   </div>
   {% if is_editor %}
-    <button hx-post="{% url 'cves:link-delete' cve.pk link.pk %}"
+    <button hx-post="{% owner_url owner 'link-delete' link.pk %}"
             hx-target="#cve-link-{{ link.pk }}"
             hx-swap="outerHTML"
             hx-confirm="Slet dette link?"

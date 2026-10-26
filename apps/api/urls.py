@@ -64,6 +64,9 @@ urlpatterns = [
     path("cves/", views.cve_collection, name="cve-list"),
     path("cves/", views.cve_collection, name="cve-create"),
     path("cves/<str:cve_id>/", views.cve_detail, name="cve-detail"),
+    # CVE cases: several CVEs with one assessment and fix. GET lists, POST creates or extends.
+    path("cve-cases/", views.case_collection, name="cve-case-list"),
+    path("cve-cases/<int:pk>/", views.case_detail, name="cve-case-detail"),
     # Reports
     path("reports/", views.reports_list, name="reports-list"),
     path("reports/<slug:slug>/", views.report_upsert, name="report-upsert"),

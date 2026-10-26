@@ -263,6 +263,7 @@
             <div class="incident-meta">
               {% include "cves/partials/cvss_pill.html" %}
               {% include "cves/partials/state_badge.html" %}
+              {% if cve.case_id %}<span class="task-status" style="color: var(--accent-ink);" title="{{ cve.case.title }}">Sag #{{ cve.case_id }}</span>{% endif %}
               {% if cve.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Løst denne uge</span>{% endif %}
             </div>
           </div>
