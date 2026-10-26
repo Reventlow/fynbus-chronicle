@@ -1,0 +1,2 @@
+{# "Sag #n" chip on a CVE that belongs to a case; links to the case. #}
+{% if cve.case_id %}<a href="{% url 'cves:case-detail' cve.case_id %}" class="task-status" style="color: var(--accent-ink); text-decoration: none;" title="{{ cve.case.title }}">Sag #{{ cve.case_id }}{% if show_title %} · {{ cve.case.title|truncatechars:50 }}{% endif %}</a>{% endif %}

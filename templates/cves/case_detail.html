@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load cve_extras %}
+
+{% block title %}Sag #{{ case.pk }} — FynBus Chronicle{% endblock %}
+
+{% block crumbs %}
+  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <span class="sep">/</span>
+  <a href="{% url 'cves:case-list' %}">Sager</a>
+  <span class="sep">/</span>
+  <span class="current">#{{ case.pk }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+
+  {# Header: title, outcome, state buttons (they move every CVE in the case) #}
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>Sag #{{ case.pk }}</span>
+      <span style="color: var(--ink-5);">·</span>
+      <span>
+        Oprettet {{ case.created_at|date:"j. M Y · H:i" }}
+        {% if case.created_by %}af {{ case.created_by.get_full_name|default:case.created_by.username }}{% endif %}
+        {% if case.source %}via {{ case.source|capfirst }}{% endif %}
+      </span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 32px; line-height: 1.15; {% if not case.is_open %}color: var(--ink-3);{% endif %}">{{ case.title }}</h1>
+    <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
+      {% include "cves/partials/case_state_badge.html" %}
+      <span class="task-status num">{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}</span>
+      {% if case.solved_at %}
+        <span class="task-status num">Løst {{ case.solved_at|date:"j. M Y · H:i" }}{% if case.solved_by %} af {{ case.solved_by.get_full_name|default:case.solved_by.username }}{% endif %}</span>
+      {% endif %}
+      <span style="flex: 1;"></span>
+      {% if case.source_url %}
+        <a href="{{ case.source_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">{% if case.source == 'harbinger' %}Harbinger{% else %}Kilde{% endif %} ↗</a>
+      {% endif %}
+      {% if is_editor %}<a href="{% url 'cves:case-edit' case.pk %}" class="btn btn-sm">Rediger</a>{% endif %}
+    </div>
+    {% if is_editor %}
+      <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
+        <span class="label-eyebrow">Skift status for hele sagen</span>
+        {% for value, resolution, label in outcomes %}
+          <form method="post" action="{% url 'cves:case-state' case.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="state" value="{{ value }}">
+            <input type="hidden" name="resolution" value="{{ resolution }}">
+            {% if value == case.state and resolution == case.resolution %}
+              <button type="submit" class="btn btn-sm btn-primary" disabled aria-current="true">{{ label }}</button>
+            {% else %}
+              <button type="submit" class="btn btn-sm">{{ label }}</button>
+            {% endif %}
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {# Assessment + solution: written once for every CVE in the case #}
+  <div class="card" style="display: grid; gap: 18px;">
+    <div>
+      <div class="label-eyebrow">Vurdering</div>
+      {% if case.assessment %}
+        <div class="md" style="font-size: 14px; color: var(--ink-2); line-height: 1.55; margin-top: 6px;">{{ case.assessment|cve_markdown }}</div>
+      {% else %}
+        <p style="color: var(--ink-4); font-size: 13px; margin: 6px 0 0;">Ikke skrevet endnu.{% if is_editor %} <a href="{% url 'cves:case-edit' case.pk %}">Skriv vurderingen</a>.{% endif %}</p>
+      {% endif %}
+    </div>
+    <div style="border-top: 1px solid var(--hairline); padding-top: 16px;">
+      <div class="label-eyebrow">Løsning / handling</div>
+      {% if case.solution %}
+        <div class="md" style="font-size: 14px; color: var(--ink-2); line-height: 1.55; margin-top: 6px;">{{ case.solution|cve_markdown }}</div>
+      {% else %}
+        <p style="color: var(--ink-4); font-size: 13px; margin: 6px 0 0;">Ikke skrevet endnu.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Member CVEs #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Omfatter</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">CVE'er i sagen</h2>
+    </div>
+    {% for cve in cves %}
+      <div class="incident-row" style="grid-template-columns: auto minmax(0, 1fr) auto;">
+        <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
+        <a href="{% url 'cves:detail' cve.pk %}" style="min-width: 0; color: inherit; text-decoration: none;">
+          <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:90 }}</div>
+          <div class="incident-meta">
+            {% include "cves/partials/cvss_pill.html" %}
+            {% include "cves/partials/state_badge.html" %}
+          </div>
+        </a>
+        {% if is_editor %}
+          <form method="post" action="{% url 'cves:case-remove-cve' case.pk cve.pk %}" style="margin: 0;"
+                onsubmit="return confirm('Tag {{ cve.cve_id }} ud af sagen? Dens status bliver stående.');">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn" style="width: 26px; height: 26px;" title="Tag ud af sagen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen CVE'er i sagen endnu.</p>
+    {% endfor %}
+    {% if is_editor %}
+      <form method="post" action="{% url 'cves:case-add-cves' case.pk %}" class="flex flex-wrap items-start gap-2"
+            style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2); margin: 0;">
+        {% csrf_token %}
+        <div style="flex: 1 1 320px; min-width: 0;">{{ add_form.cve_ids }}</div>
+        <button type="submit" class="btn btn-sm">Tilføj</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {# Shared documents #}
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Dokumenter</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Vedhæftninger</h2>
+    </div>
+    <div id="cve-attachments" x-data>
+      {% for attachment in attachments %}
+        {% include "cves/partials/cve_attachment_row.html" %}
+      {% empty %}
+        <p id="no-cve-attachments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen vedhæftninger endnu.</p>
+      {% endfor %}
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_attachment_form.html" with form=attachment_form %}
+    {% endif %}
+  </div>
+  {% include "cves/partials/pdf_lightbox.html" %}
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Referencer</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Links</h2>
+    </div>
+    <div id="cve-links">
+      {% for link in links %}
+        {% include "cves/partials/cve_link_row.html" %}
+      {% empty %}
+        <p id="no-cve-links" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen links endnu.</p>
+      {% endfor %}
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_link_form.html" with form=link_form %}
+    {% endif %}
+  </div>
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    <div style="padding: 20px 24px 14px;">
+      <div class="label-eyebrow">Tidslinje</div>
+      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Kommentarer</h2>
+    </div>
+    {% if is_editor %}
+      {% include "cves/partials/cve_comment_form.html" with form=comment_form %}
+    {% endif %}
+    <div id="cve-comments">
+      {% for comment in comments %}
+        {% include "cves/partials/cve_comment_row.html" %}
+      {% empty %}
+        <p id="no-cve-comments" style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen kommentarer endnu.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: var(--ink-4); font-family: var(--font-mono);">
+    Sidst opdateret <span class="num">{{ case.updated_at|date:"j. M Y · H:i" }}</span>
+  </div>
+</div>
+{% endblock %}

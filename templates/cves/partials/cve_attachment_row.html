@@ -1,3 +1,4 @@
+{% load cve_extras %}
 {# One attachment (PDF or Outlook mail); opens in the page's lightbox, editors can delete it. #}
 <div id="cve-attachment-{{ attachment.key }}" class="flex items-center gap-3" style="padding: 10px 24px; border-top: 1px solid var(--hairline);{% if attachment.parent_id %} padding-left: 44px;{% endif %}">
   {% if attachment.is_msg %}
@@ -25,7 +26,7 @@
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
   </a>
   {% if is_editor %}
-    <button hx-post="{% url 'cves:attachment-delete' cve.pk attachment.key %}"
+    <button hx-post="{% owner_url owner 'attachment-delete' attachment.key %}"
             hx-target="#cve-attachment-{{ attachment.key }}"
             hx-swap="outerHTML"
             hx-confirm="Slet denne vedhæftning?{% if attachment.is_msg %} PDF'er pakket ud af mailen beholdes.{% endif %}"

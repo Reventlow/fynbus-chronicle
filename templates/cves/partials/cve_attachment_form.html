@@ -1,10 +1,11 @@
+{% load cve_extras %}
 {% comment %}
   Inline "attach PDF / .msg" form (multipart via HTMX). Replaced out-of-band with a
   fresh copy after a successful upload (oob=True), re-rendered with errors.
 {% endcomment %}
 <div id="cve-attachment-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
      style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2);">
-  <form hx-post="{% url 'cves:attachment-create' cve.pk %}"
+  <form hx-post="{% owner_url owner 'attachment-create' %}"
         hx-target="#cve-attachments"
         hx-swap="beforeend"
         hx-encoding="multipart/form-data"

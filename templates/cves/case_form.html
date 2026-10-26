@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Rediger sag #{{ object.pk }}{% else %}Ny sag{% endif %} — FynBus Chronicle{% endblock %}
+
+{% block crumbs %}
+  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <span class="sep">/</span>
+  <a href="{% url 'cves:case-list' %}">Sager</a>
+  <span class="sep">/</span>
+  {% if object %}
+    <a href="{{ object.get_absolute_url }}">#{{ object.pk }}</a>
+    <span class="sep">/</span>
+    <span class="current">Rediger</span>
+  {% else %}
+    <span class="current">Ny sag</span>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 720px;">
+
+  <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 16px;">
+    <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+      <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+      <span>{% if object %}Rediger sag{% else %}Saml CVE'er med samme vurdering og løsning{% endif %}</span>
+    </div>
+    <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">
+      {% if object %}Sag #{{ object.pk }}{% else %}Ny sag{% endif %}
+    </h1>
+  </div>
+
+  <form method="post" class="card" style="display: flex; flex-direction: column; gap: 14px;">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+    {% endif %}
+
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="input-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="input-help">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}<p class="input-error-message">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="flex items-center justify-end gap-2">
+      <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'cves:case-list' %}{% endif %}" class="btn btn-sm">Annullér</a>
+      <button type="submit" class="btn btn-primary btn-sm">{% if object %}Gem{% else %}Opret sag{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

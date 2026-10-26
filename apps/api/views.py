@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.api_auth import api_auth
-from apps.cves.models import CVE, CVEComment, normalise_cve_id
+from apps.cves.models import CVE, CVECase, CVEComment, normalise_cve_id
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Incident,
@@ -35,6 +35,7 @@ from apps.oncall.models import OnCallDuty
 from apps.reports.models import Report
 
 from .serializers import (
+    serialize_case,
     serialize_cve,
     serialize_feature_request,
     serialize_incident,
@@ -605,11 +606,84 @@ def _invalid(field: str, detail: str) -> JsonResponse:
     return JsonResponse({"error": "invalid_field", "field": field, "detail": detail}, status=400)
 
 
+class _InputError(Exception):
+    """Bad API input; ``response`` is the 400 to send."""
+
+    def __init__(self, response: JsonResponse):
+        self.response = response
+        super().__init__(response.content.decode())
+
+
+def _clean_cve_input(data: dict, prefix: str = "") -> dict:
+    """Validate one CVE object from a request body.
+
+    Returns ``cve_id`` (normalised), ``subject``, ``cvss``, ``severity``,
+    ``cvefeed_url`` and ``source_url``; raises _InputError with a 400
+    naming the field (``prefix`` is prepended, e.g. ``cves[2].``).
+    """
+    def missing(field):
+        return _InputError(JsonResponse({"error": "missing_field", "field": prefix + field,
+                                         "detail": f"{prefix}{field} is required"}, status=400))
+
+    def invalid(field, detail):
+        return _InputError(_invalid(prefix + field, prefix + detail))
+
+    raw_id = data.get("cve_id")
+    if not isinstance(raw_id, str) or not raw_id.strip():
+        raise missing("cve_id")
+    try:
+        cve_id = normalise_cve_id(raw_id)
+    except ValidationError:
+        raise invalid("cve_id", "cve_id must look like CVE-YYYY-NNNN (four or more digits)") from None
+
+    subject = data.get("subject")
+    if not isinstance(subject, str) or not subject.strip():
+        raise missing("subject")
+    subject = subject.strip()
+    if len(subject) > 300:
+        raise invalid("subject", "subject must be at most 300 characters")
+
+    cvss = data.get("cvss")
+    if cvss is not None:
+        if isinstance(cvss, bool) or not isinstance(cvss, (int, float)) or not 0 <= cvss <= 10:
+            raise invalid("cvss", "cvss must be a number between 0 and 10, or null")
+        cvss = round(float(cvss), 1)
+
+    severity = data.get("severity")
+    if severity is not None and severity not in CVE.Severity.values:
+        raise invalid("severity", f"severity must be one of {', '.join(CVE.Severity.values)}, or null")
+
+    fields = {"cve_id": cve_id, "subject": subject, "cvss": cvss, "severity": severity or ""}
+    for field in ("cvefeed_url", "source_url"):
+        fields[field] = _clean_url(data.get(field), prefix + field)
+    return fields
+
+
+def _clean_url(value, field: str) -> str:
+    if value is None or value == "":
+        return ""
+    try:
+        if not isinstance(value, str):
+            raise ValidationError("not a string")
+        URLValidator(schemes=["http", "https"])(value)
+    except ValidationError:
+        raise _InputError(_invalid(field, f"{field} must be an http(s) URL, or null")) from None
+    return value
+
+
+def _create_cve(fields: dict, user) -> CVE:
+    return CVE.objects.create(
+        **fields,
+        source="harbinger" if fields["source_url"] else "api",
+        created_by=user,
+    )
+
+
 @require_GET
 @api_auth(scope="read")
 def cve_list(request: HttpRequest) -> JsonResponse:
     """All CVEs, open ones first. Optional ``?state=identified|patching|solved``."""
-    qs = CVE.objects.all()
+    qs = CVE.objects.select_related("case")
     state = request.GET.get("state")
     if state:
         if state not in CVE.State.values:
@@ -632,49 +706,16 @@ def cve_create(request: HttpRequest) -> JsonResponse:
     except ValueError as exc:
         return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
 
-    raw_id = data.get("cve_id")
-    if not isinstance(raw_id, str) or not raw_id.strip():
-        return JsonResponse({"error": "missing_field", "detail": "cve_id is required"}, status=400)
     try:
-        cve_id = normalise_cve_id(raw_id)
-    except ValidationError:
-        return _invalid("cve_id", "cve_id must look like CVE-YYYY-NNNN (four or more digits)")
+        fields = _clean_cve_input(data)
+    except _InputError as exc:
+        return exc.response
+    cve_id = fields["cve_id"]
 
     comment = data.get("comment")
     if comment is not None and not isinstance(comment, str):
         return _invalid("comment", "comment must be a string or null")
     comment = (comment or "").strip()
-
-    subject = data.get("subject")
-    if not isinstance(subject, str) or not subject.strip():
-        return JsonResponse({"error": "missing_field", "detail": "subject is required"}, status=400)
-    subject = subject.strip()
-    if len(subject) > 300:
-        return _invalid("subject", "subject must be at most 300 characters")
-
-    cvss = data.get("cvss")
-    if cvss is not None:
-        if isinstance(cvss, bool) or not isinstance(cvss, (int, float)) or not 0 <= cvss <= 10:
-            return _invalid("cvss", "cvss must be a number between 0 and 10, or null")
-        cvss = round(float(cvss), 1)
-
-    severity = data.get("severity")
-    if severity is not None and severity not in CVE.Severity.values:
-        return _invalid("severity", f"severity must be one of {', '.join(CVE.Severity.values)}, or null")
-
-    urls = {}
-    for field in ("cvefeed_url", "source_url"):
-        value = data.get(field)
-        if value is None or value == "":
-            urls[field] = ""
-            continue
-        try:
-            if not isinstance(value, str):
-                raise ValidationError("not a string")
-            URLValidator(schemes=["http", "https"])(value)
-        except ValidationError:
-            return _invalid(field, f"{field} must be an http(s) URL, or null")
-        urls[field] = value
 
     def existing_response(existing: CVE) -> JsonResponse:
         if comment:
@@ -689,16 +730,7 @@ def cve_create(request: HttpRequest) -> JsonResponse:
     try:
         # Atomic so a lost race leaves the outer transaction usable.
         with transaction.atomic():
-            cve = CVE.objects.create(
-                cve_id=cve_id,
-                subject=subject,
-                cvss=cvss,
-                severity=severity or "",
-                cvefeed_url=urls["cvefeed_url"],
-                source_url=urls["source_url"],
-                source="harbinger" if urls["source_url"] else "api",
-                created_by=request.api_user,
-            )
+            cve = _create_cve(fields, request.api_user)
     except IntegrityError:
         # Two senders raced on the same cve_id (e.g. two colleagues pressing
         # "Send to Chronicle" at once): the other request created it first.
@@ -727,3 +759,175 @@ def cve_detail(request: HttpRequest, cve_id: str) -> JsonResponse:
     if cve is None:
         return JsonResponse({"error": "not_found", "detail": f"No CVE {cve_id}"}, status=404)
     return JsonResponse(_cve_payload(request, cve, full=True))
+
+
+
+# -------------------------------------------------------------------------
+# CVE cases (Harbinger): several CVEs with one assessment and one fix
+# -------------------------------------------------------------------------
+
+MAX_CASE_CVES = 200
+
+
+def _case_payload(request: HttpRequest, case: CVECase) -> dict:
+    return serialize_case(
+        case,
+        url=request.build_absolute_uri(case.get_absolute_url()),
+        cve_url=lambda c: request.build_absolute_uri(c.get_absolute_url()),
+    )
+
+
+def _optional_text(data: dict, field: str, limit: int | None = None) -> str | None:
+    """A string field that may be absent (None), else stripped; 400 on bad type/length."""
+    value = data.get(field)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise _InputError(_invalid(field, f"{field} must be a string or null"))
+    value = value.strip()
+    if limit and len(value) > limit:
+        raise _InputError(_invalid(field, f"{field} must be at most {limit} characters"))
+    return value
+
+
+@api_auth(scope="write")
+def case_upsert(request: HttpRequest) -> JsonResponse:
+    """Create a case, or add to an existing one (``id``), with its CVEs.
+
+    Body: ``title`` (required when creating); ``id`` (an existing case);
+    ``assessment``, ``solution``, ``source_url``, ``comment``; ``state``
+    and ``resolution`` (patched|not_affected, only with state=solved);
+    ``cves``: a list of CVE objects as for POST /cves/ (``cve_id`` and
+    ``subject`` required). Unknown CVEs are created; known ones keep their
+    fields. A CVE that is already in another case makes it a 409 with
+    nothing changed. Text fields given for an existing case replace its
+    text; absent ones leave it. 201 when created, 200 when updated.
+    """
+    try:
+        data = _parse_json_body(request)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    try:
+        case_id = data.get("id")
+        if case_id is not None and (isinstance(case_id, bool) or not isinstance(case_id, int)):
+            return _invalid("id", "id must be an integer or null")
+        title = _optional_text(data, "title", 200)
+        if case_id is None and not title:
+            return JsonResponse({"error": "missing_field", "field": "title", "detail": "title is required"}, status=400)
+        assessment = _optional_text(data, "assessment")
+        solution = _optional_text(data, "solution")
+        comment = _optional_text(data, "comment") or ""
+        source_url = _clean_url(data.get("source_url"), "source_url")
+
+        state = data.get("state")
+        if state is not None and state not in CVE.State.values:
+            return _invalid("state", f"state must be one of {', '.join(CVE.State.values)}, or null")
+        resolution = data.get("resolution") or ""
+        if resolution and resolution not in CVECase.Resolution.values:
+            return _invalid("resolution", f"resolution must be one of {', '.join(CVECase.Resolution.values)}, or null")
+        if resolution and state != CVE.State.SOLVED:
+            return _invalid("resolution", "resolution only goes with state=solved")
+
+        raw_cves = data.get("cves", [])
+        if not isinstance(raw_cves, list):
+            return _invalid("cves", "cves must be a list")
+        if len(raw_cves) > MAX_CASE_CVES:
+            return _invalid("cves", f"at most {MAX_CASE_CVES} CVEs per request")
+        inputs, seen = [], set()
+        for i, item in enumerate(raw_cves):
+            if not isinstance(item, dict):
+                return _invalid(f"cves[{i}]", "each CVE must be an object")
+            fields = _clean_cve_input(item, prefix=f"cves[{i}].")
+            if fields["cve_id"] not in seen:
+                seen.add(fields["cve_id"])
+                inputs.append(fields)
+    except _InputError as exc:
+        return exc.response
+
+    case = None
+    if case_id is not None:
+        case = CVECase.objects.filter(pk=case_id).first()
+        if case is None:
+            return JsonResponse({"error": "not_found", "detail": f"No case {case_id}"}, status=404)
+
+    existing = {c.cve_id: c for c in CVE.objects.filter(cve_id__in=seen).select_related("case")}
+    taken = [c for c in existing.values() if c.case_id and (case is None or c.case_id != case.pk)]
+    if taken:
+        return JsonResponse({
+            "error": "conflict",
+            "detail": "Some CVEs are already in another case (a CVE belongs to at most one)",
+            "cves": [{"cve_id": c.cve_id, "case_id": c.case_id, "case_title": c.case.title} for c in taken],
+        }, status=409)
+
+    user = request.api_user
+    created = case is None
+    with transaction.atomic():
+        if created:
+            case = CVECase.objects.create(
+                title=title, assessment=assessment or "", solution=solution or "",
+                source="harbinger" if source_url else "api", source_url=source_url, created_by=user,
+            )
+        else:
+            changed = []
+            for field, value in (("title", title), ("assessment", assessment), ("solution", solution)):
+                if value is not None and (value or field != "title") and getattr(case, field) != value:
+                    setattr(case, field, value)
+                    changed.append(field)
+            if source_url and not case.source_url:
+                case.source_url, case.source = source_url, "harbinger"
+                changed += ["source_url", "source"]
+            if changed:
+                case.save(update_fields=[*changed, "updated_at"])
+        cves = []
+        for fields in inputs:
+            cve = existing.get(fields["cve_id"])
+            if cve is None:
+                try:
+                    with transaction.atomic():
+                        cve = _create_cve(fields, user)
+                except IntegrityError:  # created concurrently by a single-CVE push
+                    cve = CVE.objects.get(cve_id=fields["cve_id"])
+                    if cve.case_id and cve.case_id != case.pk:
+                        transaction.set_rollback(True)
+                        return JsonResponse({"error": "conflict", "detail": f"{cve.cve_id} joined another case meanwhile"}, status=409)
+            cves.append(cve)
+        if created:
+            # The new case starts in the requested state, so its CVEs join in that state.
+            if state:
+                case.set_state(state, user, resolution=resolution)
+            case.add_cves(cves, user)
+        else:
+            case.add_cves(cves, user)
+            if state:
+                case.set_state(state, user, resolution=resolution)
+        if comment:
+            CVEComment.objects.create(case=case, text=comment, author=user)
+    case.refresh_from_db()
+    return JsonResponse({**_case_payload(request, case), "created": created}, status=201 if created else 200)
+
+
+@require_GET
+@api_auth(scope="read")
+def case_list(request: HttpRequest) -> JsonResponse:
+    """All cases, open ones first."""
+    qs = CVECase.objects.prefetch_related("cves").open_first()[:500]
+    return JsonResponse({"cases": [_case_payload(request, c) for c in qs]})
+
+
+@csrf_exempt
+def case_collection(request: HttpRequest) -> JsonResponse:
+    """``/api/v1/cve-cases/``: GET lists (read key), POST creates/extends (write key)."""
+    if request.method == "GET":
+        return case_list(request)
+    if request.method == "POST":
+        return case_upsert(request)
+    return JsonResponse({"error": "method_not_allowed"}, status=405, headers={"Allow": "GET, POST"})
+
+
+@require_GET
+@api_auth(scope="read")
+def case_detail(request: HttpRequest, pk: int) -> JsonResponse:
+    case = CVECase.objects.filter(pk=pk).first()
+    if case is None:
+        return JsonResponse({"error": "not_found", "detail": f"No case {pk}"}, status=404)
+    return JsonResponse(_case_payload(request, case))

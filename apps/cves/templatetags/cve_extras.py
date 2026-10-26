@@ -29,3 +29,9 @@ def cve_markdown(value: str) -> str:
     html = str(render_markdown(text))
     html = re.sub(r"<a (?![^>]*\btarget=)", '<a target="_blank" ', html)
     return mark_safe(html)
+
+
+@register.simple_tag
+def owner_url(owner, name: str, *args) -> str:
+    """URL of a per-owner view for a CVE or a case: ``{% owner_url owner 'link-create' %}``."""
+    return owner.owner_url(name, *args)

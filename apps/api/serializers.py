@@ -7,7 +7,7 @@ tight and the contract obvious.
 
 from typing import Any
 
-from apps.cves.models import CVE
+from apps.cves.models import CVE, CVECase
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Absence,
@@ -246,6 +246,7 @@ def serialize_cve(cve: CVE, *, url: str, full: bool = False) -> dict[str, Any]:
         "severity": cve.severity,
         "state": cve.state,
         "url": url,
+        "case": {"id": cve.case_id, "title": cve.case.title} if cve.case_id else None,
     }
     if full:
         data.update(
@@ -278,3 +279,25 @@ def serialize_cve(cve: CVE, *, url: str, full: bool = False) -> dict[str, Any]:
             }
         )
     return data
+
+
+def serialize_case(case: CVECase, *, url: str, cve_url) -> dict[str, Any]:
+    """A CVE case as Harbinger sees it. ``cve_url(cve)`` gives a CVE's page."""
+    return {
+        "id": case.id,
+        "title": case.title,
+        "state": case.state,
+        "resolution": case.resolution,
+        "outcome": case.outcome_label,
+        "assessment": case.assessment,
+        "solution": case.solution,
+        "url": url,
+        "source_url": case.source_url,
+        "created_at": case.created_at.isoformat() if case.created_at else None,
+        "updated_at": case.updated_at.isoformat() if case.updated_at else None,
+        "solved_at": case.solved_at.isoformat() if case.solved_at else None,
+        "cves": [
+            {"cve_id": c.cve_id, "subject": c.subject, "state": c.state, "url": cve_url(c)}
+            for c in case.cves.order_by("cve_id")
+        ],
+    }

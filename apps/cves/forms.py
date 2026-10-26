@@ -4,7 +4,7 @@ from django import forms
 
 from django.conf import settings
 
-from .models import CVE, CVEAttachment, CVEComment, CVELink, normalise_cve_id
+from .models import CVE, CVEAttachment, CVECase, CVEComment, CVELink, normalise_cve_id
 
 
 class CVECreateForm(forms.ModelForm):
@@ -153,3 +153,72 @@ class CVEAttachmentForm(forms.ModelForm):
             upload.seek(0)
         self.kind = CVEAttachment.Kind.MSG
         return upload
+
+
+def _parse_cve_ids(raw: str) -> list[str]:
+    """Normalised, de-duplicated CVE ids from free text (spaces, commas,
+    semicolons or newlines). Raises ValidationError naming bad tokens."""
+    import re
+
+    ids, bad = [], []
+    for token in re.split(r"[\s,;]+", raw or ""):
+        if not token:
+            continue
+        try:
+            cve_id = normalise_cve_id(token)
+        except forms.ValidationError:
+            bad.append(token)
+            continue
+        if cve_id not in ids:
+            ids.append(cve_id)
+    if bad:
+        raise forms.ValidationError("Ikke gyldige CVE-id'er: " + ", ".join(bad[:10]))
+    return ids
+
+
+class _CVEIdsMixin:
+    """Validates ``cve_ids`` and exposes the existing CVEs as ``cleaned_data['cves']``.
+
+    Unknown ids are allowed (the view creates them with the case title).
+    """
+
+    def clean_cve_ids(self) -> str:
+        ids = _parse_cve_ids(self.cleaned_data.get("cve_ids", ""))
+        self.cleaned_data["cves"] = list(CVE.objects.filter(cve_id__in=ids))
+        return ",".join(ids)
+
+
+CVE_IDS_WIDGET = forms.Textarea(attrs={
+    "class": "textarea-field", "rows": 3,
+    "placeholder": "CVE-2026-115557, CVE-2026-111943 — ét eller flere, adskilt af komma eller linjeskift",
+})
+
+
+class CVECaseForm(_CVEIdsMixin, forms.ModelForm):
+    """Create or edit a case. ``with_cves=False`` drops the id field (edit)."""
+
+    cve_ids = forms.CharField(
+        label="CVE'er", required=False, widget=CVE_IDS_WIDGET,
+        help_text="Kendte CVE'er flyttes ind i sagen; ukendte oprettes med sagens titel. En CVE kan kun være i én sag.",
+    )
+
+    class Meta:
+        model = CVECase
+        fields = ["title", "assessment", "solution"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "input-field", "maxlength": 200, "autofocus": True}),
+            "assessment": forms.Textarea(attrs={"class": "textarea-field", "rows": 5,
+                                                "placeholder": "Er vi berørt? Hvilke systemer, versioner, hvad er tjekket?"}),
+            "solution": forms.Textarea(attrs={"class": "textarea-field", "rows": 5,
+                                              "placeholder": "Hvad er gjort eller skal gøres — opdatering, konfiguration, ansvarlig."}),
+        }
+
+    def __init__(self, *args, with_cves: bool = True, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not with_cves:
+            del self.fields["cve_ids"]
+
+
+class CVECaseAddForm(_CVEIdsMixin, forms.Form):
+    cve_ids = forms.CharField(label="Tilføj CVE'er", widget=forms.TextInput(attrs={
+        "class": "input-field", "placeholder": "CVE-2026-… (flere adskilt af komma)"}))

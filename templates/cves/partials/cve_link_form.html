@@ -1,10 +1,11 @@
+{% load cve_extras %}
 {% comment %}
   Inline "add link" form. Replaced out-of-band with a fresh copy after a
   successful add (oob=True), and re-rendered in place with errors.
 {% endcomment %}
 <div id="cve-link-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}
      style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2);">
-  <form hx-post="{% url 'cves:link-create' cve.pk %}"
+  <form hx-post="{% owner_url owner 'link-create' %}"
         hx-target="#cve-links"
         hx-swap="beforeend"
         class="flex flex-wrap items-start gap-2">

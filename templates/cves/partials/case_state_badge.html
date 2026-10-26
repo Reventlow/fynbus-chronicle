@@ -1,0 +1,2 @@
+{# A case's state (and how it was solved) as dot + text, like state_badge.html. #}
+<span class="task-status"{% if case.state == 'identified' %} style="color: var(--bad-ink);"{% elif case.state == 'patching' %} style="color: var(--warn-ink);"{% endif %}><span class="pill-dot" style="background: {{ case.state_color }};"></span>{{ case.outcome_label }}</span>

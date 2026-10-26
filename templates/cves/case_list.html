@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Sager — FynBus Chronicle{% endblock %}
+
+{% block crumbs %}
+  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <span class="sep">/</span>
+  <span class="current">Sager</span>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+  <div class="flex flex-wrap items-end justify-between gap-6" style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>{{ open_count }} åben{{ open_count|pluralize:"e" }}</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Sager <span class="display-italic" style="color: var(--ink-3);">med samme løsning.</span>
+      </h1>
+      <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
+        En sag samler CVE'er, der har samme vurdering og samme løsning — fx flere kerne-CVE'er, der lukkes af én opdatering.
+        Vurdering, løsning og dokumenter skrives én gang på sagen, og sagens status gælder alle dens CVE'er.
+        Løste sager vises i {{ solved_window_days }} dage{% if state != 'all' %} — <a href="?state=all">vis alle</a>{% endif %}.
+      </p>
+    </div>
+    {% if is_editor %}
+      <a href="{% url 'cves:case-create' %}" class="btn btn-primary btn-sm">Ny sag</a>
+    {% endif %}
+  </div>
+
+  <div class="card overflow-hidden" style="padding: 0;">
+    {% for case in cases %}
+      {% include "cves/partials/case_row.html" %}
+    {% empty %}
+      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">Ingen sager endnu.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

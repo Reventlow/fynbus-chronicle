@@ -41,6 +41,7 @@ class TestCreate:
             "severity": "critical",
             "state": "identified",
             "url": f"http://testserver{reverse('cves:detail', args=[cve.pk])}",
+            "case": None,
             "created": True,
         }
         assert cve.source == "harbinger"
@@ -179,7 +180,7 @@ class TestRead:
         assert all_ids == ["CVE-2026-109618", "CVE-2026-0002"]
         solved = client.get(reverse("api:cve-list"), {"state": "solved"}, **auth).json()["cves"]
         assert [c["cve_id"] for c in solved] == ["CVE-2026-0002"]
-        assert set(solved[0]) == {"id", "cve_id", "subject", "cvss", "severity", "state", "url"}
+        assert set(solved[0]) == {"id", "cve_id", "subject", "cvss", "severity", "state", "url", "case"}
 
     def test_list_bad_state_400(self, client, read_key):
         response = client.get(reverse("api:cve-list"), {"state": "x"}, HTTP_AUTHORIZATION=f"Bearer {read_key}")

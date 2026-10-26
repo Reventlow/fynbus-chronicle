@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import CVE, CVEAttachment, CVEComment, CVELink
+from .models import CVE, CVEAttachment, CVECase, CVEComment, CVELink
 
 
 class CVELinkInline(admin.TabularInline):
@@ -35,7 +35,7 @@ class CVEAdmin(admin.ModelAdmin):
     inlines = [CVEAttachmentInline, CVELinkInline, CVECommentInline]
     fieldsets = (
         (None, {"fields": ("cve_id", "subject", "cvss", "severity", "cvefeed_url")}),
-        ("Status", {"fields": ("state", "solved_at", "solved_by")}),
+        ("Status", {"fields": ("state", "case", "solved_at", "solved_by")}),
         ("Kilde", {"fields": ("source", "source_url")}),
         ("Metadata", {"fields": ("created_by", "created_at", "updated_at")}),
     )
@@ -60,3 +60,11 @@ class CVEAttachmentAdmin(admin.ModelAdmin):
     list_filter = ["tlp"]
     search_fields = ["title", "original_name", "source", "cve__cve_id"]
     readonly_fields = ["key", "file", "original_name", "size", "uploaded_by", "uploaded_at"]
+
+
+@admin.register(CVECase)
+class CVECaseAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "state", "resolution", "updated_at")
+    list_filter = ("state", "resolution")
+    search_fields = ("title", "cves__cve_id")
+    readonly_fields = ("created_at", "updated_at", "solved_at")

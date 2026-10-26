@@ -330,6 +330,17 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 - Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
 - **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *løst denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
 
+### Sager: flere CVE'er med samme løsning
+
+En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
+
+- Klik **Sager** på CVE-listen og **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
+- Fra en CVE's side: **Føj til sag** vælger en åben sag, og **Ny sag med denne CVE** starter en ny.
+- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Løst — patchet* og *Løst — ikke berørt*. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
+- Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
+- **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.
+- Åbne sager står øverst på CVE-listen, og CVE'er i en sag har mærket *Sag #n* i lister og ugeloggen. Harbinger kan sende en hel sag på én gang.
+
 Læsere kan se alt, men ikke oprette eller ændre.
 
 ---
