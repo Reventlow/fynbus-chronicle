@@ -16,10 +16,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Prefetch, Q
+from django.db.models.functions import Length
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -44,6 +46,18 @@ def _owner(pk: int, kind: str = "cve"):
 def _owned_by(owner) -> dict:
     """Filter kwargs selecting rows that belong to ``owner``."""
     return {"case": owner} if owner.is_case else {"cve": owner}
+
+
+def _section_tabs(current: str) -> dict:
+    """The "CVE'er | Sager" tabs on top of both Sårbarheder lists, with open counts."""
+    return {
+        "tabs": [
+            {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"), "count": CVE.objects.open().count()},
+            {"key": "cases", "label": "Sager", "url": reverse("cves:case-list"), "count": CVECase.objects.open().count()},
+        ],
+        "current_tab": current,
+    }
+
 
 @login_required
 def cve_list(request: HttpRequest) -> HttpResponse:
@@ -76,7 +90,7 @@ def cve_list(request: HttpRequest) -> HttpResponse:
             "solved_window_days": SOLVED_WINDOW_DAYS,
             "open_count": CVE.objects.open().count(),
             "patching_count": CVE.objects.filter(state=CVE.State.PATCHING).count(),
-            "open_cases": CVECase.objects.open().open_first().prefetch_related("cves"),
+            **_section_tabs("cves"),
         },
     )
 
@@ -427,8 +441,9 @@ def _resolve_cve_ids(raw: str, *, subject: str, user) -> tuple[list[CVE], list[s
 @login_required
 def case_list(request: HttpRequest) -> HttpResponse:
     """All cases, open ones first. ``?state=all`` includes old solved ones;
-    ``?q=`` searches title, source, reference and member CVE ids in every state."""
-    qs = CVECase.objects.prefetch_related("cves")
+    ``?q=`` searches title, source, reference and member CVE ids in every state.
+    Each case is shown with every CVE it holds."""
+    qs = CVECase.objects.prefetch_related(Prefetch("cves", queryset=CVE.objects.order_by(Length("cve_id"), "cve_id")))
     state = request.GET.get("state") or ""
     q = (request.GET.get("q") or "").strip()
     if q:
@@ -443,6 +458,7 @@ def case_list(request: HttpRequest) -> HttpResponse:
         "q": q,
         "solved_window_days": SOLVED_WINDOW_DAYS,
         "open_count": CVECase.objects.open().count(),
+        **_section_tabs("cases"),
     })
 
 
