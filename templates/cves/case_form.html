@@ -3,7 +3,7 @@
 {% block title %}{% if object %}Rediger sag #{{ object.pk }}{% else %}Ny sag{% endif %} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <a href="{% url 'cves:list' %}">Sårbarheder</a>
   <span class="sep">/</span>
   <a href="{% url 'cves:case-list' %}">Sager</a>
   <span class="sep">/</span>
@@ -43,6 +43,10 @@
         {% if field.errors %}<p class="input-error-message">{{ field.errors.0 }}</p>{% endif %}
       </div>
     {% endfor %}
+
+    <datalist id="case-sources">
+      <option value="CFCS"><option value="Harbinger"><option value="Leverandør"><option value="Microsoft">
+    </datalist>
 
     <div class="flex items-center justify-end gap-2">
       <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'cves:case-list' %}{% endif %}" class="btn btn-sm">Annullér</a>

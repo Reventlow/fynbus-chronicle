@@ -365,3 +365,40 @@ class TestCaseAPI:
     def test_cve_payload_names_its_case(self, client, read_key, case):
         data = client.get(reverse("api:cve-detail", args=["CVE-2026-93228"]), HTTP_AUTHORIZATION=f"Bearer {read_key}").json()
         assert data["case"] == {"id": case.pk, "title": case.title}
+
+
+class TestSourceAndReference:
+    """Warnings without a CVE number (e.g. from CFCS) become cases with no CVEs."""
+
+    def test_create_without_cves(self, editor_client):
+        response = editor_client.post(reverse("cves:case-create"), {
+            "title": "CFCS: phishing mod trafikselskaber", "source": "CFCS",
+            "reference": "CFCS-advarsel 2026-10-24", "source_url": "https://www.cfcs.dk/",
+            "assessment": "Ingen tegn hos os.", "solution": "", "cve_ids": "",
+        })
+        case = CVECase.objects.get()
+        assert response.status_code == 302
+        assert (case.source, case.reference, case.cves.count()) == ("CFCS", "CFCS-advarsel 2026-10-24", 0)
+        body = editor_client.get(case.get_absolute_url()).content.decode()
+        assert "via CFCS" in body
+        assert "CFCS-advarsel 2026-10-24" in body
+        assert "Ingen CVE" in body
+        assert "CFCS ↗" in body
+
+    def test_harbinger_source_reads_as_a_name(self, case):
+        case.source = "harbinger"
+        assert case.source_label == "Harbinger"
+
+    def test_case_list_search(self, editor_client, case, editor):
+        cfcs = CVECase.objects.create(title="CFCS-advarsel", source="CFCS", reference="2026-10-24", created_by=editor)
+        assert list(editor_client.get(reverse("cves:case-list"), {"q": "2026-10-24"}).context["cases"]) == [cfcs]
+        assert list(editor_client.get(reverse("cves:case-list"), {"q": "93228"}).context["cases"]) == [case]
+
+    def test_api_takes_source_and_reference(self, client, write_key):
+        response = post_case(client, write_key, {"title": "CFCS-advarsel", "source": "CFCS",
+                                                 "reference": "CFCS 2026-10-24", "cves": []})
+        assert response.status_code == 201
+        data = response.json()
+        assert (data["source"], data["reference"], data["cves"]) == ("CFCS", "CFCS 2026-10-24", [])
+        again = post_case(client, write_key, {"id": data["id"], "reference": "CFCS 2026-10-25"})
+        assert again.json()["reference"] == "CFCS 2026-10-25"

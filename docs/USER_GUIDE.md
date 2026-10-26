@@ -319,7 +319,7 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 ## Sårbarheder (CVE'er)
 
-**CVE'er** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
+**Sårbarheder** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
 
 - Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
 - Status er **Identificeret**, **Patcher** eller **Løst**. Skift den med knapperne på CVE'ens side; hvert skift skrives i tidslinjen med navn og tidspunkt.
@@ -340,6 +340,9 @@ En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire ker
 - Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
 - **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.
 - Åbne sager står øverst på CVE-listen, og CVE'er i en sag har mærket *Sag #n* i lister og ugeloggen. Harbinger kan sende en hel sag på én gang.
+- **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
+- **Ugeloggen og Kontrolpanelet** viser sagerne over CVE'erne. Ugeloggen viser hver sag, der var åben i løbet af ugen; Kontrolpanelet viser de åbne. En sag uden CVE'er kommer derfor med i ugens dokumentation.
+- Søgefeltet på **Sager** finder titel, kilde, reference og CVE-id, også i løste sager.
 
 Læsere kan se alt, men ikke oprette eller ændre.
 

@@ -292,6 +292,8 @@ def serialize_case(case: CVECase, *, url: str, cve_url) -> dict[str, Any]:
         "assessment": case.assessment,
         "solution": case.solution,
         "url": url,
+        "source": case.source,
+        "reference": case.reference,
         "source_url": case.source_url,
         "created_at": case.created_at.isoformat() if case.created_at else None,
         "updated_at": case.updated_at.isoformat() if case.updated_at else None,

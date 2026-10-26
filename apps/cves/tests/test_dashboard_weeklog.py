@@ -6,7 +6,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.cves.models import CVE
+from apps.cves.models import CVE, CVECase
 from apps.dashboard.overview import cve_overview
 from apps.logbook.exports.html import generate_html
 from apps.logbook.models import WeekLog
@@ -93,3 +93,62 @@ class TestWeeklogSection:
         html = generate_html(weeklog)
         assert "CVE-2026-4020" in html
         assert "CVSS 8,1" in html  # Danish decimal comma
+
+
+class TestCasesWithoutCVEs:
+    """A CFCS warning without a CVE number is a case with no CVEs; it must
+    still reach the Kontrolpanel and the week log (the NIS2 trail)."""
+
+    @staticmethod
+    def at(y, m, d, h=12):
+        return timezone.make_aware(datetime(y, m, d, h))
+
+    @pytest.fixture
+    def cfcs(self, editor):
+        return CVECase.objects.create(title="CFCS: phishing mod trafikselskaber", source="CFCS",
+                                      reference="CFCS-advarsel 2026-10-24", created_by=editor,
+                                      created_at=self.at(2026, 5, 12))
+
+    def test_dashboard_lists_open_cases_first(self, editor_client, cfcs, cve):
+        data = cve_overview()
+        assert data["cases"] == [cfcs]
+        assert data["open_case_count"] == 1
+        body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
+        assert cfcs.get_absolute_url() in body
+        assert "CFCS-advarsel 2026-10-24" in body
+        assert body.index(cfcs.get_absolute_url()) < body.index(reverse("cves:detail", args=[cve.pk]))
+
+    def test_dashboard_drops_solved_cases(self, editor, cfcs):
+        cfcs.set_state(CVE.State.SOLVED, editor, resolution=CVECase.Resolution.NOT_AFFECTED)
+        assert cve_overview()["cases"] == []
+
+    def test_dashboard_card_shows_with_only_a_case(self, editor_client, cfcs):
+        body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
+        assert cfcs.title in body
+        assert "Ingen CVE" not in body.split(cfcs.title)[0]  # no empty-state above the case
+
+    def test_week_log_lists_the_case(self, editor_client, cfcs):
+        WeekLog.objects.create(year=2026, week_number=20)
+        later = CVECase.objects.create(title="senere", created_at=self.at(2026, 5, 20))
+        response = editor_client.get(reverse("logbook:weeklog-detail", args=[2026, 20]))
+        assert response.context["week_cases"] == [cfcs]
+        assert response.context["week_vuln_count"] == 1
+        body = response.content.decode()
+        assert cfcs.get_absolute_url() in body
+        assert "CFCS-advarsel 2026-10-24" in body
+        assert "Ingen åbne CVE" not in body
+        assert later.title not in body
+
+    def test_case_solved_this_week_is_marked(self, editor_client, cfcs):
+        WeekLog.objects.create(year=2026, week_number=20)
+        CVECase.objects.filter(pk=cfcs.pk).update(state="solved", resolution="not_affected",
+                                                  solved_at=self.at(2026, 5, 14))
+        response = editor_client.get(reverse("logbook:weeklog-detail", args=[2026, 20]))
+        assert response.context["week_cases"][0].solved_this_week
+        assert "Løst denne uge" in response.content.decode()
+
+    def test_html_export_includes_cases(self, cfcs):
+        html = generate_html(WeekLog.objects.create(year=2026, week_number=20))
+        assert "Sag #%d" % cfcs.pk in html
+        assert "CFCS-advarsel 2026-10-24" in html
+        assert "Ingen CVE" in html

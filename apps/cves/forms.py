@@ -199,14 +199,20 @@ class CVECaseForm(_CVEIdsMixin, forms.ModelForm):
 
     cve_ids = forms.CharField(
         label="CVE'er", required=False, widget=CVE_IDS_WIDGET,
-        help_text="Kendte CVE'er flyttes ind i sagen; ukendte oprettes med sagens titel. En CVE kan kun være i én sag.",
+        help_text="Kendte CVE'er flyttes ind i sagen; ukendte oprettes med sagens titel. En CVE kan kun være i én sag. "
+                  "Tom er fint: en advarsel uden CVE-nummer bliver en sag uden CVE'er.",
     )
 
     class Meta:
         model = CVECase
-        fields = ["title", "assessment", "solution"]
+        fields = ["title", "source", "reference", "source_url", "assessment", "solution"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "input-field", "maxlength": 200, "autofocus": True}),
+            "source": forms.TextInput(attrs={"class": "input-field", "maxlength": 40, "list": "case-sources",
+                                             "placeholder": "CFCS"}),
+            "reference": forms.TextInput(attrs={"class": "input-field", "maxlength": 100,
+                                                "placeholder": "Fx CFCS-advarsel 2026-10-24"}),
+            "source_url": forms.URLInput(attrs={"class": "input-field", "placeholder": "https://"}),
             "assessment": forms.Textarea(attrs={"class": "textarea-field", "rows": 5,
                                                 "placeholder": "Er vi berørt? Hvilke systemer, versioner, hvad er tjekket?"}),
             "solution": forms.Textarea(attrs={"class": "textarea-field", "rows": 5,

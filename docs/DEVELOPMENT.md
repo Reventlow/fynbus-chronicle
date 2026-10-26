@@ -174,7 +174,7 @@ Used by Harbinger. They validate every field (choices included) and answer `400 
 | `POST` | `/api/v1/cves/` | write | Create a CVE — or, if the id exists, leave its fields alone and add `comment` |
 | `GET` | `/api/v1/cves/<cve_id>/` | read | One CVE (id case-insensitive) with `links` and `comments`; 404 if unknown |
 | `GET` | `/api/v1/cve-cases/` | read | All CVE cases, open first, each with its `cves` |
-| `POST` | `/api/v1/cve-cases/` | write | Create a case (`title`, `assessment`, `solution`, `source_url`, `comment`, `state`, `resolution`, `cves: [{cve_id, subject, …}]`), or extend one with `id`. Unknown CVEs are created; a CVE already in another case → 409 and nothing changes. 201 created / 200 updated |
+| `POST` | `/api/v1/cve-cases/` | write | Create a case (`title`, `assessment`, `solution`, `source`, `reference`, `source_url`, `comment`, `state`, `resolution`, `cves: [{cve_id, subject, …}]`), or extend one with `id`. Unknown CVEs are created; a CVE already in another case → 409 and nothing changes. 201 created / 200 updated |
 | `GET` | `/api/v1/cve-cases/<id>/` | read | One case |
 
 `POST` body: `cve_id` and `subject` (≤ 300 chars) are required; `cvss` (number 0–10), `severity` (`critical`, `high`, `medium`, `low`, `none`; derived from `cvss` when null), `cvefeed_url`, `source_url` (http(s)) and `comment` (Markdown) may be null. `source` is set to `harbinger` when `source_url` is given, else `api`. Answers `201` when created and `200` when the CVE existed, both with:

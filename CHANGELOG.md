@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.5.0 — 2026-10-26
+
+### Added
+- **Advarsler uden CVE-nummer, fx fra CFCS, kan dokumenteres som en sag uden CVE'er.** Sagen har nu felterne **Kilde** (fx CFCS), **Reference** (kildens eget nummer og dato) og **Kildelink**. Lad CVE-feltet stå tomt.
+- **Sager står i ugeloggen.** Afsnittet *Sårbarheder* viser nu hver sag, der var åben i løbet af ugen, over CVE'erne, med status, kilde, reference og *Løst denne uge*. Det gælder også HTML- og PDF-eksporten. En sag uden CVE'er kommer dermed med i ugens dokumentation.
+- **Åbne sager står på Kontrolpanelet** øverst i kortet *Sårbarheder*.
+- **Søgning på Sager** finder titel, kilde, reference og CVE-id. Søgningen på CVE-listen finder også sagens reference.
+- API'et `POST /api/v1/cve-cases/` tager `source` og `reference`, og begge felter er med i svaret.
+
+### Changed
+- Menupunktet **CVE'er** hedder nu **Sårbarheder**, fordi det også rummer advarsler uden CVE-nummer. Adresserne er de samme.
+
 ## 1.4.0 — 2026-10-26
 
 ### Added

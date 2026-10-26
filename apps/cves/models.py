@@ -315,6 +315,8 @@ class CaseConflict(Exception):
 
 
 class CVECaseQuerySet(models.QuerySet):
+    open_during = CVEQuerySet.open_during
+
     def open(self) -> "CVECaseQuerySet":
         return self.exclude(state=CVE.State.SOLVED)
 
@@ -352,7 +354,11 @@ class CVECase(models.Model):
     state = models.CharField(verbose_name="Status", max_length=12, choices=CVE.State.choices,
                              default=CVE.State.IDENTIFIED)
     resolution = models.CharField(verbose_name="Udfald", max_length=16, choices=Resolution.choices, blank=True)
-    source = models.CharField(verbose_name="Kilde", max_length=40, blank=True)
+    source = models.CharField(verbose_name="Kilde", max_length=40, blank=True,
+                              help_text="Hvor advarslen kom fra, fx CFCS, Harbinger eller en leverandør.")
+    reference = models.CharField(verbose_name="Reference", max_length=100, blank=True,
+                                 help_text="Kildens eget id, fx CFCS-advarslens nummer og dato. "
+                                           "Til advarsler uden CVE-nummer.")
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
@@ -386,6 +392,12 @@ class CVECase(models.Model):
         return self.state != self.State.SOLVED
 
     state_color = CVE.state_color
+    solved_within = CVE.solved_within
+
+    @property
+    def source_label(self) -> str:
+        """``source`` for display: the stored machine values read as names."""
+        return {"harbinger": "Harbinger", "api": "API"}.get(self.source, self.source)
 
     @property
     def outcome_label(self) -> str:
@@ -557,14 +569,19 @@ def weeklog_cves(weeklog) -> dict:
     """Template context for a week log's CVE section.
 
     Every CVE that was unsolved at some point during the log's ISO week,
-    open ones first. Each carries ``solved_this_week`` for the "Løst denne
-    uge" mark. Shared by the week log page and the HTML/PDF export.
+    open ones first, and likewise every case (``week_cases``) — a case can
+    hold no CVEs at all, e.g. a CFCS warning without a CVE number. Each
+    carries ``solved_this_week`` for the "Løst denne uge" mark. Shared by
+    the week log page and the HTML/PDF export.
     """
     start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
     cves = list(CVE.objects.open_during(start, end).select_related("case").open_first())
     for cve in cves:
         cve.solved_this_week = cve.solved_within(start, end)
-    return {"week_cves": cves}
+    cases = list(CVECase.objects.open_during(start, end).prefetch_related("cves").open_first())
+    for case in cases:
+        case.solved_this_week = case.solved_within(start, end)
+    return {"week_cves": cves, "week_cases": cases, "week_vuln_count": len(cves) + len(cases)}
 
 
 class CVEFileStorage(FileSystemStorage):
