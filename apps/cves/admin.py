@@ -64,7 +64,7 @@ class CVEAttachmentAdmin(admin.ModelAdmin):
 
 @admin.register(CVECase)
 class CVECaseAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "state", "resolution", "updated_at")
-    list_filter = ("state", "resolution")
-    search_fields = ("title", "cves__cve_id")
+    list_display = ("pk", "title", "source", "reference", "state", "resolution", "updated_at")
+    list_filter = ("state", "resolution", "source")
+    search_fields = ("title", "reference", "cves__cve_id")
     readonly_fields = ("created_at", "updated_at", "solved_at")

@@ -57,7 +57,8 @@ def cve_list(request: HttpRequest) -> HttpResponse:
     state = request.GET.get("state") or ""
 
     if q:
-        qs = qs.filter(Q(cve_id__icontains=q) | Q(subject__icontains=q) | Q(case__title__icontains=q))
+        qs = qs.filter(Q(cve_id__icontains=q) | Q(subject__icontains=q) | Q(case__title__icontains=q)
+                       | Q(case__reference__icontains=q))
     if state in CVE.State.values:
         qs = qs.filter(state=state)
     elif state != "all":
@@ -425,15 +426,21 @@ def _resolve_cve_ids(raw: str, *, subject: str, user) -> tuple[list[CVE], list[s
 
 @login_required
 def case_list(request: HttpRequest) -> HttpResponse:
-    """All cases, open ones first. ``?state=all`` includes old solved ones."""
+    """All cases, open ones first. ``?state=all`` includes old solved ones;
+    ``?q=`` searches title, source, reference and member CVE ids in every state."""
     qs = CVECase.objects.prefetch_related("cves")
     state = request.GET.get("state") or ""
-    if state != "all":
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        qs = qs.filter(Q(title__icontains=q) | Q(source__icontains=q) | Q(reference__icontains=q)
+                       | Q(cves__cve_id__icontains=q)).distinct()
+    elif state != "all":
         cutoff = timezone.now() - timedelta(days=SOLVED_WINDOW_DAYS)
         qs = qs.filter(~Q(state=CVE.State.SOLVED) | Q(solved_at__gte=cutoff) | Q(updated_at__gte=cutoff))
     return render(request, "cves/case_list.html", {
         "cases": qs.open_first(),
         "state": state,
+        "q": q,
         "solved_window_days": SOLVED_WINDOW_DAYS,
         "open_count": CVECase.objects.open().count(),
     })

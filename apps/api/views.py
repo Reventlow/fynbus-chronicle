@@ -795,7 +795,8 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
     """Create a case, or add to an existing one (``id``), with its CVEs.
 
     Body: ``title`` (required when creating); ``id`` (an existing case);
-    ``assessment``, ``solution``, ``source_url``, ``comment``; ``state``
+    ``assessment``, ``solution``, ``source``, ``reference``, ``source_url``,
+    ``comment``; ``state``
     and ``resolution`` (patched|not_affected, only with state=solved);
     ``cves``: a list of CVE objects as for POST /cves/ (``cve_id`` and
     ``subject`` required). Unknown CVEs are created; known ones keep their
@@ -818,6 +819,8 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
         solution = _optional_text(data, "solution")
         comment = _optional_text(data, "comment") or ""
         source_url = _clean_url(data.get("source_url"), "source_url")
+        source = _optional_text(data, "source", 40)
+        reference = _optional_text(data, "reference", 100)
 
         state = data.get("state")
         if state is not None and state not in CVE.State.values:
@@ -865,17 +868,22 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
         if created:
             case = CVECase.objects.create(
                 title=title, assessment=assessment or "", solution=solution or "",
-                source="harbinger" if source_url else "api", source_url=source_url, created_by=user,
+                source=source or ("harbinger" if source_url else "api"), reference=reference or "",
+                source_url=source_url, created_by=user,
             )
         else:
             changed = []
-            for field, value in (("title", title), ("assessment", assessment), ("solution", solution)):
+            for field, value in (("title", title), ("assessment", assessment), ("solution", solution),
+                                 ("reference", reference)):
                 if value is not None and (value or field != "title") and getattr(case, field) != value:
                     setattr(case, field, value)
                     changed.append(field)
             if source_url and not case.source_url:
-                case.source_url, case.source = source_url, "harbinger"
+                case.source_url, case.source = source_url, source or "harbinger"
                 changed += ["source_url", "source"]
+            elif source and case.source != source:
+                case.source = source
+                changed.append("source")
             if changed:
                 case.save(update_fields=[*changed, "updated_at"])
         cves = []

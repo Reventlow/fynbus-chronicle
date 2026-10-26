@@ -3,7 +3,7 @@
 {% block title %}Sager — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">CVE'er</a>
+  <a href="{% url 'cves:list' %}">Sårbarheder</a>
   <span class="sep">/</span>
   <span class="current">Sager</span>
 {% endblock %}
@@ -22,6 +22,7 @@
       <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
         En sag samler CVE'er, der har samme vurdering og samme løsning — fx flere kerne-CVE'er, der lukkes af én opdatering.
         Vurdering, løsning og dokumenter skrives én gang på sagen, og sagens status gælder alle dens CVE'er.
+        En advarsel uden CVE-nummer, fx fra CFCS, oprettes som en sag uden CVE'er med kilde og reference.
         Løste sager vises i {{ solved_window_days }} dage{% if state != 'all' %} — <a href="?state=all">vis alle</a>{% endif %}.
       </p>
     </div>
@@ -30,11 +31,21 @@
     {% endif %}
   </div>
 
+  <form method="get" class="card">
+    <div class="filter-row">
+      <div>
+        <label for="id_q" class="input-label">Søg</label>
+        <input type="text" id="id_q" name="q" value="{{ q }}" class="field" placeholder="Titel, kilde, reference eller CVE-id…">
+      </div>
+      <div style="align-self: end;"><button type="submit" class="btn btn-sm">Søg</button></div>
+    </div>
+  </form>
+
   <div class="card overflow-hidden" style="padding: 0;">
     {% for case in cases %}
       {% include "cves/partials/case_row.html" %}
     {% empty %}
-      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">Ingen sager endnu.</p>
+      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">{% if q %}Ingen sager matcher “{{ q }}”.{% else %}Ingen sager endnu.{% endif %}</p>
     {% endfor %}
   </div>
 </div>

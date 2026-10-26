@@ -8,6 +8,7 @@
     <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title|truncatechars:90 }}</div>
     <div class="incident-meta">
       {% include "cves/partials/case_state_badge.html" %}
+      {% if case.reference or not case.cves.all %}<span class="task-status">{{ case.source_label|default:"Uden CVE" }}{% if case.reference %} · {{ case.reference }}{% endif %}</span>{% endif %}
       <span style="font-family: var(--font-mono); font-size: 11.5px;">{% for cve in case.cves.all|slice:":6" %}{{ cve.cve_id }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if case.cves.all|length > 6 %} +{{ case.cves.all|length|add:"-6" }}{% endif %}</span>
       <span class="num" title="{{ case.updated_at|date:'d. M Y H:i' }}">{{ case.updated_at|timesince }} siden</span>
     </div>

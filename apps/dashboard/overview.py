@@ -13,7 +13,7 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
 
-from apps.cves.models import CVE
+from apps.cves.models import CVE, CVECase
 from apps.logbook.models import HelpdeskTicket, WeekLog
 
 # Danish words for small counts, as the headline spells them out ("fire færre").
@@ -191,10 +191,16 @@ def cve_overview(days: int = 30, limit: int = 8) -> dict:
 
     ``open_count`` counts every open CVE however old, so an untouched one
     is not forgotten; ``solved_count`` counts those solved in the window.
+    Open cases (``cases``) are listed above the CVEs: a case can hold no
+    CVE at all (a CFCS warning without a CVE number) and would otherwise
+    never show here.
     """
     cutoff = timezone.now() - timedelta(days=days)
     active = CVE.objects.active_in_last(days).open_first()
+    open_cases = CVECase.objects.open().prefetch_related("cves").open_first()
     return {
+        "cases": list(open_cases[:4]),
+        "open_case_count": open_cases.count(),
         "cves": list(active[:limit]),
         "cve_total": active.count(),
         "open_count": CVE.objects.open().count(),

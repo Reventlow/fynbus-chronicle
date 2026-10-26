@@ -272,6 +272,27 @@
   </div>
   {% endif %}
 
+  <!-- Cases: every case unsolved at some point during the week (some have no CVEs) -->
+  {% if week_cases %}
+  <div class="section">
+    <h2>Sager</h2>
+    {% for case in week_cases %}
+    <table class="item-row no-break" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if case.is_open %} border-left:4px solid #A65D57;{% endif %} margin-bottom:8px;" bgcolor="#FAF9F7">
+      <tr>
+        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">Sag #{{ case.pk }} &middot; {{ case.title }}</td>
+        <td width="120" bgcolor="{% if case.is_open %}#A65D57{% else %}#7D8471{% endif %}" style="background-color:{% if case.is_open %}#A65D57{% else %}#7D8471{% endif %}; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ case.outcome_label }}</td>
+        <td width="10" style="border:none;"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding:0 14px 8px 14px; font-size:9pt; color:#6B635B;">
+          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %} &middot; {% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}Ingen CVE{% endfor %}{% if case.solved_this_week %} &middot; Løst denne uge{% endif %}
+        </td>
+      </tr>
+    </table>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <!-- CVEs: every CVE unsolved at some point during the week -->
   {% if week_cves %}
   <div class="section">
