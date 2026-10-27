@@ -226,7 +226,11 @@ class TestCasePages:
             body = response.content.decode()
             assert f'href="{reverse("cves:list")}"' in body and f'href="{reverse("cves:case-list")}"' in body
             assert "tab-link-active" in body
-        assert [t["count"] for t in response.context["tabs"]] == [2, 1]  # open CVEs, open cases
+        counts = [t["count"] for t in response.context["tabs"]]
+        assert counts == ["2 ikke færdigbehandlet · 2 i alt", "1 ikke færdigbehandlet · 1 i alt"]
+        CVE.objects.create(cve_id="CVE-2026-7001", subject="x", state=CVE.State.SOLVED)
+        counts = [t["count"] for t in editor_client.get(reverse("cves:list")).context["tabs"]]
+        assert counts[0] == "2 ikke færdigbehandlet · 3 i alt"  # the total includes færdigbehandlede
 
     def test_viewer_can_read_but_not_write(self, viewer_client, case):
         assert viewer_client.get(case.get_absolute_url()).status_code == 200

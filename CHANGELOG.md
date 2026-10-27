@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.10.1 — 2026-10-27
+
+### Changed
+- **Fanerne *CVE'er* og *Sager* siger nu, hvad tallet tæller**, fx *2 ikke færdigbehandlet · 9 i alt*. Det nøgne tal blev læst, som om der kun var registreret 2.
+
 ## 1.10.0 — 2026-10-27
 
 ### Changed

@@ -48,12 +48,21 @@ def _owned_by(owner) -> dict:
     return {"case": owner} if owner.is_case else {"cve": owner}
 
 
+def _tab_count(open_count: int, total: int) -> str:
+    """Tab badge text. A bare number read as "only 2 registered", so it
+    says what it counts and how many there are in all."""
+    return f"{open_count} ikke færdigbehandlet · {total} i alt"
+
+
 def _section_tabs(current: str) -> dict:
-    """The "CVE'er | Sager" tabs on top of both Sårbarheder lists, with open counts."""
+    """The "CVE'er | Sager" tabs on top of both Sårbarheder lists, with
+    not-yet-færdigbehandlet and total counts."""
     return {
         "tabs": [
-            {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"), "count": CVE.objects.open().count()},
-            {"key": "cases", "label": "Sager", "url": reverse("cves:case-list"), "count": CVECase.objects.open().count()},
+            {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"),
+             "count": _tab_count(CVE.objects.open().count(), CVE.objects.count())},
+            {"key": "cases", "label": "Sager", "url": reverse("cves:case-list"),
+             "count": _tab_count(CVECase.objects.open().count(), CVECase.objects.count())},
         ],
         "current_tab": current,
     }
