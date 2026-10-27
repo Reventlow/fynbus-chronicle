@@ -264,7 +264,7 @@
               {% include "cves/partials/case_state_badge.html" %}
               {% if case.source or case.reference %}<span class="task-status">{{ case.source_label }}{% if case.source and case.reference %} · {% endif %}{{ case.reference }}</span>{% endif %}
               <span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>
-              {% if case.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Løst denne uge</span>{% endif %}
+              {% if case.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Færdigbehandlet denne uge</span>{% endif %}
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
@@ -279,7 +279,7 @@
               {% include "cves/partials/cvss_pill.html" %}
               {% include "cves/partials/state_badge.html" %}
               {% if cve.case_id %}<span class="task-status" style="color: var(--accent-ink);" title="{{ cve.case.title }}">Sag #{{ cve.case_id }}</span>{% endif %}
-              {% if cve.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Løst denne uge</span>{% endif %}
+              {% if cve.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Færdigbehandlet denne uge</span>{% endif %}
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>

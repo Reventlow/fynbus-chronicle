@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.9.0 — 2026-10-27
+
+### Changed
+- **"Løst" hedder nu "Færdigbehandlet"** under Sårbarheder: status, knapper, lister, Kontrolpanelet og ugeloggen (*Færdigbehandlet denne uge*), også i eksporten. En sikkerhedssag er sjældent endegyldigt løst. Vi kan vurdere og handle efter bedste viden og så lukke den. Ældre statusskift i tidslinjerne beholder deres oprindelige tekst. Hændelser i logbogen hedder stadig *Løst*.
+
+### Added
+- **Nyt udfald på sager: *Færdigbehandlet — risiko accepteret***, ved siden af *patchet* og *ikke berørt*. Det er til en sårbarhed, hvor vi bevidst vælger ikke at patche, fx fordi der ingen rettelse findes, eller fordi en anden foranstaltning dækker risikoen. Skriv begrundelsen i sagens *Vurdering* eller *Løsning / handling*. API'et tager `resolution: "risk_accepted"`.
+
 ## 1.8.0 — 2026-10-27
 
 ### Added

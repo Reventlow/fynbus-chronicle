@@ -107,7 +107,7 @@ class CVE(models.Model):
     class State(models.TextChoices):
         IDENTIFIED = "identified", "Identificeret"
         PATCHING = "patching", "Patcher"
-        SOLVED = "solved", "Løst"
+        SOLVED = "solved", "Færdigbehandlet"
 
     class Severity(models.TextChoices):
         CRITICAL = "critical", "Kritisk"
@@ -176,14 +176,14 @@ class CVE(models.Model):
     )
     created_at = models.DateTimeField(verbose_name="Oprettet", default=timezone.now)
     updated_at = models.DateTimeField(verbose_name="Opdateret", auto_now=True)
-    solved_at = models.DateTimeField(verbose_name="Løst", null=True, blank=True)
+    solved_at = models.DateTimeField(verbose_name="Færdigbehandlet", null=True, blank=True)
     solved_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="cves_solved",
-        verbose_name="Løst af",
+        verbose_name="Færdigbehandlet af",
     )
 
     objects = CVEQuerySet.as_manager()
@@ -336,7 +336,8 @@ class CVECase(models.Model):
     The case's state is the truth for its CVEs: changing it moves every
     member CVE too (each CVE's timeline notes that it came via the case),
     and a CVE added to a case takes the case's state. When solved, the
-    ``resolution`` says how: patched, or not affected at all.
+    ``resolution`` says how: patched, not affected at all, or the risk
+    consciously accepted (no fix, or a compensating control instead).
     """
 
     State = CVE.State
@@ -344,6 +345,7 @@ class CVECase(models.Model):
     class Resolution(models.TextChoices):
         PATCHED = "patched", "Patchet"
         NOT_AFFECTED = "not_affected", "Ikke berørt"
+        RISK_ACCEPTED = "risk_accepted", "Risiko accepteret"
 
     title = models.CharField(verbose_name="Titel", max_length=200,
                              help_text="Fx \"eMudhra CA-kompromittering\" eller \"Linux-kerne, oktober 2026\".")
@@ -365,9 +367,9 @@ class CVECase(models.Model):
                                    related_name="cve_cases_created", verbose_name="Oprettet af")
     created_at = models.DateTimeField(verbose_name="Oprettet", default=timezone.now)
     updated_at = models.DateTimeField(verbose_name="Opdateret", auto_now=True)
-    solved_at = models.DateTimeField(verbose_name="Løst", null=True, blank=True)
+    solved_at = models.DateTimeField(verbose_name="Færdigbehandlet", null=True, blank=True)
     solved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                  related_name="cve_cases_solved", verbose_name="Løst af")
+                                  related_name="cve_cases_solved", verbose_name="Færdigbehandlet af")
 
     objects = CVECaseQuerySet.as_manager()
 
@@ -401,7 +403,7 @@ class CVECase(models.Model):
 
     @property
     def outcome_label(self) -> str:
-        """"Løst — patchet", "Løst — ikke berørt", or the plain state label."""
+        """"Færdigbehandlet — patchet" (… ikke berørt / … risiko accepteret), or the plain state label."""
         if self.state == self.State.SOLVED and self.resolution:
             return f"{self.get_state_display()} — {self.get_resolution_display().lower()}"
         return self.get_state_display()
@@ -578,7 +580,7 @@ def weeklog_cves(weeklog) -> dict:
     Every CVE that was unsolved at some point during the log's ISO week,
     open ones first, and likewise every case (``week_cases``) — a case can
     hold no CVEs at all, e.g. a CFCS warning without a CVE number. Each
-    carries ``solved_this_week`` for the "Løst denne uge" mark. Shared by
+    carries ``solved_this_week`` for the "Færdigbehandlet denne uge" mark. Shared by
     the week log page and the HTML/PDF export.
     """
     start, end = iso_week_bounds(weeklog.year, weeklog.week_number)

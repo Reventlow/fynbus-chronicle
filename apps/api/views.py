@@ -797,7 +797,7 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
     Body: ``title`` (required when creating); ``id`` (an existing case);
     ``assessment``, ``solution``, ``source``, ``reference``, ``source_url``,
     ``comment``; ``state``
-    and ``resolution`` (patched|not_affected, only with state=solved);
+    and ``resolution`` (patched|not_affected|risk_accepted, only with state=solved);
     ``cves``: a list of CVE objects as for POST /cves/ (``cve_id`` and
     ``subject`` required). Unknown CVEs are created; known ones keep their
     fields. A CVE that is already in another case makes it a 409 with

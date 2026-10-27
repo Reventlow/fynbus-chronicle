@@ -31,7 +31,7 @@
       {% include "cves/partials/cvss_pill.html" %}
       {% include "cves/partials/state_badge.html" %}
       {% if cve.solved_at %}
-        <span class="task-status num">Løst {{ cve.solved_at|date:"j. M Y · H:i" }}{% if cve.solved_by %} af {{ cve.solved_by.get_full_name|default:cve.solved_by.username }}{% endif %}</span>
+        <span class="task-status num">Færdigbehandlet {{ cve.solved_at|date:"j. M Y · H:i" }}{% if cve.solved_by %} af {{ cve.solved_by.get_full_name|default:cve.solved_by.username }}{% endif %}</span>
       {% endif %}
       <span style="flex: 1;"></span>
       {% if cve.cvefeed_url %}
