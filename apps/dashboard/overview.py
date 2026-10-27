@@ -11,6 +11,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from django.conf import settings
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from apps.cves.models import CVE, CVECase
@@ -185,24 +186,32 @@ def open_ticket_lists(limit: int = 6, now: datetime | None = None) -> dict:
     }
 
 
-def cve_overview(days: int = 30, limit: int = 8) -> dict:
-    """The CVE card: CVEs created or updated in the last ``days`` days,
-    open ones first (patching, then identified), then solved.
+def cve_overview(days: int = 30, limit: int = 8, case_limit: int = 6) -> dict:
+    """The Sårbarheder card on the Kontrolpanel, built around cases.
+
+    ``cases``: open cases plus those færdigbehandlet in the last ``days``
+    days, open first, each with its CVEs prefetched so the card shows how
+    the CVEs are grouped (a case can hold no CVE at all, e.g. a CFCS
+    warning). ``cves``: CVEs created or updated in the window that are in
+    no case; CVEs in a case are shown under their case instead.
 
     ``open_count`` counts every open CVE however old, so an untouched one
-    is not forgotten; ``solved_count`` counts those solved in the window.
-    Open cases (``cases``) are listed above the CVEs: a case can hold no
-    CVE at all (a CFCS warning without a CVE number) and would otherwise
-    never show here.
+    is not forgotten; ``solved_count`` counts those færdigbehandlet in the
+    window.
     """
     cutoff = timezone.now() - timedelta(days=days)
-    active = CVE.objects.active_in_last(days).open_first()
-    open_cases = CVECase.objects.open().prefetch_related("cves").open_first()
+    cases = (
+        CVECase.objects.filter(Q(state__in=[CVE.State.IDENTIFIED, CVE.State.PATCHING]) | Q(solved_at__gte=cutoff))
+        .prefetch_related(Prefetch("cves", queryset=CVE.objects.open_first()))
+        .open_first()
+    )
+    loose = CVE.objects.active_in_last(days).filter(case__isnull=True).open_first()
     return {
-        "cases": list(open_cases[:4]),
-        "open_case_count": open_cases.count(),
-        "cves": list(active[:limit]),
-        "cve_total": active.count(),
+        "cases": list(cases[:case_limit]),
+        "case_total": cases.count(),
+        "open_case_count": CVECase.objects.open().count(),
+        "cves": list(loose[:limit]),
+        "cve_total": loose.count(),
         "open_count": CVE.objects.open().count(),
         "solved_count": CVE.objects.filter(
             state=CVE.State.SOLVED, solved_at__gte=cutoff

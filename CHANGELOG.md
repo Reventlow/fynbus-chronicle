@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.10.0 — 2026-10-27
+
+### Changed
+- **Kortet *Sårbarheder* på Kontrolpanelet er bygget op om sagerne.** Hver sag står med sine CVE'er nedenunder: id, emne og CVSS. Så kan man se, hvilke CVE'er der hører sammen, uden at åbne sagen. Hver CVE er et link.
+  - Kortet viser de åbne sager og dem, der er færdigbehandlet de sidste 30 dage. Åbne sager står først.
+  - Under sagerne står *CVE'er uden sag* fra de sidste 30 dage. En CVE i en sag vises kun under sin sag.
+  - Overskriften tæller de åbne sager. Linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. Links fører til fanerne *Sager* og *CVE'er*.
+
 ## 1.9.0 — 2026-10-27
 
 ### Changed

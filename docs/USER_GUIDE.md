@@ -105,7 +105,7 @@ Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen p�
 - **Hændelser** fra de sidste 30 dage plus alle uløste, nyeste først. Den farvede kant og P1/P2/P3 viser alvoren (P1 kritisk, P2 høj, P3 lavere), og hver linje siger **Løst** eller **Uløst**. *Vis ældre* folder ældre, løste hændelser ud.
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
-- **Sårbarheder**: CVE'er, der er oprettet eller ændret de sidste 30 dage — dem der patches først, så de identificerede, til sidst de færdigbehandlede. Overskriften tæller alle åbne CVE'er og dem, der er færdigbehandlet i perioden. *Se alle CVE'er* åbner listen.
+- **Sårbarheder**: sagerne, hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
 
 ### 02 Åbne sager
 
