@@ -50,9 +50,9 @@
       {% endif %}
 
       {% if cves %}
-        <div class="label-eyebrow" style="padding: 14px 24px 6px; border-top: 1px solid var(--hairline);">CVE'er uden sag</div>
+        <div class="label-eyebrow" style="padding: 14px 24px 6px; border-top: 1px solid var(--hairline); color: var(--warn-ink);">CVE'er uden sag · læg dem i en sag</div>
         {% for cve in cves %}
-          <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
+          <a href="{% url 'cves:detail' cve.pk %}#sag" class="incident-row">
             <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
             <div style="min-width: 0;">
               <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:70 }}</div>
