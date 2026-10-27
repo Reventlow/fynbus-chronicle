@@ -41,7 +41,7 @@ class TestDashboardCard:
         assert cve.cve_id in body
         assert reverse("cves:detail", args=[cve.pk]) in body
         assert reverse("cves:list") in body
-        assert "1 åben, 0 løst" in body
+        assert "1 åben, 0 færdigbehandlet" in body
 
     def test_partial_empty_state(self, editor_client):
         body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
@@ -78,7 +78,7 @@ class TestWeeklogSection:
         assert "CVE-2026-4001" in body
         assert "CVE-2026-4002" in body
         assert "CVE-2026-4003" not in body
-        assert "Løst denne uge" in body
+        assert "Færdigbehandlet denne uge" in body
 
     def test_solved_cve_gone_next_week(self, editor_client, weeklog):
         WeekLog.objects.create(year=2026, week_number=21)
@@ -145,7 +145,7 @@ class TestCasesWithoutCVEs:
                                                   solved_at=self.at(2026, 5, 14))
         response = editor_client.get(reverse("logbook:weeklog-detail", args=[2026, 20]))
         assert response.context["week_cases"][0].solved_this_week
-        assert "Løst denne uge" in response.content.decode()
+        assert "Færdigbehandlet denne uge" in response.content.decode()
 
     def test_html_export_includes_cases(self, cfcs):
         html = generate_html(WeekLog.objects.create(year=2026, week_number=20))

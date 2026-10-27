@@ -105,7 +105,7 @@ Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen p�
 - **Hændelser** fra de sidste 30 dage plus alle uløste, nyeste først. Den farvede kant og P1/P2/P3 viser alvoren (P1 kritisk, P2 høj, P3 lavere), og hver linje siger **Løst** eller **Uløst**. *Vis ældre* folder ældre, løste hændelser ud.
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
-- **Sårbarheder**: CVE'er, der er oprettet eller ændret de sidste 30 dage — dem der patches først, så de identificerede, til sidst de løste. Overskriften tæller alle åbne CVE'er og dem, der er løst i perioden. *Se alle CVE'er* åbner listen.
+- **Sårbarheder**: CVE'er, der er oprettet eller ændret de sidste 30 dage — dem der patches først, så de identificerede, til sidst de færdigbehandlede. Overskriften tæller alle åbne CVE'er og dem, der er færdigbehandlet i perioden. *Se alle CVE'er* åbner listen.
 
 ### 02 Åbne sager
 
@@ -322,13 +322,13 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 **Sårbarheder** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
 
 - Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
-- Status er **Identificeret**, **Patcher** eller **Løst**. Skift den med knapperne på CVE'ens side; hvert skift skrives i tidslinjen med navn og tidspunkt.
+- Status er **Identificeret**, **Patcher** eller **Færdigbehandlet**. Ordet er valgt med vilje: en sikkerhedssag lukkes efter bedste viden, den er sjældent endegyldigt løst. Skift den med knapperne på CVE'ens side; hvert skift skrives i tidslinjen med navn og tidspunkt.
 - Under **Links** samles advisories, leverandørnoter og sager. Under **Kommentarer** skrives noter (Markdown virker), nyeste øverst. Din egen kommentar kan rettes med blyanten ved den; den får så mærket *redigeret* med tidspunkt. Andres kommentarer og statusskift kan ikke rettes, fordi tidslinjen er dokumentationen.
 - Under **Vedhæftninger** lægges PDF'er, fx advisories fra FE-CSIRT. Vælg filen, giv den evt. en titel og kilde, angiv **TLP** (CLEAR, GREEN, AMBER, AMBER+STRICT, RED) og klik **Vedhæft PDF**. Klik på en PDF for at se den oven på siden; TLP-mærket står i toppen. Husk TLP, før du sender et dokument videre. PDF'er, ODT-dokumenter (.odt) og Outlook-mails (.msg), højst 25 MB. Et ODT-dokument kan ikke vises i browseren; klik på det for at hente det.
 - En **Outlook-mail (.msg)**, fx en advarsel fra FE-CSIRT, kan vedhæftes direkte: træk den ud af Outlook og vælg den. Klik på den for at læse afsender, dato og tekst; *Hent* giver den oprindelige mail. PDF'er i mailen pakkes ud som egne vedhæftninger med samme TLP, og vælger du ingen TLP, bruges den, der står i mailen.
-- Listen viser åbne CVE'er øverst og løste i 90 dage. Søg på id eller emne, eller vælg *Alle* for ældre.
+- Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. Søg på id eller emne, eller vælg *Alle* for ældre.
 - Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
-- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *løst denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
+- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
 
 ### Sager: flere CVE'er med samme løsning
 
@@ -336,13 +336,13 @@ En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire ker
 
 - Vælg fanen **Sager** og klik **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
 - Fra en CVE's side: **Føj til sag** vælger en åben sag, og **Ny sag med denne CVE** starter en ny.
-- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Løst — patchet* og *Løst — ikke berørt*. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
+- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. En enkelt CVE uden sag har intet udfald; skal risikoen accepteres, så læg den i en sag. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
 - Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
 - **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.
 - CVE'er i en sag har mærket *Sag #n* i ugeloggen. Harbinger kan sende en hel sag på én gang.
 - **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
 - **Ugeloggen og Kontrolpanelet** viser sagerne over CVE'erne. Ugeloggen viser hver sag, der var åben i løbet af ugen; Kontrolpanelet viser de åbne. En sag uden CVE'er kommer derfor med i ugens dokumentation.
-- Søgefeltet på **Sager** finder titel, kilde, reference og CVE-id, også i løste sager.
+- Søgefeltet på **Sager** finder titel, kilde, reference og CVE-id, også i færdigbehandlede sager.
 - **Fanerne *CVE'er* og *Sager*** øverst under Sårbarheder viser sammenhængen begge veje. *Sager* viser hver sag med alle dens CVE'er. *CVE'er* viser for hver CVE i en sag et link til sagen (*↳ Sag #n · titel*).
 
 Læsere kan se alt, men ikke oprette eller ændre.

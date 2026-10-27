@@ -80,7 +80,7 @@ class TestStateTransitions:
         assert cve.solved_by == editor
         entry = cve.comments.get()
         assert entry.kind == CVEComment.Kind.STATE
-        assert entry.text == "Status: Identificeret → Løst"
+        assert entry.text == "Status: Identificeret → Færdigbehandlet"
         assert entry.author == editor
 
     def test_leaving_solved_clears_stamp(self, cve, editor):
@@ -89,7 +89,7 @@ class TestStateTransitions:
         cve.refresh_from_db()
         assert cve.solved_at is None
         assert cve.solved_by is None
-        assert cve.comments.first().text == "Status: Løst → Patcher"
+        assert cve.comments.first().text == "Status: Færdigbehandlet → Patcher"
         assert cve.comments.count() == 2
 
     def test_same_state_is_a_no_op(self, cve, editor):

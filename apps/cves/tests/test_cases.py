@@ -82,18 +82,25 @@ class TestModel:
         assert case.set_state(CVE.State.SOLVED, editor, resolution=CVECase.Resolution.PATCHED)
         case.refresh_from_db()
         assert (case.state, case.resolution, case.solved_by) == ("solved", "patched", editor)
-        assert case.outcome_label == "Løst — patchet"
+        assert case.outcome_label == "Færdigbehandlet — patchet"
         for cve in kernel:
             cve.refresh_from_db()
             assert cve.state == CVE.State.SOLVED and cve.solved_at
-            assert timeline(cve)[-1] == f"Status: Identificeret → Løst (via sag #{case.pk})"
-        assert timeline(case)[-1] == "Status: Identificeret → Løst — patchet"
+            assert timeline(cve)[-1] == f"Status: Identificeret → Færdigbehandlet (via sag #{case.pk})"
+        assert timeline(case)[-1] == "Status: Identificeret → Færdigbehandlet — patchet"
 
     def test_changing_only_the_resolution_counts(self, case, editor):
         case.set_state(CVE.State.SOLVED, editor, resolution="patched")
         assert case.set_state(CVE.State.SOLVED, editor, resolution="not_affected")
-        assert timeline(case)[-1] == "Status: Løst — patchet → Løst — ikke berørt"
+        assert timeline(case)[-1] == "Status: Færdigbehandlet — patchet → Færdigbehandlet — ikke berørt"
         assert not case.set_state(CVE.State.SOLVED, editor, resolution="not_affected")
+
+    def test_risk_accepted_is_an_outcome(self, case, kernel, editor):
+        assert case.set_state(CVE.State.SOLVED, editor, resolution=CVECase.Resolution.RISK_ACCEPTED)
+        case.refresh_from_db()
+        assert case.outcome_label == "Færdigbehandlet — risiko accepteret"
+        assert timeline(case)[-1] == "Status: Identificeret → Færdigbehandlet — risiko accepteret"
+        assert all(c.state == CVE.State.SOLVED for c in CVE.objects.filter(case=case))
 
     def test_reopening_clears_resolution_and_solved_stamp(self, case, editor):
         case.set_state(CVE.State.SOLVED, editor, resolution="patched")
@@ -179,7 +186,7 @@ class TestCasePages:
         body = editor_client.get(case.get_absolute_url()).content.decode()
         assert "<strong>Ikke berørt</strong>" in body
         assert "CVE-2026-93228" in body and "CVE-2026-93207" in body
-        assert "Løst — ikke berørt" in body and "Skift status for hele sagen" in body
+        assert "Færdigbehandlet — ikke berørt" in body and "Færdigbehandlet — risiko accepteret" in body and "Skift status for hele sagen" in body
 
     def test_state_button(self, editor_client, case, kernel):
         response = editor_client.post(reverse("cves:case-state", args=[case.pk]),
@@ -329,8 +336,13 @@ class TestCaseAPI:
 
     def test_create_solved_puts_members_in_solved(self, client, write_key):
         response = post_case(client, write_key, {**EMUDHRA, "state": "solved", "resolution": "not_affected"})
-        assert response.json()["outcome"] == "Løst — ikke berørt"
+        assert response.json()["outcome"] == "Færdigbehandlet — ikke berørt"
         assert set(CVE.objects.values_list("state", flat=True)) == {"solved"}
+
+    def test_create_with_risk_accepted(self, client, write_key):
+        response = post_case(client, write_key, {**EMUDHRA, "state": "solved", "resolution": "risk_accepted"})
+        assert response.status_code == 201
+        assert response.json()["outcome"] == "Færdigbehandlet — risiko accepteret"
 
     def test_extend_existing_case_by_id(self, client, write_key):
         case_id = post_case(client, write_key, EMUDHRA).json()["id"]

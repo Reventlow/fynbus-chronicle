@@ -540,8 +540,9 @@ class CVECaseDetailView(LoginRequiredMixin, DetailView):
 CASE_OUTCOMES = [
     (CVE.State.IDENTIFIED, "", "Identificeret"),
     (CVE.State.PATCHING, "", "Patcher"),
-    (CVE.State.SOLVED, CVECase.Resolution.PATCHED, "Løst — patchet"),
-    (CVE.State.SOLVED, CVECase.Resolution.NOT_AFFECTED, "Løst — ikke berørt"),
+    (CVE.State.SOLVED, CVECase.Resolution.PATCHED, "Færdigbehandlet — patchet"),
+    (CVE.State.SOLVED, CVECase.Resolution.NOT_AFFECTED, "Færdigbehandlet — ikke berørt"),
+    (CVE.State.SOLVED, CVECase.Resolution.RISK_ACCEPTED, "Færdigbehandlet — risiko accepteret"),
 ]
 
 

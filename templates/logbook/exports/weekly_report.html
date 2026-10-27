@@ -285,7 +285,7 @@
       </tr>
       <tr>
         <td colspan="3" style="padding:0 14px 8px 14px; font-size:9pt; color:#6B635B;">
-          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %} &middot; {% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}Ingen CVE{% endfor %}{% if case.solved_this_week %} &middot; Løst denne uge{% endif %}
+          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %} &middot; {% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}Ingen CVE{% endfor %}{% if case.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}
         </td>
       </tr>
     </table>
@@ -308,7 +308,7 @@
       </tr>
       <tr>
         <td colspan="5" style="padding:0 14px 8px 14px; font-size:9pt; color:#6B635B;">
-          {{ cve.get_severity_display }}{% if cve.solved_this_week %} &middot; Løst denne uge{% endif %}{% if cve.cvefeed_url %} &middot; <a href="{{ cve.cvefeed_url }}">cvefeed.io</a>{% endif %}
+          {{ cve.get_severity_display }}{% if cve.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}{% if cve.cvefeed_url %} &middot; <a href="{{ cve.cvefeed_url }}">cvefeed.io</a>{% endif %}
         </td>
       </tr>
     </table>
