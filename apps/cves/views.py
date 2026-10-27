@@ -269,7 +269,7 @@ def link_delete(request: HttpRequest, pk: int, link_pk: int, kind: str = "cve") 
 @editor_required
 @require_POST
 def attachment_create(request: HttpRequest, pk: int, kind: str = "cve") -> HttpResponse:
-    """Attach a PDF or an Outlook mail (HTMX multipart POST).
+    """Attach a PDF, an ODT document or an Outlook mail (HTMX multipart POST).
 
     For a mail, its headers and text are stored for the preview, a TLP
     found in it is used when none was chosen, and every PDF inside it is
@@ -328,6 +328,13 @@ def attachment_create(request: HttpRequest, pk: int, kind: str = "cve") -> HttpR
     return HttpResponse(rows + fresh_form + '<p id="no-cve-attachments" hx-swap-oob="delete"></p>')
 
 
+_ATTACHMENT_CONTENT_TYPES = {
+    CVEAttachment.Kind.PDF: "application/pdf",
+    CVEAttachment.Kind.MSG: "application/vnd.ms-outlook",
+    CVEAttachment.Kind.ODT: "application/vnd.oasis.opendocument.text",
+}
+
+
 @login_required
 @require_GET
 @xframe_options_sameorigin  # the CVE page shows it in a lightbox (same-origin iframe)
@@ -335,20 +342,20 @@ def attachment_view(request: HttpRequest, pk: int, key: str, kind: str = "cve") 
     """Serve a CVE's attachment to any logged-in user (viewers included).
 
     PDFs inline by default for the lightbox; ``?download=1`` forces a
-    download. A .msg is always a download (the lightbox shows the preview
-    page instead). ``no-store``: these can be TLP:AMBER advisories, so no
-    copies are kept in shared or browser caches.
+    download. A .msg or .odt is always a download (for a mail the lightbox
+    shows the preview page instead). ``no-store``: these can be TLP:AMBER
+    advisories, so no copies are kept in shared or browser caches.
     """
     attachment = get_object_or_404(CVEAttachment, key=key, **{f"{kind}_id": pk})
     try:
         handle = attachment.file.open("rb")
     except FileNotFoundError:
         raise Http404
-    is_msg = attachment.is_msg
+    is_pdf = attachment.kind == CVEAttachment.Kind.PDF
     response = FileResponse(
         handle,
-        content_type="application/vnd.ms-outlook" if is_msg else "application/pdf",
-        as_attachment=is_msg or request.GET.get("download") == "1",
+        content_type=_ATTACHMENT_CONTENT_TYPES[attachment.kind],
+        as_attachment=not is_pdf or request.GET.get("download") == "1",
         filename=attachment.original_name or f"{attachment.key}.{attachment.kind}",
     )
     response["Cache-Control"] = "private, no-store"

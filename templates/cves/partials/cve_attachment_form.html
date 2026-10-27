@@ -1,6 +1,6 @@
 {% load cve_extras %}
 {% comment %}
-  Inline "attach PDF / .msg" form (multipart via HTMX). Replaced out-of-band with a
+  Inline "attach PDF / .odt / .msg" form (multipart via HTMX). Replaced out-of-band with a
   fresh copy after a successful upload (oob=True), re-rendered with errors.
 {% endcomment %}
 <div id="cve-attachment-form-container" {% if oob %}hx-swap-oob="outerHTML"{% endif %}

@@ -103,10 +103,31 @@ class CVECommentForm(forms.ModelForm):
         }
 
 
-class CVEAttachmentForm(forms.ModelForm):
-    """Upload one PDF or Outlook mail (.msg), with title, source and TLP.
+ODT_MIMETYPE = b"application/vnd.oasis.opendocument.text"
 
-    After ``is_valid()``, ``kind`` is "pdf" or "msg" and, for a mail,
+
+def _is_odt(upload) -> bool:
+    """True if ``upload`` is an OpenDocument text: a zip whose ``mimetype``
+    member says so (the ODF spec puts it first, uncompressed). Only that one
+    small member is read, so a zip bomb is never unpacked."""
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(upload) as archive:
+            info = archive.getinfo("mimetype")
+            if info.file_size > 100:
+                return False
+            return archive.read(info).strip() == ODT_MIMETYPE
+    except (zipfile.BadZipFile, KeyError, OSError, RuntimeError, NotImplementedError):
+        return False
+    finally:
+        upload.seek(0)
+
+
+class CVEAttachmentForm(forms.ModelForm):
+    """Upload one PDF, ODT document or Outlook mail (.msg), with title, source and TLP.
+
+    After ``is_valid()``, ``kind`` is "pdf", "odt" or "msg" and, for a mail,
     ``msg_info`` holds what was read from it (see apps.cves.msg).
     """
 
@@ -114,7 +135,7 @@ class CVEAttachmentForm(forms.ModelForm):
         model = CVEAttachment
         fields = ["file", "title", "source", "tlp"]
         widgets = {
-            "file": forms.ClearableFileInput(attrs={"class": "input-field", "accept": "application/pdf,.pdf,.msg,application/vnd.ms-outlook"}),
+            "file": forms.ClearableFileInput(attrs={"class": "input-field", "accept": "application/pdf,.pdf,.odt,application/vnd.oasis.opendocument.text,.msg,application/vnd.ms-outlook"}),
             "title": forms.TextInput(attrs={"class": "input-field", "placeholder": "Titel (valgfri)"}),
             "source": forms.TextInput(attrs={"class": "input-field", "placeholder": "Kilde, fx FE-CSIRT"}),
             "tlp": forms.Select(attrs={"class": "input-field"}),
@@ -131,10 +152,10 @@ class CVEAttachmentForm(forms.ModelForm):
 
         upload = self.cleaned_data.get("file")
         if not upload:
-            raise forms.ValidationError("Vælg en PDF eller en Outlook-mail (.msg).")
+            raise forms.ValidationError("Vælg en PDF, et ODT-dokument eller en Outlook-mail (.msg).")
         name = upload.name.lower()
-        if not name.endswith((".pdf", ".msg")):
-            raise forms.ValidationError("Kun PDF-filer og Outlook-mails (.msg) kan vedhæftes.")
+        if not name.endswith((".pdf", ".odt", ".msg")):
+            raise forms.ValidationError("Kun PDF-filer, ODT-dokumenter (.odt) og Outlook-mails (.msg) kan vedhæftes.")
         limit = settings.CVE_ATTACHMENT_MAX_BYTES
         if upload.size > limit:
             raise forms.ValidationError(f"Filen er for stor (maks. {limit // (1024 * 1024)} MB).")
@@ -144,6 +165,11 @@ class CVEAttachmentForm(forms.ModelForm):
             if head[:5] != b"%PDF-":  # the extension alone proves nothing
                 raise forms.ValidationError("Filen er ikke en gyldig PDF.")
             self.kind = CVEAttachment.Kind.PDF
+            return upload
+        if name.endswith(".odt"):
+            if not _is_odt(upload):
+                raise forms.ValidationError("Filen er ikke et gyldigt ODT-dokument.")
+            self.kind = CVEAttachment.Kind.ODT
             return upload
         try:
             self.msg_info = msg_reader.parse(upload)
