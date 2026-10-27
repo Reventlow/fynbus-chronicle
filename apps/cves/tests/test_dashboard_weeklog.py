@@ -41,11 +41,13 @@ class TestDashboardCard:
         assert cve.cve_id in body
         assert reverse("cves:detail", args=[cve.pk]) in body
         assert reverse("cves:list") in body
-        assert "1 åben, 0 færdigbehandlet" in body
+        assert "1 åben CVE, 0 færdigbehandlet" in body
+        assert "Ingen åbne sager" in body
+        assert reverse("cves:case-list") in body
 
     def test_partial_empty_state(self, editor_client):
         body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
-        assert "Ingen CVE&#x27;er de sidste 30 dage." in body or "Ingen CVE'er de sidste 30 dage." in body
+        assert "Ingen sager eller CVE&#x27;er de sidste 30 dage." in body or "Ingen sager eller CVE'er de sidste 30 dage." in body
 
     def test_index_loads_card(self, editor_client):
         body = editor_client.get(reverse("dashboard:index")).content.decode()
@@ -118,9 +120,24 @@ class TestCasesWithoutCVEs:
         assert "CFCS-advarsel 2026-10-24" in body
         assert body.index(cfcs.get_absolute_url()) < body.index(reverse("cves:detail", args=[cve.pk]))
 
-    def test_dashboard_drops_solved_cases(self, editor, cfcs):
+    def test_dashboard_keeps_recently_solved_cases_only(self, editor, cfcs):
         cfcs.set_state(CVE.State.SOLVED, editor, resolution=CVECase.Resolution.NOT_AFFECTED)
+        data = cve_overview()
+        assert data["cases"] == [cfcs] and data["open_case_count"] == 0
+        CVECase.objects.filter(pk=cfcs.pk).update(solved_at=timezone.now() - timedelta(days=31))
         assert cve_overview()["cases"] == []
+
+    def test_dashboard_nests_cves_under_their_case(self, editor, editor_client, cve):
+        case = CVECase.objects.create(title="Kerne, oktober", created_by=editor)
+        case.add_cves([cve], editor)
+        loose = CVE.objects.create(cve_id="CVE-2026-5005", subject="uden sag")
+        data = cve_overview()
+        assert data["cases"] == [case] and list(data["cases"][0].cves.all()) == [cve]
+        assert data["cves"] == [loose]  # the case's CVE is shown under the case, not again
+        body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
+        detail = reverse("cves:detail", args=[cve.pk])
+        assert body.count(detail) == 1
+        assert body.index(case.get_absolute_url()) < body.index(detail) < body.index("CVE'er uden sag") < body.index(loose.cve_id)
 
     def test_dashboard_card_shows_with_only_a_case(self, editor_client, cfcs):
         body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()

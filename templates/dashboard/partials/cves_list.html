@@ -1,57 +1,90 @@
 {% comment %}
-  CVE card: open cases first (some have no CVEs, e.g. CFCS warnings), then
-  CVEs created or updated in the last 30 days, open ones first (patching,
-  then identified), then solved. Headline counts every open CVE and those
-  solved in the window. Rows link to the case's or the CVE's page.
+  Sårbarheder card, built around cases: open cases (and those
+  færdigbehandlet in the window), open first, each with its CVEs listed
+  underneath so it is visible which CVEs a case holds. A case without CVEs
+  (e.g. a CFCS warning) shows its source and reference instead. Below
+  them, CVEs from the window that are in no case. The case row and each
+  CVE row are separate links (no nesting).
 {% endcomment %}
 <div class="card overflow-hidden" style="padding: 0; display: flex; flex-direction: column;">
   <div class="card-head" style="padding: 18px 24px 10px; margin: 0;">
     <div>
-      <div class="label-eyebrow">Sårbarheder · {{ window_days }} dage{% if open_case_count %} · {{ open_case_count }} åben{{ open_case_count|pluralize:"e" }} sag{{ open_case_count|pluralize:"er" }}{% endif %}</div>
-      <h3>{% if open_count %}{{ open_count }} åben{{ open_count|pluralize:"e" }}{% else %}Ingen åbne{% endif %}, {{ solved_count }} færdigbehandlet</h3>
+      <div class="label-eyebrow">Sårbarheder · {{ window_days }} dage · {{ open_count }} åben{{ open_count|pluralize:"e" }} CVE{{ open_count|pluralize:"'er" }}, {{ solved_count }} færdigbehandlet</div>
+      <h3>{% if open_case_count %}{{ open_case_count }} åben{{ open_case_count|pluralize:"e" }} sag{{ open_case_count|pluralize:"er" }}{% else %}Ingen åbne sager{% endif %}</h3>
     </div>
-    <a href="{% url 'cves:list' %}" class="incident-toggle" style="font-size: 12.5px;">Se alle CVE'er →</a>
+    <div style="display: flex; gap: 14px; font-size: 12.5px;">
+      <a href="{% url 'cves:case-list' %}" class="incident-toggle">Sager →</a>
+      <a href="{% url 'cves:list' %}" class="incident-toggle">CVE'er →</a>
+    </div>
   </div>
 
   {% if cves or cases %}
     <div class="scrollbar-thin" style="overflow-y: auto;">
       {% for case in cases %}
-        <a href="{{ case.get_absolute_url }}" class="incident-row">
-          <span class="incident-rail" style="background: {{ case.state_color }};"></span>
-          <div style="min-width: 0;">
-            <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title|truncatechars:70 }}</div>
-            <div class="incident-meta">
-              {% include "cves/partials/case_state_badge.html" %}
-              <span class="task-status">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}{{ case.source_label|default:"Uden CVE" }}{% if case.reference %} · {{ case.reference|truncatechars:30 }}{% endif %}{% endif %}{% endwith %}</span>
-              <span class="num">{{ case.updated_at|timesince }} siden</span>
+        <div class="dash-case">
+          <a href="{{ case.get_absolute_url }}" class="incident-row">
+            <span class="incident-rail" style="background: {{ case.state_color }};"></span>
+            <div style="min-width: 0;">
+              <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title|truncatechars:70 }}</div>
+              <div class="incident-meta">
+                {% include "cves/partials/case_state_badge.html" %}
+                {% with n=case.cves.all|length %}
+                  {% if n %}<span class="task-status num">{{ n }} CVE{{ n|pluralize:"'er" }}</span>
+                  {% else %}<span class="task-status">{{ case.source_label|default:"Uden CVE" }}{% if case.reference %} · {{ case.reference|truncatechars:30 }}{% endif %}</span>{% endif %}
+                {% endwith %}
+                <span class="num">{{ case.updated_at|timesince }} siden</span>
+              </div>
             </div>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+          {% for cve in case.cves.all %}
+            <a href="{% url 'cves:detail' cve.pk %}" class="dash-case-cve">
+              <span class="dash-case-cve-id"><span style="color: var(--ink-5);" aria-hidden="true">↳</span> <span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> <span style="color: var(--ink-4);">· {{ cve.subject|truncatechars:48 }}</span></span>
+              <span class="incident-sev num" style="color: var(--{% if cve.severity == 'critical' %}bad-ink{% elif cve.severity == 'high' %}warn-ink{% else %}ink-3{% endif %});">CVSS {% if cve.cvss is not None %}{{ cve.cvss }}{% else %}–{% endif %}</span>
+            </a>
+          {% endfor %}
+        </div>
       {% endfor %}
-      {% for cve in cves %}
-        <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
-          <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
-          <div style="min-width: 0;">
-            <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:70 }}</div>
-            <div class="incident-meta">
-              <span class="incident-sev" style="color: var(--{% if cve.severity == 'critical' %}bad-ink{% elif cve.severity == 'high' %}warn-ink{% else %}ink-3{% endif %});">CVSS {% if cve.cvss is not None %}{{ cve.cvss }}{% else %}–{% endif %}</span>
-              {% include "cves/partials/state_badge.html" %}
-              <span class="num">{{ cve.updated_at|timesince }} siden</span>
+      {% if case_total > cases|length %}
+        <div class="dash-more">{{ cases|length }} af {{ case_total }} sager vist · <a href="{% url 'cves:case-list' %}" class="incident-toggle">se alle sager</a></div>
+      {% endif %}
+
+      {% if cves %}
+        <div class="label-eyebrow" style="padding: 14px 24px 6px; border-top: 1px solid var(--hairline);">CVE'er uden sag</div>
+        {% for cve in cves %}
+          <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
+            <span class="incident-rail" style="background: {{ cve.state_color }};"></span>
+            <div style="min-width: 0;">
+              <div class="incident-title"><span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> · {{ cve.subject|truncatechars:70 }}</div>
+              <div class="incident-meta">
+                <span class="incident-sev" style="color: var(--{% if cve.severity == 'critical' %}bad-ink{% elif cve.severity == 'high' %}warn-ink{% else %}ink-3{% endif %});">CVSS {% if cve.cvss is not None %}{{ cve.cvss }}{% else %}–{% endif %}</span>
+                {% include "cves/partials/state_badge.html" %}
+                <span class="num">{{ cve.updated_at|timesince }} siden</span>
+              </div>
             </div>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
-      {% endfor %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        {% endfor %}
+        {% if cve_total > cves|length %}
+          <div class="dash-more">{{ cves|length }} af {{ cve_total }} vist · <a href="{% url 'cves:list' %}" class="incident-toggle">se resten</a></div>
+        {% endif %}
+      {% endif %}
     </div>
-    {% if cve_total > cves|length %}
-      <div style="padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-4);">
-        {{ cves|length }} af {{ cve_total }} vist · <a href="{% url 'cves:list' %}" class="incident-toggle">se resten</a>
-      </div>
-    {% endif %}
   {% else %}
     <p style="padding: 36px 24px; border-top: 1px solid var(--hairline); margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">
-      Ingen CVE'er de sidste {{ window_days }} dage.
+      Ingen sager eller CVE'er de sidste {{ window_days }} dage.
     </p>
   {% endif %}
 </div>
+<style>
+  .dash-case + .dash-case, .dash-case { border-top: 1px solid var(--hairline); }
+  .dash-case > .incident-row { border-top: 0; }
+  .dash-case-cve {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 4px 24px 4px 46px; font-size: 12.5px; color: var(--ink-2); text-decoration: none;
+  }
+  .dash-case-cve:last-child { padding-bottom: 12px; }
+  .dash-case-cve:hover { background: var(--surface-2); }
+  .dash-case-cve-id { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-more { padding: 10px 24px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-4); }
+</style>
