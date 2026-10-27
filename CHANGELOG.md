@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.8.0 — 2026-10-27
+
+### Added
+- **Redigér kommentarer i tidslinjen** på CVE'er og sager. Blyanten ved en kommentar åbner den til redigering direkte i tidslinjen. *Gem* gemmer, og *Annullér* fortryder.
+  - Kun den, der har skrevet kommentaren, kan rette den. Statusskift kan ikke rettes. Tidslinjen er dokumentationen af, hvem der skrev hvad og hvornår.
+  - En rettet kommentar viser *redigeret* med tidspunkt. Det oprindelige tidspunkt står uændret.
+
 ## 1.7.0 — 2026-10-27
 
 ### Added
