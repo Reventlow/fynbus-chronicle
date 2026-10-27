@@ -1,0 +1,21 @@
+{% load cve_extras %}
+{% comment %}
+  A timeline comment being edited in place. Saving swaps back the updated
+  row; Annullér fetches the unchanged row. Errors re-render this form.
+{% endcomment %}
+<div id="cve-comment-{{ comment.pk }}" style="padding: 14px 24px; border-top: 1px solid var(--hairline);">
+  <form hx-post="{% owner_url owner 'comment-edit' comment.pk %}"
+        hx-target="#cve-comment-{{ comment.pk }}"
+        hx-swap="outerHTML"
+        style="display: flex; flex-direction: column; gap: 8px;">
+    {% csrf_token %}
+    {{ form.text }}
+    {% if form.text.errors %}<p class="input-error-message">{{ form.text.errors.0 }}</p>{% endif %}
+    <div class="flex justify-end gap-2">
+      <button type="button" class="btn btn-sm"
+              hx-get="{% owner_url owner 'comment' comment.pk %}"
+              hx-target="#cve-comment-{{ comment.pk }}" hx-swap="outerHTML">Annullér</button>
+      <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+    </div>
+  </form>
+</div>

@@ -15,7 +15,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch, Q
 from django.db.models.functions import Length
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
@@ -412,6 +412,47 @@ def comment_create(request: HttpRequest, pk: int, kind: str = "cve") -> HttpResp
         container_id="cve-comment-form-container",
         empty_id="no-cve-comments",
     )
+
+
+def _own_comment(request: HttpRequest, pk: int, comment_pk: int, kind: str) -> CVEComment:
+    """The comment on this CVE/case, if ``request.user`` may edit it (403 otherwise)."""
+    comment = get_object_or_404(CVEComment, pk=comment_pk, **{f"{kind}_id": pk})
+    if not comment.can_edit(request.user):
+        raise PermissionDenied
+    return comment
+
+
+@login_required
+@editor_required
+@require_http_methods(["GET", "POST"])
+def comment_edit(request: HttpRequest, pk: int, comment_pk: int, kind: str = "cve") -> HttpResponse:
+    """Edit one's own comment in place (HTMX).
+
+    GET swaps the timeline row for an edit form; a valid POST saves, marks
+    the comment as edited (only if the text changed) and returns the row.
+    """
+    comment = _own_comment(request, pk, comment_pk, kind)
+    owner = comment.owner
+    if request.method == "POST":
+        before = comment.text
+        form = CVECommentForm(request.POST, instance=comment, auto_id=f"comment-{comment.pk}-%s")
+        if form.is_valid():
+            if form.cleaned_data["text"] != before:
+                comment.edited_at = timezone.now()
+                form.save()
+            return render(request, "cves/partials/cve_comment_row.html", {"owner": owner, "comment": comment})
+    else:
+        # Own ids: the add form's textarea is on the same page.
+        form = CVECommentForm(instance=comment, auto_id=f"comment-{comment.pk}-%s")
+    return render(request, "cves/partials/cve_comment_edit.html", {"owner": owner, "comment": comment, "form": form})
+
+
+@login_required
+@require_GET
+def comment_row(request: HttpRequest, pk: int, comment_pk: int, kind: str = "cve") -> HttpResponse:
+    """One timeline row: what *Annullér* on the edit form swaps back in."""
+    comment = get_object_or_404(CVEComment, pk=comment_pk, **{f"{kind}_id": pk})
+    return render(request, "cves/partials/cve_comment_row.html", {"owner": comment.owner, "comment": comment})
 
 
 # -------------------------------------------------------------------------

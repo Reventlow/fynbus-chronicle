@@ -545,6 +545,8 @@ class CVEComment(_OwnedMixin, models.Model):
         verbose_name="Forfatter",
     )
     created_at = models.DateTimeField(verbose_name="Oprettet", auto_now_add=True)
+    # Set when the author changes the text; shown as "redigeret" on the timeline.
+    edited_at = models.DateTimeField(verbose_name="Redigeret", null=True, blank=True)
 
     class Meta:
         verbose_name = "CVE-kommentar"
@@ -559,6 +561,11 @@ class CVEComment(_OwnedMixin, models.Model):
     @property
     def is_state_change(self) -> bool:
         return self.kind == self.Kind.STATE
+
+    def can_edit(self, user) -> bool:
+        """Only the author may change a comment, and never a state change:
+        the timeline is the documentation of who said what."""
+        return not self.is_state_change and self.author_id is not None and self.author_id == user.pk
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
