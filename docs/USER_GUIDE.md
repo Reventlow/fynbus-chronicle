@@ -335,7 +335,7 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
 
 - Vælg fanen **Sager** og klik **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
-- Fra en CVE's side: **Føj til sag** vælger en åben sag, og **Ny sag med denne CVE** starter en ny.
+- **Alle CVE'er skal høre til en sag.** En CVE uden sag har boksen *Ikke i en sag* på sin side: **Ny sag med denne CVE** starter en ny, og **Føj til eksisterende sag** vælger en åben eller færdigbehandlet sag. CVE'en får sagens status. I CVE-listen og på Kontrolpanelet er CVE'er uden sag markeret og linker direkte til boksen.
 - **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. En enkelt CVE uden sag har intet udfald; skal risikoen accepteres, så læg den i en sag. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
 - Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
 - **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.

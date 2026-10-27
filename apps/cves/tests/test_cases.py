@@ -291,10 +291,27 @@ class TestCVEPageInACase:
 
     def test_join_an_open_case(self, editor_client, case, cve):
         body = editor_client.get(cve.get_absolute_url()).content.decode()
-        assert "Føj til sag" in body and "Ny sag med denne CVE" in body
+        assert "Ikke i en sag" in body and "Føj til eksisterende sag" in body and "Ny sag med denne CVE" in body
         editor_client.post(reverse("cves:join-case", args=[cve.pk]), {"case": case.pk})
         cve.refresh_from_db()
         assert cve.case == case
+        assert "Ikke i en sag" not in editor_client.get(cve.get_absolute_url()).content.decode()
+
+    def test_join_a_færdigbehandlet_case(self, editor, editor_client, case, cve):
+        case.set_state(CVE.State.SOLVED, editor, resolution=CVECase.Resolution.NOT_AFFECTED)
+        body = editor_client.get(cve.get_absolute_url()).content.decode()
+        assert 'optgroup label="Færdigbehandlede sager"' in body and f'value="{case.pk}"' in body
+        editor_client.post(reverse("cves:join-case", args=[cve.pk]), {"case": case.pk})
+        cve.refresh_from_db()
+        assert (cve.case, cve.state) == (case, CVE.State.SOLVED)  # it takes the case's state
+
+    def test_viewer_sees_the_notice_without_buttons(self, viewer_client, cve):
+        body = viewer_client.get(cve.get_absolute_url()).content.decode()
+        assert "Ikke i en sag" in body and "Føj til eksisterende sag" not in body and "Ny sag med denne CVE" not in body
+
+    def test_list_flags_cves_without_a_case(self, editor_client, cve):
+        body = editor_client.get(reverse("cves:list")).content.decode()
+        assert f'{reverse("cves:detail", args=[cve.pk])}#sag' in body and "Ikke i en sag" in body
 
     def test_list_row_links_to_its_case(self, editor_client, case, kernel, cve):
         body = editor_client.get(reverse("cves:list")).content.decode()

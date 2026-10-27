@@ -71,19 +71,32 @@
           </form>
         {% endfor %}
       </div>
-      <div class="flex items-center flex-wrap gap-2" style="margin-top: 10px;">
-        <span class="label-eyebrow">Sag</span>
-        {% if open_cases %}
-          <form method="post" action="{% url 'cves:join-case' cve.pk %}" class="flex items-center gap-2" style="margin: 0;">
-            {% csrf_token %}
-            <select name="case" class="select-field" style="max-width: 320px;" aria-label="Åben sag">
-              {% for c in open_cases %}<option value="{{ c.pk }}">#{{ c.pk }} · {{ c.title|truncatechars:50 }}</option>{% endfor %}
-            </select>
-            <button type="submit" class="btn btn-sm">Føj til sag</button>
-          </form>
-          <span style="color: var(--ink-4); font-size: 12.5px;">eller</span>
+    {% endif %}
+
+    {% if not cve.case %}
+      {# Not in a case: every CVE should belong to one, so say so and offer both ways in #}
+      <div id="sag" class="card" style="margin-top: 14px; padding: 14px 16px; border-left: 3px solid var(--warn-ink);">
+        <div class="label-eyebrow" style="color: var(--warn-ink);">Ikke i en sag</div>
+        <p style="font-size: 13px; color: var(--ink-3); margin: 4px 0 0;">
+          Alle CVE'er skal høre til en sag, hvor vurdering, løsning og dokumenter samles.
+          {% if is_editor %}Læg den i en eksisterende sag, eller start en ny. Den får sagens status.{% endif %}
+        </p>
+        {% if is_editor %}
+          <div class="flex items-center flex-wrap gap-2" style="margin-top: 10px;">
+            <a href="{% url 'cves:case-create' %}?cve_ids={{ cve.cve_id }}" class="btn btn-sm btn-primary">Ny sag med denne CVE</a>
+            {% if open_cases or closed_cases %}
+              <span style="color: var(--ink-4); font-size: 12.5px;">eller</span>
+              <form method="post" action="{% url 'cves:join-case' cve.pk %}" class="flex items-center flex-wrap gap-2" style="margin: 0;">
+                {% csrf_token %}
+                <select name="case" class="select-field" style="max-width: 360px;" aria-label="Eksisterende sag">
+                  {% if open_cases %}<optgroup label="Åbne sager">{% for c in open_cases %}<option value="{{ c.pk }}">#{{ c.pk }} · {{ c.title|truncatechars:50 }}</option>{% endfor %}</optgroup>{% endif %}
+                  {% if closed_cases %}<optgroup label="Færdigbehandlede sager">{% for c in closed_cases %}<option value="{{ c.pk }}">#{{ c.pk }} · {{ c.title|truncatechars:50 }}</option>{% endfor %}</optgroup>{% endif %}
+                </select>
+                <button type="submit" class="btn btn-sm">Føj til eksisterende sag</button>
+              </form>
+            {% endif %}
+          </div>
         {% endif %}
-        <a href="{% url 'cves:case-create' %}?cve_ids={{ cve.cve_id }}" class="btn btn-sm">Ny sag med denne CVE</a>
       </div>
     {% endif %}
   </div>

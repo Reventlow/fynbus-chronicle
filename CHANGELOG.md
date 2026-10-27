@@ -2,7 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
-## 1.10.1 — 2026-10-27
+## 1.11.0 — 2026-10-27
+
+### Added
+- **En CVE uden sag får en tydelig boks *Ikke i en sag*** på sin side med to knapper: *Ny sag med denne CVE* og *Føj til eksisterende sag*. Alle CVE'er skal høre til en sag. Listen kan nu også vælge færdigbehandlede sager, ikke kun åbne. CVE'en får sagens status.
+- I CVE-listen står *Ikke i en sag · læg den i en sag →* under en CVE uden sag. På Kontrolpanelet er overskriften *CVE'er uden sag* markeret. Begge fører direkte til boksen.
 
 ### Changed
 - **Fanerne *CVE'er* og *Sager* siger nu, hvad tallet tæller**, fx *2 ikke færdigbehandlet · 9 i alt*. Det nøgne tal blev læst, som om der kun var registreret 2.

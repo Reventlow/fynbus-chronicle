@@ -115,7 +115,10 @@ class CVEDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context["owner"] = self.object
-        context["open_cases"] = CVECase.objects.open().order_by("-updated_at") if not self.object.case_id else []
+        if not self.object.case_id:
+            # Every CVE should belong to a case: offer every case, open ones first.
+            context["open_cases"] = CVECase.objects.open().order_by("-updated_at")
+            context["closed_cases"] = CVECase.objects.filter(state=CVE.State.SOLVED).order_by("-updated_at")
         context["links"] = self.object.links.select_related("added_by")
         context["attachments"] = self.object.attachments.select_related("uploaded_by")
         context["attachment_form"] = CVEAttachmentForm()
@@ -658,7 +661,7 @@ def case_remove_cve(request: HttpRequest, pk: int, cve_pk: int) -> HttpResponse:
 @editor_required
 @require_POST
 def cve_join_case(request: HttpRequest, pk: int) -> HttpResponse:
-    """From a CVE page: put this CVE into an open case (``POST case``)."""
+    """From a CVE page: put this CVE into a case (``POST case``). It takes the case's state."""
     cve = get_object_or_404(CVE, pk=pk)
     case = get_object_or_404(CVECase, pk=request.POST.get("case") or 0)
     try:
