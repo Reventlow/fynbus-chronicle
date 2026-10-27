@@ -608,20 +608,23 @@ def _new_key() -> str:
 
 
 class CVEAttachment(_OwnedMixin, models.Model):
-    """A PDF or Outlook mail (.msg) attached to a CVE, with its TLP marking.
+    """A PDF, ODT document or Outlook mail (.msg) attached to a CVE, with its TLP marking.
 
     PDFs are served inline for the lightbox. A .msg can't be shown by a
     browser, so its headers and plain-text body are extracted at upload
     (``email_*``) and shown as a preview; the original is offered as a
     download. PDFs found inside a mail are stored as their own attachments
-    with ``parent`` pointing at it. Content is checked, not just the name:
-    ``%PDF-`` for PDFs, an OLE compound file with MAPI properties for .msg.
+    with ``parent`` pointing at it. An .odt has no preview: clicking it
+    downloads it. Content is checked, not just the name: ``%PDF-`` for
+    PDFs, an OLE compound file with MAPI properties for .msg, and a zip
+    whose ``mimetype`` member names an OpenDocument text for .odt.
     Never served from static/media.
     """
 
     class Kind(models.TextChoices):
         PDF = "pdf", "PDF"
         MSG = "msg", "Outlook-mail"
+        ODT = "odt", "ODT-dokument"
 
     class TLP(models.TextChoices):
         # FIRST TLP 2.0. Empty = not marked.
@@ -677,6 +680,10 @@ class CVEAttachment(_OwnedMixin, models.Model):
     @property
     def is_msg(self) -> bool:
         return self.kind == self.Kind.MSG
+
+    @property
+    def is_odt(self) -> bool:
+        return self.kind == self.Kind.ODT
 
     def get_download_url(self) -> str:
         return self.get_absolute_url() + "?download=1"

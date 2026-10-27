@@ -132,3 +132,55 @@ class TestDeleteAndPage:
         body = viewer_client.get(reverse("cves:detail", args=[cve.pk])).content.decode()
         assert "Advisory" in body
         assert "Vedhæft</button>" not in body
+
+
+def make_odt(mimetype=b"application/vnd.oasis.opendocument.text") -> bytes:
+    """A minimal OpenDocument text: ``mimetype`` first and stored, as the spec says."""
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr(zipfile.ZipInfo("mimetype"), mimetype, compress_type=zipfile.ZIP_STORED)
+        z.writestr("content.xml", "<office:document-content/>", compress_type=zipfile.ZIP_DEFLATED)
+    return buf.getvalue()
+
+
+class TestOdt:
+    def test_editor_uploads_odt(self, editor_client, cve, cve_files):
+        data = make_odt()
+        response = upload(editor_client, cve, name="CFCS-orientering.odt", data=data, tlp="green")
+        assert response.status_code == 200
+        a = CVEAttachment.objects.get(cve=cve)
+        assert (a.kind, a.tlp, a.original_name, a.size) == ("odt", "green", "CFCS-orientering.odt", len(data))
+        assert a.file.name.endswith(f"{a.key}.odt")
+        body = response.content.decode()
+        assert "ODT-dokument" in body and a.get_download_url() in body
+        assert "open-pdf" not in body  # no lightbox: a browser can't show an .odt
+
+    def test_rejects_fake_and_other_opendocument_types(self, editor_client, cve):
+        for data in (b"PK\x03\x04 not really a zip", PDF, make_odt(b"application/vnd.oasis.opendocument.spreadsheet")):
+            response = upload(editor_client, cve, name="orientering.odt", data=data)
+            assert "ikke et gyldigt ODT-dokument" in response.content.decode()
+        assert not CVEAttachment.objects.exists()
+
+    def test_always_served_as_download(self, editor_client, viewer_client, cve):
+        upload(editor_client, cve, name="orientering.odt", data=make_odt())
+        a = CVEAttachment.objects.get()
+        response = viewer_client.get(reverse("cves:attachment", args=[cve.pk, a.key]))
+        assert response["Content-Type"] == "application/vnd.oasis.opendocument.text"
+        assert response["Content-Disposition"].startswith("attachment")
+        assert "orientering.odt" in response["Content-Disposition"]
+        assert "no-store" in response["Cache-Control"]
+
+    def test_case_accepts_odt(self, editor_client, cve_files):
+        from apps.cves.models import CVECase
+
+        case = CVECase.objects.create(title="Orientering: kendte IOC'er")
+        response = editor_client.post(
+            reverse("cves:case-attachment-create", args=[case.pk]),
+            {"file": SimpleUploadedFile("ioc.odt", make_odt(), content_type="application/vnd.oasis.opendocument.text")},
+            HTTP_HX_REQUEST="true",
+        )
+        assert response.status_code == 200
+        assert case.attachments.get().is_odt

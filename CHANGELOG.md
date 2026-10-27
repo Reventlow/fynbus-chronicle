@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.7.0 — 2026-10-27
+
+### Added
+- **ODT-dokumenter (.odt) kan vedhæftes** på CVE'er og sager, ligesom PDF'er og Outlook-mails, med titel, kilde og TLP. Det er fx til orienteringer, der kommer som et LibreOffice-dokument. En browser kan ikke vise et .odt, så et klik på det henter filen. Chronicle tjekker, at filen faktisk er et ODT-dokument, og ikke kun at navnet ender på .odt.
+
 ## 1.6.0 — 2026-10-26
 
 ### Added
