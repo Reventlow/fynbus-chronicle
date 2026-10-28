@@ -207,7 +207,7 @@ class TestCasePages:
     def test_list(self, editor_client, case, kernel):
         """The Sager tab shows each case with every CVE it holds, each a link."""
         body = editor_client.get(reverse("cves:case-list")).content.decode()
-        assert f"Sag #{case.pk}" in body
+        assert f"sag #{case.pk}" in body
         for cve in kernel:
             assert cve.cve_id in body
             assert f'href="{reverse("cves:detail", args=[cve.pk])}"' in body

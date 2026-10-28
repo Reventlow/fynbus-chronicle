@@ -3,7 +3,7 @@
 {% block title %}Sager — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder</a>
+  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
   <span class="current">Sager</span>
 {% endblock %}
@@ -27,6 +27,7 @@
       </p>
     </div>
     {% if is_editor %}
+      <a href="{% url 'cves:case-create' %}?kind=incident" class="btn btn-sm">Ny hændelse</a>
       <a href="{% url 'cves:case-create' %}" class="btn btn-primary btn-sm">Ny sag</a>
     {% endif %}
   </div>

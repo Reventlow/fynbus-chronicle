@@ -378,18 +378,29 @@ def incident_create(request: HttpRequest, year: int, week: int) -> JsonResponse:
             )
     else:
         occurred_at = timezone.now()
-    incident = Incident.objects.create(
-        weeklog=weeklog,
-        title=title[:200],
-        description=description,
-        incident_type=data.get("incident_type", Incident.IncidentType.OTHER),
-        severity=data.get("severity", Incident.Severity.MEDIUM),
-        occurred_at=occurred_at,
+    # Since 1.12.0 an incident is a case of type Hændelse; the old logbook
+    # Incident is a read-only archive. The response keeps the old
+    # "incident" shape (id = the case's id) so existing callers still work.
+    incident_type = data.get("incident_type", Incident.IncidentType.OTHER)
+    severity = data.get("severity", Incident.Severity.MEDIUM)
+    case = CVECase.create_incident(
+        title=title, description=description, user=request.api_user, occurred_at=occurred_at,
+        type_label=dict(Incident.IncidentType.choices).get(incident_type, ""),
+        severity_label=dict(Incident.Severity.choices).get(severity, ""),
         resolved=bool(data.get("resolved", False)),
         resolution=(data.get("resolution") or "").strip(),
-        created_by=request.api_user,
     )
-    return JsonResponse({"incident": serialize_incident(incident)}, status=201)
+    url = request.build_absolute_uri(case.get_absolute_url())
+    return JsonResponse({
+        "incident": {
+            "id": case.id, "title": case.title, "description": description,
+            "incident_type": incident_type, "severity": severity,
+            "occurred_at": case.created_at.isoformat(), "resolved": not case.is_open,
+            "resolution": case.solution, "url": url,
+            "weeklog": {"year": weeklog.year, "week": weeklog.week_number},
+        },
+        "case": _case_payload(request, case),
+    }, status=201)
 
 
 # -------------------------------------------------------------------------

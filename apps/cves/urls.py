@@ -30,6 +30,7 @@ urlpatterns = [
     path("cases/<int:pk>/", views.CVECaseDetailView.as_view(), name="case-detail"),
     path("cases/<int:pk>/edit/", views.CVECaseUpdateView.as_view(), name="case-edit"),
     path("cases/<int:pk>/state/", views.case_state, name="case-state"),
+    path("cases/<int:pk>/export/<str:section>/", views.case_export_toggle, name="case-export-toggle"),
     path("cases/<int:pk>/cves/", views.case_add_cves, name="case-add-cves"),
     path("cases/<int:pk>/cves/<int:cve_pk>/remove/", views.case_remove_cve, name="case-remove-cve"),
     path("cases/<int:pk>/links/", views.link_create, CASE, name="case-link-create"),

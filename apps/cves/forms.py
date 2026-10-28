@@ -231,8 +231,9 @@ class CVECaseForm(_CVEIdsMixin, forms.ModelForm):
 
     class Meta:
         model = CVECase
-        fields = ["title", "source", "reference", "source_url", "assessment", "solution"]
+        fields = ["kind", "title", "source", "reference", "source_url", "assessment", "solution"]
         widgets = {
+            "kind": forms.RadioSelect(),
             "title": forms.TextInput(attrs={"class": "input-field", "maxlength": 200, "autofocus": True}),
             "source": forms.TextInput(attrs={"class": "input-field", "maxlength": 40, "list": "case-sources",
                                              "placeholder": "CFCS"}),
@@ -249,6 +250,11 @@ class CVECaseForm(_CVEIdsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not with_cves:
             del self.fields["cve_ids"]
+        # Absent (old clients, the CVE page's "Ny sag") means a vulnerability.
+        self.fields["kind"].required = False
+
+    def clean_kind(self) -> str:
+        return self.cleaned_data.get("kind") or (self.instance.kind if self.instance.pk else CVECase.Kind.VULNERABILITY)
 
 
 class CVECaseAddForm(_CVEIdsMixin, forms.Form):

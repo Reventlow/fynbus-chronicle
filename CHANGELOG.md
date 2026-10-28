@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.12.0 — 2026-10-28
+
+### Changed
+- **Sårbarheder hedder nu *Sårbarheder og hændelser*.** En hændelse er nu en **sag af typen Hændelse** med vurdering, løsning, vedhæftninger, links og kommentarer, ligesom en sårbarhed. Opret den med **Ny hændelse** på fanen *Sager*. En hændelse har status *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Hver sag er mærket *Sårbarhed* eller *Hændelse* i lister, på Kontrolpanelet og i ugeloggen.
+- **Hændelser i ugeloggen er stoppet.** De gamle står stadig som et skrivebeskyttet arkiv i deres uger og i de ugers eksport. Der kan ikke oprettes, rettes eller slettes nogen. API'ets `POST …/incidents/` (fx Chronicles MCP-værktøj) opretter nu en hændelses-sag og svarer i samme format som før.
+- **Kontrolpanelet har ikke længere kortet *Hændelser*.** Linjen under overskriften tæller åbne hændelser og åbne sårbarheder.
+
+### Added
+- **Boksen *Vis i ugelogs-eksport*** på hvert afsnit af en sag: vurdering, løsning, vedhæftninger, links og kommentarer. Som standard kommer vurdering og løsning med. Kommentarer kommer kun med for den uge, de er skrevet i, og vedhæftninger kun med navn og TLP, aldrig som fil.
+- **Søjlediagram i ugeloggen og dens eksport**: hændelser og sårbarheder, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen.
+
 ## 1.11.1 — 2026-10-28
 
 ### Fixed

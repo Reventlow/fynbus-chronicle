@@ -739,7 +739,19 @@ class AbsenceDeleteView(EditorRequiredMixin, DeleteView):
 # =============================================================================
 
 
-class IncidentCreateView(EditorRequiredMixin, CreateView):
+class IncidentsRetiredMixin:
+    """Since 1.12.0 an incident is a case (type Hændelse) under Sårbarheder og
+    hændelser. The old logbook incidents are a read-only archive: creating,
+    editing or deleting them answers 410 Gone."""
+
+    def dispatch(self, request, *args, **kwargs):
+        return HttpResponse(
+            "Hændelser oprettes nu som sager under Sårbarheder og hændelser; de gamle er skrivebeskyttede.",
+            status=410, content_type="text/plain; charset=utf-8",
+        )
+
+
+class IncidentCreateView(EditorRequiredMixin, IncidentsRetiredMixin, CreateView):
     """HTMX view for creating incidents inline."""
 
     model = Incident
@@ -773,7 +785,7 @@ class IncidentCreateView(EditorRequiredMixin, CreateView):
         return context
 
 
-class IncidentUpdateView(EditorRequiredMixin, UpdateView):
+class IncidentUpdateView(EditorRequiredMixin, IncidentsRetiredMixin, UpdateView):
     """HTMX view for updating incidents inline."""
 
     model = Incident
@@ -793,7 +805,7 @@ class IncidentUpdateView(EditorRequiredMixin, UpdateView):
         )
 
 
-class IncidentDeleteView(EditorRequiredMixin, DeleteView):
+class IncidentDeleteView(EditorRequiredMixin, IncidentsRetiredMixin, DeleteView):
     """HTMX view for deleting incidents."""
 
     model = Incident

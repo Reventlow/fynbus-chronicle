@@ -1,0 +1,17 @@
+{% comment %}
+  One "Vis i ugelogs-eksport" box on a case section. Params: case, section
+  (a key of CVECase.EXPORT_SECTIONS), on (current value). Editors flip it
+  with HTMX and get this partial back; others see the state read-only.
+{% endcomment %}
+<span id="export-{{ section }}" class="case-export-toggle" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3);">
+  {% if is_editor %}
+    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" title="Kommer dette afsnit med i ugelogs-eksporten (HTML/PDF/mail)?">
+      <input type="checkbox" {% if on %}checked{% endif %}
+             hx-post="{% url 'cves:case-export-toggle' case.pk section %}"
+             hx-target="#export-{{ section }}" hx-swap="outerHTML">
+      Vis i ugelogs-eksport
+    </label>
+  {% else %}
+    {% if on %}I ugelogs-eksport{% else %}Ikke i ugelogs-eksport{% endif %}
+  {% endif %}
+</span>

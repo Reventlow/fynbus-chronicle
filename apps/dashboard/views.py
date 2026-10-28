@@ -28,6 +28,7 @@ from django.views.generic import TemplateView
 
 from apps.accounts.permissions import editor_required
 from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
+from apps.cves.models import CVECase
 from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
 
 from .overview import (
@@ -124,11 +125,10 @@ def headline_context() -> dict:
         context["open_delta"] = None
     context["open_now_mirror"] = open_mirror
 
-    incidents = weeklog.incidents.all() if weeklog else Incident.objects.none()
-    context["incident_count_week"] = incidents.count()
-    context["incident_critical_week"] = incidents.filter(
-        severity=Incident.Severity.CRITICAL
-    ).count()
+    # Incidents are cases since 1.12.0: count the open ones of each kind.
+    open_cases = CVECase.objects.open()
+    context["open_incident_count"] = open_cases.filter(kind=CVECase.Kind.INCIDENT).count()
+    context["open_vuln_case_count"] = open_cases.filter(kind=CVECase.Kind.VULNERABILITY).count()
     if weeklog:
         context["weeklog_task_count"] = weeklog.priority_appearances.filter(
             priority_item__deleted_at__isnull=True

@@ -51,7 +51,7 @@ class TestList:
 
     def test_breadcrumb_names_the_section(self, editor_client, cve):
         html = editor_client.get(reverse("cves:list")).content.decode()
-        assert '<span class="current">Sårbarheder</span>' in html
+        assert '<span class="current">Sårbarheder og hændelser</span>' in html
         assert '<span class="current">Kontrolpanel</span>' not in html
 
 

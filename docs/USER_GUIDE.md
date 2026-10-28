@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.1.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.12.
 
 ## Indhold
 
@@ -12,7 +12,7 @@ Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi u
 6. [Opgavesøgning](#opgavesøgning)
 7. [Vagtkalender](#vagtkalender)
 8. [Statistik](#statistik)
-9. [Sårbarheder (CVE'er)](#sårbarheder-cveer)
+9. [Sårbarheder og hændelser](#sårbarheder-og-hændelser)
 10. [Forslag](#forslag)
 11. [Eksporter rapporter](#eksporter-rapporter)
 12. [Rapporter](#rapporter)
@@ -91,7 +91,7 @@ Kontrolpanelet viser ugen lige nu. Alt opdaterer sig selv, mens siden er åben: 
 
 Overskriften siger, hvor mange sager der er åbne, og om det er flere eller færre end ved udgangen af sidste uge — fx *"28 åbne sager, én flere end sidste uge."* Linjen under viser:
 - **Live · synk kl …**: hvornår sagerne sidst blev hentet fra ServiceDesk.
-- Ugens hændelser og hvor mange der er kritiske.
+- Hvor mange hændelser og sårbarheder (sager) der er åbne. Klik for at åbne *Sager*.
 - Ugeloggen for ugen og antallet af opgaver på den.
 
 Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
@@ -102,10 +102,9 @@ Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen p�
 
 ### 01 Nu
 
-- **Hændelser** fra de sidste 30 dage plus alle uløste, nyeste først. Den farvede kant og P1/P2/P3 viser alvoren (P1 kritisk, P2 høj, P3 lavere), og hver linje siger **Løst** eller **Uløst**. *Vis ældre* folder ældre, løste hændelser ud.
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
-- **Sårbarheder**: sagerne, hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
+- **Sårbarheder og hændelser**: sagerne (hver mærket *Sårbarhed* eller *Hændelse*), hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
 
 ### 02 Åbne sager
 
@@ -218,21 +217,7 @@ Er den samme opgave oprettet to gange, flettes den ene ind i den anden med flet-
 
 ### Hændelser
 
-Brug hændelser til at dokumentere:
-- Sikkerhedshændelser
-- Systemfejl
-- Netværksproblemer
-- Databrud
-
-**Registrer hændelse**
-1. Klik "Tilføj" ved Hændelser
-2. Udfyld:
-   - Titel
-   - Type og alvorlighed
-   - Tidspunkt
-   - Beskrivelse
-3. Marker som løst når relevant
-4. Tilføj løsningsbeskrivelse
+Siden version 1.12.0 registreres hændelser ikke længere i ugeloggen. En hændelse er en **sag af typen Hændelse** under *Sårbarheder og hændelser* (se nedenfor). Ugeloggen viser stadig de gamle hændelser fra uger før skiftet som et skrivebeskyttet arkiv, og de kommer stadig med i de ugers eksport.
 
 ---
 
@@ -317,7 +302,7 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 ---
 
-## Sårbarheder (CVE'er)
+## Sårbarheder og hændelser
 
 **Sårbarheder** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
 
@@ -329,6 +314,18 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 - Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. Søg på id eller emne. Linket *vis alle CVE'er* øverst (eller *Alle* under Status) viser også de ældre.
 - Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
 - **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
+
+### Hændelser som sager
+
+En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på fanen *Sager*. Det er en sag af typen **Hændelse**: den har vurdering, løsning, vedhæftninger, links og kommentarer ligesom en sårbarhed, men normalt ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Skriv typen og alvoren i vurderingen.
+
+### Hvad kommer med i ugelogs-eksporten
+
+Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links og Kommentarer) har boksen **Vis i ugelogs-eksport**. Den bestemmer, om afsnittet kommer med i ugeloggens HTML-, PDF- og mail-eksport.
+- Som standard kommer *Vurdering* og *Løsning* med, og resten ikke.
+- Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
+- Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
+- Eksporten starter med et søjlediagram: hændelser og sårbarheder, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
 
 ### Sager: flere CVE'er med samme løsning
 
