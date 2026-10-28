@@ -32,6 +32,7 @@
           if (theme === 'star-wars') variant = darkMode ? 'sith' : 'rebel';
           else if (theme === 'pirate') variant = 'pirate';
           else if (theme === 'star-trek') variant = darkMode ? 'klingon' : 'trek';
+          else if (theme === 'halloween') variant = 'halloween';
           const g = {
             default: { morning: 'Godmorgen',         day: 'Goddag',              evening: 'Godaften',        night: 'Godnat' },
             rebel:   { morning: 'Morgenlys',         day: 'Hilsen',              evening: 'Aftenstjerne',    night: 'Sov i Kraften' },
@@ -39,6 +40,7 @@
             pirate:  { morning: 'Yarr',              day: 'Ahoj',                evening: 'Aftenro',         night: 'Godnat, matros' },
             trek:    { morning: 'Morgen-shift',      day: 'Hilsen, kommandør',   evening: 'Aftenwatch',      night: 'Sov i fred' },
             klingon: { morning: 'nuqneH',            day: 'Qapla',               evening: 'Krigsskumring',   night: 'Sov i ære' },
+            halloween: { morning: 'Uhyggelig morgen', day: 'Bøh',                 evening: 'Heksetime',       night: 'Spøgelsestime' },
           };
           return g[variant][slot] + ', {{ user.first_name|default:user.get_short_name|default:user.username|escapejs }}';
         })()">Goddag, {{ user.first_name|default:user.get_short_name|default:user.username }}</span>
