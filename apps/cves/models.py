@@ -331,7 +331,12 @@ class CVECaseQuerySet(models.QuerySet):
 
 
 class CVECase(models.Model):
-    """A case: CVEs that share one assessment, one fix and one set of documents.
+    """A case: a vulnerability or an incident, with one assessment, one fix
+    and one set of documents.
+
+    A vulnerability case groups the CVEs that share that assessment and fix
+    (or none, e.g. a CFCS warning). An incident case (``kind=incident``)
+    replaces the old logbook Hændelser since 1.12.0; it normally has no CVEs.
 
     The case's state is the truth for its CVEs: changing it moves every
     member CVE too (each CVE's timeline notes that it came via the case),
@@ -342,11 +347,16 @@ class CVECase(models.Model):
 
     State = CVE.State
 
+    class Kind(models.TextChoices):
+        VULNERABILITY = "vulnerability", "Sårbarhed"
+        INCIDENT = "incident", "Hændelse"
+
     class Resolution(models.TextChoices):
         PATCHED = "patched", "Patchet"
         NOT_AFFECTED = "not_affected", "Ikke berørt"
         RISK_ACCEPTED = "risk_accepted", "Risiko accepteret"
 
+    kind = models.CharField(verbose_name="Type", max_length=16, choices=Kind.choices, default=Kind.VULNERABILITY)
     title = models.CharField(verbose_name="Titel", max_length=200,
                              help_text="Fx \"eMudhra CA-kompromittering\" eller \"Linux-kerne, oktober 2026\".")
     assessment = models.TextField(verbose_name="Vurdering", blank=True,
@@ -363,6 +373,13 @@ class CVECase(models.Model):
                                            "Til advarsler uden CVE-nummer.")
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
 
+    # Which sections the week log export shows for this case (see EXPORT_SECTIONS).
+    export_assessment = models.BooleanField(verbose_name="Vurdering i ugelogs-eksport", default=True)
+    export_solution = models.BooleanField(verbose_name="Løsning i ugelogs-eksport", default=True)
+    export_comments = models.BooleanField(verbose_name="Kommentarer i ugelogs-eksport", default=False)
+    export_links = models.BooleanField(verbose_name="Links i ugelogs-eksport", default=False)
+    export_attachments = models.BooleanField(verbose_name="Vedhæftninger i ugelogs-eksport", default=False)
+
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name="cve_cases_created", verbose_name="Oprettet af")
     created_at = models.DateTimeField(verbose_name="Oprettet", default=timezone.now)
@@ -374,8 +391,8 @@ class CVECase(models.Model):
     objects = CVECaseQuerySet.as_manager()
 
     class Meta:
-        verbose_name = "CVE-sag"
-        verbose_name_plural = "CVE-sager"
+        verbose_name = "Sag"
+        verbose_name_plural = "Sager"
         ordering = ["-updated_at"]
 
     def __str__(self) -> str:
@@ -389,9 +406,29 @@ class CVECase(models.Model):
     def owner_url(self, name: str, *args) -> str:
         return reverse(f"cves:case-{name}", args=(self.pk, *args))
 
+    # Section key -> (model field, label), for the "Vis i ugelogs-eksport" toggles.
+    EXPORT_SECTIONS = {
+        "assessment": ("export_assessment", "Vurdering"),
+        "solution": ("export_solution", "Løsning / handling"),
+        "comments": ("export_comments", "Kommentarer"),
+        "links": ("export_links", "Links"),
+        "attachments": ("export_attachments", "Vedhæftninger"),
+    }
+
     @property
     def is_open(self) -> bool:
         return self.state != self.State.SOLVED
+
+    @property
+    def is_incident(self) -> bool:
+        return self.kind == self.Kind.INCIDENT
+
+    @property
+    def state_label(self) -> str:
+        """The state's name; an incident is "Under behandling", not "Patcher"."""
+        if self.is_incident and self.state == self.State.PATCHING:
+            return "Under behandling"
+        return self.get_state_display()
 
     state_color = CVE.state_color
     solved_within = CVE.solved_within
@@ -405,12 +442,37 @@ class CVECase(models.Model):
     def outcome_label(self) -> str:
         """"Færdigbehandlet — patchet" (… ikke berørt / … risiko accepteret), or the plain state label."""
         if self.state == self.State.SOLVED and self.resolution:
-            return f"{self.get_state_display()} — {self.get_resolution_display().lower()}"
-        return self.get_state_display()
+            return f"{self.state_label} — {self.get_resolution_display().lower()}"
+        return self.state_label
 
     def touch(self) -> None:
         self.updated_at = timezone.now()
         CVECase.objects.filter(pk=self.pk).update(updated_at=self.updated_at)
+
+    @classmethod
+    def create_incident(cls, *, title: str, description: str, user=None, occurred_at=None,
+                        type_label: str = "", severity_label: str = "", resolved: bool = False,
+                        resolution: str = "", solved_at=None) -> "CVECase":
+        """An incident case from the fields of an old logbook Hændelse (the
+        API's incident endpoint and the 1.12.0 move use it). Type, severity
+        and time go into the assessment as a closing line; a resolved
+        incident is færdigbehandlet at ``solved_at`` (default now)."""
+        occurred_at = occurred_at or timezone.now()
+        facts = " · ".join(x for x in (
+            type_label and f"Type: {type_label}",
+            severity_label and f"Alvorlighed: {severity_label}",
+            f"Tidspunkt: {timezone.localtime(occurred_at):%d.%m.%Y %H:%M}",
+        ) if x)
+        case = cls.objects.create(
+            kind=cls.Kind.INCIDENT, title=title[:200],
+            assessment=f"{description.strip()}\n\n*{facts}*".strip(),
+            solution=resolution.strip(),
+            state=cls.State.SOLVED if resolved else cls.State.IDENTIFIED,
+            solved_at=(solved_at or timezone.now()) if resolved else None,
+            solved_by=user if resolved else None,
+            created_by=user, created_at=occurred_at,
+        )
+        return case
 
     def _log(self, text: str, user=None, *, state: bool = True) -> None:
         CVEComment.objects.create(case=self, kind=CVEComment.Kind.STATE if state else CVEComment.Kind.COMMENT,
@@ -587,10 +649,43 @@ def weeklog_cves(weeklog) -> dict:
     cves = list(CVE.objects.open_during(start, end).select_related("case").open_first())
     for cve in cves:
         cve.solved_this_week = cve.solved_within(start, end)
-    cases = list(CVECase.objects.open_during(start, end).prefetch_related("cves").open_first())
+    cases = list(CVECase.objects.open_during(start, end)
+                 .prefetch_related("cves", "links", "attachments", "comments__author").open_first())
     for case in cases:
         case.solved_this_week = case.solved_within(start, end)
-    return {"week_cves": cves, "week_cases": cases, "week_vuln_count": len(cves) + len(cases)}
+        # Only what the case's "Vis i ugelogs-eksport" boxes allow; comments
+        # are the ones written during this week (not state changes).
+        case.week_comments = [c for c in case.comments.all()
+                              if c.kind == CVEComment.Kind.COMMENT and start <= c.created_at < end] \
+            if case.export_comments else []
+        case.export_links_list = list(case.links.all()) if case.export_links else []
+        case.export_attachments_list = list(case.attachments.all()) if case.export_attachments else []
+    return {
+        "week_cves": cves,
+        "week_cases": cases,
+        "week_vuln_count": len(cves) + len(cases),
+        "week_summary": _week_summary(cases),
+    }
+
+
+def _week_summary(cases) -> list[dict]:
+    """Counts behind the week log's bar chart: per kind (Hændelser,
+    Sårbarheder), the cases still open at the end of the week and those
+    færdigbehandlet during it. ``open_pct``/``solved_pct`` scale the bars
+    against the largest count so the chart reads at a glance."""
+    rows = []
+    for kind, label in ((CVECase.Kind.INCIDENT, "Hændelser"), (CVECase.Kind.VULNERABILITY, "Sårbarheder")):
+        of_kind = [c for c in cases if c.kind == kind]
+        rows.append({
+            "label": label,
+            "open": sum(1 for c in of_kind if not c.solved_this_week),  # still open when the week ended
+            "solved": sum(1 for c in of_kind if c.solved_this_week),
+        })
+    top = max([1] + [max(r["open"], r["solved"]) for r in rows])
+    for r in rows:
+        r["open_pct"] = round(100 * r["open"] / top)
+        r["solved_pct"] = round(100 * r["solved"] / top)
+    return rows
 
 
 class CVEFileStorage(FileSystemStorage):

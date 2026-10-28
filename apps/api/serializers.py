@@ -285,6 +285,7 @@ def serialize_case(case: CVECase, *, url: str, cve_url) -> dict[str, Any]:
     """A CVE case as Harbinger sees it. ``cve_url(cve)`` gives a CVE's page."""
     return {
         "id": case.id,
+        "kind": case.kind,
         "title": case.title,
         "state": case.state,
         "resolution": case.resolution,

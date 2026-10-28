@@ -543,12 +543,19 @@ class CVECaseDetailView(LoginRequiredMixin, DetailView):
             "link_form": CVELinkForm(),
             "comment_form": CVECommentForm(),
             "add_form": CVECaseAddForm(),
-            "outcomes": CASE_OUTCOMES,
+            "outcomes": INCIDENT_OUTCOMES if case.is_incident else CASE_OUTCOMES,
         })
         return context
 
 
-# The state buttons on a case: (state, resolution, label).
+# The state buttons on an incident case: no patch outcomes, "Under behandling".
+INCIDENT_OUTCOMES = [
+    (CVE.State.IDENTIFIED, "", "Identificeret"),
+    (CVE.State.PATCHING, "", "Under behandling"),
+    (CVE.State.SOLVED, "", "Færdigbehandlet"),
+]
+
+# The state buttons on a vulnerability case: (state, resolution, label).
 CASE_OUTCOMES = [
     (CVE.State.IDENTIFIED, "", "Identificeret"),
     (CVE.State.PATCHING, "", "Patcher"),
@@ -560,7 +567,8 @@ CASE_OUTCOMES = [
 
 class CVECaseCreateView(EditorRequiredMixin, CreateView):
     """Start a case, optionally with CVE ids (``?cve_ids=`` prefills them,
-    which the "Ny sag" button on a CVE page uses)."""
+    which the "Ny sag" button on a CVE page uses; ``?kind=incident`` starts
+    an incident case, from the "Ny hændelse" button)."""
 
     model = CVECase
     form_class = CVECaseForm
@@ -568,6 +576,8 @@ class CVECaseCreateView(EditorRequiredMixin, CreateView):
 
     def get_initial(self) -> dict:
         initial = super().get_initial()
+        if self.request.GET.get("kind") in CVECase.Kind.values:
+            initial["kind"] = self.request.GET["kind"]
         if self.request.GET.get("cve_ids"):
             initial["cve_ids"] = self.request.GET["cve_ids"]
             first = CVE.objects.filter(cve_id=self.request.GET["cve_ids"].split(",")[0].strip().upper()).first()
@@ -608,6 +618,21 @@ class CVECaseUpdateView(EditorRequiredMixin, UpdateView):
 
     def get_success_url(self) -> str:
         return self.object.get_absolute_url()
+
+
+@login_required
+@editor_required
+@require_POST
+def case_export_toggle(request: HttpRequest, pk: int, section: str) -> HttpResponse:
+    """Flip one "Vis i ugelogs-eksport" box on a case; returns the box (HTMX)."""
+    case = get_object_or_404(CVECase, pk=pk)
+    if section not in CVECase.EXPORT_SECTIONS:
+        raise Http404
+    field, label = CVECase.EXPORT_SECTIONS[section]
+    setattr(case, field, not getattr(case, field))
+    case.save(update_fields=[field, "updated_at"])
+    return render(request, "cves/partials/case_export_toggle.html",
+                  {"case": case, "section": section, "on": getattr(case, field), "is_editor": True})
 
 
 @login_required

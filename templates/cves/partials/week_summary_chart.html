@@ -1,0 +1,30 @@
+{% comment %}
+  Bar chart of the week's cases (week_summary from weeklog_cves): per kind,
+  how many were still open when the week ended and how many were
+  færdigbehandlet during it. Plain tables with inline colours, so the same
+  markup works on the week log page, in the HTML/PDF export and in mail.
+{% endcomment %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:9.5pt; margin:4px 0 12px 0;">
+  {% for row in week_summary %}
+  <tr>
+    <td width="110" rowspan="2" style="padding:6px 10px 6px 0; font-weight:600; color:#4A4540; vertical-align:middle;">{{ row.label }}</td>
+    <td width="110" style="padding:3px 8px 1px 0; color:#6B635B; white-space:nowrap;">Åbne</td>
+    <td style="padding:3px 0 1px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        {% if row.open %}<td width="{{ row.open_pct }}%" bgcolor="#A65D57" style="background-color:#A65D57; height:12px; font-size:1px; line-height:1px;">&nbsp;</td>{% endif %}
+        <td style="padding-left:6px; color:#4A4540; font-weight:600; white-space:nowrap;">{{ row.open }}</td>
+      </tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:1px 8px 6px 0; color:#6B635B; white-space:nowrap;">Færdigbehandlet</td>
+    <td style="padding:1px 0 6px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        {% if row.solved %}<td width="{{ row.solved_pct }}%" bgcolor="#7D8471" style="background-color:#7D8471; height:12px; font-size:1px; line-height:1px;">&nbsp;</td>{% endif %}
+        <td style="padding-left:6px; color:#4A4540; font-weight:600; white-space:nowrap;">{{ row.solved }}</td>
+      </tr></table>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<p style="margin:0 0 10px 0; font-size:8.5pt; color:#8A8178;">Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.</p>

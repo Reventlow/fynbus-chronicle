@@ -272,22 +272,47 @@
   </div>
   {% endif %}
 
-  <!-- Cases: every case unsolved at some point during the week (some have no CVEs) -->
+  <!-- Sårbarheder og hændelser: every case unsolved at some point during the
+       week, after a bar chart of open/færdigbehandlet per kind. Each case
+       shows only the sections its "Vis i ugelogs-eksport" boxes allow.
+       Attachments are listed by name and TLP only, never the file. -->
   {% if week_cases %}
   <div class="section">
-    <h2>Sager</h2>
+    <h2>Sårbarheder og hændelser</h2>
+    {% include "cves/partials/week_summary_chart.html" %}
     {% for case in week_cases %}
     <table class="item-row no-break" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if case.is_open %} border-left:4px solid #A65D57;{% endif %} margin-bottom:8px;" bgcolor="#FAF9F7">
       <tr>
-        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">Sag #{{ case.pk }} &middot; {{ case.title }}</td>
+        <td style="padding:10px 14px; font-weight:600; color:#4A4540;">{{ case.get_kind_display }} &middot; sag #{{ case.pk }} &middot; {{ case.title }}</td>
         <td width="120" bgcolor="{% if case.is_open %}#A65D57{% else %}#7D8471{% endif %}" style="background-color:{% if case.is_open %}#A65D57{% else %}#7D8471{% endif %}; color:white; text-align:center; padding:6px 10px; font-size:9pt; font-weight:500;">{{ case.outcome_label }}</td>
         <td width="10" style="border:none;"></td>
       </tr>
       <tr>
         <td colspan="3" style="padding:0 14px 8px 14px; font-size:9pt; color:#6B635B;">
-          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %} &middot; {% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}Ingen CVE{% endfor %}{% if case.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}
+          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %}{% if case.cves.all or not case.is_incident %} &middot; {% endif %}{% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}{% if not case.is_incident %}Ingen CVE{% endif %}{% endfor %}{% if case.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}
         </td>
       </tr>
+      {% if case.export_assessment and case.assessment %}
+      <tr><td colspan="3" class="md" style="padding:0 14px 8px 14px; font-size:9pt; color:#4A4540;"><strong>Vurdering:</strong> {{ case.assessment|render_markdown }}</td></tr>
+      {% endif %}
+      {% if case.export_solution and case.solution %}
+      <tr><td colspan="3" class="md" bgcolor="#F0EDE8" style="background-color:#F0EDE8; padding:8px 14px; font-size:9pt; color:#4A4540;"><strong>Løsning / handling:</strong> {{ case.solution|render_markdown }}</td></tr>
+      {% endif %}
+      {% if case.week_comments %}
+      <tr><td colspan="3" style="padding:8px 14px 4px 14px; font-size:9pt; color:#4A4540;"><strong>Kommentarer denne uge:</strong>
+        {% for c in case.week_comments %}<div style="margin-top:4px;"><span style="color:#8A8178;">{{ c.created_at|date:"d/m H:i" }}{% if c.author %} &middot; {{ c.author.get_full_name|default:c.author.username }}{% endif %}:</span> {{ c.text|render_markdown_inline }}</div>{% endfor %}
+      </td></tr>
+      {% endif %}
+      {% if case.export_links_list %}
+      <tr><td colspan="3" style="padding:6px 14px 4px 14px; font-size:9pt; color:#4A4540;"><strong>Links:</strong>
+        {% for l in case.export_links_list %}<div><a href="{{ l.url }}">{{ l.label|default:l.url }}</a></div>{% endfor %}
+      </td></tr>
+      {% endif %}
+      {% if case.export_attachments_list %}
+      <tr><td colspan="3" style="padding:6px 14px 10px 14px; font-size:9pt; color:#4A4540;"><strong>Vedhæftninger</strong> <span style="color:#8A8178;">(hentes i Chronicle)</span>:
+        {% for a in case.export_attachments_list %}<div>{{ a.display_title }}{% if a.tlp %} &middot; <strong>{{ a.get_tlp_display }}</strong>{% endif %}</div>{% endfor %}
+      </td></tr>
+      {% endif %}
     </table>
     {% endfor %}
   </div>

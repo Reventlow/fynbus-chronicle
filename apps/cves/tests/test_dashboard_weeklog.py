@@ -166,6 +166,6 @@ class TestCasesWithoutCVEs:
 
     def test_html_export_includes_cases(self, cfcs):
         html = generate_html(WeekLog.objects.create(year=2026, week_number=20))
-        assert "Sag #%d" % cfcs.pk in html
+        assert "sag #%d" % cfcs.pk in html
         assert "CFCS-advarsel 2026-10-24" in html
         assert "Ingen CVE" in html

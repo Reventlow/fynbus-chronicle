@@ -213,57 +213,47 @@
     </div>
   </div>
 
-  {# === Incidents ========================================================== #}
+  {% comment %}=== Incidents: read-only history. Since 1.12.0 an incident is a case
+       (type Hændelse) under Sårbarheder og hændelser; old weeks keep theirs.{% endcomment %}
+  {% if incidents %}
   <div class="card overflow-hidden" style="padding: 0;">
     <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
       <div>
-        <div class="label-eyebrow">Hændelser</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if incidents %}{{ incidents|length }} denne uge · {% if incident_critical %}{{ incident_critical }}{% else %}ingen{% endif %} kritisk{% else %}Registrerede hændelser{% endif %}</h2>
+        <div class="label-eyebrow">Hændelser · arkiv</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{{ incidents|length }} denne uge · {% if incident_critical %}{{ incident_critical }}{% else %}ingen{% endif %} kritisk</h2>
+        <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--ink-4);">Registreret før hændelser blev til sager. Nye hændelser oprettes under <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>.</p>
       </div>
-      {% if is_editor %}
-      <button hx-get="{% url 'logbook:incident-create' %}?weeklog={{ weeklog.id }}"
-              hx-target="#incidents-list"
-              hx-swap="beforeend"
-              class="btn btn-sm btn-ghost">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        Tilføj
-      </button>
-      {% endif %}
     </div>
-
     <div id="incidents-list">
       {% for incident in incidents %}
-        {% include 'logbook/partials/incident_row.html' %}
-      {% empty %}
-        <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-incidents">
-          Ingen hændelser registreret.
-        </p>
+        {% include 'logbook/partials/incident_row.html' with read_only=True %}
       {% endfor %}
     </div>
   </div>
+  {% endif %}
 
   {# === Cases + CVEs: computed — everything unsolved at some point this week #}
   <div class="card overflow-hidden" style="padding: 0;" id="weeklog-cves">
     <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
       <div>
-        <div class="label-eyebrow">Sårbarheder</div>
+        <div class="label-eyebrow">Sårbarheder og hændelser</div>
         <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if week_cases %}Sager og CVE'er{% else %}CVE'er{% endif %}{% if week_vuln_count %} · {{ week_vuln_count }} åben{{ week_vuln_count|pluralize:"e" }} i ugens løb{% endif %}</h2>
       </div>
       <a href="{% url 'cves:list' %}" class="btn btn-sm btn-ghost">Alle CVE'er</a>
     </div>
+
+    {% if week_cases %}<div style="padding: 0 24px 6px;">{% include "cves/partials/week_summary_chart.html" %}</div>{% endif %}
 
     <div>
       {% for case in week_cases %}
         <a href="{{ case.get_absolute_url }}" class="incident-row">
           <span class="incident-rail" style="background: {{ case.state_color }};"></span>
           <div style="min-width: 0;">
-            <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title }}</div>
+            <div class="incident-title"><span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title }}</div>
             <div class="incident-meta">
               {% include "cves/partials/case_state_badge.html" %}
               {% if case.source or case.reference %}<span class="task-status">{{ case.source_label }}{% if case.source and case.reference %} · {% endif %}{{ case.reference }}</span>{% endif %}
-              <span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>
+              {% if not case.is_incident %}<span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>{% endif %}
               {% if case.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Færdigbehandlet denne uge</span>{% endif %}
             </div>
           </div>

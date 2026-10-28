@@ -4,7 +4,7 @@
 {% block title %}Sag #{{ case.pk }} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder</a>
+  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
   <a href="{% url 'cves:case-list' %}">Sager</a>
   <span class="sep">/</span>
@@ -18,7 +18,7 @@
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>Sag #{{ case.pk }}</span>
+      <span>{{ case.get_kind_display }} · sag #{{ case.pk }}</span>
       <span style="color: var(--ink-5);">·</span>
       <span>
         Oprettet {{ case.created_at|date:"j. M Y · H:i" }}
@@ -33,7 +33,7 @@
     <h1 class="display" style="margin: 0; font-size: 32px; line-height: 1.15; {% if not case.is_open %}color: var(--ink-3);{% endif %}">{{ case.title }}</h1>
     <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
       {% include "cves/partials/case_state_badge.html" %}
-      <span class="task-status num">{% if cves %}{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>
+      {% if not case.is_incident or cves %}<span class="task-status num">{% if cves %}{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endif %}
       {% if case.solved_at %}
         <span class="task-status num">Færdigbehandlet {{ case.solved_at|date:"j. M Y · H:i" }}{% if case.solved_by %} af {{ case.solved_by.get_full_name|default:case.solved_by.username }}{% endif %}</span>
       {% endif %}
@@ -62,10 +62,11 @@
     {% endif %}
   </div>
 
-  {# Assessment + solution: written once for every CVE in the case #}
+  {% comment %}Assessment + solution: written once for every CVE in the case. Each
+     section has a "Vis i ugelogs-eksport" box deciding if the export shows it.{% endcomment %}
   <div class="card" style="display: grid; gap: 18px;">
     <div>
-      <div class="label-eyebrow">Vurdering</div>
+      <div class="flex items-center justify-between gap-3"><div class="label-eyebrow">Vurdering</div>{% include "cves/partials/case_export_toggle.html" with section="assessment" on=case.export_assessment %}</div>
       {% if case.assessment %}
         <div class="md" style="font-size: 14px; color: var(--ink-2); line-height: 1.55; margin-top: 6px;">{{ case.assessment|cve_markdown }}</div>
       {% else %}
@@ -73,7 +74,7 @@
       {% endif %}
     </div>
     <div style="border-top: 1px solid var(--hairline); padding-top: 16px;">
-      <div class="label-eyebrow">Løsning / handling</div>
+      <div class="flex items-center justify-between gap-3"><div class="label-eyebrow">Løsning / handling</div>{% include "cves/partials/case_export_toggle.html" with section="solution" on=case.export_solution %}</div>
       {% if case.solution %}
         <div class="md" style="font-size: 14px; color: var(--ink-2); line-height: 1.55; margin-top: 6px;">{{ case.solution|cve_markdown }}</div>
       {% else %}
@@ -82,7 +83,8 @@
     </div>
   </div>
 
-  {# Member CVEs #}
+  {# Member CVEs (an incident shows the card only if it holds any) #}
+  {% if not case.is_incident or cves %}
   <div class="card overflow-hidden" style="padding: 0;">
     <div style="padding: 20px 24px 14px;">
       <div class="label-eyebrow">Omfatter</div>
@@ -120,12 +122,16 @@
       </form>
     {% endif %}
   </div>
+  {% endif %}
 
   {# Shared documents #}
   <div class="card overflow-hidden" style="padding: 0;">
-    <div style="padding: 20px 24px 14px;">
-      <div class="label-eyebrow">Dokumenter</div>
-      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Vedhæftninger</h2>
+    <div class="flex items-start justify-between gap-3" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Dokumenter</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Vedhæftninger</h2>
+      </div>
+      {% include "cves/partials/case_export_toggle.html" with section="attachments" on=case.export_attachments %}
     </div>
     <div id="cve-attachments" x-data>
       {% for attachment in attachments %}
@@ -141,9 +147,12 @@
   {% include "cves/partials/pdf_lightbox.html" %}
 
   <div class="card overflow-hidden" style="padding: 0;">
-    <div style="padding: 20px 24px 14px;">
-      <div class="label-eyebrow">Referencer</div>
-      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Links</h2>
+    <div class="flex items-start justify-between gap-3" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Referencer</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Links</h2>
+      </div>
+      {% include "cves/partials/case_export_toggle.html" with section="links" on=case.export_links %}
     </div>
     <div id="cve-links">
       {% for link in links %}
@@ -158,9 +167,12 @@
   </div>
 
   <div class="card overflow-hidden" style="padding: 0;">
-    <div style="padding: 20px 24px 14px;">
-      <div class="label-eyebrow">Tidslinje</div>
-      <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Kommentarer</h2>
+    <div class="flex items-start justify-between gap-3" style="padding: 20px 24px 14px;">
+      <div>
+        <div class="label-eyebrow">Tidslinje</div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Kommentarer</h2>
+      </div>
+      {% include "cves/partials/case_export_toggle.html" with section="comments" on=case.export_comments %}
     </div>
     {% if is_editor %}
       {% include "cves/partials/cve_comment_form.html" with form=comment_form %}

@@ -3,7 +3,7 @@
 {% block title %}{% if object %}Rediger {{ object.cve_id }}{% else %}Ny CVE{% endif %} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder</a>
+  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
   {% if object %}
     <a href="{% url 'cves:detail' object.pk %}">{{ object.cve_id }}</a>

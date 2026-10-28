@@ -8,11 +8,11 @@
   <a href="{{ case.get_absolute_url }}" class="incident-row" style="grid-template-columns: auto minmax(0, 1fr) auto; border-top: 0;">
     <span class="incident-rail" style="background: {{ case.state_color }};"></span>
     <div style="min-width: 0;">
-      <div class="incident-title"><span style="color: var(--ink-4);">Sag #{{ case.pk }}</span> · {{ case.title }}</div>
+      <div class="incident-title"><span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title }}</div>
       <div class="incident-meta">
         {% include "cves/partials/case_state_badge.html" %}
         {% if case.source or case.reference %}<span class="task-status">{{ case.source_label }}{% if case.source and case.reference %} · {% endif %}{{ case.reference }}</span>{% endif %}
-        {% with n=case.cves.all|length %}<span class="task-status num">{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endwith %}
+        {% with n=case.cves.all|length %}{% if n or not case.is_incident %}<span class="task-status num">{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endif %}{% endwith %}
         <span class="num" title="{{ case.updated_at|date:'d. M Y H:i' }}">{{ case.updated_at|timesince }} siden</span>
       </div>
     </div>
