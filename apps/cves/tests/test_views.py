@@ -255,3 +255,12 @@ class TestHtmxLinks:
 def test_sidebar_has_entry(editor_client):
     body = editor_client.get(reverse("cves:list")).content.decode()
     assert "CVE&#x27;er" in body or "CVE'er" in body
+
+
+def test_list_intro_links_to_all(editor_client):
+    """The intro offers a real "vis alle" link (not a dropdown hint), hidden once showing all."""
+    from django.urls import reverse
+    body = editor_client.get(reverse("cves:list")).content.decode()
+    assert 'href="?state=all"' in body and "vis alle CVE" in body
+    body = editor_client.get(reverse("cves:list") + "?state=all").content.decode()
+    assert 'href="?state=all"' not in body

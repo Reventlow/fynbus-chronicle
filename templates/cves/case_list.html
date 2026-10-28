@@ -23,7 +23,7 @@
         En sag samler CVE'er, der har samme vurdering og samme løsning — fx flere kerne-CVE'er, der lukkes af én opdatering.
         Vurdering, løsning og dokumenter skrives én gang på sagen, og sagens status gælder alle dens CVE'er.
         En advarsel uden CVE-nummer, fx fra CFCS, oprettes som en sag uden CVE'er med kilde og reference.
-        Færdigbehandlede sager vises i {{ solved_window_days }} dage{% if state != 'all' %} — <a href="?state=all">vis alle</a>{% endif %}.
+        Færdigbehandlede sager vises i {{ solved_window_days }} dage{% if state != 'all' %} — <a href="?state=all">vis alle sager</a>{% endif %}.
       </p>
     </div>
     {% if is_editor %}

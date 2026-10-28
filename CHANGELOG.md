@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.11.1 — 2026-10-28
+
+### Fixed
+- Teksten øverst på CVE-listen bad om at *vælge Alle*, men *Alle* var kun et valg i Status-feltet, og det var ikke til at finde. Nu er det linket **vis alle CVE'er** (på Sager: **vis alle sager**). Det forsvinder, når alle allerede vises.
+
 ## 1.11.0 — 2026-10-27
 
 ### Added
