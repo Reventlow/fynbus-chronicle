@@ -1,0 +1,42 @@
+{% load theme_messages static %}
+{% comment %}
+  Halloween banner — only shown when the halloween theme is active
+  (24 Oct – 1 Nov, user pick via the tweaks panel, or
+  ?force-theme=halloween preview). CSS hides it for any other theme so it
+  can render unconditionally.
+
+  Mirrors the other day-theme banners: DB-backed messages cycle every
+  2 minutes, initial pick is random, the JSON list ships in its own
+  <script> tag so straight quotes don't end x-data early.
+
+  The parade script (ghosts, jack-o'-lanterns, bats and skeletons crossing
+  the screen) is loaded here too; it checks data-event on <html> before
+  every skit, so it only plays while the theme is actually on.
+{% endcomment %}
+<script id="halloween-banner-messages" type="application/json">{% theme_messages_json "halloween" %}</script>
+<div class="halloween-banner" role="note" aria-label="Halloween"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('halloween-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="halloween-banner-inner">
+    <span class="halloween-banner-glyph" aria-hidden="true">🎃</span>
+    <span class="halloween-banner-date">24. okt – 1. nov</span>
+    <span class="halloween-banner-sep" aria-hidden="true">·</span>
+    <span class="halloween-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Bøh!</span>
+  </div>
+</div>
+<script src="{% static 'js/halloween-parade.js' %}" defer></script>

@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.13.0 — 2026-10-28
+
+### Added
+- **Halloween-tema, 24. oktober – 1. november** (hvert år). Græskar-orange i lyst tema og heksetime-lilla i mørkt, 🎃 som mærke (👻 i mørkt tema), et spindelvæv i hjørnet og et banner med uhyggelige IT-råd. Hilsenen på Kontrolpanelet bliver til *Bøh*.
+- **Halloween-paraden:** et par gange i timen krydser nogen skærmen og laver noget fjollet. Et skelet taber hovedet og må løbe efter det, et andet skelet drikker kaffe, der løber lige ud gennem ribbenene, og et tredje moonwalker baglæns. Et spøgelse spørger efter wifi-koden, et andet kommer med *Ticket #666: Det spøger i printeren*. Et græskar ruller ind og bliver svimmelt, og tre flagermus flyver forbi, hvor den sidste først flyver den forkerte vej. Paraden kan ikke klikkes på og står aldrig i vejen. Den holder pause, når fanen ikke er synlig, og kører ikke, hvis styresystemet er sat til at begrænse animationer.
+
 ## 1.12.0 — 2026-10-28
 
 ### Changed

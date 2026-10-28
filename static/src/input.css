@@ -720,6 +720,313 @@ html[data-event="star-trek"].dark .star-trek-banner {
 }
 
 /* =============================================================================
+   24. okt – 1. nov — Halloween skin
+   Light = pumpkin orange on parchment. Dark = jack-o'-lantern orange on
+   witching-hour purple. Same plumbing as the other day-themes:
+   data-event="halloween" overrides the accent tokens, swaps the brand-mark
+   glyph, paints a faint cobweb + dust page background and shows the sticky
+   banner. On top of that the parade (static/js/halloween-parade.js) sends a
+   ghost, a jack-o'-lantern, bats or a skeleton across the screen now and
+   then; its actors are styled at the end of this block.
+   ============================================================================= */
+html[data-event="halloween"] {
+  --accent:      oklch(0.66 0.17 50);    /* pumpkin */
+  --accent-soft: oklch(0.95 0.05 70);    /* candle-lit parchment */
+  --accent-ink:  oklch(0.42 0.14 45);    /* burnt orange */
+  --chart-accent: rgb(225, 115, 35);
+}
+html[data-event="halloween"].dark {
+  --accent:      oklch(0.70 0.17 55);    /* glowing pumpkin */
+  --accent-soft: oklch(0.26 0.08 305);   /* witching-hour purple */
+  --accent-ink:  oklch(0.84 0.14 65);    /* candle flame */
+  --chart-accent: rgb(240, 140, 50);
+}
+
+/* A cobweb in the top-right corner and a faint dust of dots. Fixed, so it
+   doesn't scroll, like the other themes' patterns. */
+html[data-event="halloween"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%23888' stroke-width='1.1'%3E%3Cpath d='M200 0 L40 0 M200 0 L60 90 M200 0 L120 160 M200 0 L200 200'/%3E%3Cpath d='M170 0 Q172 18 186 28 Q194 16 200 14 M130 0 Q134 40 160 56 Q186 44 200 46 M90 0 Q96 64 140 96 Q178 80 200 84 M55 0 Q62 90 124 136 Q168 124 200 128'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 30% 40%, var(--ink-1) 1px, transparent 1.6px),
+    radial-gradient(circle at 70% 75%, var(--ink-1) 0.9px, transparent 1.4px);
+  background-repeat: no-repeat, repeat, repeat;
+  background-position: right top, 0 0, 50px 70px;
+  background-size: 260px 260px, 150px 150px, 110px 110px;
+  opacity: 0.09;
+}
+html[data-event="halloween"].dark body::before { opacity: 0.16; }
+html[data-event="halloween"] body > * { position: relative; z-index: 1; }
+html[data-event="halloween"] body > .sidebar { position: sticky; z-index: 50; }
+
+/* Brand mark: a jack-o'-lantern in light mode, a ghost in dark mode. */
+html[data-event="halloween"] .brand-mark { font-size: 0; }
+html[data-event="halloween"] .brand-mark::before {
+  content: "🎃";
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1;
+}
+html[data-event="halloween"].dark .brand-mark::before { content: "👻"; }
+
+/* Banner — same shape as the others, separate class for independence. */
+.halloween-banner { display: none; }
+html[data-event="halloween"] .halloween-banner {
+  display: block;
+  position: sticky;
+  top: var(--toolbar-h);
+  z-index: 30;
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 92%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 70%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+.halloween-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.halloween-banner-glyph { font-size: 15px; }
+.halloween-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.halloween-banner-sep { color: var(--accent); opacity: 0.5; }
+.halloween-banner-msg {
+  color: var(--accent-ink);
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.halloween-banner-msg.is-fading { opacity: 0; }
+.halloween-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+/* ---- The parade -------------------------------------------------------
+   An actor is one fixed element that crosses the viewport (hw-cross*),
+   with its parts animated inside it. Never catches the pointer. Each
+   actor's run time arrives as --hw-ms from the script. */
+.hw-actor {
+  --hw-bone: #fbf7ee;
+  --hw-outline: #3b342e;
+  position: fixed;
+  left: 0;
+  z-index: 70;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+  animation: hw-cross var(--hw-ms) linear forwards;
+}
+/* Every day-theme sets body > * { position: relative; z-index: 1 } to keep
+   content above its pattern; the actor is a child of <body> too, so win
+   that back explicitly or it lands at the top of the page. */
+html body > .hw-actor { position: fixed; z-index: 70; }
+.hw-actor.hw-pause { animation-name: hw-cross-pause; }
+.hw-actor.hw-rtl   { animation-name: hw-cross-rtl; }
+.hw-ground { bottom: 8px; }
+.hw-mid    { top: 40vh; }
+.hw-low    { top: 60vh; }
+.hw-top    { top: 96px; }
+@media (max-width: 640px) { .hw-actor { scale: 0.75; } }
+
+@keyframes hw-cross       { from { transform: translateX(-220px); } to { transform: translateX(calc(100vw + 60px)); } }
+@keyframes hw-cross-rtl   { from { transform: translateX(calc(100vw + 60px)); } to { transform: translateX(-220px); } }
+@keyframes hw-cross-pause {
+  0%   { transform: translateX(-220px); }
+  42%  { transform: translateX(42vw); }
+  62%  { transform: translateX(42vw); }
+  100% { transform: translateX(calc(100vw + 60px)); }
+}
+
+/* Speech bubble, switched on and off by the script. */
+.hw-bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-30%) scale(0.6);
+  transform-origin: 30% 100%;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  background: #fffdf6;
+  color: #2c2825;
+  border: 1.5px solid #2c2825;
+  border-radius: 12px;
+  padding: 5px 10px;
+  font: 600 13px/1.3 'Inter Tight', system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.18);
+}
+.hw-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 26%;
+  border: 7px solid transparent;
+  border-top-color: #2c2825;
+}
+.hw-bubble.is-on { opacity: 1; transform: translateX(-30%) scale(1); }
+
+/* Emoji actors (ghost, jack-o'-lantern, bats). */
+.hw-emoji {
+  display: inline-block;
+  font-size: 46px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25));
+}
+.hw-bob  { animation: hw-bob 1.6s ease-in-out infinite alternate; opacity: 0.93; }
+.hw-spin { animation: hw-spin var(--hw-ms) linear forwards; }
+@keyframes hw-bob { from { transform: translateY(-10px) rotate(-6deg); } to { transform: translateY(10px) rotate(6deg); } }
+/* Rolls, stops mid-screen and wobbles (dizzy), then rolls on: the stops
+   line up with hw-cross-pause. */
+@keyframes hw-spin {
+  0%   { transform: rotate(0deg); }
+  42%  { transform: rotate(1080deg); }
+  45%  { transform: rotate(1065deg); }
+  48%  { transform: rotate(1094deg); }
+  51%  { transform: rotate(1070deg); }
+  54%  { transform: rotate(1088deg); }
+  58%  { transform: rotate(1078deg); }
+  62%  { transform: rotate(1080deg); }
+  100% { transform: rotate(2160deg); }
+}
+.hw-sign {
+  position: absolute;
+  left: 40px;
+  top: 30px;
+  background: #fffdf6;
+  color: #3b342e;
+  border: 1.5px solid #3b342e;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font: 600 10px/1.25 var(--font-mono);
+  white-space: nowrap;
+  transform: rotate(-5deg);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+}
+
+.hw-bats { display: flex; align-items: flex-start; gap: 10px; }
+.hw-bats .hw-emoji { font-size: 30px; }
+.hw-flap { animation: hw-flap 0.18s ease-in-out infinite alternate; }
+.hw-bat-2 { margin-top: 18px; }
+/* The last bat goes the wrong way first (margin + scale, so it can still
+   flap with transform). */
+.hw-bat-3 { animation: hw-flap 0.18s ease-in-out infinite alternate, hw-wrong-way var(--hw-ms) ease-in-out forwards; }
+@keyframes hw-flap { from { transform: scaleY(1) translateY(0); } to { transform: scaleY(0.55) translateY(-4px); } }
+@keyframes hw-wrong-way {
+  0%   { margin-left: 0;      scale: 1 1; }
+  4%   { scale: -1 1; }
+  24%  { margin-left: -170px; scale: -1 1; }
+  30%  { margin-left: -170px; scale: 1 1; }
+  52%  { margin-left: 0;      scale: 1 1; }
+  100% { margin-left: 0;      scale: 1 1; }
+}
+
+/* The skeleton: white bones with a dark outline (drop-shadows), so it
+   reads on both the light and the dark theme. */
+.hw-skel {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 0.8px var(--hw-outline)) drop-shadow(0 0 0.8px var(--hw-outline)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.25));
+}
+.hw-skel path { fill: none; stroke: var(--hw-bone); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.hw-skel .hw-skull { fill: var(--hw-bone); stroke: var(--hw-bone); stroke-width: 1; }
+.hw-skel .hw-eye { fill: var(--hw-outline); stroke: none; }
+.hw-skel .hw-teeth { stroke: var(--hw-outline); stroke-width: 1; }
+.hw-leg-l { transform-origin: 29px 80px; }
+.hw-leg-r { transform-origin: 35px 80px; }
+.hw-arm   { transform-origin: 32px 33px; }
+.hw-head  { transform-origin: 32px 16px; }
+
+/* Walking: legs and arms swing in opposite phase, the body bobs. */
+.hw-walk .hw-skel   { animation: hw-step 0.275s ease-in-out infinite alternate; }
+.hw-walk .hw-leg-l  { animation: hw-swing 0.55s ease-in-out infinite alternate; }
+.hw-walk .hw-leg-r  { animation: hw-swing 0.55s ease-in-out infinite alternate-reverse; }
+.hw-walk .hw-arm-l  { animation: hw-swing-arm 0.55s ease-in-out infinite alternate-reverse; }
+.hw-walk .hw-arm-r  { animation: hw-swing-arm 0.55s ease-in-out infinite alternate; }
+@keyframes hw-step      { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+@keyframes hw-swing     { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+@keyframes hw-swing-arm { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+
+/* Moonwalk: travels right-to-left facing right; the feet slide back. */
+.hw-moonwalk .hw-skel  { animation: hw-lean 0.6s ease-in-out infinite alternate; }
+.hw-moonwalk .hw-leg-l { animation: hw-slide 0.6s ease-in-out infinite alternate; }
+.hw-moonwalk .hw-leg-r { animation: hw-slide 0.6s ease-in-out infinite alternate-reverse; }
+.hw-moonwalk .hw-arm-l { animation: hw-swing-arm 1.2s ease-in-out infinite alternate; }
+.hw-moonwalk .hw-arm-r { animation: hw-swing-arm 1.2s ease-in-out infinite alternate-reverse; }
+@keyframes hw-slide { from { transform: translateX(-7px) rotate(10deg); } to { transform: translateX(5px) rotate(-6deg); } }
+@keyframes hw-lean  { from { transform: rotate(-3deg); } to { transform: rotate(2deg); } }
+
+/* The head pops off, lands ahead and rolls; the body catches up and the
+   head hops back on. Offsets are relative to the walking body. */
+.hw-skit-head .hw-head { animation: hw-head-pop var(--hw-ms) linear forwards; }
+@keyframes hw-head-pop {
+  0%, 40% { transform: translate(0, 0) rotate(0deg); }
+  44%     { transform: translate(16px, -48px) rotate(170deg); }
+  50%     { transform: translate(44px, 98px) rotate(380deg); }
+  53%     { transform: translate(56px, 84px) rotate(450deg); }
+  56%     { transform: translate(66px, 98px) rotate(520deg); }
+  76%     { transform: translate(74px, 98px) rotate(620deg); }
+  88%     { transform: translate(26px, 98px) rotate(660deg); }
+  93%     { transform: translate(12px, -34px) rotate(700deg); }
+  97%, 100% { transform: translate(0, 0) rotate(720deg); }
+}
+
+/* Coffee in hand, running straight out through the ribs. */
+.hw-cup {
+  position: absolute;
+  left: 40px;
+  top: 58px;
+  font-size: 18px;
+  transform: rotate(-12deg);
+}
+.hw-drip {
+  position: absolute;
+  left: 30px;
+  top: 28px;
+  width: 4px;
+  height: 7px;
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: #6b3e1e;
+  opacity: 0;
+  animation: hw-drip 1.1s ease-in infinite 5s;
+}
+.hw-drip-2 { left: 33px; animation-delay: 5.5s; }
+@keyframes hw-drip {
+  0%   { transform: translateY(0); opacity: 1; }
+  90%  { transform: translateY(92px); opacity: 1; }
+  100% { transform: translateY(94px) scaleX(2.2) scaleY(0.3); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-actor { display: none; }
+}
+
+/* =============================================================================
    Density modes (driven by data-density on <html>)
    - comfortable (default, no attribute): full layout, comfortable spacing
    - compact:    denser spacing AND graphs hidden
@@ -1455,6 +1762,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   }
   .theme-row.is-selected .theme-dot-auto { color: var(--accent-ink); }
   .theme-dot[data-theme="alzheimer"] { background: oklch(0.50 0.15 300); }
+  .theme-dot[data-theme="halloween"] { background: oklch(0.66 0.17 50); }
   .theme-dot[data-theme="pirate"]    { background: oklch(0.50 0.10 200); }
   .theme-dot[data-theme="star-trek"] { background: oklch(0.55 0.16 240); }
   .theme-dot[data-theme="star-wars"] { background: oklch(0.68 0.17 55); }
