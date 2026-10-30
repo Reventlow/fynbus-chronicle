@@ -1022,6 +1022,126 @@ html body > .hw-actor { position: fixed; z-index: 70; }
   100% { transform: translateY(94px) scaleX(2.2) scaleY(0.3); opacity: 0; }
 }
 
+/* Zombies lurch: a stiff, lopsided sway with a little drag in each step. */
+.hw-lurch { animation: hw-lurch 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes hw-lurch {
+  0%   { transform: rotate(-8deg) translateY(0); }
+  30%  { transform: rotate(4deg) translateY(-4px); }
+  50%  { transform: rotate(-3deg) translateY(0); }
+  80%  { transform: rotate(7deg) translateY(-2px); }
+  100% { transform: rotate(-8deg) translateY(0); }
+}
+
+/* Vampire: glides to mid-screen (hw-cross-pause), talks, goes poof at
+   ~58 % and leaves as a bat flying up and away. */
+.hw-vamp-wrap { position: relative; display: inline-block; width: 56px; height: 56px; }
+.hw-vamp-wrap > * { position: absolute; left: 0; top: 0; }
+.hw-vamp     { animation: hw-vamp var(--hw-ms) linear forwards; }
+.hw-poof     { opacity: 0; animation: hw-poof var(--hw-ms) linear forwards; }
+.hw-vamp-bat { opacity: 0; left: 10px; top: 8px; animation: hw-vamp-bat var(--hw-ms) ease-in forwards; }
+.hw-vamp-bat .hw-emoji { font-size: 30px; }
+@keyframes hw-vamp {
+  0%, 55% { transform: scale(1); opacity: 1; }
+  58%     { transform: scale(1.15) rotate(-6deg); opacity: 1; }
+  60%     { transform: scale(0); opacity: 0; }
+  100%    { transform: scale(0); opacity: 0; }
+}
+@keyframes hw-poof {
+  0%, 57% { transform: scale(0.5); opacity: 0; }
+  59%     { transform: scale(0.8); opacity: 1; }
+  67%     { transform: scale(1.7); opacity: 0; }
+  100%    { opacity: 0; }
+}
+@keyframes hw-vamp-bat {
+  0%, 58% { transform: translate(0, 0) scale(0.3); opacity: 0; }
+  61%     { transform: translate(0, -6px) scale(1); opacity: 1; }
+  100%    { transform: translate(140px, -70vh) scale(1); opacity: 1; }
+}
+
+/* Werewolf: a colleague walks in, the moon rises above at the stop, they
+   shake, and a howling wolf takes their place for the run off-screen. */
+.hw-morph { position: relative; display: inline-block; width: 56px; height: 56px; }
+.hw-morph > .hw-human, .hw-morph > .hw-wolf { position: absolute; left: 0; top: 0; }
+.hw-human { animation: hw-human var(--hw-ms) linear forwards; }
+.hw-wolf  { opacity: 0; animation: hw-wolf var(--hw-ms) linear forwards; transform-origin: 50% 90%; }
+.hw-moon  {
+  position: absolute; left: 6px; top: -110px; font-size: 34px; opacity: 0;
+  filter: drop-shadow(0 0 12px rgb(255 236 150 / 0.9));
+  animation: hw-moon var(--hw-ms) ease-out forwards;
+}
+@keyframes hw-human {
+  0%, 44% { transform: translateX(0) scale(1); opacity: 1; }
+  45%     { transform: translateX(-3px) scale(1); }
+  46%     { transform: translateX(3px) scale(1.05); }
+  47%     { transform: translateX(-3px) scale(1.1); }
+  48%     { transform: translateX(3px) scale(1.15); opacity: 1; }
+  50%     { transform: scale(0.3); opacity: 0; }
+  100%    { transform: scale(0.3); opacity: 0; }
+}
+@keyframes hw-wolf {
+  0%, 49% { transform: scale(0.3); opacity: 0; }
+  52%     { transform: scale(1.3) rotate(-14deg); opacity: 1; }
+  58%     { transform: scale(1.1) rotate(-18deg); opacity: 1; }
+  62%     { transform: scale(1) rotate(0deg); opacity: 1; }
+  100%    { transform: scale(1); opacity: 1; }
+}
+@keyframes hw-moon {
+  0%, 34% { transform: translateY(30px); opacity: 0; }
+  42%     { transform: translateY(0); opacity: 1; }
+  64%     { transform: translateY(0); opacity: 1; }
+  74%     { transform: translateY(-10px); opacity: 0; }
+  100%    { opacity: 0; }
+}
+
+/* Spiders don't cross: the actor sits at the top edge (left set by the
+   script) and each spider drops on its thread, dangles, and climbs back.
+   The thread is a hairline running from the spider off the top of the
+   screen. */
+.hw-actor.hw-drop-actor { top: 0; animation: none; }
+.hw-spiders { display: flex; gap: 46px; }
+.hw-spider {
+  position: relative;
+  display: inline-block;
+  transform: translateY(-90px);
+  animation: hw-drop var(--hw-ms) ease-in-out forwards;
+}
+.hw-spider::before {
+  content: "";
+  position: absolute;
+  bottom: 70%;
+  left: 50%;
+  width: 1px;
+  height: 100vh;
+  background: rgb(140 140 140 / 0.75);
+}
+.hw-spider .hw-emoji { font-size: 34px; }
+.hw-dangle { animation: hw-dangle 1.6s ease-in-out infinite alternate; transform-origin: 50% 0; }
+.hw-spiders .hw-spider-2 { animation-duration: calc(var(--hw-ms) - 800ms);  animation-delay: 800ms; }
+.hw-spiders .hw-spider-3 { animation-duration: calc(var(--hw-ms) - 1600ms); animation-delay: 1600ms; }
+@keyframes hw-drop {
+  0%       { transform: translateY(-90px); }
+  22%      { transform: translateY(var(--hw-depth)); }
+  26%      { transform: translateY(calc(var(--hw-depth) - 16px)); }
+  30%, 74% { transform: translateY(var(--hw-depth)); }
+  100%     { transform: translateY(-90px); }
+}
+@keyframes hw-dangle { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+/* A spider's bubble hangs beside it, not above (the thread is there). */
+.hw-spider > .hw-bubble {
+  left: calc(100% + 10px);
+  bottom: 6px;
+  transform: scale(0.6);
+  transform-origin: 0 100%;
+}
+.hw-spider > .hw-bubble.is-on { transform: scale(1); }
+.hw-spider > .hw-bubble::after {
+  top: auto;
+  bottom: 6px;
+  left: -14px;
+  border-top-color: transparent;
+  border-right-color: #2c2825;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hw-actor { display: none; }
 }

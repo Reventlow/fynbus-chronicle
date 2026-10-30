@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.14.0 — 2026-10-30
+
+### Added
+- **Flere monstre i Halloween-paraden.** En zombie slæber sig langsomt over skærmen og vil have kaffe. En anden er en *zombie-proces* med skiltet *kill -9 virker ikke*. En vampyr vil kun suge jeres båndbredde, går op i røg og flyver væk som flagermus. En kollega går ind, fuldmånen står op, og en varulv hyler over fredagsdeploy. Edderkopper firer sig ned fra toppen af skærmen i deres tråd, hænger og siger hej, og kravler op igen, nogle gange tre ad gangen.
+
 ## 1.13.0 — 2026-10-28
 
 ### Added

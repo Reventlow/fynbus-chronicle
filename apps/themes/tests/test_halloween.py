@@ -29,3 +29,12 @@ class TestHalloween:
         assert 'class="halloween-banner"' in body and "halloween-banner-messages" in body
         assert "js/halloween-parade" in body
         assert "halloween-footer-egg" in body
+
+    def test_parade_has_the_monsters(self):
+        """1.14.0: zombies, a vampire, a werewolf and spiders joined the parade."""
+        from pathlib import Path
+        from django.conf import settings
+        js = (Path(settings.BASE_DIR) / "static" / "js" / "halloween-parade.js").read_text()
+        for skit in ("zombieShuffle", "zombieProcess", "vampire", "werewolf", "spiderDrop", "spiderTrio",
+                     "skeletonHead", "ghostWifi", "pumpkinRoll", "bats"):
+            assert f"    {skit}: function" in js
