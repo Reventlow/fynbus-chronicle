@@ -2258,6 +2258,17 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .incident-sev[data-sev="P1"] { color: var(--bad-ink); }
   .incident-sev[data-sev="P2"] { color: var(--warn-ink); }
 
+  /* Case type icon (cves/partials/case_kind_icon.html): Sårbarhed, Hændelse,
+     Planlagt opgave each get their own shape and tint. */
+  .case-kind-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 22px; height: 22px; border-radius: 6px; vertical-align: middle; margin-right: 6px;
+  }
+  .case-kind-vulnerability { color: var(--warn-ink); background: var(--warn-soft); }
+  .case-kind-incident { color: var(--bad-ink); background: var(--bad-soft); }
+  .case-kind-task { color: var(--info); background: var(--info-soft); }
+  .incident-title .case-kind-icon { width: 20px; height: 20px; margin-top: -2px; }
+
   /* Task status as dot + text; only "Blokeret" keeps a pill. */
   .task-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; }
   .task-row.is-done { opacity: 0.55; }

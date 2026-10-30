@@ -289,7 +289,7 @@
       </tr>
       <tr>
         <td colspan="3" style="padding:0 14px 8px 14px; font-size:9pt; color:#6B635B;">
-          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %}{% if case.cves.all or not case.is_incident %} &middot; {% endif %}{% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}{% if not case.is_incident %}Ingen CVE{% endif %}{% endfor %}{% if case.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}
+          {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %}{% if case.cves.all or case.is_vulnerability %} &middot; {% endif %}{% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}{% if case.is_vulnerability %}Ingen CVE{% endif %}{% endfor %}{% if case.solved_this_week %} &middot; Færdigbehandlet denne uge{% endif %}
         </td>
       </tr>
       {% if case.export_assessment and case.assessment %}

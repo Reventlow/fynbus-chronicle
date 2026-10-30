@@ -231,10 +231,11 @@ class CVECaseForm(_CVEIdsMixin, forms.ModelForm):
 
     class Meta:
         model = CVECase
-        fields = ["kind", "title", "source", "reference", "source_url", "assessment", "solution"]
+        fields = ["kind", "title", "due_date", "source", "reference", "source_url", "assessment", "solution"]
         widgets = {
             "kind": forms.RadioSelect(),
             "title": forms.TextInput(attrs={"class": "input-field", "maxlength": 200, "autofocus": True}),
+            "due_date": forms.DateInput(format="%Y-%m-%d", attrs={"class": "input-field", "type": "date"}),
             "source": forms.TextInput(attrs={"class": "input-field", "maxlength": 40, "list": "case-sources",
                                              "placeholder": "CFCS"}),
             "reference": forms.TextInput(attrs={"class": "input-field", "maxlength": 100,

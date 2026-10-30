@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.0 — 2026-10-30
+
+### Added
+- **Planlagte opgaver.** Ved siden af sårbarheder og hændelser kan en sag nu være en **planlagt opgave**: IT-arbejde, vi selv planlægger, fx en større opgradering eller en licensfornyelse. Opret den med **Ny planlagt opgave** på fanen *Sager*. Den har vurdering, løsning, vedhæftninger, links og kommentarer som de andre sager, kan have en **frist** (vist med rødt, når den er overskredet), og har status *Planlagt*, *I gang* eller *Udført*. Kontrolpanelets overskrift tæller de åbne planlagte opgaver, og ugelogens søjlediagram får en række for dem i uger, hvor der er nogen.
+- **Ikoner for sagstyper.** På Kontrolpanelet, på fanen *Sager*, på sagens side og i ugeloggen har hver sag et ikon: et skjold for en sårbarhed, en advarselstrekant for en hændelse og en kalender med et flueben for en planlagt opgave.
+
 ## 1.14.0 — 2026-10-30
 
 ### Added

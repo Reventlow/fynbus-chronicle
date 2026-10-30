@@ -1,5 +1,6 @@
 {% comment %}
-  Sårbarheder card, built around cases: open cases (and those
+  Sårbarheder card, built around cases (vulnerabilities, incidents and
+  planned tasks, each with its type icon): open cases (and those
   færdigbehandlet in the window), open first, each with its CVEs listed
   underneath so it is visible which CVEs a case holds. A case without CVEs
   (e.g. a CFCS warning) shows its source and reference instead. Below
@@ -9,7 +10,7 @@
 <div class="card overflow-hidden" style="padding: 0; display: flex; flex-direction: column;">
   <div class="card-head" style="padding: 18px 24px 10px; margin: 0;">
     <div>
-      <div class="label-eyebrow">Sårbarheder og hændelser · {{ window_days }} dage · {{ open_count }} åben{{ open_count|pluralize:"e" }} CVE{{ open_count|pluralize:"'er" }}, {{ solved_count }} færdigbehandlet</div>
+      <div class="label-eyebrow">Sårbarheder, hændelser og opgaver · {{ window_days }} dage · {{ open_count }} åben{{ open_count|pluralize:"e" }} CVE{{ open_count|pluralize:"'er" }}, {{ solved_count }} færdigbehandlet</div>
       <h3>{% if open_case_count %}{{ open_case_count }} åben{{ open_case_count|pluralize:"e" }} sag{{ open_case_count|pluralize:"er" }}{% else %}Ingen åbne sager{% endif %}</h3>
     </div>
     <div style="display: flex; gap: 14px; font-size: 12.5px;">
@@ -25,12 +26,13 @@
           <a href="{{ case.get_absolute_url }}" class="incident-row">
             <span class="incident-rail" style="background: {{ case.state_color }};"></span>
             <div style="min-width: 0;">
-              <div class="incident-title"><span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title|truncatechars:70 }}</div>
+              <div class="incident-title">{% include "cves/partials/case_kind_icon.html" %}<span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title|truncatechars:70 }}</div>
               <div class="incident-meta">
                 {% include "cves/partials/case_state_badge.html" %}
+                {% include "cves/partials/case_due.html" %}
                 {% with n=case.cves.all|length %}
                   {% if n %}<span class="task-status num">{{ n }} CVE{{ n|pluralize:"'er" }}</span>
-                  {% elif case.source or not case.is_incident %}<span class="task-status">{{ case.source_label|default:"Uden CVE" }}{% if case.reference %} · {{ case.reference|truncatechars:30 }}{% endif %}</span>{% endif %}
+                  {% elif case.source or case.is_vulnerability %}<span class="task-status">{{ case.source_label|default:"Uden CVE" }}{% if case.reference %} · {{ case.reference|truncatechars:30 }}{% endif %}</span>{% endif %}
                 {% endwith %}
                 <span class="num">{{ case.updated_at|timesince }} siden</span>
               </div>

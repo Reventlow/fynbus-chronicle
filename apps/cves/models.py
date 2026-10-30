@@ -337,6 +337,9 @@ class CVECase(models.Model):
     A vulnerability case groups the CVEs that share that assessment and fix
     (or none, e.g. a CFCS warning). An incident case (``kind=incident``)
     replaces the old logbook Hændelser since 1.12.0; it normally has no CVEs.
+    A planned task (``kind=task``, 1.15.0) is IT work we schedule ourselves,
+    e.g. a major upgrade or a licence renewal, with an optional ``due_date``;
+    its states read Planlagt / I gang / Udført.
 
     The case's state is the truth for its CVEs: changing it moves every
     member CVE too (each CVE's timeline notes that it came via the case),
@@ -350,6 +353,7 @@ class CVECase(models.Model):
     class Kind(models.TextChoices):
         VULNERABILITY = "vulnerability", "Sårbarhed"
         INCIDENT = "incident", "Hændelse"
+        TASK = "task", "Planlagt opgave"
 
     class Resolution(models.TextChoices):
         PATCHED = "patched", "Patchet"
@@ -372,6 +376,8 @@ class CVECase(models.Model):
                                  help_text="Kildens eget id, fx CFCS-advarslens nummer og dato. "
                                            "Til advarsler uden CVE-nummer.")
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
+    due_date = models.DateField(verbose_name="Frist", null=True, blank=True,
+                                help_text="Til planlagte opgaver: hvornår den skal være gjort. Valgfri.")
 
     # Which sections the week log export shows for this case (see EXPORT_SECTIONS).
     export_assessment = models.BooleanField(verbose_name="Vurdering i ugelogs-eksport", default=True)
@@ -424,13 +430,40 @@ class CVECase(models.Model):
         return self.kind == self.Kind.INCIDENT
 
     @property
+    def is_task(self) -> bool:
+        return self.kind == self.Kind.TASK
+
+    @property
+    def is_vulnerability(self) -> bool:
+        """Only vulnerability cases are about CVEs (the CVE count and card)."""
+        return self.kind == self.Kind.VULNERABILITY
+
+    # A planned task's states in its own words (see TASK_OUTCOMES in views).
+    TASK_STATE_LABELS = {"identified": "Planlagt", "patching": "I gang", "solved": "Udført"}
+
+    @property
     def state_label(self) -> str:
-        """The state's name; an incident is "Under behandling", not "Patcher"."""
+        """The state's name; an incident is "Under behandling", not "Patcher",
+        and a planned task is Planlagt / I gang / Udført."""
+        if self.is_task:
+            return self.TASK_STATE_LABELS[self.state]
         if self.is_incident and self.state == self.State.PATCHING:
             return "Under behandling"
         return self.get_state_display()
 
-    state_color = CVE.state_color
+    @property
+    def is_overdue(self) -> bool:
+        """An open case whose due date has passed."""
+        return bool(self.due_date and self.is_open and self.due_date < timezone.localdate())
+
+    @property
+    def state_color(self) -> str:
+        """CSS colour for the state dot: as a CVE's, except that a planned
+        task that is merely Planlagt is not an alarm (blue, not red)."""
+        if self.is_task and self.state == self.State.IDENTIFIED:
+            return "var(--info)"
+        return CVE.state_color.fget(self)
+
     solved_within = CVE.solved_within
 
     @property
@@ -670,12 +703,15 @@ def weeklog_cves(weeklog) -> dict:
 
 def _week_summary(cases) -> list[dict]:
     """Counts behind the week log's bar chart: per kind (Hændelser,
-    Sårbarheder), the cases still open at the end of the week and those
+    Sårbarheder, Planlagte opgaver), the cases still open at the end of the week and those
     færdigbehandlet during it. ``open_pct``/``solved_pct`` scale the bars
     against the largest count so the chart reads at a glance."""
     rows = []
-    for kind, label in ((CVECase.Kind.INCIDENT, "Hændelser"), (CVECase.Kind.VULNERABILITY, "Sårbarheder")):
+    for kind, label in ((CVECase.Kind.INCIDENT, "Hændelser"), (CVECase.Kind.VULNERABILITY, "Sårbarheder"),
+                        (CVECase.Kind.TASK, "Planlagte opgaver")):
         of_kind = [c for c in cases if c.kind == kind]
+        if kind == CVECase.Kind.TASK and not of_kind:
+            continue  # the tasks row only shows in weeks that have one
         rows.append({
             "label": label,
             "open": sum(1 for c in of_kind if not c.solved_this_week),  # still open when the week ended

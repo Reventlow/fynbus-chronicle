@@ -129,6 +129,7 @@ def headline_context() -> dict:
     open_cases = CVECase.objects.open()
     context["open_incident_count"] = open_cases.filter(kind=CVECase.Kind.INCIDENT).count()
     context["open_vuln_case_count"] = open_cases.filter(kind=CVECase.Kind.VULNERABILITY).count()
+    context["open_task_count"] = open_cases.filter(kind=CVECase.Kind.TASK).count()
     if weeklog:
         context["weeklog_task_count"] = weeklog.priority_appearances.filter(
             priority_item__deleted_at__isnull=True

@@ -543,7 +543,7 @@ class CVECaseDetailView(LoginRequiredMixin, DetailView):
             "link_form": CVELinkForm(),
             "comment_form": CVECommentForm(),
             "add_form": CVECaseAddForm(),
-            "outcomes": INCIDENT_OUTCOMES if case.is_incident else CASE_OUTCOMES,
+            "outcomes": OUTCOMES_BY_KIND[case.kind],
         })
         return context
 
@@ -564,11 +564,21 @@ CASE_OUTCOMES = [
     (CVE.State.SOLVED, CVECase.Resolution.RISK_ACCEPTED, "Færdigbehandlet — risiko accepteret"),
 ]
 
+# The state buttons on a planned task (labels as CVECase.TASK_STATE_LABELS).
+TASK_OUTCOMES = [(state, "", CVECase.TASK_STATE_LABELS[state]) for state in CVE.State.values]
+
+OUTCOMES_BY_KIND = {
+    CVECase.Kind.VULNERABILITY: CASE_OUTCOMES,
+    CVECase.Kind.INCIDENT: INCIDENT_OUTCOMES,
+    CVECase.Kind.TASK: TASK_OUTCOMES,
+}
+
 
 class CVECaseCreateView(EditorRequiredMixin, CreateView):
     """Start a case, optionally with CVE ids (``?cve_ids=`` prefills them,
-    which the "Ny sag" button on a CVE page uses; ``?kind=incident`` starts
-    an incident case, from the "Ny hændelse" button)."""
+    which the "Ny sag" button on a CVE page uses; ``?kind=incident`` or
+    ``?kind=task`` start an incident or a planned task, from the "Ny
+    hændelse" and "Ny planlagt opgave" buttons)."""
 
     model = CVECase
     form_class = CVECaseForm

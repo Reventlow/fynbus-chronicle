@@ -249,11 +249,12 @@
         <a href="{{ case.get_absolute_url }}" class="incident-row">
           <span class="incident-rail" style="background: {{ case.state_color }};"></span>
           <div style="min-width: 0;">
-            <div class="incident-title"><span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title }}</div>
+            <div class="incident-title">{% include "cves/partials/case_kind_icon.html" %}<span style="color: var(--ink-4);">{{ case.get_kind_display }} · sag #{{ case.pk }}</span> · {{ case.title }}</div>
             <div class="incident-meta">
               {% include "cves/partials/case_state_badge.html" %}
+                {% include "cves/partials/case_due.html" %}
               {% if case.source or case.reference %}<span class="task-status">{{ case.source_label }}{% if case.source and case.reference %} · {% endif %}{{ case.reference }}</span>{% endif %}
-              {% if not case.is_incident %}<span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>{% endif %}
+              {% if case.is_vulnerability %}<span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>{% endif %}
               {% if case.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Færdigbehandlet denne uge</span>{% endif %}
             </div>
           </div>
