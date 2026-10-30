@@ -1,0 +1,2 @@
+{# A case's due date (Frist) in a meta line; red once an open case is past it. #}
+{% if case.due_date %}<span class="task-status num"{% if case.is_overdue %} style="color: var(--bad-ink); font-weight: 500;"{% endif %} title="Frist">Frist {{ case.due_date|date:"j. M Y" }}{% if case.is_overdue %} · overskredet{% endif %}</span>{% endif %}

@@ -38,7 +38,7 @@
           </span>
         {% endif %}
         <span style="color: var(--ink-5);">·</span>
-        <a href="{% url 'cves:case-list' %}" style="color: inherit; text-decoration: none;"><span class="num">{{ open_incident_count }}</span> åbne {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %}, <span class="num">{{ open_vuln_case_count }}</span> åbne sårbarheder</a>
+        <a href="{% url 'cves:case-list' %}" style="color: inherit; text-decoration: none;"><span class="num">{{ open_incident_count }}</span> åbne {% sw_phrase "hændelser" "indsatser" "sith-aktioner" "kapringer" trek="anomalier" klingon="kampe" %}, <span class="num">{{ open_vuln_case_count }}</span> åbne sårbarheder, <span class="num">{{ open_task_count }}</span> planlagte opgave{{ open_task_count|pluralize:"r" }}</a>
         <span style="color: var(--ink-5);">·</span>
         <span>Ugelog {{ iso_week }}:
           {% if current_week %}

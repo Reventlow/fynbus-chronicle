@@ -18,7 +18,7 @@
 
 {% block content %}
 <style>
-  /* Type (Sårbarhed / Hændelse) as one row of radio buttons */
+  /* Type (Sårbarhed / Hændelse / Planlagt opgave) as one row of radio buttons */
   #id_kind { display: flex; gap: 20px; }
   #id_kind label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 </style>
@@ -27,7 +27,7 @@
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 16px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>{% if object %}Rediger sag{% else %}En sårbarhed (CVE'er med samme vurdering og løsning) eller en hændelse{% endif %}</span>
+      <span>{% if object %}Rediger sag{% else %}En sårbarhed (CVE'er med samme vurdering og løsning), en hændelse eller en planlagt opgave{% endif %}</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">
       {% if object %}Sag #{{ object.pk }}{% else %}Ny sag{% endif %}

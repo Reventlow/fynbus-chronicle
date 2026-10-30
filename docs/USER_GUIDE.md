@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.12.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.
 
 ## Indhold
 
@@ -91,7 +91,7 @@ Kontrolpanelet viser ugen lige nu. Alt opdaterer sig selv, mens siden er åben: 
 
 Overskriften siger, hvor mange sager der er åbne, og om det er flere eller færre end ved udgangen af sidste uge — fx *"28 åbne sager, én flere end sidste uge."* Linjen under viser:
 - **Live · synk kl …**: hvornår sagerne sidst blev hentet fra ServiceDesk.
-- Hvor mange hændelser og sårbarheder (sager) der er åbne. Klik for at åbne *Sager*.
+- Hvor mange hændelser, sårbarheder og planlagte opgaver (sager) der er åbne. Klik for at åbne *Sager*.
 - Ugeloggen for ugen og antallet af opgaver på den.
 
 Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
@@ -104,7 +104,7 @@ Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen p�
 
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
-- **Sårbarheder og hændelser**: sagerne (hver mærket *Sårbarhed* eller *Hændelse*), hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
+- **Sårbarheder og hændelser**: sagerne (hver mærket *Sårbarhed*, *Hændelse* eller *Planlagt opgave* med sit ikon), hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
 
 ### 02 Åbne sager
 
@@ -319,13 +319,19 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på fanen *Sager*. Det er en sag af typen **Hændelse**: den har vurdering, løsning, vedhæftninger, links og kommentarer ligesom en sårbarhed, men normalt ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Skriv typen og alvoren i vurderingen.
 
+### Planlagte opgaver
+
+En planlagt opgave er IT-arbejde, vi selv planlægger, fx en større opgradering eller en licensfornyelse. Opret den med **Ny planlagt opgave** på fanen *Sager*. Den er en sag af typen **Planlagt opgave** med vurdering, løsning, vedhæftninger, links og kommentarer, og den kan have en **frist**. Status er *Planlagt*, *I gang* eller *Udført*. En åben opgave, hvis frist er overskredet, får fristen vist med rødt.
+
+På Kontrolpanelet, på fanen *Sager* og i ugeloggen har hver sag et ikon for sin type: et skjold for en sårbarhed, en advarselstrekant for en hændelse og en kalender med et flueben for en planlagt opgave.
+
 ### Hvad kommer med i ugelogs-eksporten
 
 Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links og Kommentarer) har boksen **Vis i ugelogs-eksport**. Den bestemmer, om afsnittet kommer med i ugeloggens HTML-, PDF- og mail-eksport.
 - Som standard kommer *Vurdering* og *Løsning* med, og resten ikke.
 - Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
 - Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
-- Eksporten starter med et søjlediagram: hændelser og sårbarheder, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
+- Eksporten starter med et søjlediagram: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
 
 ### Sager: flere CVE'er med samme løsning
 

@@ -18,7 +18,7 @@
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>{{ case.get_kind_display }} · sag #{{ case.pk }}</span>
+      {% include "cves/partials/case_kind_icon.html" %}<span>{{ case.get_kind_display }} · sag #{{ case.pk }}</span>
       <span style="color: var(--ink-5);">·</span>
       <span>
         Oprettet {{ case.created_at|date:"j. M Y · H:i" }}
@@ -33,7 +33,8 @@
     <h1 class="display" style="margin: 0; font-size: 32px; line-height: 1.15; {% if not case.is_open %}color: var(--ink-3);{% endif %}">{{ case.title }}</h1>
     <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
       {% include "cves/partials/case_state_badge.html" %}
-      {% if not case.is_incident or cves %}<span class="task-status num">{% if cves %}{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endif %}
+      {% include "cves/partials/case_due.html" %}
+      {% if case.is_vulnerability or cves %}<span class="task-status num">{% if cves %}{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endif %}
       {% if case.solved_at %}
         <span class="task-status num">Færdigbehandlet {{ case.solved_at|date:"j. M Y · H:i" }}{% if case.solved_by %} af {{ case.solved_by.get_full_name|default:case.solved_by.username }}{% endif %}</span>
       {% endif %}
@@ -84,7 +85,7 @@
   </div>
 
   {# Member CVEs (an incident shows the card only if it holds any) #}
-  {% if not case.is_incident or cves %}
+  {% if case.is_vulnerability or cves %}
   <div class="card overflow-hidden" style="padding: 0;">
     <div style="padding: 20px 24px 14px;">
       <div class="label-eyebrow">Omfatter</div>

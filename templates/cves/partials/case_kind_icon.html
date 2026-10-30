@@ -1,0 +1,19 @@
+{% comment %}
+  A case's type as a small icon, so Sårbarheder, Hændelser and Planlagte
+  opgaver tell apart at a glance: a shield for a vulnerability, a warning
+  triangle for an incident, a calendar with a tick for a planned task.
+  The tooltip and the screen-reader text carry the type's name. The tint
+  classes are spelled out in full so Tailwind's purge keeps them.
+{% endcomment %}
+<span class="case-kind-icon {% if case.kind == "incident" %}case-kind-incident{% elif case.kind == "task" %}case-kind-task{% else %}case-kind-vulnerability{% endif %}" title="{{ case.get_kind_display }}">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    {% if case.kind == "incident" %}
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>
+    {% elif case.kind == "task" %}
+      <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="m9 16 2 2 4-4"/>
+    {% else %}
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    {% endif %}
+  </svg>
+  <span class="sr-only">{{ case.get_kind_display }}</span>
+</span>
