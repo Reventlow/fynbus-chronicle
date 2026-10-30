@@ -1,6 +1,7 @@
 /*
  * Halloween parade — now and then a ghost, a jack-o'-lantern, a squadron
- * of bats or a skeleton crosses the screen and does something silly.
+ * of bats, a skeleton, a zombie, a vampire or a werewolf crosses the screen
+ * and does something silly, or a spider drops in from the top on its thread.
  *
  * Loaded by templates/components/halloween_banner.html on every page, but
  * it only plays while <html data-event="halloween"> (the schedule, a user
@@ -28,6 +29,10 @@
     return min + Math.random() * (max - min);
   }
 
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   // A stick-figure skeleton. Head, arms and legs are separate groups so
   // CSS can swing the limbs (walk) and pop the head off.
   var SKELETON =
@@ -49,7 +54,9 @@
     '</svg>';
 
   // Each skit builds its actor, says when its speech bubble shows (ms from
-  // start) and how long the whole thing runs.
+  // start) and how long the whole thing runs. Optional: `left` places an
+  // actor that doesn't cross (the spiders drop in at a random spot), and
+  // `speaker` is the part the bubble hangs on (default: the whole actor).
   var SKITS = {
     // The skeleton's head pops off, rolls ahead, and the body chases it.
     skeletonHead: function () {
@@ -107,6 +114,71 @@
         bubble: "Forkert vej, Bent!", say: [3500, 6500],
       };
     },
+    // A zombie shuffles across, very slowly, lurching.
+    zombieShuffle: function () {
+      return {
+        cls: "hw-ground", ms: 22000,
+        html: '<span class="hw-emoji hw-lurch">🧟</span>',
+        bubble: pick(["Hjeeerner… nej vent: kaaaffe.", "Er det … stadig mandag?", "Jeg har ikke sovet siden go-live."]),
+        say: [8000, 12500],
+      };
+    },
+    // A zombie process: stops mid-screen with its sign, refuses to die.
+    zombieProcess: function () {
+      return {
+        cls: "hw-pause hw-low", ms: 18000,
+        html: '<span class="hw-emoji hw-lurch">🧟‍♂️</span><span class="hw-sign">PID 666 &lt;defunct&gt;<br>kill -9 virker ikke</span>',
+        bubble: "Jeg er en zombie-proces. Jeg går ingen steder.", say: [7800, 11000],
+      };
+    },
+    // A vampire glides in, makes its demand, goes poof and leaves as a bat.
+    vampire: function () {
+      return {
+        cls: "hw-pause hw-mid", ms: 15000,
+        html: '<span class="hw-vamp-wrap">' +
+                '<span class="hw-emoji hw-vamp">🧛</span>' +
+                '<span class="hw-emoji hw-poof">💨</span>' +
+                '<span class="hw-vamp-bat"><span class="hw-emoji hw-flap">🦇</span></span>' +
+              '</span>',
+        bubble: pick(["Jeg vil kun suge … jeres båndbredde.", "Må jeg komme ind? Jeg har ikke noget adgangskort."]),
+        say: [5600, 8400],
+      };
+    },
+    // A colleague walks in, the full moon rises, and a werewolf runs off.
+    werewolf: function () {
+      return {
+        cls: "hw-pause hw-ground", ms: 16000,
+        html: '<span class="hw-morph">' +
+                '<span class="hw-emoji hw-moon">🌕</span>' +
+                '<span class="hw-emoji hw-human">🧑‍💼</span>' +
+                '<span class="hw-emoji hw-wolf">🐺</span>' +
+              '</span>',
+        bubble: pick(["Auuuu! Fuldmåne OG fredagsdeploy!", "Auuuu! Hvem har rørt min firewall?"]),
+        say: [8300, 11000],
+      };
+    },
+    // A spider drops in on its thread, dangles, says hello, climbs back up.
+    spiderDrop: function () {
+      return {
+        cls: "hw-drop-actor", ms: 12000, left: rand(8, 60) + "vw", speaker: ".hw-spider",
+        html: '<span class="hw-spider" style="--hw-depth: ' + Math.round(rand(26, 48)) + 'vh">' +
+                '<span class="hw-emoji hw-dangle">🕷️</span></span>',
+        bubble: pick(["Hej! Jeg er bare en lille bug.", "Det er ikke en bug. Det er en feature.", "Har I prøvet at slukke og tænde for mig?"]),
+        say: [3200, 8000],
+      };
+    },
+    // Three spiders, one after the other; the last one explains.
+    spiderTrio: function () {
+      var spider = function (depth, extra) {
+        return '<span class="hw-spider ' + extra + '" style="--hw-depth: ' + depth + 'vh">' +
+               '<span class="hw-emoji hw-dangle">🕷️</span></span>';
+      };
+      return {
+        cls: "hw-drop-actor hw-spiders", ms: 13000, left: rand(8, 45) + "vw", speaker: ".hw-spider-3",
+        html: spider(22, "hw-spider-1") + spider(34, "hw-spider-2") + spider(28, "hw-spider-3"),
+        bubble: "Vi er tre bugs. Det står i release notes.", say: [4800, 9000],
+      };
+    },
   };
 
   var names = Object.keys(SKITS);
@@ -127,10 +199,14 @@
     actor.className = "hw-actor " + skit.cls;
     actor.setAttribute("aria-hidden", "true");
     actor.style.setProperty("--hw-ms", skit.ms + "ms");
-    actor.innerHTML = skit.html + '<span class="hw-bubble">' + skit.bubble + "</span>";
+    if (skit.left) actor.style.left = skit.left;
+    actor.innerHTML = skit.html;
+    var bubble = document.createElement("span");
+    bubble.className = "hw-bubble";
+    bubble.textContent = skit.bubble;
+    (skit.speaker && actor.querySelector(skit.speaker) || actor).appendChild(bubble);
     document.body.appendChild(actor);
 
-    var bubble = actor.querySelector(".hw-bubble");
     setTimeout(function () { bubble.classList.add("is-on"); }, skit.say[0]);
     setTimeout(function () { bubble.classList.remove("is-on"); }, skit.say[1]);
     setTimeout(function () {

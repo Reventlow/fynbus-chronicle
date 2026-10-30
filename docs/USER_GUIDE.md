@@ -457,7 +457,7 @@ administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
 | 8. september og 5. april | Star Trek Day / First Contact Day |
 | 19. september og 1. oktober | Pirate Day |
 | 21. september | Verdens Alzheimerdag — lilla, med fakta og henvisninger til Alzheimerforeningen i banneret i stedet for vittigheder |
-| 24. oktober – 1. november | Halloween: græskar-orange, uhyggelige IT-råd i banneret, og indimellem krydser et spøgelse, et græskar, flagermus eller et skelet skærmen og laver noget fjollet. Paraden kører ikke, hvis styresystemet er sat til at begrænse animationer |
+| 24. oktober – 1. november | Halloween: græskar-orange, uhyggelige IT-råd i banneret, og indimellem krydser et spøgelse, et græskar, flagermus, et skelet, en zombie, en vampyr eller en varulv skærmen og laver noget fjollet, eller en edderkop firer sig ned fra toppen. Paraden kører ikke, hvis styresystemet er sat til at begrænse animationer |
 
 **Read-only Friday.** Hver fredag viser sitet et rødt banner øverst: ingen
 ændringer i produktion i dag — deploys, patches og "lige en lille rettelse"
