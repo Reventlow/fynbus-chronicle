@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.2.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.3.
 
 ## Indhold
 
@@ -334,7 +334,7 @@ Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links o
 - Det samme gælder mailen med ugeloggen: både selve mailen og den vedhæftede PDF.
 - Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
 - Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
-- Eksporten starter med et søjlediagram over alle ugens sager, også dem, der ikke vises: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
+- Afsnittet står i eksporten og mailen lige efter *Ugeoversigt* og før *Referat af mandags møde*. Det starter med et søjlediagram over alle ugens sager, også dem, der ikke vises: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
 
 ### Sager: flere CVE'er med samme løsning
 

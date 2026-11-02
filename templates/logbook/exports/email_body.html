@@ -206,6 +206,8 @@
   </div>
   {% endif %}
 
+  {% include "logbook/exports/_week_cases.html" with fs="13px" %}
+
   {% if weeklog.meeting_skipped %}
   <h2>Referat af mandags møde</h2>
   <p><em>Mødet blev ikke afholdt denne uge.</em>{% if weeklog.meeting_skipped_reason %} {{ weeklog.meeting_skipped_reason }}{% endif %}</p>
@@ -279,8 +281,6 @@
   </div>
   {% endfor %}
   {% endif %}
-
-  {% include "logbook/exports/_week_cases.html" %}
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin-top:30px; border-top:1px solid #E5E0D8;">
     <tr>

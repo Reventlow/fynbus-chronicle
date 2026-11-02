@@ -164,6 +164,9 @@
   </div>
   {% endif %}
 
+  <!-- Sårbarheder og hændelser (chart + cases): shared with the mail body -->
+  {% include "logbook/exports/_week_cases.html" %}
+
   <!-- Meeting Minutes -->
   {% if weeklog.meeting_skipped %}
   <div class="section">
@@ -271,9 +274,6 @@
     {% endfor %}
   </div>
   {% endif %}
-
-  <!-- Sårbarheder og hændelser: shared with the mail body -->
-  {% include "logbook/exports/_week_cases.html" %}
 
   <!-- Footer -->
   <div class="report-footer" style="margin-top:30px; padding-top:12px; border-top:1px solid #E5E0D8; font-size:9pt; color:#6B635B;">

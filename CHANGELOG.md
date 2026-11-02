@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.3 — 2026-11-02
+
+### Changed
+- **Søjlediagrammet for *Sårbarheder og hændelser* har fået samme udseende som *Åbne sager fordelt på liggetid***: én ramme, en tynd bjælke på en lys baggrund og tallet til højre (fx *3 åbne*, *2 færdigbehandlet*). Gælder ugeloggens side, HTML- og PDF-eksporten og mailen.
+- **Afsnittet *Sårbarheder og hændelser* er flyttet op** i eksporten og mailen, så det står før *Referat af mandags møde*.
+
+### Fixed
+- En sag uden kilde og CVE'er viste "· Færdigbehandlet denne uge" med en overflødig prik foran i eksporten.
+
 ## 1.15.2 — 2026-11-02
 
 ### Changed
