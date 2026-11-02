@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.1 — 2026-11-02
+
+### Fixed
+- **Sager med alle *Vis i ugelogs-eksport*-bokse slået fra kommer ikke længere med i ugelogs-eksporten** (HTML, PDF og mailens PDF). Før kom sagens titellinje med alligevel. Søjlediagrammet i eksporten tæller nu kun de sager, der kommer med. På ugeloggens side i Chronicle står alle sager stadig.
+
+### Changed
+- **Ugelogs-eksporten har ikke længere afsnittet *CVE'er*.** En sag, der kommer med, nævner sine CVE-numre; CVE'erne står stadig på ugeloggens side.
+
 ## 1.15.0 — 2026-10-30
 
 ### Added
