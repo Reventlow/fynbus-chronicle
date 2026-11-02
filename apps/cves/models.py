@@ -683,9 +683,10 @@ def weeklog_cves(weeklog) -> dict:
     open ones first, and likewise every case (``week_cases``) — a case can
     hold no CVEs at all, e.g. a CFCS warning without a CVE number. Each
     carries ``solved_this_week`` for the "Færdigbehandlet denne uge" mark. Shared by
-    the week log page and the HTML/PDF export. The export uses
-    ``export_cases``/``export_summary``: only cases with at least one
-    "Vis i ugelogs-eksport" box on, and the chart counts just those.
+    the week log page and the HTML/PDF export. The export lists only
+    ``export_cases`` (at least one "Vis i ugelogs-eksport" box on), but its
+    chart still counts every case (``week_summary``): hiding a case keeps
+    its details internal, not the statistics.
     """
     start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
     cves = list(CVE.objects.open_during(start, end).select_related("case").open_first())
@@ -707,8 +708,7 @@ def weeklog_cves(weeklog) -> dict:
         "week_cases": cases,
         "week_vuln_count": len(cves) + len(cases),
         "week_summary": _week_summary(cases),
-        "export_cases": (export_cases := [c for c in cases if c.in_week_export]),
-        "export_summary": _week_summary(export_cases),
+        "export_cases": [c for c in cases if c.in_week_export],
     }
 
 
