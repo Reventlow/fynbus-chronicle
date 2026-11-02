@@ -77,3 +77,56 @@ class TestNoCveSection:
     def test_hidden_case_cves_not_exported(self, editor, week20, hidden):
         hidden.add_cves([CVE.objects.create(cve_id="CVE-2024-10441", subject="Synology", created_at=at(2026, 5, 11))], editor)
         assert "CVE-2024-10441" not in generate_html(week20)
+
+
+class TestMailExport:
+    """The mail (HTML body, PDF attachment, or both) follows the same rules
+    as the HTML/PDF export: shown cases in, hidden cases and loose CVEs out."""
+
+    @pytest.fixture(autouse=True)
+    def recipients(self, settings):
+        settings.CHRONICLE_EMAIL_RECIPIENTS = ["team@fynbus.dk"]
+
+    @pytest.fixture
+    def loose(self):
+        return CVE.objects.create(cve_id="CVE-2026-5099", subject="løs", created_at=at(2026, 5, 11))
+
+    def _send(self, week, fmt):
+        from django.core import mail
+
+        from apps.logbook.exports.email import send_weeklog_email
+
+        ok, message = send_weeklog_email(week, format=fmt, from_email="gorm@fynbus.dk")
+        assert ok, message
+        return mail.outbox[-1]
+
+    @pytest.mark.parametrize("fmt", ["html", "both"])
+    def test_html_body(self, week20, shown, hidden, loose, fmt):
+        body = self._send(week20, fmt).body
+        assert "<h2>Sårbarheder og hændelser</h2>" in body
+        assert "Synlig kerne-sag" in body and "CVE-2026-5001" in body
+        assert "Intern Synology-sag" not in body
+        assert "CVE-2026-5099" not in body
+        assert "data:image" not in body  # still Outlook-safe
+
+    @pytest.mark.parametrize("fmt", ["pdf", "both"])
+    def test_pdf_attachment(self, week20, shown, hidden, loose, fmt, monkeypatch):
+        # The attached PDF is rendered from the same HTML as the export;
+        # capture that HTML instead of parsing the PDF bytes.
+        import apps.logbook.exports.pdf as pdf_module
+
+        seen = {}
+        real = pdf_module.render_to_string
+
+        def capture(name, context=None, *a, **kw):
+            html = real(name, context, *a, **kw)
+            if name == "logbook/exports/weekly_report.html":
+                seen["html"] = html
+            return html
+
+        monkeypatch.setattr(pdf_module, "render_to_string", capture)
+        msg = self._send(week20, fmt)
+        assert any(att[0].endswith(".pdf") for att in msg.attachments if isinstance(att, tuple))
+        html = seen["html"]
+        assert "Synlig kerne-sag" in html and "CVE-2026-5001" in html
+        assert "Intern Synology-sag" not in html and "CVE-2026-5099" not in html

@@ -9,6 +9,7 @@ All notable changes to FynBus Chronicle are documented here.
 
 ### Changed
 - **Ugelogs-eksporten har ikke længere afsnittet *CVE'er*.** En sag, der kommer med, nævner sine CVE-numre; CVE'erne står stadig på ugeloggens side.
+- **Mailen med ugeloggen har nu også afsnittet *Sårbarheder og hændelser***, med samme regler som HTML- og PDF-eksporten. Før stod sagerne kun i den vedhæftede PDF og ikke i selve mailen.
 
 ## 1.15.0 — 2026-10-30
 

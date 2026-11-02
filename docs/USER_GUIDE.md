@@ -331,6 +331,7 @@ Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links o
 - Som standard kommer *Vurdering* og *Løsning* med, og resten ikke.
 - **Er alle boksene slået fra, kommer sagen slet ikke med i eksporten**, heller ikke i søjlediagrammet. Den står stadig på ugeloggens side i Chronicle. Brug det til interne sager, fx et varsel, der ikke berører os.
 - CVE'er har ikke deres eget afsnit i eksporten. En sag, der kommer med, nævner sine CVE-numre.
+- Det samme gælder mailen med ugeloggen: både selve mailen og den vedhæftede PDF.
 - Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
 - Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
 - Eksporten starter med et søjlediagram over de sager, der kommer med: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
