@@ -90,11 +90,13 @@ class TestWeeklogSection:
         assert response.context["week_cves"] == []
         assert "Ingen åbne CVE" in response.content.decode()
 
-    def test_html_export_includes_section(self, weeklog):
-        CVE.objects.create(cve_id="CVE-2026-4020", subject="i eksporten", cvss="8.1", created_at=self.at(2026, 5, 4))
+    def test_html_export_has_no_cve_section(self, weeklog):
+        # CVEs are listed on the week log page, not in the export (1.15.1):
+        # the export shows cases, and a case row names its CVEs.
+        CVE.objects.create(cve_id="CVE-2026-4020", subject="ikke i eksporten", cvss="8.1", created_at=self.at(2026, 5, 4))
         html = generate_html(weeklog)
-        assert "CVE-2026-4020" in html
-        assert "CVSS 8,1" in html  # Danish decimal comma
+        assert "CVE-2026-4020" not in html
+        assert "CVSS 8,1" not in html
 
 
 class TestCasesWithoutCVEs:

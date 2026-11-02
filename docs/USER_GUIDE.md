@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.1.
 
 ## Indhold
 
@@ -313,7 +313,7 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 - En **Outlook-mail (.msg)**, fx en advarsel fra FE-CSIRT, kan vedhæftes direkte: træk den ud af Outlook og vælg den. Klik på den for at læse afsender, dato og tekst; *Hent* giver den oprindelige mail. PDF'er i mailen pakkes ud som egne vedhæftninger med samme TLP, og vælger du ingen TLP, bruges den, der står i mailen.
 - Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. Søg på id eller emne. Linket *vis alle CVE'er* øverst (eller *Alle* under Status) viser også de ældre.
 - Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
-- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. Afsnittet kommer også med i HTML- og PDF-eksporten.
+- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. I HTML- og PDF-eksporten står CVE'erne kun som numre på deres sag (se nedenfor).
 
 ### Hændelser som sager
 
@@ -329,9 +329,12 @@ På Kontrolpanelet, på fanen *Sager* og i ugeloggen har hver sag et ikon for si
 
 Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links og Kommentarer) har boksen **Vis i ugelogs-eksport**. Den bestemmer, om afsnittet kommer med i ugeloggens HTML-, PDF- og mail-eksport.
 - Som standard kommer *Vurdering* og *Løsning* med, og resten ikke.
+- **Er alle boksene slået fra, kommer sagen slet ikke med i eksporten**, heller ikke i søjlediagrammet. Den står stadig på ugeloggens side i Chronicle. Brug det til interne sager, fx et varsel, der ikke berører os.
+- CVE'er har ikke deres eget afsnit i eksporten. En sag, der kommer med, nævner sine CVE-numre.
+- Det samme gælder mailen med ugeloggen: både selve mailen og den vedhæftede PDF.
 - Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
 - Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
-- Eksporten starter med et søjlediagram: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
+- Eksporten starter med et søjlediagram over de sager, der kommer med: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
 
 ### Sager: flere CVE'er med samme løsning
 

@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
+from apps.cves.models import weeklog_cves
 from apps.images.embedding import InlineImage, embed_as_cid
 from apps.oncall.models import OnCallDuty, OnCallSegment
 
@@ -150,6 +151,8 @@ def send_weeklog_email(
         "avg_new": avgs["avg_new"],
         "avg_closed": avgs["avg_closed"],
     }
+    # Sårbarheder og hændelser: the same cases as the HTML/PDF export.
+    context.update(weeklog_cves(weeklog))
 
     try:
         body_html = render_to_string("logbook/exports/email_body.html", context)

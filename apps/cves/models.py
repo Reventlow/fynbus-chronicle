@@ -426,6 +426,13 @@ class CVECase(models.Model):
         return self.state != self.State.SOLVED
 
     @property
+    def in_week_export(self) -> bool:
+        """Whether the case appears in the week log export at all: only
+        when at least one of its "Vis i ugelogs-eksport" boxes is on. With
+        every box off the case is internal and left out entirely."""
+        return any(getattr(self, field) for field, _ in self.EXPORT_SECTIONS.values())
+
+    @property
     def is_incident(self) -> bool:
         return self.kind == self.Kind.INCIDENT
 
@@ -676,7 +683,9 @@ def weeklog_cves(weeklog) -> dict:
     open ones first, and likewise every case (``week_cases``) — a case can
     hold no CVEs at all, e.g. a CFCS warning without a CVE number. Each
     carries ``solved_this_week`` for the "Færdigbehandlet denne uge" mark. Shared by
-    the week log page and the HTML/PDF export.
+    the week log page and the HTML/PDF export. The export uses
+    ``export_cases``/``export_summary``: only cases with at least one
+    "Vis i ugelogs-eksport" box on, and the chart counts just those.
     """
     start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
     cves = list(CVE.objects.open_during(start, end).select_related("case").open_first())
@@ -698,6 +707,8 @@ def weeklog_cves(weeklog) -> dict:
         "week_cases": cases,
         "week_vuln_count": len(cves) + len(cases),
         "week_summary": _week_summary(cases),
+        "export_cases": (export_cases := [c for c in cases if c.in_week_export]),
+        "export_summary": _week_summary(export_cases),
     }
 
 
