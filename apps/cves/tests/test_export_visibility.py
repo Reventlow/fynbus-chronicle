@@ -1,8 +1,9 @@
-"""Week log export visibility (1.15.1): a case with every "Vis i
-ugelogs-eksport" box off is left out of the export entirely (and out of
-its chart), while the week log page still lists it. CVEs have no section
+"""Week log export visibility (1.15.1, 1.15.2): a case with every "Vis i
+ugelogs-eksport" box off is not listed in the export, but the export's
+chart still counts it; the week log page still lists it. CVEs have no section
 of their own in the export; a shown case still names its CVEs."""
 
+import re
 from datetime import datetime
 
 import pytest
@@ -53,15 +54,17 @@ class TestCaseVisibility:
         assert "Intern Synology-sag" not in html
         assert f"sag #{hidden.pk}" not in html
 
-    def test_export_chart_counts_only_shown_cases(self, week20, shown, hidden):
-        ctx = weeklog_cves(week20)
-        page = {r["label"]: (r["open"], r["solved"]) for r in ctx["week_summary"]}
-        export = {r["label"]: (r["open"], r["solved"]) for r in ctx["export_summary"]}
-        assert page["Sårbarheder"] == (2, 0)
-        assert export["Sårbarheder"] == (1, 0)
+    def test_export_chart_counts_hidden_cases(self, week20, shown, hidden):
+        summary = {r["label"]: (r["open"], r["solved"]) for r in weeklog_cves(week20)["week_summary"]}
+        assert summary["Sårbarheder"] == (2, 0)
+        html = generate_html(week20)
+        assert re.search(r"Sårbarheder</td>.*?Åbne</td>.*?white-space:nowrap;\">2</td>", html, re.S)
 
-    def test_no_section_when_every_case_is_hidden(self, week20, hidden):
-        assert "<h2>Sårbarheder og hændelser</h2>" not in generate_html(week20)
+    def test_chart_but_no_rows_when_every_case_is_hidden(self, week20, hidden):
+        html = generate_html(week20)
+        assert "<h2>Sårbarheder og hændelser</h2>" in html
+        assert re.search(r"Sårbarheder</td>.*?Åbne</td>.*?white-space:nowrap;\">1</td>", html, re.S)
+        assert "Intern Synology-sag" not in html
 
     def test_page_still_lists_hidden_case(self, editor_client, week20, shown, hidden):
         body = editor_client.get(reverse("logbook:weeklog-detail", args=[2026, 20])).content.decode()
@@ -106,6 +109,7 @@ class TestMailExport:
         assert "<h2>Sårbarheder og hændelser</h2>" in body
         assert "Synlig kerne-sag" in body and "CVE-2026-5001" in body
         assert "Intern Synology-sag" not in body
+        assert re.search(r"Sårbarheder</td>.*?Åbne</td>.*?white-space:nowrap;\">2</td>", body, re.S)
         assert "CVE-2026-5099" not in body
         assert "data:image" not in body  # still Outlook-safe
 

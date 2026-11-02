@@ -2,18 +2,18 @@
   Sårbarheder og hændelser for the week log export: every case unsolved at
   some point during the week, after a bar chart of open/færdigbehandlet per
   kind. Each case shows only the sections its "Vis i ugelogs-eksport" boxes
-  allow; a case with every box off is left out, and the chart counts only
-  the cases shown. Attachments are listed by name and TLP only, never the
-  file. CVEs are not listed on their own: a case row names its CVEs.
-  Plain tables with inline colours, so the same markup serves the HTML/PDF
-  export and the mail body. Context: export_cases, export_summary
-  (from apps.cves.models.weeklog_cves).
+  allow; a case with every box off is not listed, but the chart still
+  counts it (the statistics cover every case). Attachments are listed by
+  name and TLP only, never the file. CVEs are not listed on their own: a
+  case row names its CVEs. Plain tables with inline colours, so the same
+  markup serves the HTML/PDF export and the mail body. Context:
+  week_cases, week_summary, export_cases (from apps.cves.models.weeklog_cves).
 {% endcomment %}
 {% load markdown_extras %}
-  {% if export_cases %}
+  {% if week_cases %}
   <div class="section">
     <h2>Sårbarheder og hændelser</h2>
-    {% include "cves/partials/week_summary_chart.html" with week_summary=export_summary %}
+    {% include "cves/partials/week_summary_chart.html" %}
     {% for case in export_cases %}
     <table class="item-row no-break" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F7; border:1px solid #E5E0D8;{% if case.is_open %} border-left:4px solid #A65D57;{% endif %} margin-bottom:8px;" bgcolor="#FAF9F7">
       <tr>

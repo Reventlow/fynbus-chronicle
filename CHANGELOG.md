@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.2 — 2026-11-02
+
+### Changed
+- **Søjlediagrammet i ugelogs-eksporten tæller igen alle ugens sager**, også dem, hvor alle *Vis i ugelogs-eksport*-bokse er slået fra. Sådanne sager står stadig ikke i eksportens liste over sager. Gælder HTML, PDF og mail. Er alle ugens sager skjult, kommer afsnittet med diagrammet alligevel med.
+
 ## 1.15.1 — 2026-11-02
 
 ### Fixed
