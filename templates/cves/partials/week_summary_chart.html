@@ -1,30 +1,45 @@
 {% comment %}
   Bar chart of the week's cases (week_summary from weeklog_cves): per kind,
   how many were still open when the week ended and how many were
-  færdigbehandlet during it. Plain tables with inline colours, so the same
-  markup works on the week log page, in the HTML/PDF export and in mail.
+  færdigbehandlet during it. Same look as the "Åbne sager fordelt på
+  liggetid" grid: one framed table, a label column, a bar on a light track
+  and the count on the right. Every cell carries its own padding/border and
+  bgcolor, so the markup survives the PDF stylesheet and mail clients that
+  strip CSS. Shared by the week log page, the HTML/PDF export and the mail.
+  Param ``fs``: font size (default 9.5pt for print; the mail passes 13px).
 {% endcomment %}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:9.5pt; margin:4px 0 12px 0;">
+{% with fs=fs|default:"9.5pt" %}
+<table class="age-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8; margin:4px 0 0 0;" bgcolor="#FAF9F7">
   {% for row in week_summary %}
   <tr>
-    <td width="110" rowspan="2" style="padding:6px 10px 6px 0; font-weight:600; color:#4A4540; vertical-align:middle;">{{ row.label }}</td>
-    <td width="110" style="padding:3px 8px 1px 0; color:#6B635B; white-space:nowrap;">Åbne</td>
-    <td style="padding:3px 0 1px 0;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-        {% if row.open %}<td width="{{ row.open_pct }}%" bgcolor="#A65D57" style="background-color:#A65D57; height:12px; font-size:1px; line-height:1px;">&nbsp;</td>{% endif %}
-        <td style="padding-left:6px; color:#4A4540; font-weight:600; white-space:nowrap;">{{ row.open }}</td>
-      </tr></table>
+    <td width="140" style="width:140px; padding:{% if forloop.first %}8px{% else %}10px{% endif %} 0 3px 14px; border:none;{% if not forloop.first %} border-top:1px solid #E5E0D8;{% endif %} vertical-align:middle; font-size:{{ fs }}; color:#4A4540; font-weight:600; white-space:nowrap;">{{ row.label }}</td>
+    <td style="padding:{% if forloop.first %}8px{% else %}10px{% endif %} 10px 3px 10px; border:none;{% if not forloop.first %} border-top:1px solid #E5E0D8;{% endif %} vertical-align:middle;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; width:100%; margin:0;">
+        <tr>
+          {% if row.open %}<td width="{{ row.open_pct }}%" height="12" bgcolor="#A65D57" style="width:{{ row.open_pct }}%; height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:#A65D57;">&nbsp;</td>{% endif %}
+          {% if row.open_pct < 100 %}<td height="12" bgcolor="#EFEBE4" style="height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:#EFEBE4;">&nbsp;</td>{% endif %}
+        </tr>
+      </table>
+    </td>
+    <td width="150" align="right" style="width:150px; padding:{% if forloop.first %}8px{% else %}10px{% endif %} 14px 3px 0; border:none;{% if not forloop.first %} border-top:1px solid #E5E0D8;{% endif %} vertical-align:middle; font-size:{{ fs }}; color:#4A4540; white-space:nowrap;">
+      <strong>{{ row.open }}</strong> <span style="color:#6B635B;">åbne</span>
     </td>
   </tr>
   <tr>
-    <td style="padding:1px 8px 6px 0; color:#6B635B; white-space:nowrap;">Færdigbehandlet</td>
-    <td style="padding:1px 0 6px 0;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-        {% if row.solved %}<td width="{{ row.solved_pct }}%" bgcolor="#7D8471" style="background-color:#7D8471; height:12px; font-size:1px; line-height:1px;">&nbsp;</td>{% endif %}
-        <td style="padding-left:6px; color:#4A4540; font-weight:600; white-space:nowrap;">{{ row.solved }}</td>
-      </tr></table>
+    <td width="140" style="width:140px; padding:3px 0 {% if forloop.last %}8px{% else %}10px{% endif %} 14px; border:none;">&nbsp;</td>
+    <td style="padding:3px 10px {% if forloop.last %}8px{% else %}10px{% endif %} 10px; border:none; vertical-align:middle;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; width:100%; margin:0;">
+        <tr>
+          {% if row.solved %}<td width="{{ row.solved_pct }}%" height="12" bgcolor="#7D8471" style="width:{{ row.solved_pct }}%; height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:#7D8471;">&nbsp;</td>{% endif %}
+          {% if row.solved_pct < 100 %}<td height="12" bgcolor="#EFEBE4" style="height:12px; padding:0; border:none; font-size:1px; line-height:12px; background-color:#EFEBE4;">&nbsp;</td>{% endif %}
+        </tr>
+      </table>
+    </td>
+    <td width="150" align="right" style="width:150px; padding:3px 14px {% if forloop.last %}8px{% else %}10px{% endif %} 0; border:none; vertical-align:middle; font-size:{{ fs }}; color:#4A4540; white-space:nowrap;">
+      <strong>{{ row.solved }}</strong> <span style="color:#6B635B;">færdigbehandlet</span>
     </td>
   </tr>
   {% endfor %}
 </table>
-<p style="margin:0 0 10px 0; font-size:8.5pt; color:#8A8178;">Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.</p>
+<p style="margin:2px 0 10px 0; font-size:{% if fs == "13px" %}12px{% else %}9pt{% endif %}; color:#6B635B;">Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.</p>
+{% endwith %}

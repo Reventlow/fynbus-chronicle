@@ -242,7 +242,7 @@
       <a href="{% url 'cves:list' %}" class="btn btn-sm btn-ghost">Alle CVE'er</a>
     </div>
 
-    {% if week_cases %}<div style="padding: 0 24px 6px;">{% include "cves/partials/week_summary_chart.html" %}</div>{% endif %}
+    {% if week_cases %}<div style="padding: 0 24px 6px;">{% include "cves/partials/week_summary_chart.html" with fs="13px" %}</div>{% endif %}
 
     <div>
       {% for case in week_cases %}
