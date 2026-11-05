@@ -136,6 +136,17 @@ Fields rendered with `<input type="datetime-local">` need `localize=False` on th
 
 ## Permissions
 
+Chronicle has three access rules:
+
+| Who | May | Enforced by |
+|-----|-----|-------------|
+| Anonymous | Sign in; open a report an editor made public; use a share link (report token, statistics token) | `login_required` / `LoginRequiredMixin` on every other view |
+| Viewer (group) | Read every page | `EditorRequiredMixin` / `@editor_required` on writes |
+| Editor (everyone else; staff always) | Read and write | — |
+| API key | `read` scope: GET endpoints; `write` scope: also POST/PATCH | `@api_auth(scope=…)` |
+
+`apps/accounts/tests/test_access_policy.py` walks the whole URL conf and fails if any route answers an anonymous GET or POST with anything but a login redirect, 401, 403 or 405. A route that must be public goes into its `PUBLIC_ROUTES` with a reason, and has to answer an unknown key and a private one identically.
+
 Users in the **Viewer** group are read-only. Everyone else is an editor; staff always are. The group is created by migration `accounts/0001_create_viewer_group`.
 
 | Component | Location | Purpose |
@@ -266,9 +277,33 @@ Work is committed to `main`. Every push to `main` builds and pushes Docker image
 
 `.github/workflows/ci_cd.yml`:
 
-- **On push and pull request to `main`:** `test` job — Python 3.12, `pip install -r requirements/dev.txt`, `python manage.py check`, `python -m pytest -q`.
+- **On push and pull request to `main`:** `test` job — Python 3.12, `pip install --require-hashes -r requirements/lock/requirements-dev.txt`, `npm ci` + CSS build, `python manage.py check`, `python -m pytest -q`.
 - **On push to `main` only, after tests pass:** `build` job — builds and pushes
   - `elohite/chronicle:<version.txt>` and `:latest` from `docker/Dockerfile`
   - `elohite/chronicle_sync_servicedesk:<version.txt>` and `:latest` from `docker/Dockerfile.sync`
 
 Docker Hub credentials come from the repository secrets `DOCKER_HUB_USERNAME` and `DOCKER_HUB_ACCESS_TOKEN`.
+
+The workflow runs with `permissions: contents: read`, checks out without persisting the `GITHUB_TOKEN`, and pins every action to a full commit SHA (the tag is in the trailing comment). Audit it with `uvx zizmor --persona=pedantic .github/workflows/`; it should report no findings.
+
+### Dependencies and lock files
+
+The ranges you edit live in `requirements/base.txt`, `prod.txt` and `dev.txt` and in `package.json`. What gets installed — in CI and in all three Dockerfiles — comes from the lock files:
+
+- `requirements/lock/requirements-{base,prod,dev}.txt`: every package pinned with `==` and its hashes, installed with `pip install --require-hashes`.
+- `package-lock.json`: installed with `npm ci`, which fails if it no longer matches `package.json`.
+
+After changing a range, or to pick up new versions, regenerate and commit the locks:
+
+```bash
+for f in base prod dev; do
+  uv pip compile requirements/$f.txt --universal --python-version 3.12 \
+    --generate-hashes --upgrade -o requirements/lock/requirements-$f.txt
+done
+npm update && npm audit            # rewrites package-lock.json
+uvx pip-audit -r requirements/lock/requirements-prod.txt --require-hashes --disable-pip
+```
+
+Drop `--upgrade` to change only what the edited range forces. Dependabot (`.github/dependabot.yml`) opens weekly PRs for the actions, the npm lock and the Python locks.
+
+Floors such as `certifi>=2026.10.19` still belong in the `.txt` ranges: the lock only records what the range resolved to on the day it was compiled.

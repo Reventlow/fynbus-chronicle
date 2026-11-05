@@ -32,8 +32,8 @@ source .venv/bin/activate
 ### 2. Install dependencies
 
 ```bash
-pip install -r requirements/dev.txt   # base.txt + pytest, ruff, debug tools
-npm install                           # Tailwind CSS
+pip install --require-hashes -r requirements/lock/requirements-dev.txt   # base + pytest, ruff, debug tools
+npm ci                                                      # Tailwind CSS, from package-lock.json
 ```
 
 ### 3. Configure the environment

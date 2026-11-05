@@ -56,15 +56,25 @@ def report_list(request: HttpRequest) -> HttpResponse:
     )
 
 
+def _report_for(request: HttpRequest, slug: str) -> Report | None:
+    """Look up a report by slug for this visitor, or ``None`` to ask for login.
+
+    Signed-in users get the report or a 404. Anonymous visitors get the
+    report only while it is public; an unknown slug and a private one both
+    send them to the login page, so the answer never tells which slugs exist.
+    """
+    if request.user.is_authenticated:
+        return get_object_or_404(Report, slug=slug)
+    return Report.objects.filter(slug=slug, is_public=True).first()
+
+
 def report_view(request: HttpRequest, slug: str) -> HttpResponse:
     """The readable address. Open to everyone while the report is public;
     otherwise it behaves like any other Chronicle page and asks for login."""
-    report = get_object_or_404(Report, slug=slug)
-    if report.is_public:
-        return render_report(report, public=True)
-    if not request.user.is_authenticated:
+    report = _report_for(request, slug)
+    if report is None:
         return redirect_to_login(request.get_full_path())
-    return render_report(report, public=False)
+    return render_report(report, public=report.is_public)
 
 
 def _serve_video(request: HttpRequest, report: Report) -> HttpResponse:
@@ -115,8 +125,8 @@ def _serve_video(request: HttpRequest, report: Report) -> HttpResponse:
 
 
 def report_video(request: HttpRequest, slug: str) -> HttpResponse:
-    report = get_object_or_404(Report, slug=slug)
-    if not report.is_public and not request.user.is_authenticated:
+    report = _report_for(request, slug)
+    if report is None:
         return redirect_to_login(request.get_full_path())
     return _serve_video(request, report)
 

@@ -59,7 +59,7 @@ Production is defined only in `infrastructure-as-code`, deployed as the Portaine
 - The mirror is synced **in full on start and then every 24 hours**, incrementally (changed tickets only) in between. A failure in one sync does not stop the other.
 - On start it logs `Starting ServiceDesk sync loop (every 300s).`
 
-The sync image contains only `requirements/base.txt` and the app code (no templates, static files or gunicorn). Its Docker health check only verifies that Django and the ServiceDesk client load.
+The sync image contains only the `requirements/lock/requirements-base.txt` packages and the app code (no templates, static files or gunicorn). Its Docker health check only verifies that Django and the ServiceDesk client load.
 
 Both containers must use the same database: the same `DATABASE_URL`, or the same volume mounted at `SQLITE_DIR`.
 

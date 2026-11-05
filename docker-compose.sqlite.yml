@@ -3,10 +3,14 @@
 #
 # Simple deployment without PostgreSQL - good for small teams.
 # Data persists in the sqlite_data volume.
+#
+# The image is pinned to a release tag rather than :latest, so a restart
+# never silently pulls different code. Bump it deliberately to upgrade
+# (tags: https://hub.docker.com/r/elohite/chronicle/tags).
 
 services:
   web:
-    image: elohite/chronicle:latest
+    image: elohite/chronicle:1.15.4
     ports:
       - "8000:8000"
     environment:
