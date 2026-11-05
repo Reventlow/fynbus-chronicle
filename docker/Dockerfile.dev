@@ -3,7 +3,7 @@
 # Node.js for Tailwind comes from the official Node image, copied in below.
 # This replaces piping the NodeSource setup script into a root shell, which
 # ran whatever that URL served at build time.
-FROM node:20-bookworm-slim AS node
+FROM node:25-bookworm-slim AS node
 
 FROM python:3.12-slim
 
