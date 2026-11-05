@@ -2,7 +2,7 @@
 # Multi-stage build for optimized image size
 
 # Stage 1: Build Tailwind CSS
-FROM node:20-alpine AS tailwind-builder
+FROM node:26-alpine AS tailwind-builder
 
 WORKDIR /build
 
