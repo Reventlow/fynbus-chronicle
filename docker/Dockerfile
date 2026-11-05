@@ -7,10 +7,10 @@ FROM node:20-alpine AS tailwind-builder
 WORKDIR /build
 
 # Copy package files
-COPY package.json ./
+COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install
+# Install exactly what package-lock.json lists (fails if it is out of date)
+RUN npm ci
 
 # Copy Tailwind config and source CSS
 COPY tailwind.config.js ./
@@ -39,9 +39,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install Python dependencies
-COPY requirements/ ./requirements/
-RUN pip install --no-cache-dir -r requirements/prod.txt
+# Install Python dependencies from the hash-pinned lock (see requirements/lock/)
+COPY requirements/lock/requirements-prod.txt ./requirements/lock/
+RUN pip install --no-cache-dir --require-hashes -r requirements/lock/requirements-prod.txt
 
 # Stage 3: Production image
 FROM python:3.12-slim AS production

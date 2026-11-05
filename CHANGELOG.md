@@ -2,6 +2,22 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.4 — 2026-11-05
+
+### Security
+- **Byggeprocessen (GitHub Actions) er strammet op:** alle actions er låst til et bestemt commit i stedet for et tag, der kan flyttes; workflowet har kun læseadgang til repoet; `GITHUB_TOKEN` bliver ikke liggende i checkout'et; versionsnummeret fra `version.txt` skal være `X.Y.Z`, før det bruges som image-tag. `zizmor` finder ingen fejl.
+- **Pakkerne er låst:** Python installeres fra `requirements/lock/requirements-{base,prod,dev}.txt` med versioner og hashes (`pip install --require-hashes`), og npm fra `package-lock.json` (`npm ci`) — i CI og i alle tre Dockerfiles. Nu kan sårbarheds- og malware-scanninger læse præcis, hvad der ligger i imaget. Ingen kendte sårbarheder i hverken Python- eller npm-pakkerne.
+- **Tailwinds byggeværktøjer er opdateret** (postcss, nanoid, picomatch m.fl.) for at lukke seks npm-advisories. Den genererede CSS er uændret.
+- **Dependabot** foreslår hver uge opdateringer af actions, npm, Python-låsene og base-images.
+- **Udviklings-imaget henter ikke længere Node.js ved at køre NodeSources script som root** (`curl … | bash`); Node kopieres fra det officielle `node:20`-image.
+- **`docker-compose.sqlite.yml` peger på `elohite/chronicle:1.15.4`** i stedet for `:latest`.
+- **Gamle `/logbook/<id>/`-links kræver login**, før de viderestiller. Før kunne man uden login se, hvilke uger der havde en ugelog.
+- **En privat rapports adresse svarer nu det samme som en adresse, der ikke findes** (login-siden), når man ikke er logget ind. Før kunne man se, om en rapport med et bestemt navn fandtes.
+- **Ny test** sikrer, at alle sider kræver login, undtagen dem der står på en liste med en begrundelse.
+
+### Fixed
+- `docker/Dockerfile.dev` kunne ikke bygges, fordi `python:3.12-slim` nu er Debian trixie, hvor pakken hedder `libgdk-pixbuf-2.0-0`.
+
 ## 1.15.3 — 2026-11-02
 
 ### Changed

@@ -19,33 +19,51 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: the workflow only needs to read the repository. Images go
+# to Docker Hub with the Docker Hub token, not the GITHUB_TOKEN, so nothing
+# here needs write access to GitHub.
+#
+# Every action below is pinned to a full commit SHA (the tag it was taken
+# from is in the trailing comment). A tag can be moved to other code by
+# whoever controls the action's repository; a SHA cannot. Dependabot
+# (.github/dependabot.yml) proposes the bumps.
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Don't leave the GITHUB_TOKEN in .git/config for later steps.
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
+      # Locked, hash-checked install: the exact versions the image ships
+      # (see requirements/lock/ and docs/DEVELOPMENT.md for how to refresh).
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements/dev.txt
+          pip install --require-hashes -r requirements/lock/requirements-dev.txt
 
       # Some tests read the compiled stylesheet (theme skins, purge-safe
       # classes), so build it like the Docker image does.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
 
-      # No lockfile in the repo; same install as docker/Dockerfile.
+      # Installs exactly what package-lock.json lists; same as docker/Dockerfile.
       - name: Build CSS
         run: |
-          npm install
+          npm ci
           npm run build:css
 
       - name: Run Django checks
@@ -67,45 +85,58 @@ jobs:
           ALLOWED_HOSTS: localhost
 
   build:
+    name: Build and push images
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
     steps:
-      # 1. Check out repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
+      # A step output instead of $GITHUB_ENV, and only a plain X.Y.Z is
+      # accepted: whatever is in version.txt ends up in the image tags.
       - name: Read version from version.txt
-        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+        id: version
+        run: |
+          version="$(tr -d '[:space:]' < version.txt)"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=version.txt::not a X.Y.Z version: '$version'"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
         with:
           context: .
           file: docker/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ env.VERSION }}
+            ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.version }}
             ${{ env.DOCKER_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Build and Push ServiceDesk sync image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
         with:
           context: .
           file: docker/Dockerfile.sync
           push: true
           tags: |
-            ${{ env.DOCKER_SYNC_IMAGE }}:${{ env.VERSION }}
+            ${{ env.DOCKER_SYNC_IMAGE }}:${{ steps.version.outputs.version }}
             ${{ env.DOCKER_SYNC_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

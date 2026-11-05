@@ -56,8 +56,8 @@ source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\activate   # Windows
 
 # Install dependencies
-pip install -r requirements/dev.txt
-npm install
+pip install --require-hashes -r requirements/lock/requirements-dev.txt
+npm ci
 
 # Setup environment
 cp .env.example .env

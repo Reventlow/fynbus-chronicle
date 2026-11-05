@@ -207,17 +207,22 @@ class WeekLogUpdateView(EditorRequiredMixin, UpdateView):
         )
 
 
+@login_required
 def weeklog_legacy_redirect(request: HttpRequest, pk: int) -> HttpResponse:
     """Redirect a pre-0.10.5 ``/logbook/<pk>/`` link to its year/week URL.
 
     Weeklogs used to be addressed by database id. Old bookmarks, mails and
     links inside already-sent reports still carry that form, so they get a
     permanent redirect rather than a 404.
+
+    Login comes first: without it an anonymous visitor could walk the ids
+    and learn which weeks have a log, from the redirect target alone.
     """
     weeklog = get_object_or_404(WeekLog, pk=pk)
     return redirect(weeklog, permanent=True)
 
 
+@login_required
 def weeklog_legacy_edit_redirect(request: HttpRequest, pk: int) -> HttpResponse:
     """Redirect a pre-0.10.5 ``/logbook/<pk>/edit/`` link to its year/week URL."""
     weeklog = get_object_or_404(WeekLog, pk=pk)

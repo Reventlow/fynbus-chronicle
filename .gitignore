@@ -40,7 +40,6 @@ static/css/output.css
 
 # Node
 node_modules/
-package-lock.json
 
 # Environment
 .env

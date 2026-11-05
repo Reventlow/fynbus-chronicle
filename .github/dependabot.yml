@@ -1,0 +1,37 @@
+# Weekly update PRs for everything that is pinned in this repository.
+# Pins are only safe if someone moves them: SHA-pinned actions and locked
+# packages otherwise stay on whatever version they were pinned to, security
+# fixes included.
+version: 2
+updates:
+  # Actions in .github/workflows/, pinned to commit SHAs. Dependabot keeps
+  # the SHA and the "# vX.Y.Z" comment in step.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # package-lock.json (Tailwind and its plugins; build-time only).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      tailwind:
+        patterns: ["*"]
+
+  # requirements/lock/requirements-*.txt, compiled from requirements/*.txt with uv.
+  - package-ecosystem: pip
+    directory: /requirements/lock
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  # Base images in docker/Dockerfile*.
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
