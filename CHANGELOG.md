@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.16.1 — 2026-11-07
+
+### Fixed
+- **Planner-tavlens kolonner står nu i samme rækkefølge som i Planner** (Backlog først). Før stod de omvendt; kortene i hver kolonne var allerede i rigtig rækkefølge.
+- Beskeden *Login modtaget …* blev vist to gange, når Planner blev forbundet.
+- Den røde fejl *Planner er ikke forbundet* fra før forbindelsen forsvinder nu, så snart servicekontoen er forbundet, i stedet for først ved næste synkronisering.
+
 ## 1.16.0 — 2026-11-06
 
 ### Added

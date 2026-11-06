@@ -121,7 +121,9 @@ def board(request: HttpRequest) -> HttpResponse:
         by_bucket = {key: list(group) for key, group in
                      groupby(sorted(tasks, key=lambda t: (t.bucket_id or "", t.order_hint)),
                              key=lambda t: t.bucket_id or "")}
-        for bucket in PlannerBucket.objects.filter(plan=plan):
+        # Planner lays buckets out by descending order hint (cards within a
+        # bucket ascending); checked against the live board in 1.16.1.
+        for bucket in PlannerBucket.objects.filter(plan=plan).order_by("-order_hint"):
             in_bucket = by_bucket.get(bucket.id, [])
             columns.append({
                 "bucket": bucket,

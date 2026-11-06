@@ -30,14 +30,6 @@
     </div>
   </div>
 
-  {% if messages %}
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
   {% if plan and columns %}
     <div class="planner-board" role="list" aria-label="Buckets">
       {% for col in columns %}
