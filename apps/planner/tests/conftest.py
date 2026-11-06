@@ -19,7 +19,7 @@ def planner(settings):
     settings.PLANNER_CLIENT_ID = CLIENT_ID
     settings.PLANNER_CLIENT_SECRET = "test-secret"
     settings.PLANNER_PLAN_ID = PLAN
-    settings.PLANNER_SERVICE_ACCOUNT = "chronicle-planner@fynbus.dk"
+    settings.PLANNER_SERVICE_ACCOUNT = "SVC-Chronicle-Planner@fynbus.dk"
     settings.PLANNER_PUBLIC_KEY = public
     settings.PLANNER_PRIVATE_KEY = private
     settings.PLANNER_REDIRECT_URI = "https://chronicle.fynbus.net/planner/connect/callback/"

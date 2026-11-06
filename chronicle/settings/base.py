@@ -254,7 +254,7 @@ PLANNER_TENANT_ID = config("PLANNER_TENANT_ID", default="") or MICROSOFT_TENANT_
 PLANNER_CLIENT_ID = config("PLANNER_CLIENT_ID", default="")
 PLANNER_CLIENT_SECRET = config("PLANNER_CLIENT_SECRET", default="")  # sync container only
 PLANNER_PLAN_ID = config("PLANNER_PLAN_ID", default="")
-# The account allowed to be connected (e.g. chronicle-planner@fynbus.dk);
+# The account allowed to be connected (e.g. SVC-Chronicle-Planner@fynbus.dk);
 # any other account is refused when it signs in.
 PLANNER_SERVICE_ACCOUNT = config("PLANNER_SERVICE_ACCOUNT", default="")
 PLANNER_PUBLIC_KEY = config("PLANNER_PUBLIC_KEY", default="")

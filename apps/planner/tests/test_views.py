@@ -43,7 +43,7 @@ def viewer(django_user_model):
 def mirrored(planner):
     mirror_plan(FakeGraph(), PLAN)
     conn = PlannerConnection.get()
-    conn.sealed_token_cache, conn.home_account_id, conn.account_upn = "x", "h", "chronicle-planner@fynbus.dk"
+    conn.sealed_token_cache, conn.home_account_id, conn.account_upn = "x", "h", "SVC-Chronicle-Planner@fynbus.dk"
     conn.save()
     SyncState.objects.filter(pk=1).update(last_success_at=timezone.now()) or SyncState.get()
     state = SyncState.get()
@@ -152,7 +152,7 @@ def test_connect_sends_staff_to_microsoft_with_pkce(client, staff, web):
     assert url.netloc == "login.microsoftonline.com" and url.path.startswith(f"/{TENANT}/")
     assert q["client_id"] == CLIENT_ID
     assert q["redirect_uri"] == "https://chronicle.fynbus.net/planner/connect/callback/"
-    assert q["code_challenge_method"] == "S256" and q["login_hint"] == "chronicle-planner@fynbus.dk"
+    assert q["code_challenge_method"] == "S256" and q["login_hint"] == "SVC-Chronicle-Planner@fynbus.dk"
     assert "Tasks.ReadWrite" in q["scope"] and "offline_access" in q["scope"]
     assert "client_secret" not in response["Location"]
     assert client.session["planner_connect"]["state"] == q["state"]

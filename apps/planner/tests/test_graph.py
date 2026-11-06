@@ -88,7 +88,7 @@ def _pending(user=None, age=timedelta(0)):
         created_by=user, created_at=timezone.now() - age)
 
 
-def _ok_result(upn="chronicle-planner@fynbus.dk", tid=TENANT):
+def _ok_result(upn="SVC-Chronicle-Planner@fynbus.dk", tid=TENANT):
     return {"access_token": "at", "id_token_claims": {"tid": tid, "preferred_username": upn, "oid": "oid-svc"}}
 
 
@@ -105,9 +105,19 @@ def test_redeem_connects_the_service_account(planner, django_user_model):
     conn = PlannerConnection.get()
     assert pending.status == "done" and pending.sealed == ""
     assert fake.calls == [("the-code", "https://r/", {"code_verifier": "v"})]
-    assert conn.is_connected and conn.account_upn == "chronicle-planner@fynbus.dk"
+    assert conn.is_connected and conn.account_upn == "SVC-Chronicle-Planner@fynbus.dk"
     assert conn.connected_by == staff
     assert conn.sealed_token_cache and "at" not in conn.sealed_token_cache[:10]
+
+
+@pytest.mark.django_db
+def test_redeem_account_name_is_case_insensitive(planner):
+    """Entra may send svc-… where the setting says SVC-…; same account."""
+    pending = _pending()
+    PlannerAuth(app_factory=FakeMsal(_ok_result(upn="svc-chronicle-planner@fynbus.dk"), [ACCOUNT])).redeem(pending)
+    pending.refresh_from_db()
+    assert pending.status == "done"
+    assert PlannerConnection.get().account_upn == "svc-chronicle-planner@fynbus.dk"
 
 
 @pytest.mark.django_db

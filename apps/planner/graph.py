@@ -118,9 +118,10 @@ class PlannerAuth:
             claims = result.get("id_token_claims") or {}
             if claims.get("tid", "").lower() != settings.PLANNER_TENANT_ID.lower():
                 raise PlannerError("Kontoen hører ikke til FynBus' tenant.")
-            upn = (claims.get("preferred_username") or "").lower()
-            expected = settings.PLANNER_SERVICE_ACCOUNT.lower()
-            if expected and upn != expected:
+            # Compared case-insensitively (SVC-… vs svc-…), stored as Entra has it.
+            upn = claims.get("preferred_username") or ""
+            expected = settings.PLANNER_SERVICE_ACCOUNT
+            if expected and upn.lower() != expected.lower():
                 raise PlannerError(f"Forkert konto: {upn or 'ukendt'}. Log ind som {expected}.")
             account = next((a for a in self.app.get_accounts()
                             if (a.get("local_account_id") or "") == claims.get("oid")), None)

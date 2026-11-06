@@ -20,7 +20,7 @@ Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*)
 ```
 
 - **Only the sync container talks to Microsoft.** It holds the app's client secret and the private key. The web container, which faces users, has neither, so a compromised web container can't read Planner tokens or call Graph.
-- **The sign-in is a service account** (e.g. `chronicle-planner@fynbus.dk`) that is a member of the plan's group and nothing else, so its tokens reach only that plan. A staff member connects it once; the sync container keeps its token cache **sealed** in the database and refreshes it on every run.
+- **The sign-in is a service account** (e.g. `SVC-Chronicle-Planner@fynbus.dk`) that is a member of the plan's group and nothing else, so its tokens reach only that plan. A staff member connects it once; the sync container keeps its token cache **sealed** in the database and refreshes it on every run.
 - **Sealed hand-over:** Microsoft sends the one-time sign-in code to the web container. It seals the code with the public key straight away; only the sync container's private key opens it. The sealed code is deleted once used.
 - **Schedule:** Mon–Fri 07:15–17:30 every 2 minutes, otherwise every 15 minutes (Danish time). **Synk nu** on the board runs a sync within seconds (at most one every 30 seconds). Task descriptions are re-read when a task changes, and all of them once an hour.
 - **Who sees it:** editors (not the read-only *Viewer* group). Connecting or disconnecting the service account: staff.
@@ -38,7 +38,7 @@ Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*)
 
 ### 2. Entra: the service account
 
-- A user such as `chronicle-planner@fynbus.dk` with a licence that includes Planner (Business Basic, F1 or E1).
+- A user such as `SVC-Chronicle-Planner@fynbus.dk` with a licence that includes Planner (Business Basic, F1 or E1).
 - **Member** of the Microsoft 365 group behind the plan, and of nothing else.
 - MFA; its password and TOTP secret in the password manager.
 - Conditional Access: exclude it from sign-in frequency for this app only, from a named location covering fbdocker01's public IP (the sync refreshes the token from the server) and the place you sign in from. Otherwise the connection lapses every few days.
@@ -59,7 +59,7 @@ docker exec chronicle-web python manage.py planner_keygen
 PLANNER_ENABLED=True
 PLANNER_CLIENT_ID=<Chronicle Planner client id>
 PLANNER_PLAN_ID=<plan id from the Planner URL: .../plan/<this>/view/board>
-PLANNER_SERVICE_ACCOUNT=chronicle-planner@fynbus.dk
+PLANNER_SERVICE_ACCOUNT=SVC-Chronicle-Planner@fynbus.dk
 PLANNER_PUBLIC_KEY=<from planner_keygen>
 # MICROSOFT_TENANT_ID is used unless PLANNER_TENANT_ID is set.
 ```
@@ -71,7 +71,7 @@ PLANNER_SYNC_ENABLED=True
 PLANNER_CLIENT_ID=<same>
 PLANNER_CLIENT_SECRET=<the secret's Value>
 PLANNER_PLAN_ID=<same>
-PLANNER_SERVICE_ACCOUNT=chronicle-planner@fynbus.dk
+PLANNER_SERVICE_ACCOUNT=SVC-Chronicle-Planner@fynbus.dk
 PLANNER_PUBLIC_KEY=<same>
 PLANNER_PRIVATE_KEY=<from planner_keygen; sync.env ONLY>
 MICROSOFT_TENANT_ID=<tenant GUID>
