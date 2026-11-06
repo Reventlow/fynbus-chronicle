@@ -17,12 +17,17 @@
 
     <!-- Login card -->
     <div class="card">
+      {% if show_password_form %}
       <div id="login-form-container">
         {% include 'accounts/partials/login_form.html' %}
       </div>
+      {% else %}
+      <p class="text-sm ink-3 text-center">Log ind med din FynBus Microsoft-konto.</p>
+      {% endif %}
 
       {% if sso_enabled %}
         <div class="mt-6">
+          {% if show_password_form %}
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-hairline"></div>
@@ -33,6 +38,7 @@
               </span>
             </div>
           </div>
+          {% endif %}
 
           <div class="mt-6">
             {% comment %}

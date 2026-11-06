@@ -166,10 +166,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 
 # Authentication backends
+# Django's and allauth's password backends, wrapped so that SSO_ONLY can
+# refuse passwords (apps/accounts/backends.py).
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
+    "apps.accounts.backends.PasswordBackend",
+    "apps.accounts.backends.AllauthPasswordBackend",
 ]
+
+# How long a login lasts. Django's default is two weeks; a working day
+# (e.g. 12) means a user disabled in Entra loses access by the next day.
+SESSION_COOKIE_AGE = config("SESSION_MAX_HOURS", default=336, cast=int) * 3600
 
 # django-allauth settings (updated for allauth 0.61+)
 ACCOUNT_LOGIN_ON_GET = True
@@ -204,6 +210,15 @@ SSO_ALLOWED_EMAIL_DOMAINS = config("SSO_ALLOWED_EMAIL_DOMAINS", default="fynbus.
 SSO_ALLOW_GUESTS = config("SSO_ALLOW_GUESTS", default=False, cast=bool)
 # A FynBus account without a Chronicle user gets one, read-only (Viewer).
 SSO_AUTO_CREATE_USERS = config("SSO_AUTO_CREATE_USERS", default=True, cast=bool)
+# Microsoft sign-in only: passwords are refused except for the break-glass
+# accounts below (usernames), kept for when Entra is unavailable. Their
+# form is at /accounts/login/?local=1. See apps/accounts/backends.py.
+SSO_ONLY = config("SSO_ONLY", default=False, cast=bool)
+SSO_BREAK_GLASS_USERS = config("SSO_BREAK_GLASS_USERS", default="", cast=Csv())
+if SSO_ONLY and not SSO_ENABLED:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured("SSO_ONLY=True needs SSO_ENABLED=True, or nobody could log in.")
 
 if SSO_ENABLED:
     import re as _re

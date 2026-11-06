@@ -2,6 +2,16 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.6 — 2026-11-06
+
+### Added
+- **Kun Microsoft-login (`SSO_ONLY`).** Når indstillingen er slået til, viser login-siden kun knappen *Office 365*, og adgangskoder afvises overalt (Chronicles login, allauths og Django-administrationens), så MFA, Conditional Access og en spærret Entra-konto også gælder Chronicle. Undtaget er de nødkonti (*break-glass*), der står i `SSO_BREAK_GLASS_USERS`; de logger ind på `/accounts/login/?local=1`, og hvert sådant login logges. API-nøgler virker som før.
+- **Kolonnen *SSO* i brugerlisten i administrationen** viser, hvem der har logget ind med Microsoft (*✓ Tilknyttet*), og et filter viser dem, der mangler, før `SSO_ONLY` slås til.
+- **`SESSION_MAX_HOURS`** bestemmer, hvor længe et login varer (standard som før: 14 dage; anbefalet med SSO: 12 timer).
+
+### Changed
+- **Alle bliver logget ud én gang**, når 1.15.6 tages i brug, fordi login nu går gennem Chronicles egne login-moduler.
+
 ## 1.15.5 — 2026-11-06
 
 ### Security

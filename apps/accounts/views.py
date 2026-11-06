@@ -38,9 +38,14 @@ class CustomLoginView(auth_views.LoginView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs) -> dict:
-        """Add SSO configuration to context."""
+        """Add SSO configuration to context.
+
+        With SSO_ONLY the password form is hidden; break-glass accounts
+        reach it at ?local=1 (the backend refuses everyone else anyway).
+        """
         context = super().get_context_data(**kwargs)
         context["sso_enabled"] = settings.SSO_ENABLED
+        context["show_password_form"] = not settings.SSO_ONLY or self.request.GET.get("local") == "1"
         return context
 
     def form_invalid(self, form) -> HttpResponse:
@@ -49,7 +54,7 @@ class CustomLoginView(auth_views.LoginView):
             return TemplateResponse(
                 self.request,
                 "accounts/partials/login_form.html",
-                {"form": form, "sso_enabled": settings.SSO_ENABLED},
+                {"form": form, "sso_enabled": settings.SSO_ENABLED, "show_password_form": True},
             )
         return super().form_invalid(form)
 

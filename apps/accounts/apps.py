@@ -11,5 +11,6 @@ class AccountsConfig(AppConfig):
     verbose_name = "Konti"
 
     def ready(self) -> None:
-        """Register signal handlers for login/logout tracking."""
+        """Register signal handlers for login/logout tracking, and checks."""
+        import apps.accounts.checks  # noqa: F401
         import apps.accounts.signals  # noqa: F401
