@@ -136,6 +136,16 @@ def test_pending_sign_in_is_handed_over_on_tick(planner):
     assert pending.pk in Auth.redeemed
 
 
+@pytest.mark.django_db
+def test_connecting_clears_old_not_connected_error(planner):
+    SyncState.objects.update_or_create(pk=1, defaults={"last_error": "Planner er ikke forbundet."})
+    PendingSignIn.objects.create(sealed="x")
+    job, _ = _job()
+    job.handle_sign_ins()
+    state = SyncState.get()
+    assert state.last_error == "" and state.next_due_at is not None
+
+
 def test_job_disabled_without_plan(planner, settings):
     settings.PLANNER_PLAN_ID = ""
     assert not PlannerJob.enabled()

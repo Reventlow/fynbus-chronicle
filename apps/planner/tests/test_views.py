@@ -93,6 +93,23 @@ def test_board_renders_buckets_cards_and_escapes(client, editor, web, mirrored):
 
 
 @pytest.mark.django_db
+def test_buckets_in_planner_order(client, editor, web, mirrored):
+    """Planner shows the bucket with the highest order hint first."""
+    client.force_login(editor)
+    html = client.get("/planner/").content.decode()
+    assert html.index("Icelog (kan vente til 2027)") < html.index("Backlog (skal løses 2026)")
+
+
+@pytest.mark.django_db
+def test_message_is_shown_once(client, staff, web):
+    from urllib.parse import parse_qs, urlparse
+    client.force_login(staff)
+    state = parse_qs(urlparse(client.post("/planner/connect/")["Location"]).query)["state"][0]
+    html = client.get("/planner/connect/callback/", {"code": "c", "state": state}, follow=True).content.decode()
+    assert html.count("Login modtaget") == 1
+
+
+@pytest.mark.django_db
 def test_board_before_first_sync(client, staff, web):
     client.force_login(staff)
     html = client.get("/planner/").content.decode()

@@ -166,7 +166,10 @@ class PlannerJob:
                 pending.handled_at = timezone.now()
                 pending.save()
             if pending.status == PendingSignIn.Status.DONE:
-                SyncState.objects.filter(pk=1).update(next_due_at=timezone.now())
+                # Sync right away, and drop the "not connected" error from
+                # runs before the connection existed.
+                SyncState.get()
+                SyncState.objects.filter(pk=1).update(next_due_at=timezone.now(), last_error="")
 
     def run(self, state: SyncState, now: datetime) -> None:
         state.last_attempt_at = now
