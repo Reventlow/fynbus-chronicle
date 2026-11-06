@@ -20,9 +20,12 @@ services:
       - SQLITE_DIR=/app/data
       # SSO (optional)
       - SSO_ENABLED=${SSO_ENABLED:-False}
+      - SSO_CLIENT_ID=${SSO_CLIENT_ID:-}
+      - SSO_CLIENT_SECRET=${SSO_CLIENT_SECRET:-}
       - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}
       - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET:-}
-      - MICROSOFT_TENANT_ID=${MICROSOFT_TENANT_ID:-common}
+      # Tenant GUID; required when SSO_ENABLED=True (no "common" fallback).
+      - MICROSOFT_TENANT_ID=${MICROSOFT_TENANT_ID:-}
       # Email (optional)
       - EMAIL_HOST=${EMAIL_HOST:-}
       - EMAIL_PORT=${EMAIL_PORT:-587}

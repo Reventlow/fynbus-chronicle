@@ -35,7 +35,15 @@
           </div>
 
           <div class="mt-6">
-            <a href="{% url 'socialaccount_login' 'microsoft' %}"
+            {% comment %}
+              A POST form, not a link: allauth only starts the Microsoft
+              sign-in on POST (a GET shows its own confirm page), which
+              keeps other sites from logging a visitor in unasked.
+            {% endcomment %}
+            <form method="post" action="{% url 'microsoft_login' %}">
+            {% csrf_token %}
+            {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+            <button type="submit"
                class="w-full btn btn-outline flex items-center justify-center space-x-2">
               <!-- Microsoft logo -->
               <svg class="w-5 h-5" viewBox="0 0 21 21">
@@ -45,7 +53,8 @@
                 <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
               </svg>
               <span>Office 365</span>
-            </a>
+            </button>
+            </form>
           </div>
         </div>
       {% endif %}

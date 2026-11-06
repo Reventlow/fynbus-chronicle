@@ -6,7 +6,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 
 
 def root_redirect(request):
@@ -16,7 +17,19 @@ def root_redirect(request):
     return redirect("accounts:login")
 
 
+# allauth is mounted for Microsoft SSO only. Its own account pages (login,
+# sign-up, password reset, e-mail confirmation, …) are not part of
+# Chronicle: users sign in at accounts:login and staff create accounts.
+# Left reachable they were a second, unadvertised way in (the open sign-up
+# made editors until 1.15.5), so they all lead to Chronicle's login page.
+# With SSO off, the Microsoft routes go there too instead of erroring.
+_UNUSED_ALLAUTH = r"login|signup|password|confirm-email|inactive|email|reauthenticate|account"
+if not settings.SSO_ENABLED:
+    _UNUSED_ALLAUTH += r"|microsoft|3rdparty|social"
+_to_login = RedirectView.as_view(pattern_name="accounts:login", query_string=True)
+
 urlpatterns = [
+    re_path(rf"^allauth/(?:{_UNUSED_ALLAUTH})(?:/|$)", _to_login),
     path("", root_redirect, name="root"),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),

@@ -23,7 +23,6 @@ from django.urls import URLPattern, URLResolver, get_resolver, reverse
 # Route prefixes owned by other access rules, not by Chronicle's views.
 EXCLUDED_PREFIXES = (
     "admin/",  # Django admin: its own staff-only login
-    "allauth/",  # SSO handshake endpoints, public by design
     "__debug__/",  # debug toolbar, DEBUG only
     "__reload__/",  # browser reload, DEBUG only
     "^media/",  # uploaded files served by runserver, DEBUG only
@@ -41,6 +40,14 @@ PUBLIC_ROUTES = {
     "reports/p/<str:token>/video/": "token link to a public report's video (else 404)",
     "dashboard/statistik/delt/<str:token>/data.json": "statistics share link; token is the key (else 404)",
     "dashboard/statistik/delt/<str:token>/vejledning.md": "guide for a statistics share link (else 404)",
+    # Microsoft SSO, only reachable with SSO_ENABLED (otherwise these lead
+    # to accounts:login like every other allauth page, see chronicle/urls.py).
+    # Who gets in is decided by apps/accounts/adapters.py and test_sso.py.
+    "allauth/microsoft/login/": "starts the Microsoft sign-in",
+    "allauth/microsoft/login/callback/": "Microsoft returns here after sign-in",
+    "allauth/3rdparty/signup/": "allauth's SSO sign-up step; the adapter decides",
+    "allauth/3rdparty/login/cancelled/": "message page: sign-in was cancelled",
+    "allauth/3rdparty/login/error/": "message page: sign-in failed",
 }
 
 REFUSED_STATUS = {401, 403, 405}
@@ -59,7 +66,11 @@ def _concrete(route: str) -> str:
     """Turn ``logbook/<int:year>/<int:week>/`` into ``/logbook/1/1/``."""
     route = re.sub(r"<int:[^>]+>", "1", route)
     route = re.sub(r"<[^>]+>", "x", route)
-    return "/" + route.lstrip("^").rstrip("$")
+    # Regex routes (re_path, allauth): named groups become "x", a
+    # non-capturing alternation becomes its first branch, anchors go.
+    route = re.sub(r"\(\?P<[^>]+>[^)]*\)", "x", route)
+    route = re.sub(r"\(\?:([^|)]*)[^)]*\)", r"\1", route)
+    return "/" + route.replace("^", "").replace("$", "")
 
 
 ROUTES = sorted(

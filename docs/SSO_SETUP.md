@@ -15,11 +15,11 @@ This guide covers configuring Office 365 (Microsoft Entra ID / Azure AD) Single 
 
 ### Application Registration
 
-- **Name**: FynBus Chronicle
+- **Name**: Chronicle SSO. Use an app of its own, separate from the one with `Mail.Send` for Graph mail and from *Chronicle Planner*: this app's secret lives in the web container, so it should carry nothing but sign-in.
 - **Supported account types**: Accounts in this organizational directory only (Single tenant)
 - **Redirect URI**:
   - Type: Web
-  - URL: `https://your-domain.dk/accounts/microsoft/login/callback/`
+  - URL: `https://chronicle.fynbus.net/allauth/microsoft/login/callback/` (allauth is mounted at `/allauth/`, not `/accounts/`; keep the trailing slash)
 
 Click **Register**.
 
@@ -35,7 +35,7 @@ Click **Register**.
 1. Go to **Certificates & secrets**
 2. Click **New client secret**
 3. Add description: "FynBus Chronicle Production"
-4. Choose expiration (recommend 24 months)
+4. Choose expiration (recommend 12 months, and a calendar reminder to rotate it)
 5. Click **Add**
 6. **Copy the secret value immediately** - it won't be shown again!
 
@@ -53,23 +53,39 @@ Click **Register**.
 6. Click **Add permissions**
 7. Click **Grant admin consent for [Organization]**
 
-## Step 5: Get Application IDs
+## Step 5: Decide who may sign in (Enterprise application)
 
-From your app registration's **Overview** page, note:
+In **Enterprise applications** → your SSO app:
 
-- **Application (client) ID**: This is `MICROSOFT_CLIENT_ID`
-- **Directory (tenant) ID**: This is `MICROSOFT_TENANT_ID`
+1. **Properties** → **Assignment required? = Yes**, **Visible to users? = No** → Save.
+2. **Users and groups** → add the groups that should use Chronicle (IT, and any read-only readers).
+
+Entra then refuses everyone else before they reach Chronicle. This is the main control over who gets in.
 
 ## Step 6: Configure FynBus Chronicle
 
-Update your `.env` file:
+From the app registration's **Overview** page take the **Application (client) ID** and the **Directory (tenant) ID**, then set in `web.env` (production: `/srv/docker/chronicle/env/web.env` on fbdocker01):
 
 ```env
 SSO_ENABLED=True
-MICROSOFT_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-MICROSOFT_CLIENT_SECRET=your-client-secret-value
-MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+SSO_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx     # the SSO app
+SSO_CLIENT_SECRET=your-client-secret-value
+MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # tenant GUID, required
+# Optional (defaults shown):
+# SSO_ALLOWED_EMAIL_DOMAINS=fynbus.dk
+# SSO_ALLOW_GUESTS=False
+# SSO_AUTO_CREATE_USERS=True
 ```
+
+- Chronicle **refuses to start** with `SSO_ENABLED=True` unless `MICROSOFT_TENANT_ID` is the tenant GUID. `common`, `organizations` or a domain name would let accounts from other organisations sign in.
+- `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` fall back to `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` (the shared app used by Graph mail), but a separate SSO app is recommended.
+
+### Who gets an account
+
+- **Self sign-up is closed.** allauth's own pages (`/allauth/signup/`, `/allauth/login/`, password reset, …) all lead to Chronicle's login page.
+- **Existing users:** the first Microsoft sign-in is linked to the active Chronicle user with the same e-mail address (only one may have it). From then on the Entra object id alone decides, so a later change of address doesn't move the login to someone else.
+- **New people** (in an assigned group, but with no Chronicle user yet) get a user in the **Viewer** group: read-only. Staff promote them by removing them from Viewer in Django Admin. With `SSO_AUTO_CREATE_USERS=False`, staff must create the user first.
+- **Refused:** guest accounts (`#EXT#`) unless `SSO_ALLOW_GUESTS=True`, and addresses outside `SSO_ALLOWED_EMAIL_DOMAINS`. The user sees a message on the login page; the reason is logged.
 
 If using Docker:
 
@@ -117,37 +133,37 @@ CHRONICLE_VERSION=<version> docker compose -f docker-compose.prod.yml up -d
 
 **Fix**:
 1. Create a new client secret in Azure
-2. Update `MICROSOFT_CLIENT_SECRET` in your configuration
+2. Update `SSO_CLIENT_SECRET` in your configuration
 3. Restart the application
 
-### Users Can Log In But Don't Have Access
+### Users Can Log In But Can Only Read
 
-**Cause**: User was created but needs staff/admin permissions
+**Cause**: A user created by SSO starts in the **Viewer** group (read-only).
 
-**Fix**:
-1. Log into Django Admin with a superuser
-2. Go to **Users**
-3. Find the user and grant appropriate permissions
+**Fix**: In Django Admin → **Users**, remove the user from the **Viewer** group to make them an editor.
+
+### "Din Microsoft-konto hører ikke til en tilladt organisation" / "Gæstekonti kan ikke logge ind"
+
+**Cause**: The account's address is outside `SSO_ALLOWED_EMAIL_DOMAINS`, or it is a guest account.
+
+**Fix**: Add the domain to `SSO_ALLOWED_EMAIL_DOMAINS`, or set `SSO_ALLOW_GUESTS=True` if guests should get in.
 
 ## Security Recommendations
 
 ### Restrict to Organization
 
-The default configuration only allows users from your Azure AD tenant. This is enforced by setting `MICROSOFT_TENANT_ID` to your organization's tenant ID.
+Only users from your tenant can sign in: `MICROSOFT_TENANT_ID` must be your tenant GUID, and Chronicle won't start with SSO on otherwise.
 
-### Group-Based Access (Advanced)
+### Group-Based Access
 
-To restrict access to specific groups:
-
-1. In Azure, add a **Groups claim** in Token configuration
-2. In Django, create custom authentication backend to check group membership
+Use **Assignment required = Yes** on the enterprise application (Step 5) and assign only the groups that should use Chronicle. Entra enforces it, so nothing is needed in Chronicle.
 
 ### Secret Rotation
 
 Set calendar reminders to rotate the client secret before expiration:
 
 1. Create new secret in Azure (while old one still works)
-2. Update `MICROSOFT_CLIENT_SECRET`
+2. Update `SSO_CLIENT_SECRET`
 3. Verify SSO still works
 4. Delete old secret in Azure
 

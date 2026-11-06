@@ -2,6 +2,22 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.15.5 — 2026-11-06
+
+### Security
+- **Man kan ikke længere oprette sin egen konto.** Siden `/allauth/signup/` (fra login-pakken allauth) var åben for alle på FynBus' net, og en konto oprettet dér fik straks fulde redaktørrettigheder. Den, og allauths øvrige egne sider (login, nulstilling af adgangskode, mailbekræftelse), sender nu videre til Chronicles login-side. Konti oprettes af IT i administrationen.
+- **Microsoft-login (SSO) er strammet op**, før det slås til:
+  - Chronicle starter ikke med SSO slået til, medmindre `MICROSOFT_TENANT_ID` er FynBus' tenant-id. Før faldt den tilbage til `common`, som ville lukke konti fra alle organisationer ind.
+  - Kun adresser på `fynbus.dk` (indstillingen `SSO_ALLOWED_EMAIL_DOMAINS`), og ingen gæstekonti (`SSO_ALLOW_GUESTS`).
+  - Første Microsoft-login knyttes til den eksisterende bruger med samme mailadresse; derefter afgør Entra-objekt-id'et alene, hvem man er.
+  - Nye personer får en bruger i gruppen *Viewer* (kun læseadgang), indtil IT giver dem redaktørrettigheder (`SSO_AUTO_CREATE_USERS`).
+  - SSO kan bruge sin egen appregistrering (`SSO_CLIENT_ID`/`SSO_CLIENT_SECRET`), adskilt fra den med `Mail.Send`.
+- **Testen af adgangsreglerne dækker nu også allauths sider.** Den sprang dem over, og derfor blev den åbne tilmelding ikke fanget i 1.15.4.
+
+### Fixed
+- **Login-siden gik ned, så snart SSO blev slået til**: knappen *Office 365* pegede på en adresse, som login-pakken ikke har længere. Knappen sender nu direkte videre til Microsofts login (som en formular med CSRF-beskyttelse).
+- `docs/SSO_SETUP.md` angav en forkert callback-adresse (`/accounts/microsoft/…`); den rigtige er `/allauth/microsoft/login/callback/`.
+
 ## 1.15.4 — 2026-11-05
 
 ### Security

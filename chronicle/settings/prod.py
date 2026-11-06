@@ -11,6 +11,9 @@ DEBUG = False
 # Security settings
 # Trust X-Forwarded-Proto header from reverse proxy (Traefik, nginx)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# The Microsoft SSO callback URL must be https even if the proxy ever
+# drops X-Forwarded-Proto; Entra refuses an http reply URL (AADSTS50011).
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 # Disable SSL redirect when behind a reverse proxy that handles SSL
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)

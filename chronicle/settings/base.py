@@ -179,18 +179,49 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
+# Who may get an account: self sign-up is closed, and SSO admits only
+# FynBus accounts (see apps/accounts/adapters.py).
+ACCOUNT_ADAPTER = "apps.accounts.adapters.AccountAdapter"
+SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"
+# Never match a Microsoft login to a user by e-mail on allauth's own; the
+# adapter makes that link once, under its own rules.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = False
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = False
+
 # Office 365 SSO Configuration
 SSO_ENABLED = config("SSO_ENABLED", default=False, cast=bool)
 MICROSOFT_CLIENT_ID = config("MICROSOFT_CLIENT_ID", default="")
 MICROSOFT_CLIENT_SECRET = config("MICROSOFT_CLIENT_SECRET", default="")
-MICROSOFT_TENANT_ID = config("MICROSOFT_TENANT_ID", default="common")
+# The FynBus tenant GUID. No "common" fallback: with SSO on, "common" would
+# let any Microsoft account, from any organisation, sign in.
+MICROSOFT_TENANT_ID = config("MICROSOFT_TENANT_ID", default="")
+# SSO may use its own app registration (recommended: one without the
+# Mail.Send permission the Graph mail backend needs). Falls back to the
+# shared MICROSOFT_CLIENT_ID / _SECRET.
+SSO_CLIENT_ID = config("SSO_CLIENT_ID", default="") or MICROSOFT_CLIENT_ID
+SSO_CLIENT_SECRET = config("SSO_CLIENT_SECRET", default="") or MICROSOFT_CLIENT_SECRET
+SSO_ALLOWED_EMAIL_DOMAINS = config("SSO_ALLOWED_EMAIL_DOMAINS", default="fynbus.dk", cast=Csv())
+SSO_ALLOW_GUESTS = config("SSO_ALLOW_GUESTS", default=False, cast=bool)
+# A FynBus account without a Chronicle user gets one, read-only (Viewer).
+SSO_AUTO_CREATE_USERS = config("SSO_AUTO_CREATE_USERS", default=True, cast=bool)
 
-if SSO_ENABLED and MICROSOFT_CLIENT_ID:
+if SSO_ENABLED:
+    import re as _re
+
+    from django.core.exceptions import ImproperlyConfigured
+
+    if not SSO_CLIENT_ID or not SSO_CLIENT_SECRET:
+        raise ImproperlyConfigured("SSO_ENABLED needs SSO_CLIENT_ID/SECRET (or MICROSOFT_CLIENT_ID/SECRET).")
+    if not _re.fullmatch(r"[0-9a-fA-F-]{36}", MICROSOFT_TENANT_ID):
+        raise ImproperlyConfigured(
+            "SSO_ENABLED needs MICROSOFT_TENANT_ID set to the tenant GUID "
+            "(not 'common', 'organizations' or a domain)."
+        )
     SOCIALACCOUNT_PROVIDERS = {
         "microsoft": {
             "APP": {
-                "client_id": MICROSOFT_CLIENT_ID,
-                "secret": MICROSOFT_CLIENT_SECRET,
+                "client_id": SSO_CLIENT_ID,
+                "secret": SSO_CLIENT_SECRET,
             },
             "TENANT": MICROSOFT_TENANT_ID,
             "SCOPE": ["openid", "email", "profile", "User.Read"],
