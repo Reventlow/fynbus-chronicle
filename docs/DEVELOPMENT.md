@@ -145,7 +145,7 @@ Chronicle has three access rules:
 | Editor (everyone else; staff always) | Read and write | — |
 | API key | `read` scope: GET endpoints; `write` scope: also POST/PATCH | `@api_auth(scope=…)` |
 
-**Accounts.** Nobody signs themselves up: staff create users in Django Admin, and Microsoft SSO (when on) admits only FynBus accounts, linked by Entra object id, new ones as Viewer. The rules live in `apps/accounts/adapters.py` (tests: `test_sso.py`); allauth's own account pages (`/allauth/login/`, `/allauth/signup/`, password reset, …) all redirect to `accounts:login` (`chronicle/urls.py`). See [SSO_SETUP.md](SSO_SETUP.md).
+**Accounts.** Nobody signs themselves up: staff create users in Django Admin, and Microsoft SSO (when on) admits only FynBus accounts, linked by Entra object id, new ones as Viewer. The rules live in `apps/accounts/adapters.py` (tests: `test_sso.py`). With `SSO_ONLY`, `apps/accounts/backends.py` refuses passwords except for `SSO_BREAK_GLASS_USERS` (tests: `test_sso_only.py`); allauth's own account pages (`/allauth/login/`, `/allauth/signup/`, password reset, …) all redirect to `accounts:login` (`chronicle/urls.py`). See [SSO_SETUP.md](SSO_SETUP.md).
 
 `apps/accounts/tests/test_access_policy.py` walks the whole URL conf (allauth's routes included) and fails if any route answers an anonymous GET or POST with anything but a login redirect, 401, 403 or 405. A route that must be public goes into its `PUBLIC_ROUTES` with a reason, and has to answer an unknown key and a private one identically.
 

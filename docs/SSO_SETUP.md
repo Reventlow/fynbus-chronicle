@@ -94,6 +94,25 @@ If using Docker:
 CHRONICLE_VERSION=<version> docker compose -f docker-compose.prod.yml up -d
 ```
 
+## Step 6b: Microsoft sign-in only (optional)
+
+Once SSO works, you can turn off passwords so that MFA, Conditional Access and disabling an account in Entra all apply to Chronicle:
+
+1. Let everyone sign in with **Office 365** once. In Django Admin → **Users**, the **SSO** column shows *✓ Tilknyttet* for linked users; filter *Microsoft-login: Ikke tilknyttet* to see who is missing.
+2. Pick one or two **break-glass** accounts: local superusers with long passwords kept in the password manager, for when Microsoft sign-in is unavailable.
+3. Set in `web.env` and redeploy:
+
+```env
+SSO_ONLY=True
+SSO_BREAK_GLASS_USERS=breakglass1,breakglass2
+SESSION_MAX_HOURS=12   # recommended: a disabled user loses access by the next day
+```
+
+- The login page then shows only the Office 365 button. Break-glass accounts use `/accounts/login/?local=1`; every such login is logged as a warning and in the login log.
+- Passwords are refused for everyone else, on Chronicle's login page, allauth's and the Django admin's. API keys are not affected.
+- `SSO_ONLY=True` without `SSO_ENABLED=True` refuses to start; `manage.py check` warns (`accounts.W001`) if no break-glass account is named.
+- Existing sessions run until they expire (`SESSION_MAX_HOURS`); the rule applies at the next login.
+
 ## Step 7: Configure Django Sites
 
 1. Log into Django Admin (`/admin/`)
