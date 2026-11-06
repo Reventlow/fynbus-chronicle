@@ -2378,6 +2378,41 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .inline-form { padding: 16px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 10px; }
 
   /* Forslag board: three status columns, stacked on narrow screens. */
+  /* Planner board (templates/planner): columns like Planner's buckets,
+     scrolling sideways when there are more than fit. */
+  .planner-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(270px, 1fr); gap: var(--gutter); align-items: start; overflow-x: auto; padding-bottom: 8px; }
+  @media (max-width: 700px) { .planner-board { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: minmax(0, 1fr); overflow-x: visible; } }
+  .planner-column { background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .planner-column-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 4px; }
+  .planner-column-head h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .planner-column-head .num { font-size: 12px; color: var(--ink-4); }
+  .planner-cards { display: flex; flex-direction: column; gap: 8px; }
+  .planner-empty { margin: 0; padding: 16px 8px; text-align: center; font-size: 12.5px; color: var(--ink-4); }
+  .planner-card { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .planner-card.is-done { opacity: 0.72; }
+  .planner-card.is-done .planner-card-title > span:nth-child(2) { text-decoration: line-through; color: var(--ink-3); }
+  .planner-card-title { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-1); line-height: 1.35; overflow-wrap: anywhere; }
+  .planner-check { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 2px; border-radius: 999px; border: 1.5px solid var(--ink-4); }
+  .planner-check.is-half { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); border-color: var(--accent); }
+  .planner-check.is-done { background: var(--good); border-color: var(--good); }
+  .planner-priority { margin-left: auto; white-space: nowrap; font-weight: 700; font-size: 12px; color: var(--warn, var(--accent)); }
+  .planner-priority.is-urgent { color: var(--bad); }
+  .planner-desc { margin: 0; font-size: 12px; color: var(--ink-3); line-height: 1.45; white-space: pre-line; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .planner-labels { display: flex; flex-wrap: wrap; gap: 4px; }
+  .planner-label { font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: var(--label); background: color-mix(in srgb, var(--label) 16%, transparent); border: 1px solid color-mix(in srgb, var(--label) 35%, transparent); }
+  .planner-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 11.5px; color: var(--ink-4); }
+  .planner-meta > span { display: inline-flex; align-items: center; gap: 4px; }
+  .planner-meta .is-overdue { color: var(--bad); font-weight: 600; }
+  .planner-people { margin-left: auto; }
+  .planner-avatar { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--hairline); font-size: 9.5px; font-weight: 600; color: var(--ink-2); margin-left: -4px; }
+  .planner-done > summary { cursor: pointer; font-size: 12.5px; color: var(--ink-3); padding: 4px; list-style-position: inside; }
+  .planner-status { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
+  .planner-status-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--good); }
+  .planner-status-dot.is-busy { background: var(--accent); animation: planner-pulse 1s ease-in-out infinite alternate; }
+  .planner-status-dot.is-bad { background: var(--bad); }
+  @keyframes planner-pulse { from { opacity: 0.35; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .planner-status-dot.is-busy { animation: none; } }
+
   .feedback-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter); align-items: start; }
   @media (max-width: 900px) { .feedback-board { grid-template-columns: minmax(0, 1fr); } }
 

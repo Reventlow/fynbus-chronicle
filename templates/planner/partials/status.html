@@ -1,0 +1,32 @@
+{% comment %}
+  The sync line under the board title. Polls itself: every 2 s while a sync
+  or sign-in is under way, otherwise every 30 s. Once a newer sync has
+  landed the status view answers HX-Refresh and the page reloads.
+{% endcomment %}
+<div id="planner-status" class="planner-status"
+     hx-get="{% url 'planner:status' %}?since={{ since|urlencode }}"
+     hx-trigger="every {% if busy %}2s{% else %}30s{% endif %}"
+     hx-swap="outerHTML">
+  {% if pending_sign_in %}
+    <span class="planner-status-dot is-busy"></span> Forbinder servicekontoen…
+  {% elif state.running_since %}
+    <span class="planner-status-dot is-busy"></span> Synkroniserer…
+  {% elif state.is_requested %}
+    <span class="planner-status-dot is-busy"></span> Synkronisering bestilt…
+  {% elif not connection.is_connected %}
+    <span class="planner-status-dot is-bad"></span> Ikke forbundet
+  {% elif stale or state.last_error %}
+    <span class="planner-status-dot is-bad"></span>
+    <span style="color: var(--bad);">
+      {% if state.last_success_at %}Sidst synkroniseret for {{ state.last_success_at|timesince }} siden{% else %}Endnu ikke synkroniseret{% endif %}{% if state.last_error %} · {{ state.last_error }}{% endif %}
+    </span>
+  {% else %}
+    <span class="planner-status-dot"></span>
+    Synkroniseret {{ state.last_success_at|date:"H:i" }}{% if state.next_due_at %} · næste {{ state.next_due_at|date:"H:i" }}{% endif %}
+  {% endif %}
+  {% if connection.is_connected %}
+    <button type="button" class="btn btn-ghost btn-sm"
+            hx-post="{% url 'planner:sync-now' %}" hx-target="#planner-status" hx-swap="outerHTML"
+            {% if busy %}disabled{% endif %}>Synk nu</button>
+  {% endif %}
+</div>

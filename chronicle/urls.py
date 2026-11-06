@@ -43,6 +43,7 @@ urlpatterns = [
     path("notifications/", include("apps.notifications.urls")),
     path("reports/", include("apps.reports.urls")),
     path("images/", include("apps.images.urls")),
+    path("planner/", include("apps.planner.urls")),
     path("api/v1/", include("apps.api.urls")),
     path("allauth/", include("allauth.urls")),
 ]

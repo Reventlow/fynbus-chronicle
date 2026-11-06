@@ -14,11 +14,12 @@ Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi u
 8. [Statistik](#statistik)
 9. [Sårbarheder og hændelser](#sårbarheder-og-hændelser)
 10. [Forslag](#forslag)
-11. [Eksporter rapporter](#eksporter-rapporter)
-12. [Rapporter](#rapporter)
-13. [Notifikationer](#notifikationer)
-14. [API-nøgler](#api-nøgler)
-15. [Udseende og temaer](#udseende-og-temaer)
+11. [Planner](#planner)
+12. [Eksporter rapporter](#eksporter-rapporter)
+13. [Rapporter](#rapporter)
+14. [Notifikationer](#notifikationer)
+15. [API-nøgler](#api-nøgler)
+16. [Udseende og temaer](#udseende-og-temaer)
 
 ---
 
@@ -364,6 +365,18 @@ Læsere kan se alt, men ikke oprette eller ændre.
 3. Når et forslag markeres som løst, får den der indsendte det besked via klokken.
 
 Søg og filtrér på kategori og vigtighed over tavlen.
+
+---
+
+## Planner
+
+*Planner* i menuen viser Microsoft Planner-planen *Intern IT - Backlog* som en tavle: de samme kolonner (buckets) og kort som i Planner, med etiketter, tjekliste (fx *2/6*), forfaldsdato (rød, når den er overskredet) og initialer på dem, der er tildelt. Fuldførte opgaver ligger foldet sammen under *Fuldførte opgaver* nederst i hver kolonne.
+
+- Tavlen er en **kopi, der kun kan læses**. Ret opgaverne i Planner (knappen **Åbn i Planner**).
+- Den opdateres af sig selv: på hverdage 07:15–17:30 hvert andet minut, ellers hvert kvarter. Linjen under titlen viser, hvornår den sidst blev opdateret, og hvornår det sker næste gang.
+- **Synk nu** henter ændringer med det samme (højst én gang hvert 30. sekund). Siden genindlæses af sig selv, når de er hentet.
+- Bliver linjen rød, er opdateringen gået i stå; teksten siger hvorfor. Sig det til IT.
+- Tavlen kan ses af redaktører, ikke af læsere (*Viewer*).
 
 ---
 

@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.16.0 — 2026-11-06
+
+### Added
+- **Planner-tavle.** *Planner* i menuen viser Microsoft Planner-planen *Intern IT - Backlog* som en tavle med de samme kolonner og kort som i Planner: etiketter, tjekliste, forfaldsdato (rød, når den er overskredet), tildelte personer og starten af beskrivelsen. Fuldførte opgaver ligger foldet sammen nederst i hver kolonne. Tavlen kan kun læses; *Åbn i Planner* går til planen.
+- **Automatisk opdatering:** hverdage 07:15–17:30 hvert andet minut, ellers hvert kvarter, og **Synk nu** henter ændringer med det samme. Statuslinjen viser seneste og næste opdatering og bliver rød med årsagen, hvis den går i stå.
+- **Forbindelse via en servicekonto**, som IT forbinder én gang. Kun sync-containeren taler med Microsoft og har app-hemmeligheden; web-containeren gemmer login-koden og tokens krypteret, så kun sync-containeren kan læse dem. Se `docs/PLANNER.md`.
+- Tavlen ses af redaktører, ikke af læsere (*Viewer*); kun IT-administratorer kan forbinde eller afbryde.
+
+### Changed
+- **Sync-containerens løkke kører nu flere opgaver uafhængigt af hinanden** (ServiceDesk og Planner), hver med sin egen tidsplan og sin egen kontakt. En fejl i den ene stopper ikke den anden. ServiceDesk-synkroniseringen kører som før.
+
 ## 1.15.6 — 2026-11-06
 
 ### Added

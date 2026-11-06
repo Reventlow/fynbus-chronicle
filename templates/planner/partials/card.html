@@ -1,0 +1,54 @@
+{% comment %}
+  One Planner task, read-only. Text comes from Planner (outside Chronicle),
+  so it is only ever rendered escaped, never as Markdown or HTML.
+{% endcomment %}
+<article class="planner-card{% if task.is_complete %} is-done{% endif %}">
+  {% if task.labels %}
+    <div class="planner-labels">
+      {% for label in task.labels %}
+        <span class="planner-label" style="--label: {{ label.color }};">{{ label.name }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="planner-card-title">
+    <span class="planner-check{% if task.is_complete %} is-done{% elif task.is_in_progress %} is-half{% endif %}"
+          aria-label="{% if task.is_complete %}Fuldført{% elif task.is_in_progress %}I gang{% else %}Ikke startet{% endif %}"></span>
+    <span>{{ task.title }}</span>
+    {% if task.priority <= 4 and not task.is_complete %}
+      <span class="planner-priority {% if task.priority <= 1 %}is-urgent{% endif %}" title="{{ task.priority_label }}">{% if task.priority <= 1 %}!!{% else %}!{% endif %}</span>
+    {% endif %}
+  </div>
+
+  {% if task.description %}
+    <p class="planner-desc">{{ task.description|truncatechars:240 }}</p>
+  {% endif %}
+
+  {% if task.checklist_total or task.due_date or task.reference_count or task.people %}
+    <div class="planner-meta">
+      {% if task.checklist_total %}
+        <span title="Tjekliste">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m9 12 2 2 4-4"/></svg>
+          {{ task.checklist_done }}/{{ task.checklist_total }}
+        </span>
+      {% endif %}
+      {% if task.due_date %}
+        <span class="{% if task.is_overdue %}is-overdue{% endif %}" title="Forfaldsdato">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+          {{ task.due_date|date:"j/n" }}
+        </span>
+      {% endif %}
+      {% if task.reference_count %}
+        <span title="Vedhæftninger">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 12-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 8"/></svg>
+          {{ task.reference_count }}
+        </span>
+      {% endif %}
+      {% if task.people %}
+        <span class="planner-people">
+          {% for person in task.people %}<span class="planner-avatar" title="{{ person.display_name }}">{{ person.initials }}</span>{% endfor %}
+        </span>
+      {% endif %}
+    </div>
+  {% endif %}
+</article>
