@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Planner — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>Microsoft Planner · skrivebeskyttet kopi</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        {% if plan %}{{ plan.title }}{% else %}Planner{% endif %}
+      </h1>
+      <div style="margin-top: 12px;">
+        {% include 'planner/partials/status.html' %}
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ plan_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+        Åbn i Planner
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if plan and columns %}
+    <div class="planner-board" role="list" aria-label="Buckets">
+      {% for col in columns %}
+        <section class="planner-column" role="listitem" aria-label="{{ col.bucket.name }}">
+          <header class="planner-column-head">
+            <h2 title="{{ col.bucket.name }}">{{ col.bucket.name }}</h2>
+            <span class="num" aria-label="{{ col.open|length }} åbne opgaver">{{ col.open|length }}</span>
+          </header>
+          <div class="planner-cards">
+            {% for task in col.open %}
+              {% include 'planner/partials/card.html' %}
+            {% empty %}
+              <p class="planner-empty">Ingen åbne opgaver.</p>
+            {% endfor %}
+            {% if col.done %}
+              <details class="planner-done">
+                <summary>Fuldførte opgaver <span class="num">{{ col.done|length }}</span></summary>
+                <div class="planner-cards" style="margin-top: 10px;">
+                  {% for task in col.done %}
+                    {% include 'planner/partials/card.html' %}
+                  {% endfor %}
+                </div>
+              </details>
+            {% endif %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 40px 24px;">
+      {% if connection.is_connected %}
+        <p style="color: var(--ink-3);">Planen er ikke hentet endnu. Den første synkronisering kører om få øjeblikke.</p>
+      {% else %}
+        <p style="color: var(--ink-3);">Planner er ikke forbundet endnu.{% if not can_connect %} En administrator skal forbinde servicekontoen.{% endif %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if can_connect %}
+    {# Staff only: the service account behind the mirror. #}
+    <div class="card">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="label-eyebrow">Forbindelse til Planner</div>
+          {% if connection.is_connected %}
+            <p style="margin: 6px 0 0; font-size: 13.5px;">
+              Forbundet som <strong>{{ connection.account_upn }}</strong>{% if connection.connected_at %} siden {{ connection.connected_at|date:"j. b Y H:i" }}{% endif %}{% if connection.connected_by %} af {{ connection.connected_by.get_username }}{% endif %}.
+            </p>
+          {% else %}
+            <p style="margin: 6px 0 0; font-size: 13.5px; color: var(--ink-3);">Ikke forbundet. Log ind som servicekontoen{% if connection.last_error %} ({{ connection.last_error }}){% endif %}.</p>
+          {% endif %}
+          {% if connection.is_connected and connection.last_error %}
+            <p style="margin: 6px 0 0; font-size: 12.5px; color: var(--bad);">{{ connection.last_error }}</p>
+          {% endif %}
+        </div>
+        <div class="flex gap-2">
+          {% if connect_configured %}
+            <form method="post" action="{% url 'planner:connect' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm {% if connection.is_connected %}btn-outline{% else %}btn-primary{% endif %}">
+                {% if connection.is_connected %}Forbind igen{% else %}Forbind Planner{% endif %}
+              </button>
+            </form>
+          {% else %}
+            <span style="font-size: 12.5px; color: var(--ink-4);">Mangler PLANNER_CLIENT_ID / PLANNER_PUBLIC_KEY i web.env.</span>
+          {% endif %}
+          {% if connection.is_connected %}
+            <form method="post" action="{% url 'planner:disconnect' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-ghost">Afbryd</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

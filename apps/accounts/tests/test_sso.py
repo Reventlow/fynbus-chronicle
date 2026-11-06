@@ -19,7 +19,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from apps.accounts.adapters import AccountAdapter, SocialAccountAdapter
 from apps.accounts.permissions import is_editor
 
-TENANT = "61f8f8f1-9274-4b15-8393-68dc1d89f250"
+TENANT = "11111111-2222-4333-8444-555555555555"
 
 
 # --- local sign-up -----------------------------------------------------------

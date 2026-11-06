@@ -79,6 +79,7 @@ DOCS_PAGES = {
     "user-guide": {"file": "USER_GUIDE.md", "title": "Brugervejledning", "icon": "book-open"},
     "sso": {"file": "SSO_SETUP.md", "title": "SSO Opsætning", "icon": "key"},
     "graph-email": {"file": "GRAPH_EMAIL_SETUP.md", "title": "Email Opsætning", "icon": "envelope"},
+    "planner": {"file": "PLANNER.md", "title": "Planner-tavle", "icon": "clipboard-list"},
     "license": {"file": None, "title": "Licens", "icon": "scale"},  # Special case
 }
 

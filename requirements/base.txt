@@ -24,3 +24,9 @@ nh3>=0.2           # sanitises the rendered HTML (Rust/Ammonia binding)
 # Outlook .msg attachments on CVEs (reads the OLE container; BSD licence —
 # extract-msg is GPL and would be shipped in the published image)
 olefile==0.47
+
+# MS Planner board (apps/planner): Microsoft sign-in and token refresh in
+# the sync container, and sealed boxes so the web container can hand a
+# sign-in to the sync container without being able to read it back.
+msal>=1.31
+PyNaCl>=1.5

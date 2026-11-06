@@ -49,6 +49,7 @@ LOCAL_APPS = [
     "apps.notifications",
     "apps.reports",
     "apps.images",
+    "apps.planner",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -86,6 +87,7 @@ TEMPLATES = [
                 "apps.accounts.context_processors.editor_context",
                 "apps.feedback.context_processors.feedback_badge",
                 "apps.notifications.context_processors.notifications_badge",
+                "apps.planner.context_processors.planner_nav",
             ],
         },
     },
@@ -242,6 +244,28 @@ if SSO_ENABLED:
             "SCOPE": ["openid", "email", "profile", "User.Read"],
         }
     }
+
+# MS Planner board (apps/planner, docs/PLANNER.md). The web container shows
+# the mirror and seals sign-ins with the public key; only the sync container
+# has the client secret and the private key, and only it talks to Graph.
+PLANNER_ENABLED = config("PLANNER_ENABLED", default=False, cast=bool)
+PLANNER_SYNC_ENABLED = config("PLANNER_SYNC_ENABLED", default=False, cast=bool)
+PLANNER_TENANT_ID = config("PLANNER_TENANT_ID", default="") or MICROSOFT_TENANT_ID
+PLANNER_CLIENT_ID = config("PLANNER_CLIENT_ID", default="")
+PLANNER_CLIENT_SECRET = config("PLANNER_CLIENT_SECRET", default="")  # sync container only
+PLANNER_PLAN_ID = config("PLANNER_PLAN_ID", default="")
+# The account allowed to be connected (e.g. chronicle-planner@fynbus.dk);
+# any other account is refused when it signs in.
+PLANNER_SERVICE_ACCOUNT = config("PLANNER_SERVICE_ACCOUNT", default="")
+PLANNER_PUBLIC_KEY = config("PLANNER_PUBLIC_KEY", default="")
+PLANNER_PRIVATE_KEY = config("PLANNER_PRIVATE_KEY", default="")  # sync container only
+# Must match the app registration's redirect URI exactly; empty = built
+# from the request.
+PLANNER_REDIRECT_URI = config("PLANNER_REDIRECT_URI", default="")
+# Sync schedule (Europe/Copenhagen): often in working hours, rarely outside.
+PLANNER_WORK_HOURS = config("PLANNER_WORK_HOURS", default="mon-fri 07:15-17:30")
+PLANNER_INTERVAL_WORK = config("PLANNER_INTERVAL_WORK", default=120, cast=int)
+PLANNER_INTERVAL_OFF = config("PLANNER_INTERVAL_OFF", default=900, cast=int)
 
 # Email configuration
 EMAIL_USE_GRAPH = config("EMAIL_USE_GRAPH", default=False, cast=bool)
