@@ -22,7 +22,7 @@ from .conftest import PLAN, FakeGraph
 @pytest.mark.django_db
 def test_mirror_stores_plan_buckets_tasks(planner, fake_graph):
     counts = mirror_plan(fake_graph, PLAN)
-    assert counts == {"buckets": 2, "tasks": 3, "details": 1, "removed": 0}
+    assert counts == {"buckets": 2, "tasks": 3, "details": 1, "removed": 0, "linked_updated": 0}
     t1 = PlannerTask.objects.get(id="t1")
     assert t1.bucket.name.startswith("Backlog")
     assert t1.label_keys == ["category16"] and t1.plan.labels == {"category16": "Ubehandlet"}

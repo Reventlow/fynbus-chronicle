@@ -276,6 +276,11 @@ class PlannerChange(models.Model):
     * create: ``{"bucket_id", "title"}``; ``task_id`` is filled in when done
     * link: ``{"url", "alias", "label"}``: a reference back to Chronicle
       and a label on the card
+    * progress: ``{"percent"}``: a linked priority or case changed status
+      in Chronicle (two-way sync, :mod:`apps.planner.linksync`)
+    * create may also carry ``{"link": {"priority_item"|"case": id}, "url",
+      "alias", "label", "description", "percent", "due"}``: "Opret i
+      Planner" from a Chronicle priority or case
     """
 
     class Kind(models.TextChoices):
@@ -284,6 +289,7 @@ class PlannerChange(models.Model):
         MOVE = "move", "Flyt"
         CREATE = "create", "Opret"
         LINK = "link", "Link til Chronicle"
+        PROGRESS = "progress", "Status fra Chronicle"
 
     class Status(models.TextChoices):
         PENDING = "pending", "Venter"
@@ -337,6 +343,12 @@ class PlannerLink(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
+    # Two-way status sync: the state each side had when last in step
+    # ("not_started" / "in_progress" / "done"; empty until first seen).
+    planner_state = models.CharField(max_length=12, blank=True)
+    chronicle_state = models.CharField(max_length=12, blank=True)
+    # Why the last Chronicle change didn't reach Planner, if it didn't.
+    sync_note = models.CharField(max_length=300, blank=True)
 
     class Meta:
         ordering = ["created_at"]

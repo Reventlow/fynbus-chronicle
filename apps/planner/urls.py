@@ -21,4 +21,5 @@ urlpatterns = [
     path("task/<str:task_id>/link/", views.link, name="link"),
     path("bucket/<str:bucket_id>/add/", views.create, name="create"),
     path("change/<int:pk>/", views.change, name="change"),
+    path("create-from/", views.create_from, name="create-from"),
 ]

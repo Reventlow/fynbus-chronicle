@@ -2,6 +2,22 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.18.0 — 2026-11-07
+
+### Added
+- **Status holdes i sync mellem Planner-kort og de opgaver og sager, de er knyttet til.** Fuldføres et kort i Planner, afsluttes den prioriterede opgave eller sagen i Chronicle, og omvendt; det samme gælder *Ikke startet* og *I gang*:
+
+  | Planner | Prioriteret opgave | Sag |
+  |---|---|---|
+  | Ikke startet | Ikke startet | Identificeret / Planlagt |
+  | I gang | Igangværende (eller Blokeret) | Patcher / I gang |
+  | Fuldført | Afsluttet | Færdigbehandlet / Udført |
+
+  - Kun den side, der har ændret sig, slår igennem. En blokeret opgave forbliver blokeret, mens kortet er i gang.
+  - Ændringer fra Planner kommer med ved næste synkronisering. Sagens tidslinje viser *Ændret i Planner*.
+  - Ændringer i Chronicle sendes til Planner i dit navn, hvis du har forbundet din Microsoft-konto. Ellers sendes de ikke, og opgaven eller sagen viser hvorfor (fx ved auto-luk efter 6 uger, som ikke har en bruger).
+- **Opret i Planner** på en prioriteret opgave eller sag, der ikke er knyttet til et kort: vælg bucket, og kortet oprettes med titel, beskrivelse (noter eller vurdering), status og frist, knyttet begge veje med etiket og link tilbage.
+
 ## 1.17.2 — 2026-11-07
 
 ### Added

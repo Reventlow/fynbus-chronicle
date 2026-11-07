@@ -43,6 +43,7 @@ from apps.logbook.models import PriorityItem, PriorityItemAppearance, WeekLog
 
 from . import crypto
 from .graph import authorize_url
+from .linksync import PERCENT, chronicle_state, planner_state
 from .models import (
     PendingSignIn,
     PlannerBucket,
@@ -443,9 +444,13 @@ def link(request: HttpRequest, task_id: str) -> HttpResponse:
             item, case = None, get_object_or_404(CVECase, pk=int(target[1:]))
         else:
             return HttpResponse("Vælg en opgave eller sag.", status=400)
+        target_obj = item or case
         link_obj, created = PlannerLink.objects.get_or_create(
             task_id=task.id, priority_item=item, case=case,
-            defaults={"task_title": task.title[:500], "created_by": request.user})
+            defaults={"task_title": task.title[:500], "created_by": request.user,
+                      # In step from here on; neither side is changed by linking.
+                      "planner_state": planner_state(task.percent_complete),
+                      "chronicle_state": chronicle_state(target_obj)})
         if created:
             label = settings.PLANNER_LABEL_PRIORITY if item else settings.PLANNER_LABEL_CASE
             _queue(request, PlannerChange.Kind.LINK, task.id,
@@ -464,3 +469,41 @@ def change(request: HttpRequest, pk: int) -> HttpResponse:
         return render(request, "planner/partials/new_card.html", {"change": obj})
     failed = obj if obj.status == PlannerChange.Status.FAILED else None
     return _render_card(request, task, failed=failed)
+
+
+def _chronicle_target(target: str):
+    """``p<id>`` → an active priority, ``c<id>`` → a case, else 404."""
+    if target[:1] == "p" and target[1:].isdigit():
+        return get_object_or_404(PriorityItem.objects.active(), pk=int(target[1:]))
+    if target[:1] == "c" and target[1:].isdigit():
+        return get_object_or_404(CVECase, pk=int(target[1:]))
+    raise Http404
+
+
+@write_access
+def create_from(request: HttpRequest) -> HttpResponse:
+    """"Opret i Planner" on a priority or case page: a new card in the
+    chosen bucket with the title, description, state and due date, linked
+    both ways (label and back-link) once the sync container has made it."""
+    obj = _chronicle_target(request.POST.get("target", ""))
+    back = obj.get_absolute_url() if hasattr(obj, "get_absolute_url") else reverse(
+        "logbook:priority-item-history", args=[obj.pk])
+    bucket = get_object_or_404(PlannerBucket, id=request.POST.get("bucket", ""), plan_id=settings.PLANNER_PLAN_ID)
+    is_case = getattr(obj, "is_case", False)
+    field = "case" if is_case else "priority_item"
+    pending = PlannerChange.objects.filter(kind=PlannerChange.Kind.CREATE, status=PlannerChange.Status.PENDING,
+                                           **{f"payload__link__{field}": obj.pk})
+    if PlannerLink.objects.filter(**{field: obj}).exists() or pending.exists():
+        messages.info(request, "Den er allerede knyttet til et Planner-kort.")
+        return redirect(back)
+    label = f"Sag #{obj.pk}" if is_case else f"Prioriteret opgave #{obj.pk}"
+    _queue(request, PlannerChange.Kind.CREATE,
+           bucket_id=bucket.id, title=obj.title[:255],
+           description=((obj.assessment if is_case else obj.notes) or "")[:4000],
+           percent=PERCENT[chronicle_state(obj)],
+           due=obj.due_date.isoformat() if is_case and obj.due_date else "",
+           link={field: obj.pk},
+           url=request.build_absolute_uri(back), alias=f"Chronicle: {label}",
+           label=settings.PLANNER_LABEL_CASE if is_case else settings.PLANNER_LABEL_PRIORITY)
+    messages.success(request, f"Kortet oprettes i Planner i »{bucket.name}« om få sekunder.")
+    return redirect(back)

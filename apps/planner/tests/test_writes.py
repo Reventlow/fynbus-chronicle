@@ -47,6 +47,8 @@ class WriteGraph(FakeGraph):
                 item[key] = value
         self.version += 1
         item["@odata.etag"] = f'W/"v{self.version}"'
+        if path.endswith("/details") and body.get("description") and path[:-8] in self.data:
+            self.data[path[:-8]]["hasDescription"] = True  # as Planner does
         return dict(item)
 
     def post(self, path, body):
@@ -55,7 +57,9 @@ class WriteGraph(FakeGraph):
         self.writes.append(("POST", path, body))
         task = {"id": "new1", "percentComplete": 0, "@odata.etag": 'W/"n1"', **body}
         self.data[f"/planner/tasks/{task['id']}"] = task
-        return task
+        # Planner creates the task's details along with it.
+        self.data[f"/planner/tasks/{task['id']}/details"] = {"@odata.etag": 'W/"nd1"', "references": {}}
+        return dict(task)
 
 
 class Auth:
