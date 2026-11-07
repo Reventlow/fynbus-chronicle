@@ -1,0 +1,21 @@
+{% comment %}
+  A card added on the board, until the sync container has made it in
+  Planner; then the poll returns the real card in its place.
+{% endcomment %}
+<article class="planner-card is-saving"
+         {% if change.still_waiting %}hx-get="{% url 'planner:change' change.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  <div class="planner-card-title">
+    <span class="planner-check"></span>
+    <span>{{ change.payload.title }}</span>
+  </div>
+  {% if change.status == "failed" %}
+    <p class="planner-note is-bad" role="alert">Ikke oprettet i Planner: {{ change.message }}</p>
+    <button type="button" class="btn btn-sm btn-ghost" style="align-self: flex-start;" onclick="this.closest('.planner-card').remove()">Luk</button>
+  {% elif change.status == "done" %}
+    <p class="planner-note" role="status">Oprettet i Planner. Vises efter næste synkronisering.</p>
+  {% elif change.still_waiting %}
+    <p class="planner-note" role="status">Opretter i Planner…</p>
+  {% else %}
+    <p class="planner-note" role="status">Venter på synkroniseringen. Kortet oprettes, når den kører igen.</p>
+  {% endif %}
+</article>

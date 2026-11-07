@@ -8,18 +8,8 @@ from django.utils import timezone
 
 from apps.planner import crypto
 from apps.planner.models import PendingSignIn, PlannerConnection, SyncState
-from apps.planner.sync import mirror_plan
 
-from .conftest import CLIENT_ID, PLAN, TENANT, FakeGraph
-
-
-@pytest.fixture
-def web(planner, settings):
-    """As the web container: no client secret, no private key."""
-    settings.PLANNER_CLIENT_SECRET = ""
-    private = settings.PLANNER_PRIVATE_KEY
-    settings.PLANNER_PRIVATE_KEY = ""
-    return private
+from .conftest import CLIENT_ID, TENANT
 
 
 @pytest.fixture
@@ -37,18 +27,6 @@ def viewer(django_user_model):
     user = django_user_model.objects.create_user("vera", password="x")
     user.groups.add(Group.objects.get_or_create(name="Viewer")[0])
     return user
-
-
-@pytest.fixture
-def mirrored(planner):
-    mirror_plan(FakeGraph(), PLAN)
-    conn = PlannerConnection.get()
-    conn.sealed_token_cache, conn.home_account_id, conn.account_upn = "x", "h", "SVC-Chronicle-Planner@fynbus.dk"
-    conn.save()
-    SyncState.objects.filter(pk=1).update(last_success_at=timezone.now()) or SyncState.get()
-    state = SyncState.get()
-    state.last_success_at = timezone.now()
-    state.save()
 
 
 # --- access -------------------------------------------------------------------
@@ -72,8 +50,13 @@ def test_viewer_is_refused(client, viewer, web):
 def test_editor_cannot_connect(client, editor, web):
     client.force_login(editor)
     assert client.post("/planner/connect/").status_code == 403
-    assert client.get("/planner/connect/callback/?code=x&state=y").status_code == 403
     assert client.post("/planner/disconnect/").status_code == 403
+    # A service-account flow can't be completed by an editor either.
+    session = client.session
+    session["planner_connect"] = {"state": "y", "verifier": "v", "redirect_uri": "r", "personal": False}
+    session.save()
+    assert client.get("/planner/connect/callback/?code=x&state=y").status_code == 403
+    assert not PendingSignIn.objects.exists()
 
 
 # --- board ------------------------------------------------------------------------
@@ -89,7 +72,8 @@ def test_board_renders_buckets_cards_and_escapes(client, editor, web, mirrored):
     assert "Ubehandlet" in html and "GR" in html  # label, assignee initials
     assert "<script>alert(1)</script>" not in html and "&lt;script&gt;" in html
     assert "Fuldførte opgaver" in html  # the completed task is folded away
-    assert "Forbind" not in html  # editors don't see the connection card
+    assert "Forbind Planner" not in html and "Forbind igen" not in html  # no service-account card
+    assert "Forbind min konto" in html  # but they can connect their own account
 
 
 @pytest.mark.django_db

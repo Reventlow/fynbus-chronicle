@@ -2410,6 +2410,36 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .planner-status-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--good); }
   .planner-status-dot.is-busy { background: var(--accent); animation: planner-pulse 1s ease-in-out infinite alternate; }
   .planner-status-dot.is-bad { background: var(--bad); }
+  /* Writing on the board (1.17.0): tick, menu, links to Chronicle, add, drag. */
+  .planner-check.is-button { cursor: pointer; padding: 0; background-color: transparent; transition: border-color 0.12s ease, background 0.12s ease; }
+  .planner-check.is-button:hover { border-color: var(--good); background: color-mix(in srgb, var(--good) 25%, transparent); }
+  .planner-check.is-button.is-done:hover { background: var(--surface-2); border-color: var(--ink-4); }
+  .planner-check.is-button.is-half { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+  .planner-check.is-button.is-done { background: var(--good); }
+  .planner-card[data-task] { cursor: grab; }
+  .planner-card.is-ghost { opacity: 0.35; }
+  .planner-card.is-saving { border-style: dashed; }
+  .planner-menu { position: relative; flex: 0 0 auto; margin-left: auto; }
+  .planner-priority + .planner-menu { margin-left: 0; }
+  .planner-menu > summary { list-style: none; cursor: pointer; color: var(--ink-4); padding: 0 2px; border-radius: 6px; line-height: 1; }
+  .planner-menu > summary::-webkit-details-marker { display: none; }
+  .planner-menu > summary:hover, .planner-menu[open] > summary { color: var(--ink-1); background: var(--surface-2); }
+  .planner-menu-panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 210px; display: flex; flex-direction: column; padding: 6px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 10px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.14); cursor: default; }
+  .planner-menu-panel > button, .planner-menu-panel > a { text-align: left; font-size: 12.5px; font-weight: 500; color: var(--ink-2); padding: 6px 8px; border-radius: 6px; background: none; border: 0; cursor: pointer; text-decoration: none; }
+  .planner-menu-panel > button:hover, .planner-menu-panel > a:hover { background: var(--surface-2); color: var(--ink-1); }
+  .planner-menu-head { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-4); padding: 8px 8px 2px; border-top: 1px solid var(--hairline); margin-top: 4px; }
+  .planner-links { display: flex; flex-wrap: wrap; gap: 4px; }
+  .planner-chronicle-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: var(--accent-ink); background: color-mix(in srgb, var(--accent) 12%, transparent); text-decoration: none; }
+  .planner-chronicle-link:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  .planner-note { margin: 0; font-size: 11.5px; color: var(--ink-3); }
+  .planner-note.is-bad { color: var(--bad); }
+  .planner-link-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); cursor: default; }
+  .planner-link-existing { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ink-3); }
+  .planner-link-existing select { width: 100%; font-size: 12.5px; }
+  .planner-add input { width: 100%; font-size: 13px; padding: 7px 10px; }
+  .planner-cards[data-bucket] { min-height: 40px; }
+  .planner-cards > .planner-empty:not(:only-child) { display: none; }
+  .planner-me { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 10px 14px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-2); font-size: 13px; color: var(--ink-2); }
   @keyframes planner-pulse { from { opacity: 0.35; } to { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .planner-status-dot.is-busy { animation: none; } }
 

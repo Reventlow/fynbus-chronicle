@@ -266,6 +266,13 @@ PLANNER_REDIRECT_URI = config("PLANNER_REDIRECT_URI", default="")
 PLANNER_WORK_HOURS = config("PLANNER_WORK_HOURS", default="mon-fri 07:15-17:30")
 PLANNER_INTERVAL_WORK = config("PLANNER_INTERVAL_WORK", default=120, cast=int)
 PLANNER_INTERVAL_OFF = config("PLANNER_INTERVAL_OFF", default=900, cast=int)
+# Changes on the board (complete, move, add, link) are made with each
+# editor's own Microsoft sign-in. Off: the board is read-only for everyone.
+PLANNER_WRITES_ENABLED = config("PLANNER_WRITES_ENABLED", default=True, cast=bool)
+# Labels put on a card when it is linked to a Chronicle priority or case;
+# created in the plan (first free label slot) if no label has the name.
+PLANNER_LABEL_PRIORITY = config("PLANNER_LABEL_PRIORITY", default="Prioriteret opgave")
+PLANNER_LABEL_CASE = config("PLANNER_LABEL_CASE", default="Sag")
 
 # Email configuration
 EMAIL_USE_GRAPH = config("EMAIL_USE_GRAPH", default=False, cast=bool)

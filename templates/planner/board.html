@@ -11,7 +11,7 @@
     <div>
       <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
         <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-        <span>Microsoft Planner · skrivebeskyttet kopi</span>
+        <span>Microsoft Planner{% if not can_write %} · skrivebeskyttet{% endif %}</span>
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
         {% if plan %}{{ plan.title }}{% else %}Planner{% endif %}
@@ -30,6 +30,30 @@
     </div>
   </div>
 
+  {% if writes_enabled and connection.is_connected %}
+    {# Changes are made with the editor's own account, so Planner shows who did them. #}
+    <div class="planner-me">
+      {% if can_write %}
+        <span>Dine ændringer gemmes i Planner som <strong>{{ my_connection.account_upn }}</strong>. Træk kort mellem buckets, eller brug <span aria-hidden="true">⋯</span> på et kort.</span>
+        <form method="post" action="{% url 'planner:disconnect-me' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-ghost">Afbryd min forbindelse</button>
+        </form>
+      {% elif my_sign_in_pending %}
+        <span>Forbinder din Microsoft-konto…</span>
+      {% else %}
+        <span>
+          Forbind din Microsoft-konto for at fuldføre, flytte, oprette og knytte kort. Ændringerne gemmes i dit navn i Planner.
+          {% if my_connection.last_error %}<span style="color: var(--bad);">{{ my_connection.last_error }}</span>{% endif %}
+        </span>
+        <form method="post" action="{% url 'planner:connect-me' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-primary">Forbind min konto</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+
   {% if plan and columns %}
     <div class="planner-board" role="list" aria-label="Buckets">
       {% for col in columns %}
@@ -38,23 +62,31 @@
             <h2 title="{{ col.bucket.name }}">{{ col.bucket.name }}</h2>
             <span class="num" aria-label="{{ col.open|length }} åbne opgaver">{{ col.open|length }}</span>
           </header>
-          <div class="planner-cards">
+          {% if can_write %}
+            <form class="planner-add" hx-post="{% url 'planner:create' col.bucket.id %}"
+                  hx-target="next .planner-cards" hx-swap="afterbegin"
+                  hx-on::after-request="if (event.detail.successful) this.reset()">
+              <input type="text" name="title" class="input" maxlength="255" required autocomplete="off"
+                     placeholder="+ Tilføj opgave" aria-label="Ny opgave i {{ col.bucket.name }}">
+            </form>
+          {% endif %}
+          <div class="planner-cards" data-bucket="{{ col.bucket.id }}">
             {% for task in col.open %}
               {% include 'planner/partials/card.html' %}
             {% empty %}
               <p class="planner-empty">Ingen åbne opgaver.</p>
             {% endfor %}
-            {% if col.done %}
-              <details class="planner-done">
-                <summary>Fuldførte opgaver <span class="num">{{ col.done|length }}</span></summary>
-                <div class="planner-cards" style="margin-top: 10px;">
-                  {% for task in col.done %}
-                    {% include 'planner/partials/card.html' %}
-                  {% endfor %}
-                </div>
-              </details>
-            {% endif %}
           </div>
+          {% if col.done %}
+            <details class="planner-done">
+              <summary>Fuldførte opgaver <span class="num">{{ col.done|length }}</span></summary>
+              <div class="planner-cards" style="margin-top: 10px;">
+                {% for task in col.done %}
+                  {% include 'planner/partials/card.html' %}
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
         </section>
       {% endfor %}
     </div>
@@ -107,4 +139,44 @@
     </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if can_write %}
+<script>
+// Drag cards between (and within) buckets. The card is posted with its new
+// bucket and neighbours; Planner places it between them.
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof Sortable === 'undefined') return;
+  const csrf = JSON.parse(document.body.getAttribute('hx-headers') || '{}')['X-CSRFToken'] || '';
+  const isCard = (el) => el && el.matches && el.matches('.planner-card[data-task]');
+  function neighbour(el, dir) {
+    let n = el[dir];
+    while (n && !isCard(n)) n = n[dir];
+    return n;
+  }
+  document.querySelectorAll('.planner-cards[data-bucket]').forEach(function (list) {
+    Sortable.create(list, {
+      group: 'planner',
+      animation: 150,
+      draggable: '.planner-card[data-task]',
+      filter: 'button, a, input, select, summary, .planner-menu-panel, .planner-link-form',
+      preventOnFilter: false,
+      ghostClass: 'is-ghost',
+      onEnd: function (evt) {
+        if (evt.from === evt.to && evt.oldDraggableIndex === evt.newDraggableIndex) return;
+        const card = evt.item;
+        const prev = neighbour(card, 'previousElementSibling');
+        const next = neighbour(card, 'nextElementSibling');
+        htmx.ajax('POST', card.dataset.moveUrl, {
+          source: card, target: card, swap: 'outerHTML',
+          headers: {'X-CSRFToken': csrf},
+          values: {bucket: evt.to.dataset.bucket, prev: prev ? prev.dataset.order : '', next: next ? next.dataset.order : ''},
+        });
+      },
+    });
+  });
+});
+</script>
+{% endif %}
 {% endblock %}

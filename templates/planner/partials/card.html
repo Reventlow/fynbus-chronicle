@@ -1,8 +1,15 @@
 {% comment %}
-  One Planner task, read-only. Text comes from Planner (outside Chronicle),
-  so it is only ever rendered escaped, never as Markdown or HTML.
+  One Planner task. Text comes from Planner (outside Chronicle), so it is
+  only ever rendered escaped, never as Markdown or HTML.
+
+  With can_write the editor can tick it, move it, and link it to Chronicle;
+  each of those returns this partial again. While a change is on its way
+  to Planner (task.change) the card polls until the sync container is done.
 {% endcomment %}
-<article class="planner-card{% if task.is_complete %} is-done{% endif %}">
+<article class="planner-card{% if task.is_complete %} is-done{% endif %}{% if task.change %} is-saving{% endif %}"
+         id="ptask-{{ task.id }}" data-task="{{ task.id }}" data-order="{{ task.order_hint }}"
+         data-move-url="{% url 'planner:move' task.id %}"
+         {% if task.change and task.change.still_waiting %}hx-get="{% url 'planner:change' task.change.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
   {% if task.labels %}
     <div class="planner-labels">
       {% for label in task.labels %}
@@ -12,16 +19,60 @@
   {% endif %}
 
   <div class="planner-card-title">
-    <span class="planner-check{% if task.is_complete %} is-done{% elif task.is_in_progress %} is-half{% endif %}"
-          aria-label="{% if task.is_complete %}Fuldført{% elif task.is_in_progress %}I gang{% else %}Ikke startet{% endif %}"></span>
+    {% if can_write and not task.change %}
+      <button type="button"
+              class="planner-check is-button{% if task.is_complete %} is-done{% elif task.is_in_progress %} is-half{% endif %}"
+              hx-post="{% url 'planner:complete' task.id %}"
+              hx-vals='{"done": "{% if task.is_complete %}0{% else %}1{% endif %}"}'
+              hx-target="closest .planner-card" hx-swap="outerHTML"
+              title="{% if task.is_complete %}Marker som ikke fuldført{% else %}Marker som fuldført{% endif %}"
+              aria-label="{% if task.is_complete %}Marker som ikke fuldført{% else %}Marker som fuldført{% endif %}"></button>
+    {% else %}
+      <span class="planner-check{% if task.is_complete %} is-done{% elif task.is_in_progress %} is-half{% endif %}"
+            aria-label="{% if task.is_complete %}Fuldført{% elif task.is_in_progress %}I gang{% else %}Ikke startet{% endif %}"></span>
+    {% endif %}
     <span>{{ task.title }}</span>
     {% if task.priority <= 4 and not task.is_complete %}
       <span class="planner-priority {% if task.priority <= 1 %}is-urgent{% endif %}" title="{{ task.priority_label }}">{% if task.priority <= 1 %}!!{% else %}!{% endif %}</span>
+    {% endif %}
+    {% if can_write %}
+      <details class="planner-menu">
+        <summary aria-label="Handlinger for {{ task.title }}" title="Handlinger">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </summary>
+        <div class="planner-menu-panel">
+          <button type="button" hx-get="{% url 'planner:link' task.id %}"
+                  hx-target="closest .planner-card" hx-swap="beforeend"
+                  hx-on::after-request="this.closest('details').open = false">Knyt til Chronicle…</button>
+          <a href="{{ task.planner_url }}" target="_blank" rel="noopener noreferrer">Åbn i Planner ↗</a>
+          {% if buckets|length > 1 %}
+            <div class="planner-menu-head">Flyt til</div>
+            {% for bucket in buckets %}
+              {% if bucket.id != task.bucket_id %}
+                <button type="button" hx-post="{% url 'planner:move' task.id %}"
+                        hx-vals='{"bucket": "{{ bucket.id|escapejs }}", "from_menu": "1"}'
+                        hx-target="closest .planner-card" hx-swap="outerHTML">{{ bucket.name }}</button>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+      </details>
     {% endif %}
   </div>
 
   {% if task.description %}
     <p class="planner-desc">{{ task.description|truncatechars:240 }}</p>
+  {% endif %}
+
+  {% if task.links %}
+    <div class="planner-links">
+      {% for link in task.links %}
+        <a href="{{ link.target_url }}" class="planner-chronicle-link" title="{{ link.target.title }}">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+          {{ link.target_label }}
+        </a>
+      {% endfor %}
+    </div>
   {% endif %}
 
   {% if task.checklist_total or task.due_date or task.reference_count or task.people %}
@@ -50,5 +101,13 @@
         </span>
       {% endif %}
     </div>
+  {% endif %}
+
+  {% if task.change %}
+    <p class="planner-note" role="status">
+      {% if task.change.still_waiting %}Gemmer i Planner…{% else %}Venter på synkroniseringen. Ændringen gemmes, når den kører igen.{% endif %}
+    </p>
+  {% elif failed %}
+    <p class="planner-note is-bad" role="alert">Ikke gemt i Planner: {{ failed.message }}</p>
   {% endif %}
 </article>
