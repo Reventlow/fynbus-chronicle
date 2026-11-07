@@ -10,7 +10,9 @@ are split into three groups:
 * **Alle andres**: assigned to someone else.
 
 "Uløste" shows the tickets open now, oldest first; "Lukkede" the tickets
-closed within the last 7, 30 or 90 days, newest first.
+closed within the last 7, 30 or 90 days, newest first. "Synk nu" runs the
+same sync as the dashboard's button (this week's counts plus the changed
+tickets) and reloads the page.
 
 Editors can link a ticket to a prioriteret opgave or a sag (an existing
 one, or a new one made from the ticket). Linking puts a ServiceDesk pill
@@ -39,6 +41,7 @@ from django.views.decorators.http import require_POST
 
 from apps.accounts.permissions import is_editor
 from apps.cves.models import CVECase
+from apps.dashboard.overview import sync_state
 from apps.logbook.models import (
     HelpdeskTicket,
     PriorityItem,
@@ -162,7 +165,6 @@ def tickets(request: HttpRequest) -> HttpResponse:
                                      .order_by("-closed_at")
     groups = split(decorate(rows, now), request.user)
 
-    newest_sync = HelpdeskTicket.objects.aggregate(m=models.Max("synced_at"))["m"]
     return render(request, "servicedesk/tickets.html", {
         "tab": tab,
         "days": days,
@@ -172,9 +174,25 @@ def tickets(request: HttpRequest) -> HttpResponse:
         "open_count": open_qs.count(),
         "can_link": is_editor(request.user),
         "servicedesk_url": (settings.SERVICEDESK_URL or "").rstrip("/"),
-        "synced_at": newest_sync,
+        "sync": sync_state(now),
+        "sync_enabled": settings.SERVICEDESK_SYNC_ENABLED,
         "me_matched": bool(_me(request.user)[0] or _me(request.user)[1]),
     })
+
+
+@require_POST
+@login_required
+def sync(request: HttpRequest) -> HttpResponse:
+    """"Synk nu": sync with ServiceDesk, then reload the page (HX-Refresh).
+    On failure, the reason is returned for the button's message slot."""
+    from apps.logbook.tasks import sync_now
+
+    error = sync_now()
+    if error:
+        return HttpResponse(error)
+    response = HttpResponse("")
+    response["HX-Refresh"] = "true"
+    return response
 
 
 def _render_row(request: HttpRequest, ticket: HelpdeskTicket) -> HttpResponse:

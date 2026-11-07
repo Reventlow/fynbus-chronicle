@@ -8,6 +8,7 @@ app_name = "servicedesk"
 
 urlpatterns = [
     path("", views.tickets, name="tickets"),
+    path("sync/", views.sync, name="sync"),
     path("ticket/<int:sdp_id>/link/", views.link, name="link"),
     path("link/<int:pk>/unlink/", views.unlink, name="unlink"),
     path("link/<int:pk>/note/", views.retry_note, name="retry-note"),

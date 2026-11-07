@@ -401,10 +401,11 @@ Fanen **Uløste** viser de sager, der er åbne nu, ældste først. **Lukkede** v
 
 - Hver sag viser nummer, emne, status, kategori, tekniker og afdeling. **Nummeret er et link** til sagen i ServiceDesk.
 - **Liggetid** står til venstre: for en åben sag hvor længe den har været åben, for en lukket sag hvor lang tid den tog. Farven er den samme som i ugelogens liggetid.
-- Listen kommer fra Chronicles kopi af ServiceDesk, som synkroniseres med få minutters mellemrum. Linjen under titlen viser hvornår.
+- Listen kommer fra Chronicles kopi af ServiceDesk, som synkroniseres med få minutters mellemrum. Linjen under titlen viser hvornår (rød, hvis synkroniseringen er gået i stå). **Synk nu** henter ændringer med det samme og genindlæser siden.
 - **Knyt** (redaktører) knytter sagen til en prioriteret opgave eller en sag i Chronicle: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende. Opgaven eller sagen får en *ServiceDesk #nummer*-pille, der åbner sagen i ServiceDesk, i ugelogen, i søgningen, under *Sager*, på kontrolpanelet og på sin egen side.
 - Samtidig får sagen i ServiceDesk en **intern note** (ikke synlig for brugeren, ingen mail) med et link til opgaven eller sagen i Chronicle og dit navn. Kunne noten ikke tilføjes, står årsagen ved linket, med *Prøv igen*.
 - **×** ved linket fjerner det igen, og ServiceDesk får en note om det.
+- ServiceDesk-pillen kommer også med i ugelogs-eksporten (PDF, HTML, mail og Markdown).
 
 ---
 

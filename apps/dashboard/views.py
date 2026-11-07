@@ -27,8 +27,8 @@ from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from apps.accounts.permissions import editor_required
-from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
 from apps.cves.models import CVECase
+from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
 from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
 
 from .overview import (
@@ -579,34 +579,12 @@ def sync_servicedesk_stats(request):
     ``reload=1`` (the headline's "Prøv igen" button) a successful sync
     answers ``HX-Refresh`` so the whole page picks up the fresh state.
     """
-    import logging
-
-    from apps.logbook.services import ticket_mirror
-    from apps.logbook.services.servicedesk import ServiceDeskClient
-
-    logger = logging.getLogger(__name__)
+    from apps.logbook.tasks import sync_now
 
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
 
-    client = ServiceDeskClient()
-    sync_error = None
-    if not client.enabled:
-        logger.warning("ServiceDesk sync triggered but disabled")
-        sync_error = "ServiceDesk sync er deaktiveret"
-    else:
-        try:
-            weeklog = WeekLog.get_or_create_current_week()
-            stats = client.get_week_stats(weeklog.year, weeklog.week_number)
-            weeklog.apply_helpdesk_stats(stats)
-            logger.info("Manual sync: %s new=%d closed=%d open=%d by_age=%s",
-                        weeklog.week_label, stats["created"], stats["closed"], stats["open"],
-                        stats.get("open_by_age") or "n/a")
-            if ticket_mirror.sync_incremental(client) is None:
-                sync_error = "Synk med ServiceDesk fejlede"
-        except Exception:
-            logger.exception("Manual ServiceDesk sync failed")
-            sync_error = "Synk med ServiceDesk fejlede"
+    sync_error = sync_now()
 
     html = render_to_string(
         "dashboard/partials/helpdesk_stats.html",
