@@ -1,7 +1,27 @@
+{% comment %}
+  Priority / case page: the linked Planner cards, or "Opret i Planner".
+  A sync_note says why a status change in Chronicle didn't reach Planner.
+{% endcomment %}
 {% for link in links %}
   <a href="{{ link.task_url }}" target="_blank" rel="noopener noreferrer" class="pill-planner"
      title="Åbn kortet i Microsoft Planner{% if link.current_title is None %} (findes ikke længere i den synkroniserede plan){% endif %}">
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/></svg>
     Planner: {{ link.current_title|default:link.task_title|truncatechars:60 }} ↗
   </a>
+  {% if link.sync_note %}<span class="planner-note is-bad" title="Status holdes i sync med Planner-kortet">{{ link.sync_note }}</span>{% endif %}
+{% empty %}
+  {% if creating %}
+    <span class="planner-note" role="status">Opretter kortet i Planner…</span>
+  {% elif can_create and buckets %}
+    <form method="post" action="{% url 'planner:create-from' %}" class="planner-create-from">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <input type="hidden" name="target" value="{{ target }}">
+      <select name="bucket" class="input" aria-label="Bucket i Planner">
+        {% for bucket in buckets %}<option value="{{ bucket.id }}">{{ bucket.name }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-sm">Opret i Planner</button>
+    </form>
+  {% elif can_connect %}
+    <a href="{% url 'planner:board' %}" class="planner-note" title="Forbind din Microsoft-konto på Planner-siden for at oprette kort">Opret i Planner: forbind din konto først</a>
+  {% endif %}
 {% endfor %}

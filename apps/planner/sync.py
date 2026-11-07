@@ -140,7 +140,11 @@ def mirror_plan(graph: GraphClient, plan_id: str, *, full_details: bool = False)
             PlannerTask.objects.update_or_create(id=t["id"], defaults=defaults)
         removed, _ = PlannerTask.objects.filter(plan=plan).exclude(id__in=task_ids).delete()
 
-    return {"buckets": len(buckets), "tasks": len(tasks), "details": len(descriptions), "removed": removed}
+    from .linksync import reconcile_plan
+
+    linked = reconcile_plan(plan_id)  # cards moved in Planner → their priorities and cases
+    return {"buckets": len(buckets), "tasks": len(tasks), "details": len(descriptions), "removed": removed,
+            "linked_updated": linked}
 
 
 class PlannerJob:

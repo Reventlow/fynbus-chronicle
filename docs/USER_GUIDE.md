@@ -378,6 +378,8 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 - **Opret et kort** i feltet *+ Tilføj opgave* øverst i kolonnen (Enter gemmer).
 - **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen viser en *Planner ↗*-pille, der åbner kortet, i ugelogen, i søgningen, under *Sager* og på kontrolpanelet.
 - Mens en ændring er på vej, står der *Gemmer i Planner…* på kortet; det tager få sekunder. Afviser Planner den (fx hvis du ikke er medlem af planens gruppe), står årsagen på kortet, og tavlen retter sig selv ved næste opdatering.
+- **Status følges ad.** Fuldfører du et knyttet kort (på tavlen eller i Planner), afsluttes opgaven eller sagen i Chronicle, og afslutter du opgaven eller sagen i Chronicle, fuldføres kortet. Det samme gælder *Ikke startet* og *I gang*. Ændringer i Chronicle sendes i dit navn, hvis du har forbundet din Microsoft-konto; ellers står der på opgaven eller sagen, at ændringen ikke blev sendt.
+- **Opret i Planner:** på en prioriteret opgave eller sag uden kort kan du vælge en bucket og klikke *Opret i Planner*. Kortet får titel, beskrivelse, status og frist og knyttes begge veje.
 - Beskrivelse, tjekliste, datoer og tildelinger rettes stadig i Planner (*⋯ → Åbn i Planner*).
 - Den opdateres af sig selv: på hverdage 07:15–17:30 hvert andet minut, ellers hvert kvarter. Linjen under titlen viser, hvornår den sidst blev opdateret, og hvornår det sker næste gang.
 - **Synk nu** henter ændringer med det samme (højst én gang hvert 30. sekund). Siden genindlæses af sig selv, når de er hentet.
