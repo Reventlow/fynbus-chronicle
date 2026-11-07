@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.17.2 — 2026-11-07
+
+### Added
+- **Planner-pillen kommer nu også med i ugelogs-eksporten**: i PDF, HTML og mailen ved prioriterede opgaver og sager, der er knyttet til et Planner-kort, og som et *[Planner ↗]*-link i Markdown. Pillen er et link til kortet i Planner (også klikbart i PDF'en).
+
 ## 1.17.1 — 2026-11-07
 
 ### Added

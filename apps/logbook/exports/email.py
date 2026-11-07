@@ -137,7 +137,8 @@ def send_weeklog_email(
     # Render HTML body
     context = {
         "weeklog": weeklog,
-        "priority_items": weeklog.priority_appearances.select_related("priority_item").all(),
+        "priority_items": weeklog.priority_appearances.select_related("priority_item")
+        .prefetch_related("priority_item__planner_links").all(),
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),
