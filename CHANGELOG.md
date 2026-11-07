@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.17.1 — 2026-11-07
+
+### Added
+- **Prioriterede opgaver og sager, der er knyttet til et Planner-kort, har nu en *Planner ↗*-pille** overalt, hvor de står i en liste: ugelogen (prioriterede opgaver og ugens sager), søgningen i prioriterede opgaver, *Sager* og kontrolpanelets kort. Pillen åbner kortet i Planner. Står sagen som ét samlet link, ligger pillen på en linje under den med kortets titel.
+
 ## 1.17.0 — 2026-11-07
 
 ### Added

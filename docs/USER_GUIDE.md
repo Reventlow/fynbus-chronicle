@@ -376,7 +376,7 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 - **Fuldfør eller genåbn** et kort ved at klikke på cirklen foran titlen.
 - **Flyt et kort** ved at trække det til en anden kolonne eller et andet sted i kolonnen, eller vælg *Flyt til* i kortets menu (**⋯**).
 - **Opret et kort** i feltet *+ Tilføj opgave* øverst i kolonnen (Enter gemmer).
-- **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen i Chronicle viser et *Planner*-link til kortet.
+- **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen viser en *Planner ↗*-pille, der åbner kortet, i ugelogen, i søgningen, under *Sager* og på kontrolpanelet.
 - Mens en ændring er på vej, står der *Gemmer i Planner…* på kortet; det tager få sekunder. Afviser Planner den (fx hvis du ikke er medlem af planens gruppe), står årsagen på kortet, og tavlen retter sig selv ved næste opdatering.
 - Beskrivelse, tjekliste, datoer og tildelinger rettes stadig i Planner (*⋯ → Åbn i Planner*).
 - Den opdateres af sig selv: på hverdage 07:15–17:30 hvert andet minut, ellers hvert kvarter. Linjen under titlen viser, hvornår den sidst blev opdateret, og hvornår det sker næste gang.

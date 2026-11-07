@@ -1,3 +1,4 @@
+{% load planner_tags %}
 {% comment %}
   Current week card (v3): every priority on the week (13 is typical — no
   truncation), status as dot + text with only "Blokeret" as a pill, and
@@ -36,6 +37,7 @@
       {% with item=appearance.priority_item %}
         <div class="task-row{% if item.status == 'completed' %} is-done{% endif %}">
           <a href="{% url 'logbook:priority-item-history' item.pk %}" class="task-row-title" title="{{ item.title }}">{{ item.title }}</a>
+          <span style="flex: 1;"></span>{% planner_pill item %}
           {% if item.status == 'blocked' %}
             <span class="pill pill-bad" style="flex: none;">{{ item.get_status_display }}</span>
           {% else %}

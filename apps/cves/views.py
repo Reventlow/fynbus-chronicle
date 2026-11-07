@@ -503,7 +503,8 @@ def case_list(request: HttpRequest) -> HttpResponse:
     """All cases, open ones first. ``?state=all`` includes old solved ones;
     ``?q=`` searches title, source, reference and member CVE ids in every state.
     Each case is shown with every CVE it holds."""
-    qs = CVECase.objects.prefetch_related(Prefetch("cves", queryset=CVE.objects.order_by(Length("cve_id"), "cve_id")))
+    qs = CVECase.objects.prefetch_related(Prefetch("cves", queryset=CVE.objects.order_by(Length("cve_id"), "cve_id")),
+                                          "planner_links")
     state = request.GET.get("state") or ""
     q = (request.GET.get("q") or "").strip()
     if q:

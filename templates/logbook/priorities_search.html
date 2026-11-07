@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load planner_tags %}
 {% load static %}
 
 {% block title %}Opgavesøgning — FynBus Chronicle{% endblock %}
@@ -93,8 +94,11 @@
               {% endif %}
             </div>
           </a>
-          <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
-            {{ item.get_priority_display }}
+          <span class="inline-flex items-center gap-2">
+            {% planner_pill item %}
+            <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
+              {{ item.get_priority_display }}
+            </span>
           </span>
           {% if item.is_merged %}
             <span class="pill pill-info" title="Flettet ind i en anden opgave">
