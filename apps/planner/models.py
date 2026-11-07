@@ -1,13 +1,18 @@
 """Models for the Planner board.
 
-Three groups:
+Four groups:
 
-* **The connection** (:class:`PlannerConnection`, :class:`PendingSignIn`):
-  the service account's sign-in. The web container receives Microsoft's
-  one-time code and stores it *sealed* (PendingSignIn); the sync container,
-  which alone has the private key and the client secret, redeems it and
-  keeps the resulting token cache sealed in PlannerConnection. The web
-  container can write both but read neither.
+* **The connections** (:class:`PlannerConnection`,
+  :class:`PlannerUserConnection`, :class:`PendingSignIn`): the service
+  account (reads the plan) and each editor's own account (makes that
+  editor's changes, so Planner and Purview record the right person). The
+  web container receives Microsoft's one-time code and stores it *sealed*
+  (PendingSignIn); the sync container, which alone has the private key and
+  the client secret, redeems it and keeps the resulting token cache sealed.
+  The web container can write these but read none of them.
+* **Changes** (:class:`PlannerChange`, :class:`PlannerLink`): what an
+  editor did on the board, queued for the sync container, and the links
+  between Planner cards and Chronicle's priorities and cases.
 * **The mirror** (:class:`PlannerPlan`, :class:`PlannerBucket`,
   :class:`PlannerTask`, :class:`PlannerPerson`): a read-only copy of the
   plan that the board renders, refreshed by the sync job.
@@ -57,12 +62,43 @@ class PlannerConnection(models.Model):
         return bool(self.sealed_token_cache and self.home_account_id)
 
 
+class PlannerUserConnection(models.Model):
+    """One editor's own Microsoft sign-in, used for that editor's changes.
+
+    Same fields as :class:`PlannerConnection`; there is one per user. The
+    sync container never falls back to the service account for a change.
+    """
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                related_name="planner_connection")
+    account_upn = models.CharField("Konto", max_length=255, blank=True)
+    account_oid = models.CharField("Entra-objekt-id", max_length=64, blank=True)
+    home_account_id = models.CharField(max_length=255, blank=True)
+    sealed_token_cache = models.TextField(blank=True, help_text="Sealed for the sync container; unreadable here.")
+    connected_at = models.DateTimeField(null=True, blank=True)
+    last_token_ok_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        verbose_name = "Personlig Planner-forbindelse"
+        verbose_name_plural = "Personlige Planner-forbindelser"
+
+    def __str__(self) -> str:
+        return f"{self.user} → {self.account_upn or 'ikke forbundet'}"
+
+    @property
+    def is_connected(self) -> bool:
+        return bool(self.sealed_token_cache and self.home_account_id)
+
+
 class PendingSignIn(models.Model):
     """A sign-in handed from the web container to the sync container.
 
     ``sealed`` holds Microsoft's code, the PKCE verifier and the redirect
     URI, sealed with the public key; the sync container clears it once
     redeemed. A code is valid for about ten minutes, so older ones fail.
+    ``for_user`` set means an editor's own account; empty means the
+    service account.
     """
 
     class Status(models.TextChoices):
@@ -79,6 +115,8 @@ class PendingSignIn(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name="+")
     handled_at = models.DateTimeField(null=True, blank=True)
+    for_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                 on_delete=models.CASCADE, related_name="+")
 
     class Meta:
         ordering = ["-created_at"]
@@ -222,3 +260,123 @@ class SyncState(models.Model):
     def is_requested(self) -> bool:
         """A "Synk nu" that the sync container has not started yet."""
         return bool(self.requested_at and (not self.last_attempt_at or self.requested_at > self.last_attempt_at))
+
+
+class PlannerChange(models.Model):
+    """A change an editor made on the board, waiting for the sync container.
+
+    The web container records it (and shows it on the board straight
+    away); the sync container makes it in Planner with that editor's own
+    connection, then updates the mirror from Planner's answer.
+
+    ``payload`` per kind:
+
+    * complete / reopen: ``{}``
+    * move: ``{"bucket_id", "order_hint"}`` (Planner's ``"<prev> <next>!"``)
+    * create: ``{"bucket_id", "title"}``; ``task_id`` is filled in when done
+    * link: ``{"url", "alias", "label"}``: a reference back to Chronicle
+      and a label on the card
+    """
+
+    class Kind(models.TextChoices):
+        COMPLETE = "complete", "Fuldfør"
+        REOPEN = "reopen", "Genåbn"
+        MOVE = "move", "Flyt"
+        CREATE = "create", "Opret"
+        LINK = "link", "Link til Chronicle"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Venter"
+        DONE = "done", "Gennemført"
+        FAILED = "failed", "Fejlede"
+
+    # After this long without the sync container, the board stops waiting.
+    WAIT_AT_MOST = timedelta(minutes=3)
+
+    kind = models.CharField(max_length=10, choices=Kind.choices)
+    task_id = models.CharField(max_length=64, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    message = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    handled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Planner-ændring"
+        verbose_name_plural = "Planner-ændringer"
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()} {self.task_id or self.payload.get('title', '')}"
+
+    @property
+    def is_pending(self) -> bool:
+        return self.status == self.Status.PENDING
+
+    @property
+    def still_waiting(self) -> bool:
+        """Pending and recent enough that the board keeps polling."""
+        return self.is_pending and timezone.now() - self.created_at < self.WAIT_AT_MOST
+
+
+class PlannerLink(models.Model):
+    """A Planner card linked to a Chronicle priority or case.
+
+    ``task_id`` is a plain id, not a foreign key: the link outlives the
+    mirror row if the card is deleted in Planner. ``task_title`` keeps the
+    name for that case.
+    """
+
+    task_id = models.CharField(max_length=64, db_index=True)
+    task_title = models.CharField(max_length=500, blank=True)
+    priority_item = models.ForeignKey("logbook.PriorityItem", null=True, blank=True,
+                                      on_delete=models.CASCADE, related_name="planner_links")
+    case = models.ForeignKey("cves.CVECase", null=True, blank=True,
+                             on_delete=models.CASCADE, related_name="planner_links")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Planner-link"
+        verbose_name_plural = "Planner-links"
+        constraints = [
+            models.CheckConstraint(
+                condition=(models.Q(priority_item__isnull=False, case__isnull=True)
+                           | models.Q(priority_item__isnull=True, case__isnull=False)),
+                name="planner_link_one_target"),
+            models.UniqueConstraint(fields=["task_id", "priority_item"], name="planner_link_unique_priority"),
+            models.UniqueConstraint(fields=["task_id", "case"], name="planner_link_unique_case"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.task_title or self.task_id} → {self.target_label}"
+
+    @property
+    def target(self):
+        return self.priority_item or self.case
+
+    @property
+    def target_label(self) -> str:
+        if self.priority_item_id:
+            return f"Prioriteret opgave #{self.priority_item_id}"
+        return f"Sag #{self.case_id}"
+
+    @property
+    def target_url(self) -> str:
+        from django.urls import reverse
+        if self.priority_item_id:
+            return reverse("logbook:priority-item-history", args=[self.priority_item_id])
+        return reverse("cves:case-detail", kwargs={"pk": self.case_id})
+
+    @property
+    def task_url(self) -> str:
+        """The card in Planner's web app."""
+        return task_url(self.task_id)
+
+
+def task_url(task_id: str) -> str:
+    """Planner's link to one task (the form "Copy link to task" gives)."""
+    return f"https://tasks.office.com/{settings.PLANNER_TENANT_ID}/Home/Task/{task_id}"

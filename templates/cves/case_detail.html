@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load planner_tags %}
 {% load cve_extras %}
 
 {% block title %}Sag #{{ case.pk }} — FynBus Chronicle{% endblock %}
@@ -34,6 +35,7 @@
     <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
       {% include "cves/partials/case_state_badge.html" %}
       {% include "cves/partials/case_due.html" %}
+      {% planner_links case %}
       {% if case.is_vulnerability or cves %}<span class="task-status num">{% if cves %}{{ cves|length }} CVE{{ cves|length|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}</span>{% endif %}
       {% if case.solved_at %}
         <span class="task-status num">Færdigbehandlet {{ case.solved_at|date:"j. M Y · H:i" }}{% if case.solved_by %} af {{ case.solved_by.get_full_name|default:case.solved_by.username }}{% endif %}</span>

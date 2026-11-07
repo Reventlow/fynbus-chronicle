@@ -1,6 +1,6 @@
 # Planner board
 
-Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*) as a board under **Planner** in the menu: the same buckets and cards as in Planner, refreshed automatically. This first version only reads; turning a card into a priority or a planned task comes in a later release.
+Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*) as a board under **Planner** in the menu: the same buckets and cards as in Planner, refreshed automatically. Since 1.17.0 editors who connect their own Microsoft account can also complete and reopen cards, drag them between buckets, add cards, and link a card to a Chronicle priority or case (both ways).
 
 ## How it works
 
@@ -24,6 +24,11 @@ Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*)
 - **Sealed hand-over:** Microsoft sends the one-time sign-in code to the web container. It seals the code with the public key straight away; only the sync container's private key opens it. The sealed code is deleted once used.
 - **Schedule:** Mon–Fri 07:15–17:30 every 2 minutes, otherwise every 15 minutes (Danish time). **Synk nu** on the board runs a sync within seconds (at most one every 30 seconds). Task descriptions are re-read when a task changes, and all of them once an hour.
 - **Who sees it:** editors (not the read-only *Viewer* group). Connecting or disconnecting the service account: staff.
+- **Changes are made in the editor's own name.** The service account only reads. An editor connects their own account once (*Forbind min konto*, same sealed hand-over); a change on the board becomes a queued `PlannerChange` that the sync container makes with *that editor's* token on its next tick (every 5 seconds), so Planner's history and Purview's audit log show the real person. There is no fallback to the service account: without your own connection the board is read-only for you.
+  - The board shows the change at once and the card polls until it is done; if Planner refuses it (most often 403: not a member of the plan's group), the card says why and a sync puts the board back.
+  - Updates read the item first for its current etag and patch only the fields in question (a 412 race is retried once).
+  - An editor can only connect *their own* account: the Entra object id of their SSO link must match, or, without SSO, their e-mail must equal the UPN. The service account is refused as a personal connection.
+- **Links to Chronicle** (`PlannerLink`): *Knyt til Chronicle* creates a priority (this week's log) or a planned-task case from the card, or picks an existing one. In Planner the card gets the label *Prioriteret opgave* / *Sag* (created in the first free label slot if the plan has no label with that name) and a reference (attachment link) back to the Chronicle page. The priority's history page and the case page show a *Planner* link to the card. Removing a link in the admin doesn't touch the card in Planner.
 - Text from Planner is shown as plain, escaped text, and descriptions are cut at 4,000 characters.
 
 ## Setup
@@ -34,7 +39,8 @@ Chronicle can show one Microsoft Planner plan (at FynBus: *Intern IT - Backlog*)
 - *Allow public client flows* = **No**; no implicit grant.
 - Delegated permissions **`Tasks.ReadWrite`**, **`User.ReadBasic.All`**, `offline_access`, `openid`, `profile`, with admin consent. No application permissions.
 - A client secret (12 months). Copy its **Value** (40 characters), not the *Secret ID* (a GUID).
-- Enterprise application: *Assignment required* = Yes; assign the service account (and the people who will connect their own accounts in later releases).
+- Enterprise application: *Assignment required* = Yes; assign the service account **and every editor who will make changes on the board** (assign a group, e.g. *Chronicle-Planner*). Without it their sign-in fails with AADSTS50105.
+- Editors who make changes must also be **members of the plan's Microsoft 365 group**; otherwise Planner refuses their changes (403) and the card says so.
 
 ### 2. Entra: the service account
 
@@ -79,6 +85,11 @@ MICROSOFT_TENANT_ID=<tenant GUID>
 # PLANNER_WORK_HOURS=mon-fri 07:15-17:30
 # PLANNER_INTERVAL_WORK=120
 # PLANNER_INTERVAL_OFF=900
+# Changes on the board (default on; False = read-only for everyone):
+# PLANNER_WRITES_ENABLED=True
+# Label names put on linked cards:
+# PLANNER_LABEL_PRIORITY=Prioriteret opgave
+# PLANNER_LABEL_CASE=Sag
 ```
 
 Never put `PLANNER_CLIENT_SECRET` or `PLANNER_PRIVATE_KEY` in `web.env`. Redeploy the stack after changing either file.
@@ -88,6 +99,7 @@ Never put `PLANNER_CLIENT_SECRET` or `PLANNER_PRIVATE_KEY` in `web.env`. Redeplo
 1. As staff, open **Planner** in Chronicle and click **Forbind Planner** at the bottom.
 2. Sign in to Microsoft **as the service account** (an incognito window avoids picking your own account). Any other account is refused.
 3. Back on the board, the status line shows *Forbinder servicekontoen…*; within a few seconds the sync container connects and runs the first sync.
+4. Each editor who wants to make changes clicks **Forbind min konto** at the top of the board and signs in with their own account.
 
 ## Operation
 
@@ -99,4 +111,4 @@ Never put `PLANNER_CLIENT_SECRET` or `PLANNER_PRIVATE_KEY` in `web.env`. Redeplo
 
 ## Code
 
-`apps/planner/`: `graph.py` (MSAL and Graph, sync side), `sync.py` (mirror and the scheduler job), `crypto.py` (sealed boxes), `schedule.py`, `views.py` (web side). The job runs in `apps/logbook/management/commands/run_scheduler.py` next to the ServiceDesk sync; each has its own switch, and an error in one doesn't stop the other.
+`apps/planner/`: `graph.py` (MSAL and Graph, sync side), `sync.py` (mirror and the scheduler job), `writes.py` (making queued changes, sync side), `crypto.py` (sealed boxes), `schedule.py`, `views.py` (web side). The job runs in `apps/logbook/management/commands/run_scheduler.py` next to the ServiceDesk sync; each has its own switch, and an error in one doesn't stop the other.

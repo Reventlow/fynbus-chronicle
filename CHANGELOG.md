@@ -2,6 +2,20 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.17.0 — 2026-11-07
+
+### Added
+- **Planner-tavlen kan nu ændres.** Når du har forbundet din egen Microsoft-konto (*Forbind min konto* øverst på tavlen), kan du:
+  - **fuldføre og genåbne** et kort ved at klikke på cirklen;
+  - **flytte kort** mellem kolonner (og inden for en kolonne) ved at trække dem, eller med *Flyt til* i kortets menu (**⋯**);
+  - **oprette kort** med *+ Tilføj opgave* øverst i en kolonne;
+  - **knytte et kort til Chronicle** (*⋯ → Knyt til Chronicle*): som en ny prioriteret opgave, en ny sag (planlagt opgave) eller en eksisterende opgave eller sag. Kortet får etiketten *Prioriteret opgave* eller *Sag* og et link tilbage til Chronicle i Planner; opgaven eller sagen i Chronicle får et *Planner*-link til kortet.
+- **Ændringerne gemmes i Planner i dit navn**, ikke servicekontoens, så Planners historik og Purview viser, hvem der gjorde hvad. Tavlen viser ændringen med det samme (*Gemmer i Planner…*), og den er i Planner få sekunder senere. Afvises den, står årsagen på kortet.
+- Man kan kun forbinde sin egen konto (samme Entra-konto som ens SSO-login, ellers samme mailadresse) og aldrig servicekontoen. Kun sync-containeren bruger tokens; de gemmes krypteret som servicekontoens.
+
+### Changed
+- Etiketterne *Prioriteret opgave* og *Sag* oprettes i planen første gang, de bruges (på en ledig etiketplads), hvis de ikke findes. Navnene kan ændres med `PLANNER_LABEL_PRIORITY` og `PLANNER_LABEL_CASE`; `PLANNER_WRITES_ENABLED=False` gør tavlen skrivebeskyttet igen.
+
 ## 1.16.1 — 2026-11-07
 
 ### Fixed

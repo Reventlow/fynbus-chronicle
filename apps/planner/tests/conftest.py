@@ -1,6 +1,7 @@
 """Shared fixtures: Planner settings with a fresh key pair, and Graph data."""
 
 import pytest
+from django.utils import timezone
 
 from apps.planner.crypto import generate_keypair
 
@@ -81,3 +82,26 @@ class FakeGraph:
 @pytest.fixture
 def fake_graph():
     return FakeGraph()
+
+
+@pytest.fixture
+def web(planner, settings):
+    """As the web container: no client secret, no private key."""
+    settings.PLANNER_CLIENT_SECRET = ""
+    private = settings.PLANNER_PRIVATE_KEY
+    settings.PLANNER_PRIVATE_KEY = ""
+    return private
+
+
+@pytest.fixture
+def mirrored(planner):
+    from apps.planner.models import PlannerConnection, SyncState
+    from apps.planner.sync import mirror_plan
+
+    mirror_plan(FakeGraph(), PLAN)
+    conn = PlannerConnection.get()
+    conn.sealed_token_cache, conn.home_account_id, conn.account_upn = "x", "h", "SVC-Chronicle-Planner@fynbus.dk"
+    conn.save()
+    state = SyncState.get()
+    state.last_success_at = timezone.now()
+    state.save()

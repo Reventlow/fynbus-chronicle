@@ -372,7 +372,13 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 
 *Planner* i menuen viser Microsoft Planner-planen *Intern IT - Backlog* som en tavle: de samme kolonner (buckets) og kort som i Planner, med etiketter, tjekliste (fx *2/6*), forfaldsdato (rød, når den er overskredet) og initialer på dem, der er tildelt. Fuldførte opgaver ligger foldet sammen under *Fuldførte opgaver* nederst i hver kolonne.
 
-- Tavlen er en **kopi, der kun kan læses**. Ret opgaverne i Planner (knappen **Åbn i Planner**).
+- **Forbind din egen Microsoft-konto** første gang (*Forbind min konto* øverst på tavlen). Indtil da kan tavlen kun læses. Ændringerne gemmes i Planner i dit navn; *Afbryd min forbindelse* gør tavlen skrivebeskyttet for dig igen.
+- **Fuldfør eller genåbn** et kort ved at klikke på cirklen foran titlen.
+- **Flyt et kort** ved at trække det til en anden kolonne eller et andet sted i kolonnen, eller vælg *Flyt til* i kortets menu (**⋯**).
+- **Opret et kort** i feltet *+ Tilføj opgave* øverst i kolonnen (Enter gemmer).
+- **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen i Chronicle viser et *Planner*-link til kortet.
+- Mens en ændring er på vej, står der *Gemmer i Planner…* på kortet; det tager få sekunder. Afviser Planner den (fx hvis du ikke er medlem af planens gruppe), står årsagen på kortet, og tavlen retter sig selv ved næste opdatering.
+- Beskrivelse, tjekliste, datoer og tildelinger rettes stadig i Planner (*⋯ → Åbn i Planner*).
 - Den opdateres af sig selv: på hverdage 07:15–17:30 hvert andet minut, ellers hvert kvarter. Linjen under titlen viser, hvornår den sidst blev opdateret, og hvornår det sker næste gang.
 - **Synk nu** henter ændringer med det samme (højst én gang hvert 30. sekund). Siden genindlæses af sig selv, når de er hentet.
 - Bliver linjen rød, er opdateringen gået i stå; teksten siger hvorfor. Sig det til IT.

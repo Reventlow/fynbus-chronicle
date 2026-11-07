@@ -3,10 +3,11 @@
 :func:`mirror_plan` reads the plan, its buckets, tasks and (where needed)
 task details through Graph and makes the local tables match. Planner is
 the source of truth: tasks and buckets that are gone there are removed
-here. Nothing is written to Planner.
+here. The mirror itself writes nothing to Planner.
 
 :class:`PlannerJob` is what ``run_scheduler`` drives: every few seconds it
-hands over pending sign-ins and picks up "Synk nu" requests, and it runs
+hands over pending sign-ins, makes the editors' queued changes
+(:mod:`apps.planner.writes`) and picks up "Synk nu" requests, and it runs
 the mirror on the schedule from :mod:`apps.planner.schedule`.
 """
 
@@ -26,9 +27,11 @@ from .models import (
     DESCRIPTION_MAX,
     PendingSignIn,
     PlannerBucket,
+    PlannerConnection,
     PlannerPerson,
     PlannerPlan,
     PlannerTask,
+    PlannerUserConnection,
     SyncState,
 )
 
@@ -50,6 +53,34 @@ def _date(value: str | None) -> date | None:
     """Planner sends due dates as midnight UTC of the chosen day."""
     parsed = _dt(value)
     return parsed.date() if parsed else None
+
+
+def task_defaults(t: dict, plan: PlannerPlan, bucket_ids: set[str], now: datetime) -> dict:
+    """Mirror fields of one task as Graph returns it (not the description,
+    which comes from the task's details)."""
+    defaults = {
+        "plan": plan,
+        "bucket_id": t.get("bucketId") if t.get("bucketId") in bucket_ids else None,
+        "title": (t.get("title") or "")[:500],
+        "percent_complete": t.get("percentComplete") or 0,
+        "priority": t.get("priority", 5),
+        "start_date": _date(t.get("startDateTime")),
+        "due_date": _date(t.get("dueDateTime")),
+        "created_at": _dt(t.get("createdDateTime")),
+        "completed_at": _dt(t.get("completedDateTime")),
+        "order_hint": t.get("orderHint", ""),
+        "assignee_ids": sorted((t.get("assignments") or {}).keys()),
+        "label_keys": sorted(k for k, on in (t.get("appliedCategories") or {}).items() if on),
+        "checklist_total": t.get("checklistItemCount") or 0,
+        "checklist_open": t.get("activeChecklistItemCount") or 0,
+        "reference_count": t.get("referenceCount") or 0,
+        "has_description": bool(t.get("hasDescription")),
+        "etag": t.get("@odata.etag", ""),
+        "synced_at": now,
+    }
+    if not t.get("hasDescription"):
+        defaults["description"] = ""
+    return defaults
 
 
 def mirror_plan(graph: GraphClient, plan_id: str, *, full_details: bool = False) -> dict:
@@ -102,31 +133,10 @@ def mirror_plan(graph: GraphClient, plan_id: str, *, full_details: bool = False)
         task_ids = set()
         for t in tasks:
             task_ids.add(t["id"])
-            defaults = {
-                "plan": plan,
-                "bucket_id": t.get("bucketId") if t.get("bucketId") in bucket_ids else None,
-                "title": (t.get("title") or "")[:500],
-                "percent_complete": t.get("percentComplete") or 0,
-                "priority": t.get("priority", 5),
-                "start_date": _date(t.get("startDateTime")),
-                "due_date": _date(t.get("dueDateTime")),
-                "created_at": _dt(t.get("createdDateTime")),
-                "completed_at": _dt(t.get("completedDateTime")),
-                "order_hint": t.get("orderHint", ""),
-                "assignee_ids": sorted((t.get("assignments") or {}).keys()),
-                "label_keys": sorted(k for k, on in (t.get("appliedCategories") or {}).items() if on),
-                "checklist_total": t.get("checklistItemCount") or 0,
-                "checklist_open": t.get("activeChecklistItemCount") or 0,
-                "reference_count": t.get("referenceCount") or 0,
-                "has_description": bool(t.get("hasDescription")),
-                "etag": t.get("@odata.etag", ""),
-                "synced_at": now,
-            }
+            defaults = task_defaults(t, plan, bucket_ids, now)
             if t["id"] in descriptions:
                 defaults["description"], defaults["details_etag"] = descriptions[t["id"]]
                 defaults["details_synced_at"] = now
-            elif not t.get("hasDescription"):
-                defaults["description"] = ""
             PlannerTask.objects.update_or_create(id=t["id"], defaults=defaults)
         removed, _ = PlannerTask.objects.filter(plan=plan).exclude(id__in=task_ids).delete()
 
@@ -147,9 +157,10 @@ class PlannerJob:
         return bool(settings.PLANNER_SYNC_ENABLED and settings.PLANNER_PLAN_ID)
 
     def tick(self, now: datetime | None = None) -> None:
-        """Called every few seconds: sign-ins, requests, schedule."""
+        """Called every few seconds: sign-ins, changes, requests, schedule."""
         now = now or timezone.now()
         self.handle_sign_ins()
+        self.handle_changes()
         state = SyncState.get()
         due = state.next_due_at is None or now >= state.next_due_at
         requested = state.is_requested and (
@@ -160,7 +171,11 @@ class PlannerJob:
     def handle_sign_ins(self) -> None:
         for pending in PendingSignIn.objects.filter(status=PendingSignIn.Status.PENDING).order_by("created_at"):
             try:
-                self.auth_factory().redeem(pending)
+                if pending.for_user_id:
+                    target, _ = PlannerUserConnection.objects.get_or_create(user_id=pending.for_user_id)
+                else:
+                    target = PlannerConnection.get()
+                self.auth_factory(connection=target).redeem(pending)
             except PlannerError as exc:  # misconfigured sync container
                 pending.status, pending.message, pending.sealed = PendingSignIn.Status.FAILED, str(exc)[:500], ""
                 pending.handled_at = timezone.now()
@@ -170,6 +185,13 @@ class PlannerJob:
                 # runs before the connection existed.
                 SyncState.get()
                 SyncState.objects.filter(pk=1).update(next_due_at=timezone.now(), last_error="")
+
+    def handle_changes(self) -> int:
+        from .writes import process_changes
+
+        if not settings.PLANNER_WRITES_ENABLED:
+            return 0
+        return process_changes(self.auth_factory, self.graph_factory)
 
     def run(self, state: SyncState, now: datetime) -> None:
         state.last_attempt_at = now
