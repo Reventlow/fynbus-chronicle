@@ -1,4 +1,4 @@
-{% load planner_tags %}
+{% load planner_tags %}{% load servicedesk_tags %}
 {% load markdown_extras %}
 {% comment %}
   Priority item row — represents a PriorityItemAppearance for one weeklog.
@@ -49,7 +49,7 @@
   <div style="min-width: 0;">
     <div class="flex items-center gap-2 flex-wrap" style="font-size: 13.5px; color: var(--ink-1); font-weight: 500; letter-spacing: -0.005em;">
       <span>{{ item.title }}</span>
-      {% planner_pill item %}
+      {% planner_pill item %}{% ticket_pill item %}
       {% if item.has_history %}
         <a href="{% url 'logbook:priority-item-history' item.pk %}"
            class="inline-flex items-center"

@@ -960,6 +960,12 @@ class HelpdeskTicket(models.Model):
     department = models.CharField(verbose_name="Afdeling", max_length=120, blank=True)
     category = models.CharField(verbose_name="Kategori", max_length=120, blank=True)
     technician = models.CharField(verbose_name="Tekniker", max_length=120, blank=True)
+    technician_email = models.CharField(
+        verbose_name="Teknikerens e-mail",
+        max_length=254,
+        blank=True,
+        help_text="Bruges til at finde »mine sager« på ServiceDesk-siden.",
+    )
     subject = models.CharField(verbose_name="Emne", max_length=255, blank=True)
     sdp_updated_at = models.DateTimeField(
         verbose_name="Sidst ændret i ServiceDesk",

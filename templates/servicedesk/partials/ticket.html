@@ -1,0 +1,63 @@
+{% comment %}
+  One ticket: age, number (link to ServiceDesk), subject, status line, and
+  the Chronicle priorities / cases it is linked to. Editors get "Knyt",
+  which opens the link form in .sd-link-slot.
+{% endcomment %}
+<div class="sd-ticket" id="ticket-{{ ticket.sdp_id }}">
+  <span class="sd-age" style="--age: {{ ticket.age_color }};"
+        title="{% if ticket.is_open %}Åben siden {{ ticket.created_at|date:'d. M Y H:i' }}{% else %}Oprettet {{ ticket.created_at|date:'d. M Y H:i' }}, lukket {{ ticket.closed_at|date:'d. M Y H:i' }}{% endif %}">
+    <span class="sd-age-num">{{ ticket.age_text }}</span>
+    <span class="sd-age-label">liggetid</span>
+  </span>
+  <div class="sd-main">
+    <div class="sd-title">
+      {% if ticket.servicedesk_url %}
+        <a href="{{ ticket.servicedesk_url }}" target="_blank" rel="noopener noreferrer" class="sd-num" title="Åbn sagen i ServiceDesk">#{{ ticket.sdp_id }} ↗</a>
+      {% else %}
+        <span class="sd-num">#{{ ticket.sdp_id }}</span>
+      {% endif %}
+      <span class="sd-subject" title="{{ ticket.subject }}">{{ ticket.subject|default:"(intet emne)" }}</span>
+    </div>
+    <div class="incident-meta">
+      <span class="task-status">{{ ticket.status }}</span>
+      {% if ticket.category %}<span>{{ ticket.category }}</span>{% endif %}
+      <span>{% if ticket.technician %}{% if ticket.technician|slice:":10" == "ANONYMOUS_" %}Anonymiseret tekniker{% else %}{{ ticket.technician }}{% endif %}{% else %}Ikke tildelt{% endif %}</span>
+      {% if ticket.department %}<span>{{ ticket.department }}</span>{% endif %}
+      {% if ticket.is_open %}
+        <span class="num">oprettet {{ ticket.created_at|date:'d.m.Y' }}</span>
+      {% else %}
+        <span class="num">lukket {{ ticket.closed_at|date:'d.m.Y' }}</span>
+      {% endif %}
+    </div>
+    {% if ticket.links %}
+      <div class="sd-links">
+        {% for link in ticket.links %}
+          <span class="sd-link">
+            <a href="{{ link.target_url }}" class="pill-sd" title="Åbn i Chronicle">
+              {% if link.priority_item_id %}Prioriteret opgave{% else %}Sag #{{ link.case_id }}{% endif %}: {{ link.target_title|truncatechars:60 }}
+            </a>
+            {% if link.note_error %}
+              <span class="planner-note is-bad">Ingen note i ServiceDesk: {{ link.note_error }}</span>
+              {% if can_link %}
+                <button type="button" class="btn btn-sm btn-ghost sd-mini" hx-post="{% url 'servicedesk:retry-note' link.pk %}"
+                        hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Prøv igen</button>
+              {% endif %}
+            {% endif %}
+            {% if can_link %}
+              <button type="button" class="sd-unlink" hx-post="{% url 'servicedesk:unlink' link.pk %}"
+                      hx-target="closest .sd-ticket" hx-swap="outerHTML"
+                      hx-confirm="Fjern linket mellem #{{ ticket.sdp_id }} og {{ link.target_label|lower }}?"
+                      title="Fjern linket" aria-label="Fjern linket til {{ link.target_label|lower }}">×</button>
+            {% endif %}
+          </span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="sd-link-slot"></div>
+  </div>
+  {% if can_link %}
+    <button type="button" class="btn btn-sm btn-ghost sd-link-btn" hx-get="{% url 'servicedesk:link' ticket.sdp_id %}"
+            hx-target="#ticket-{{ ticket.sdp_id }} .sd-link-slot" hx-swap="innerHTML"
+            title="Knyt sagen til en prioriteret opgave eller sag i Chronicle">Knyt</button>
+  {% endif %}
+</div>

@@ -1,0 +1,7 @@
+{% comment %}Priority / case page: the linked ServiceDesk tickets.{% endcomment %}
+{% for link in links %}
+  <a href="{{ link.ticket_url|default:'#' }}" target="_blank" rel="noopener noreferrer" class="pill-sd" title="Åbn sagen i ServiceDesk">
+    {% include 'servicedesk/partials/icon.html' %}
+    ServiceDesk #{{ link.sdp_id }}{% if link.subject %}: {{ link.subject|truncatechars:60 }}{% endif %} ↗
+  </a>
+{% endfor %}

@@ -2,6 +2,17 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.19.0 — 2026-11-07
+
+### Added
+- **Ny side: ServiceDesk** (i menuen). Helpdesk-sagerne fra ServiceDesk Plus i tre grupper: **Mine sager**, **Ikke tildelt** og **Alle andres**.
+  - Fanen *Uløste* viser de åbne sager, ældste først. *Lukkede* viser sager lukket de sidste 7, 30 eller 90 dage.
+  - Hver sag viser sin liggetid (i ugelogens farver) og linker til sagen i ServiceDesk.
+- **Knyt en helpdesk-sag til en prioriteret opgave eller sag** (ny eller eksisterende). Opgaven eller sagen får en *ServiceDesk #nummer*-pille overalt, hvor den står, og sagen i ServiceDesk får en intern note med et link tilbage til Chronicle og navnet på den, der knyttede. Fjernes linket, noteres det også.
+
+### Changed
+- Kopien af ServiceDesk-sager gemmer nu også teknikerens e-mail, så *Mine sager* kan findes.
+
 ## 1.18.0 — 2026-11-07
 
 ### Added

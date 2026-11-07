@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load planner_tags %}
+{% load planner_tags %}{% load servicedesk_tags %}
 {% load static %}
 {% load markdown_extras %}
 
@@ -50,6 +50,7 @@
         {% if item.status == 'blocked' %}<span class="pill pill-bad">{{ item.get_status_display }}</span>{% else %}<span class="task-status"><span class="pill-dot" style="background: {% if item.status == 'ongoing' %}var(--accent){% elif item.status == 'completed' %}var(--good){% else %}var(--ink-5){% endif %};"></span>{{ item.get_status_display }}</span>{% endif %}
       {% endif %}
       {% planner_links item %}
+      {% ticket_links item %}
       <span style="font-size: 12.5px; color: var(--ink-4);" class="num">{{ appearances|length }} uge{{ appearances|length|pluralize:"r" }} i alt</span>
 
       {% if is_editor %}

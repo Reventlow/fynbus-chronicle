@@ -1,0 +1,39 @@
+{% comment %}
+  "Knyt til Chronicle" for one ticket: fills the row's link slot, replaced
+  by the whole row again when a choice is made. Linking adds an internal
+  note with a link back to Chronicle on the ticket in ServiceDesk.
+{% endcomment %}
+<div class="planner-link-form sd-link-form" role="group" aria-label="Knyt #{{ ticket.sdp_id }} til Chronicle">
+  <div class="label-eyebrow">Knyt til Chronicle · tilføjer en intern note i ServiceDesk</div>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" class="btn btn-sm" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}" hx-vals='{"action": "priority"}'
+            hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Ny prioriteret opgave</button>
+    <button type="button" class="btn btn-sm" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}" hx-vals='{"action": "case"}'
+            hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Ny sag (planlagt opgave)</button>
+  </div>
+  {% if priorities or cases %}
+    <label class="planner-link-existing">
+      <span>eller en eksisterende</span>
+      <select name="target" class="input">
+        {% if priorities %}
+          <optgroup label="Prioriterede opgaver">
+            {% for item in priorities %}<option value="p{{ item.pk }}">{{ item.title }}</option>{% endfor %}
+          </optgroup>
+        {% endif %}
+        {% if cases %}
+          <optgroup label="Åbne sager">
+            {% for case in cases %}<option value="c{{ case.pk }}">#{{ case.pk }} {{ case.title }} ({{ case.get_kind_display|lower }})</option>{% endfor %}
+          </optgroup>
+        {% endif %}
+      </select>
+    </label>
+    <div class="flex gap-2">
+      <button type="button" class="btn btn-sm btn-primary" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}"
+              hx-vals='{"action": "existing"}' hx-include="previous select"
+              hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Knyt</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="this.closest('.sd-link-form').remove()">Annuller</button>
+    </div>
+  {% else %}
+    <button type="button" class="btn btn-sm btn-ghost" style="align-self: flex-start;" onclick="this.closest('.sd-link-form').remove()">Annuller</button>
+  {% endif %}
+</div>
