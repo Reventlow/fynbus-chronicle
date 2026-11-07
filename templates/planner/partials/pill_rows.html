@@ -1,0 +1,12 @@
+{% comment %}One row per linked Planner card, under a list row that is itself a link.{% endcomment %}
+{% for link in links %}
+  <a href="{{ link.task_url }}" target="_blank" rel="noopener noreferrer" class="incident-row planner-subrow"
+     title="Åbn kortet i Microsoft Planner">
+    <div class="incident-title" style="font-weight: 400; font-size: 13px;">
+      <span style="color: var(--ink-5);" aria-hidden="true">↳</span>
+      <span class="pill-planner"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/></svg> Planner</span>
+      {{ link.task_title|truncatechars:80 }}
+    </div>
+    <span style="color: var(--ink-5);" aria-hidden="true">↗</span>
+  </a>
+{% endfor %}

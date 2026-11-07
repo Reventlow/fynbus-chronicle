@@ -129,6 +129,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["incident_form"] = IncidentForm()
         appearances = list(
             self.object.priority_appearances.select_related("priority_item")
+            .prefetch_related("priority_item__planner_links")
             .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
         )
@@ -430,7 +431,7 @@ def priorities_search(request: HttpRequest) -> HttpResponse:
     if year and year.isdigit():
         qs = qs.filter(origin_weeklog__year=int(year))
 
-    qs = qs.order_by("-last_active_at")[:100]
+    qs = qs.prefetch_related("planner_links").order_by("-last_active_at")[:100]
     years = (
         WeekLog.objects.values_list("year", flat=True)
         .distinct()

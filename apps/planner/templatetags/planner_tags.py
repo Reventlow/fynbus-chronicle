@@ -1,6 +1,15 @@
-"""``{% planner_links obj %}``: the Planner cards a priority or case is
-linked to, as chips that open the card in Planner. Renders nothing when
-the Planner board is off or there are no links."""
+"""Planner links on Chronicle's priorities and cases (``PlannerLink``).
+
+* ``{% planner_links obj %}``: chips with the card's title, for the
+  priority's history page and the case page.
+* ``{% planner_pill obj %}``: a small "Planner ↗" pill, for list rows.
+* ``{% planner_rows obj %}``: the same as a row of its own, for list rows
+  that are one big link already (a link can't hold another link).
+
+All render nothing when the Planner board is off or there are no links.
+The list tags read ``obj.planner_links.all()``, so the views prefetch
+``planner_links`` and a list costs no extra query per row.
+"""
 
 from django import template
 from django.conf import settings
@@ -21,3 +30,19 @@ def planner_links(obj):
         for link in links:
             link.current_title = titles.get(link.task_id)
     return {"links": links}
+
+
+def _links(obj) -> list:
+    if not settings.PLANNER_ENABLED or obj is None or not obj.pk:
+        return []
+    return list(obj.planner_links.all())
+
+
+@register.inclusion_tag("planner/partials/pill.html")
+def planner_pill(obj):
+    return {"links": _links(obj)}
+
+
+@register.inclusion_tag("planner/partials/pill_rows.html")
+def planner_rows(obj):
+    return {"links": _links(obj)}

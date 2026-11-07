@@ -1,3 +1,4 @@
+{% load planner_tags %}
 {% comment %}
   Sårbarheder card, built around cases (vulnerabilities, incidents and
   planned tasks, each with its type icon): open cases (and those
@@ -39,6 +40,7 @@
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
           </a>
+          {% planner_rows case %}
           {% for cve in case.cves.all %}
             <a href="{% url 'cves:detail' cve.pk %}" class="dash-case-cve">
               <span class="dash-case-cve-id"><span style="color: var(--ink-5);" aria-hidden="true">↳</span> <span style="font-family: var(--font-mono);">{{ cve.cve_id }}</span> <span style="color: var(--ink-4);">· {{ cve.subject|truncatechars:48 }}</span></span>
