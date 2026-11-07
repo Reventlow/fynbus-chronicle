@@ -15,11 +15,12 @@ Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi u
 9. [Sårbarheder og hændelser](#sårbarheder-og-hændelser)
 10. [Forslag](#forslag)
 11. [Planner](#planner)
-12. [Eksporter rapporter](#eksporter-rapporter)
-13. [Rapporter](#rapporter)
-14. [Notifikationer](#notifikationer)
-15. [API-nøgler](#api-nøgler)
-16. [Udseende og temaer](#udseende-og-temaer)
+12. [ServiceDesk](#servicedesk)
+13. [Eksporter rapporter](#eksporter-rapporter)
+14. [Rapporter](#rapporter)
+15. [Notifikationer](#notifikationer)
+16. [API-nøgler](#api-nøgler)
+17. [Udseende og temaer](#udseende-og-temaer)
 
 ---
 
@@ -71,7 +72,7 @@ Kontakt din administrator for at ændre din brugerrolle.
 
 ## Navigation
 
-**Sidemenuen** til venstre fører til Kontrolpanel, Ugelog, Rådighedsvagt, Forslag, Rapporter, Statistik og Dokumentation. Tallet ved *Forslag* er antallet af åbne og igangværende forslag.
+**Sidemenuen** til venstre fører til Kontrolpanel, Ugelog, Rådighedsvagt, Sårbarheder og hændelser, ServiceDesk, Forslag, Rapporter, Statistik og Dokumentation. Tallet ved *Forslag* er antallet af åbne og igangværende forslag.
 
 - Nederst står **Rådighedsvagt nu**: hvem der har vagten, til hvornår, og hvem der er den næste.
 - I bunden finder du din profil (API-nøgler, Admin, Log ud), **tandhjulet** med indstillinger og knappen, der **klapper menuen sammen** til ikoner. Valget huskes i din browser.
@@ -385,6 +386,25 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 - **Synk nu** henter ændringer med det samme (højst én gang hvert 30. sekund). Siden genindlæses af sig selv, når de er hentet.
 - Bliver linjen rød, er opdateringen gået i stå; teksten siger hvorfor. Sig det til IT.
 - Tavlen kan ses af redaktører, ikke af læsere (*Viewer*).
+
+---
+
+## ServiceDesk
+
+*ServiceDesk* i menuen viser helpdesk-sagerne fra ServiceDesk Plus i tre grupper:
+
+- **Mine sager**: tildelt dig (din e-mail eller dit navn som tekniker i ServiceDesk);
+- **Ikke tildelt**: ingen tekniker endnu;
+- **Alle andres**: tildelt en anden tekniker.
+
+Fanen **Uløste** viser de sager, der er åbne nu, ældste først. **Lukkede** viser sager lukket de sidste 7, 30 eller 90 dage, senest lukket først.
+
+- Hver sag viser nummer, emne, status, kategori, tekniker og afdeling. **Nummeret er et link** til sagen i ServiceDesk.
+- **Liggetid** står til venstre: for en åben sag hvor længe den har været åben, for en lukket sag hvor lang tid den tog. Farven er den samme som i ugelogens liggetid.
+- Listen kommer fra Chronicles kopi af ServiceDesk, som synkroniseres med få minutters mellemrum. Linjen under titlen viser hvornår.
+- **Knyt** (redaktører) knytter sagen til en prioriteret opgave eller en sag i Chronicle: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende. Opgaven eller sagen får en *ServiceDesk #nummer*-pille, der åbner sagen i ServiceDesk, i ugelogen, i søgningen, under *Sager*, på kontrolpanelet og på sin egen side.
+- Samtidig får sagen i ServiceDesk en **intern note** (ikke synlig for brugeren, ingen mail) med et link til opgaven eller sagen i Chronicle og dit navn. Kunne noten ikke tilføjes, står årsagen ved linket, med *Prøv igen*.
+- **×** ved linket fjerner det igen, og ServiceDesk får en note om det.
 
 ---
 

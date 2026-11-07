@@ -104,6 +104,7 @@ def ticket_values(row: dict) -> dict | None:
         )
 
     requester = row.get("requester") or {}
+    technician = row.get("technician") if isinstance(row.get("technician"), dict) else {}
     return {
         "sdp_id": sdp_id,
         "created_at": created_at,
@@ -114,7 +115,8 @@ def ticket_values(row: dict) -> dict | None:
         "requester_ref": str(requester.get("id") or "")[:40],
         "department": _name(requester.get("department"))[:120],
         "category": _name(row.get("category"))[:120],
-        "technician": _name(row.get("technician"))[:120],
+        "technician": _name(technician)[:120],
+        "technician_email": str(technician.get("email_id") or "").strip().lower()[:254],
         "subject": str(row.get("subject") or "").strip()[:255],
         "sdp_updated_at": updated_at,
     }

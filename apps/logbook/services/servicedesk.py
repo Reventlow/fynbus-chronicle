@@ -411,3 +411,56 @@ class ServiceDeskClient:
             open=open_count,
             open_by_age=open_by_age,
         )
+
+    # --- writes ----------------------------------------------------------------------
+
+    def add_note(self, request_id: int, html: str) -> str | None:
+        """Add an internal note (not shown to the requester, no e-mail) to a
+        request. Returns None on success, otherwise a short Danish reason.
+
+        Only needs the URL and API key, not ``SERVICEDESK_SYNC_ENABLED``:
+        the web container writes notes when a ticket is linked, whether or
+        not it also runs the scheduled sync. The note is recorded in
+        ServiceDesk as the technician who owns the API key.
+        """
+        if not self.base_url or not self.api_key:
+            return "ServiceDesk er ikke sat op (SERVICEDESK_URL / SERVICEDESK_API_KEY)."
+        input_data = {
+            "note": {
+                "description": html,
+                "show_to_requester": False,
+                "notify_technician": False,
+                "mark_first_response": False,
+                "add_to_linked_requests": False,
+            }
+        }
+        try:
+            response = requests.post(
+                f"{self.base_url.rstrip('/')}/api/v3/requests/{int(request_id)}/notes",
+                headers={
+                    "authtoken": self.api_key,
+                    "Accept": "application/vnd.manageengine.sdp.v3+json",
+                },
+                data={"input_data": json.dumps(input_data)},
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            logger.error("ServiceDesk note on #%s failed: %s", request_id, e)
+            return "ServiceDesk svarede ikke."
+        try:
+            data = response.json()
+        except ValueError:
+            data = {}
+        status = data.get("response_status") or {}
+        if isinstance(status, list):
+            status = status[0] if status else {}
+        if response.ok and status.get("status") == "success":
+            return None
+        logger.error("ServiceDesk note on #%s refused: HTTP %s %s", request_id, response.status_code, status)
+        if response.status_code in (401, 403):
+            return f"ServiceDesk afviste noten (HTTP {response.status_code}). Må API-nøglen skrive noter?"
+        if response.status_code == 404:
+            return "Sagen findes ikke længere i ServiceDesk."
+        messages = status.get("messages") or []
+        detail = (messages[0].get("message") if messages and isinstance(messages[0], dict) else "") or ""
+        return f"ServiceDesk afviste noten (HTTP {response.status_code}){': ' + detail[:120] if detail else ''}."

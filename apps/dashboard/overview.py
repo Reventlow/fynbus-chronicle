@@ -202,7 +202,7 @@ def cve_overview(days: int = 30, limit: int = 8, case_limit: int = 6) -> dict:
     cutoff = timezone.now() - timedelta(days=days)
     cases = (
         CVECase.objects.filter(Q(state__in=[CVE.State.IDENTIFIED, CVE.State.PATCHING]) | Q(solved_at__gte=cutoff))
-        .prefetch_related(Prefetch("cves", queryset=CVE.objects.open_first()), "planner_links")
+        .prefetch_related(Prefetch("cves", queryset=CVE.objects.open_first()), "planner_links", "ticket_links")
         .open_first()
     )
     loose = CVE.objects.active_in_last(days).filter(case__isnull=True).open_first()

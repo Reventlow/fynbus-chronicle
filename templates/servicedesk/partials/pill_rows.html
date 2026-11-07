@@ -1,0 +1,12 @@
+{% comment %}One row per linked ServiceDesk ticket, under a list row that is itself a link.{% endcomment %}
+{% for link in links %}
+  <a href="{{ link.ticket_url|default:'#' }}" target="_blank" rel="noopener noreferrer" class="incident-row planner-subrow"
+     title="Åbn sagen i ServiceDesk">
+    <div class="incident-title" style="font-weight: 400; font-size: 13px;">
+      <span style="color: var(--ink-5);" aria-hidden="true">↳</span>
+      <span class="pill-sd">{% include 'servicedesk/partials/icon.html' %} #{{ link.sdp_id }}</span>
+      {{ link.subject|truncatechars:80 }}
+    </div>
+    <span style="color: var(--ink-5);" aria-hidden="true">↗</span>
+  </a>
+{% endfor %}

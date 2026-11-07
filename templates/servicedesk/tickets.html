@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}ServiceDesk — FynBus Chronicle{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>ServiceDesk Plus</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">Helpdesk-sager</h1>
+      <p style="margin: 12px 0 0; font-size: 13px; color: var(--ink-3);">
+        {% if synced_at %}Synkroniseret {{ synced_at|timesince }} siden.{% else %}Ingen sager synkroniseret endnu.{% endif %}
+        {% if can_link %}Knyt en sag til en prioriteret opgave eller sag; ServiceDesk får en intern note med et link hertil.{% endif %}
+      </p>
+    </div>
+    {% if servicedesk_url %}
+      <a href="{{ servicedesk_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+        Åbn ServiceDesk
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <nav class="tab-list" aria-label="Vis">
+      <a href="?vis=open" class="tab-link{% if tab == 'open' %} tab-link-active{% endif %}"{% if tab == 'open' %} aria-current="page"{% endif %}>
+        Uløste <span class="tab-count">{{ open_count }}</span>
+      </a>
+      <a href="?vis=closed&amp;dage={{ days }}" class="tab-link{% if tab == 'closed' %} tab-link-active{% endif %}"{% if tab == 'closed' %} aria-current="page"{% endif %}>
+        Lukkede
+      </a>
+    </nav>
+    {% if tab == 'closed' %}
+      <div class="segmented" role="group" aria-label="Lukket inden for">
+        {% for d in closed_days %}
+          <a href="?vis=closed&amp;dage={{ d }}" class="segmented-btn{% if d == days %} segmented-btn-active{% endif %}"
+             {% if d == days %}aria-current="true"{% endif %}>{{ d }} dage</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if not me_matched %}
+    <p class="planner-note">Din bruger har hverken e-mail eller navn, så »Mine sager« kan ikke findes.</p>
+  {% endif %}
+
+  {% for group in groups %}
+    <section class="card sd-group" aria-labelledby="sd-{{ group.key }}" style="padding: 0;">
+      <header class="sd-group-head">
+        <div>
+          <h2 id="sd-{{ group.key }}">{{ group.title }} <span class="tab-count">{{ group.tickets|length }}</span></h2>
+          <p>{{ group.hint }} {% if tab == 'open' %}Ældste først.{% else %}Senest lukket først.{% endif %}</p>
+        </div>
+      </header>
+      {% for ticket in group.tickets %}
+        {% include 'servicedesk/partials/ticket.html' %}
+      {% empty %}
+        <p class="sd-empty">{% if tab == 'open' %}Ingen uløste sager.{% else %}Ingen sager lukket de sidste {{ days }} dage.{% endif %}</p>
+      {% endfor %}
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

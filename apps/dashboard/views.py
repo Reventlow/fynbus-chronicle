@@ -385,7 +385,7 @@ class CurrentWeekPartialView(LoginRequiredMixin, TemplateView):
             # ones included; the card fades those rather than striking them.
             appearances = list(
                 weeklog.priority_appearances.select_related("priority_item")
-                .prefetch_related("priority_item__planner_links")
+                .prefetch_related("priority_item__planner_links", "priority_item__ticket_links")
                 .filter(priority_item__deleted_at__isnull=True)
                 .order_by("order", "id")
             )
