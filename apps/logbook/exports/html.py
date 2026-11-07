@@ -17,9 +17,9 @@ from apps.oncall.models import OnCallDuty, OnCallSegment
 from ..models import WeekLog
 from .chart import (
     generate_category_donut,
-    generate_technician_donut,
     generate_helpdesk_chart,
     generate_helpdesk_flow_chart,
+    generate_technician_donut,
 )
 
 # Browser-specific overrides layered on top of pdf_styles.css.
@@ -129,7 +129,7 @@ def generate_html(weeklog: WeekLog) -> str:
     context = {
         "weeklog": weeklog,
         "priority_items": weeklog.priority_appearances.select_related("priority_item")
-        .prefetch_related("priority_item__planner_links").all(),
+        .prefetch_related("priority_item__planner_links", "priority_item__ticket_links").all(),
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),

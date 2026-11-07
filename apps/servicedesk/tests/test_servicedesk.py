@@ -322,3 +322,95 @@ def test_linked_items_have_a_servicedesk_pill(client, anna, sd, week, page):
     }[page]
     html = client.get(url).content.decode()
     assert "pill-sd" in html and "woID=4711" in html, page
+
+
+# --- "Synk nu" ----------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_sync_button_shown_when_sync_is_on(client, anna, sd, settings):
+    settings.SERVICEDESK_SYNC_ENABLED = True
+    assert reverse("servicedesk:sync") in client.get(reverse("servicedesk:tickets")).content.decode()
+    settings.SERVICEDESK_SYNC_ENABLED = False
+    assert reverse("servicedesk:sync") not in client.get(reverse("servicedesk:tickets")).content.decode()
+
+
+@pytest.mark.django_db
+def test_sync_now_reloads_the_page(client, anna, monkeypatch):
+    calls = []
+    monkeypatch.setattr("apps.logbook.tasks.sync_now", lambda: calls.append(1))
+    response = client.post(reverse("servicedesk:sync"))
+    assert response.status_code == 200 and response["HX-Refresh"] == "true" and calls == [1]
+
+
+@pytest.mark.django_db
+def test_sync_now_failure_is_shown(client, anna, monkeypatch):
+    monkeypatch.setattr("apps.logbook.tasks.sync_now", lambda: "Synk med ServiceDesk fejlede")
+    response = client.post(reverse("servicedesk:sync"))
+    assert "HX-Refresh" not in response and response.content.decode() == "Synk med ServiceDesk fejlede"
+
+
+@pytest.mark.django_db
+def test_sync_now_needs_post_and_login(client, anna):
+    assert client.get(reverse("servicedesk:sync")).status_code == 405
+    client.logout()
+    assert client.post(reverse("servicedesk:sync")).status_code == 302
+
+
+# --- the pill in the week log exports -----------------------------------------------------
+
+
+@pytest.fixture
+def export_week(sd, settings):
+    settings.CHRONICLE_EMAIL_RECIPIENTS = ["team@fynbus.dk"]
+    weeklog = WeekLog.get_or_create_current_week()
+    item = PriorityItem.objects.create(origin_weeklog=weeklog, title="Printere")
+    PriorityItemAppearance.objects.create(priority_item=item, weeklog=weeklog)
+    plain = PriorityItem.objects.create(origin_weeklog=weeklog, title="Uden link")
+    PriorityItemAppearance.objects.create(priority_item=plain, weeklog=weeklog)
+    case = CVECase.objects.create(kind=CVECase.Kind.TASK, title="Ny printer", assessment="Plan")
+    TicketLink.objects.create(sdp_id=4711, subject="Printer", priority_item=item)
+    TicketLink.objects.create(sdp_id=4712, subject="Printer 2", case=case)
+    return weeklog
+
+
+@pytest.mark.django_db
+def test_export_html_has_ticket_pills(export_week):
+    from apps.logbook.exports.html import generate_html
+
+    html = generate_html(export_week)
+    assert html.count("woID=4711") == 1 and html.count("woID=4712") == 1
+    assert "ServiceDesk #4711 &#8599;" in html and 'class="pill-sd"' not in html  # inline styles only
+
+
+@pytest.mark.django_db
+def test_export_mail_has_ticket_pills(export_week):
+    from django.core import mail
+
+    from apps.logbook.exports.email import send_weeklog_email
+
+    ok, message = send_weeklog_email(export_week, format="html", from_email="gorm@fynbus.dk")
+    assert ok, message
+    assert "woID=4711" in mail.outbox[0].body and "woID=4712" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_export_markdown_has_ticket_links(export_week):
+    from apps.logbook.exports.markdown import generate_markdown
+
+    md = generate_markdown(export_week)
+    assert f"| Printere [ServiceDesk #4711 ↗]({SD}/WorkOrder.do?woMode=viewWO&woID=4711) |" in md
+    assert "| Uden link |" in md
+
+
+@pytest.mark.django_db
+def test_export_pdf_has_clickable_ticket_links(export_week):
+    import re
+    import zlib
+
+    from apps.logbook.exports.pdf import generate_pdf
+
+    pdf = generate_pdf(export_week)
+    text = pdf + b"".join(zlib.decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
+                          if m[:1] == b"x")
+    assert b"woID=4711" in text and b"woID=4712" in text

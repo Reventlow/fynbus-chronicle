@@ -2,6 +2,12 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.19.1 — 2026-11-07
+
+### Added
+- **Synk nu** på ServiceDesk-siden: henter ændringer fra ServiceDesk med det samme (samme synk som kontrolpanelets knap) og genindlæser siden. Linjen under titlen viser, hvornår der sidst blev synkroniseret, og bliver rød, hvis synkroniseringen er gået i stå.
+- **ServiceDesk-pillen kommer nu også med i ugelogs-eksporten**: i PDF, HTML og mailen ved prioriterede opgaver og sager, der er knyttet til en helpdesk-sag, og som et *[ServiceDesk #nummer ↗]*-link i Markdown. Pillen er et link til sagen i ServiceDesk.
+
 ## 1.19.0 — 2026-11-07
 
 ### Added

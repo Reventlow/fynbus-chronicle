@@ -15,10 +15,24 @@
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">Helpdesk-sager</h1>
       <p style="margin: 12px 0 0; font-size: 13px; color: var(--ink-3);">
-        {% if synced_at %}Synkroniseret {{ synced_at|timesince }} siden.{% else %}Ingen sager synkroniseret endnu.{% endif %}
+        {% if sync.last_sync %}<span{% if sync.stale %} style="color: var(--bad);"{% endif %}>Sidst synkroniseret {{ sync.label }}{% if sync.stale %}; synkroniseringen ser ud til at være gået i stå{% endif %}.</span>{% else %}Ingen sager synkroniseret endnu.{% endif %}
         {% if can_link %}Knyt en sag til en prioriteret opgave eller sag; ServiceDesk får en intern note med et link hertil.{% endif %}
       </p>
     </div>
+    <div class="flex flex-wrap items-center justify-end gap-2">
+    <span id="sd-sync-msg" class="planner-note is-bad" role="status"></span>
+    {% if sync_enabled %}
+      <button type="button" class="btn btn-outline btn-sm" hx-post="{% url 'servicedesk:sync' %}"
+              hx-target="#sd-sync-msg" hx-swap="innerHTML" hx-disabled-elt="this"
+              hx-on::before-request="this.querySelector('.sd-sync-label').textContent = 'Synkroniserer…'"
+              hx-on::after-request="this.querySelector('.sd-sync-label').textContent = 'Synk nu'"
+              title="Hent ændringer fra ServiceDesk nu">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.582m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/>
+        </svg>
+        <span class="sd-sync-label">Synk nu</span>
+      </button>
+    {% endif %}
     {% if servicedesk_url %}
       <a href="{{ servicedesk_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
         Åbn ServiceDesk
@@ -27,6 +41,7 @@
         </svg>
       </a>
     {% endif %}
+    </div>
   </div>
 
   <div class="flex flex-wrap items-center justify-between gap-3">

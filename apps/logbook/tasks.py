@@ -62,3 +62,32 @@ def sync_ticket_mirror(*, full: bool = False) -> int | None:
     from apps.logbook.services import ticket_mirror
 
     return ticket_mirror.sync_full() if full else ticket_mirror.sync_incremental()
+
+
+def sync_now() -> str | None:
+    """A sync asked for by hand (dashboard button, "Synk nu" on the
+    ServiceDesk page): this week's counts plus the changed tickets.
+
+    Runs in the web container. Returns None on success, otherwise a short
+    Danish reason for the button to show.
+    """
+    # Looked up at call time, so tests can patch the client in its module.
+    from apps.logbook.services import servicedesk, ticket_mirror
+
+    client = servicedesk.ServiceDeskClient()
+    if not client.enabled:
+        logger.warning("ServiceDesk sync triggered but disabled")
+        return "ServiceDesk sync er deaktiveret"
+    try:
+        weeklog = WeekLog.get_or_create_current_week()
+        stats = client.get_week_stats(weeklog.year, weeklog.week_number)
+        weeklog.apply_helpdesk_stats(stats)
+        logger.info("Manual sync: %s new=%d closed=%d open=%d by_age=%s",
+                    weeklog.week_label, stats["created"], stats["closed"], stats["open"],
+                    stats.get("open_by_age") or "n/a")
+        if ticket_mirror.sync_incremental(client) is None:
+            return "Synk med ServiceDesk fejlede"
+    except Exception:
+        logger.exception("Manual ServiceDesk sync failed")
+        return "Synk med ServiceDesk fejlede"
+    return None
