@@ -5,6 +5,8 @@
 * ``{% planner_pill obj %}``: a small "Planner ↗" pill, for list rows.
 * ``{% planner_rows obj %}``: the same as a row of its own, for list rows
   that are one big link already (a link can't hold another link).
+* ``{% planner_export_pill obj %}``: the pill with inline styles only, for
+  the week log exports (HTML, PDF and the mail body pasted into Outlook).
 
 All render nothing when the Planner board is off or there are no links.
 The list tags read ``obj.planner_links.all()``, so the views prefetch
@@ -46,3 +48,13 @@ def planner_pill(obj):
 @register.inclusion_tag("planner/partials/pill_rows.html")
 def planner_rows(obj):
     return {"links": _links(obj)}
+
+
+@register.inclusion_tag("planner/partials/export_pill.html")
+def planner_export_pill(obj):
+    return {"links": _links(obj)}
+
+
+def markdown_links(obj) -> str:
+    """`` [Planner ↗](url)`` per linked card, for the Markdown export."""
+    return "".join(f" [Planner ↗]({link.task_url})" for link in _links(obj))
