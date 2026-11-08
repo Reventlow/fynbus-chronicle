@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ folder.name }} — Kursusmateriale — FynBus Chronicle{% endblock %}
+{% block extra_css %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {% if not user.is_authenticated %}
+    <div class="flex items-center justify-between gap-3" style="font-size: 13px; color: var(--ink-3);">
+      <span><strong style="color: var(--ink-1);">FynBus Chronicle</strong> · Kursusmateriale</span>
+      <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline btn-sm">Log ind</a>
+    </div>
+  {% endif %}
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div style="min-width: 0;">
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <a href="{% url 'courses:index' %}" style="color: inherit;">Kursusmateriale</a>
+        <span aria-hidden="true">·</span>
+        <span>{{ count }} element{{ count|pluralize:"er" }}</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05; overflow-wrap: anywhere;">{{ folder.name }}</h1>
+      {% if folder.description %}
+        <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">{{ folder.description }}</p>
+      {% endif %}
+    </div>
+    {% if can_edit %}
+      <details class="km-menu">
+        <summary class="btn btn-outline btn-sm">Rediger mappe</summary>
+        <div class="card km-menu-panel">
+          <form method="post" action="{% url 'courses:folder-edit' folder.slug %}" class="km-fields">
+            {% csrf_token %}
+            <div>
+              <label class="input-label" for="folder-name">Navn</label>
+              <input id="folder-name" name="name" class="field" maxlength="100" required value="{{ folder_form.name.value|default:'' }}">
+              {% for e in folder_form.name.errors %}<p class="km-error">{{ e }}</p>{% endfor %}
+            </div>
+            <div>
+              <label class="input-label" for="folder-description">Beskrivelse</label>
+              <input id="folder-description" name="description" class="field" maxlength="300" value="{{ folder_form.description.value|default:'' }}">
+            </div>
+            <div><button type="submit" class="btn btn-primary btn-sm">Gem</button></div>
+          </form>
+          <hr class="hr-soft" style="margin: 14px 0;">
+          <form method="post" action="{% url 'courses:folder-delete' folder.slug %}"
+                onsubmit="return confirm('Slet mappen ”{{ folder.name|escapejs }}”{% if count %} og alle {{ count }} elementer i den{% endif %}? Det kan ikke fortrydes.')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--bad-ink);">Slet mappen{% if count %} og dens indhold{% endif %}</button>
+          </form>
+        </div>
+      </details>
+    {% endif %}
+  </div>
+
+  {% for section in sections %}
+    <section class="card km-section" aria-labelledby="km-{{ section.kind }}" style="padding: 0;">
+      <header class="sd-group-head">
+        <h2 id="km-{{ section.kind }}">{{ section.heading }} <span class="tab-count">{{ section.items|length }}</span></h2>
+      </header>
+      {% for m in section.items %}
+        <div class="km-item" id="m-{{ m.key }}" x-data="{ play: false, edit: false }">
+          <div class="km-icon km-icon-{{ m.kind }}">{% include 'courses/partials/kind_icon.html' with kind=m.kind %}</div>
+          <div class="km-main">
+            <a class="km-title" href="{{ m.href }}"{% if m.is_link or m.kind == 'pdf' %} target="_blank" rel="noopener noreferrer"{% endif %}
+               {% if m.kind == 'video' %}@click.prevent="play = !play"{% endif %}>{{ m.title }}{% if m.is_link %} <span aria-hidden="true">↗</span>{% endif %}</a>
+            {% if m.description %}<p class="km-desc">{{ m.description }}</p>{% endif %}
+            <div class="km-meta">
+              {{ m.format_label }}{% if m.size %} · {{ m.size|filesizeformat }}{% endif %}{% if m.is_link %} · <span class="km-url">{{ m.url }}</span>{% endif %}
+              · tilføjet {{ m.added_at|date:"j. M Y" }}{% if m.added_by and user.is_authenticated %} af {{ m.added_by.get_full_name|default:m.added_by.username }}{% endif %}
+            </div>
+            {% if m.kind == 'video' %}
+              <template x-if="play">
+                <video class="km-video" controls autoplay preload="metadata" src="{{ m.get_file_url }}">
+                  Din browser kan ikke afspille videoen. <a href="{{ m.get_download_url }}">Download den</a>.
+                </video>
+              </template>
+            {% endif %}
+            {% if can_edit %}
+              <form x-show="edit" x-cloak method="post" action="{% url 'courses:material-edit' m.key %}" class="km-fields km-edit">
+                {% csrf_token %}
+                <div>
+                  <label class="input-label" for="t-{{ m.key }}">Titel</label>
+                  <input id="t-{{ m.key }}" name="title" class="field" maxlength="200" required value="{{ m.title }}">
+                </div>
+                <div>
+                  <label class="input-label" for="d-{{ m.key }}">Beskrivelse</label>
+                  <input id="d-{{ m.key }}" name="description" class="field" maxlength="500" value="{{ m.description }}">
+                </div>
+                {% if m.is_link %}
+                  <div>
+                    <label class="input-label" for="u-{{ m.key }}">Link</label>
+                    <input id="u-{{ m.key }}" name="url" type="url" class="field" maxlength="1000" required value="{{ m.url }}">
+                  </div>
+                {% endif %}
+                <div>
+                  <label class="input-label" for="f-{{ m.key }}">Mappe</label>
+                  <select id="f-{{ m.key }}" name="folder" class="field">
+                    {% for f in folders %}<option value="{{ f.pk }}"{% if f.pk == folder.pk %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
+                  </select>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+                  <button type="button" class="btn btn-ghost btn-sm" @click="edit = false">Annuller</button>
+                </div>
+              </form>
+            {% endif %}
+          </div>
+          <div class="km-actions">
+            {% if m.kind == 'video' %}
+              <button type="button" class="btn btn-outline btn-sm" @click="play = !play" x-text="play ? 'Luk' : 'Afspil'">Afspil</button>
+            {% elif m.is_link %}
+              <a href="{{ m.url }}" class="btn btn-outline btn-sm" target="_blank" rel="noopener noreferrer">Åbn</a>
+            {% elif m.kind == 'pdf' %}
+              <a href="{{ m.get_file_url }}" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Åbn</a>
+            {% endif %}
+            {% if not m.is_link %}<a href="{{ m.get_download_url }}" class="btn btn-ghost btn-sm" title="Download {{ m.original_name }}">Download</a>{% endif %}
+            {% if can_edit %}
+              <button type="button" class="btn btn-ghost btn-sm" @click="edit = !edit" :aria-expanded="edit">Rediger</button>
+              <form method="post" action="{% url 'courses:material-delete' m.key %}"
+                    onsubmit="return confirm('Slet ”{{ m.title|escapejs }}”? Det kan ikke fortrydes.')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--bad-ink);" aria-label="Slet {{ m.title }}">Slet</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+  {% empty %}
+    <div class="card" style="color: var(--ink-3);">Mappen er tom.{% if can_edit %} Tilføj en video, en præsentation, en PDF eller et link herunder.{% endif %}</div>
+  {% endfor %}
+
+  {% if can_edit %}
+    <div class="card" style="max-width: 720px;">
+      {% include 'courses/partials/material_form.html' %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

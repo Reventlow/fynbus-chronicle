@@ -77,6 +77,13 @@
       </svg>
       <span class="sidebar-label">Rapporter</span>
     </a>
+    <a href="{% url 'courses:index' %}" title="Kursusmateriale"
+       class="sidebar-link{% if app == 'courses' %} is-active{% endif %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M22 9 12 4 2 9l10 5 10-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+      </svg>
+      <span class="sidebar-label">Kursusmateriale</span>
+    </a>
     {% if planner_enabled and is_editor %}
     <a href="{% url 'planner:board' %}" title="Planner"
        class="sidebar-link{% if app == 'planner' %} is-active{% endif %}">

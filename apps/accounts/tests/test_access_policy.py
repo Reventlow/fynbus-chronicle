@@ -38,6 +38,11 @@ PUBLIC_ROUTES = {
     "reports/<slug:slug>/video/": "the video of a public report (else login)",
     "reports/p/<str:token>/": "token link to a public report (else 404)",
     "reports/p/<str:token>/video/": "token link to a public report's video (else 404)",
+    # Kursusmateriale is readable without login by design (1.20.0); every
+    # write route under kursus/ still needs an editor (apps/courses tests).
+    "kursus/": "course material overview (folder creation still needs an editor)",
+    "kursus/<slug:slug>/": "a course material folder",
+    "kursus/fil/<str:key>/": "a course material file; the key is random",
     "dashboard/statistik/delt/<str:token>/data.json": "statistics share link; token is the key (else 404)",
     "dashboard/statistik/delt/<str:token>/vejledning.md": "guide for a statistics share link (else 404)",
     # Microsoft SSO, only reachable with SSO_ENABLED (otherwise these lead

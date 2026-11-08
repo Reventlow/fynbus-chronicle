@@ -18,9 +18,10 @@ Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi u
 12. [ServiceDesk](#servicedesk)
 13. [Eksporter rapporter](#eksporter-rapporter)
 14. [Rapporter](#rapporter)
-15. [Notifikationer](#notifikationer)
-16. [API-nøgler](#api-nøgler)
-17. [Udseende og temaer](#udseende-og-temaer)
+15. [Kursusmateriale](#kursusmateriale)
+16. [Notifikationer](#notifikationer)
+17. [API-nøgler](#api-nøgler)
+18. [Udseende og temaer](#udseende-og-temaer)
 
 ---
 
@@ -72,7 +73,7 @@ Kontakt din administrator for at ændre din brugerrolle.
 
 ## Navigation
 
-**Sidemenuen** til venstre fører til Kontrolpanel, Ugelog, Rådighedsvagt, Sårbarheder og hændelser, ServiceDesk, Forslag, Rapporter, Statistik og Dokumentation. Tallet ved *Forslag* er antallet af åbne og igangværende forslag.
+**Sidemenuen** til venstre fører til Kontrolpanel, Ugelog, Rådighedsvagt, Sårbarheder og hændelser, ServiceDesk, Forslag, Rapporter, Kursusmateriale, Statistik og Dokumentation. Tallet ved *Forslag* er antallet af åbne og igangværende forslag.
 
 - Nederst står **Rådighedsvagt nu**: hvem der har vagten, til hvornår, og hvem der er den næste.
 - I bunden finder du din profil (API-nøgler, Admin, Log ud), **tandhjulet** med indstillinger og knappen, der **klapper menuen sammen** til ikoner. Valget huskes i din browser.
@@ -460,6 +461,31 @@ Menuen **Rapporter** samler selvstændige sider med egen grafik, fx den animered
 4. Vedhæft eventuelt en video (MP4, højst 300 MB). Den vises under rapporten med en download-knap, og listen får en "Download video"-knap
 
 Rapporter kan også lægges op og opdateres via API'et: `PUT /api/v1/reports/<slug>/` med `title`, `html`, `description` og `is_public` (skrivenøgle); `PUT /api/v1/reports/<slug>/video/` med MP4-filen som rå body (`Content-Type: video/mp4`). `GET /api/v1/reports/` lister dem.
+
+---
+
+## Kursusmateriale
+
+Menuen **Kursusmateriale** samler materiale fra kurser i **mapper**, fx *Anthropic* eller *Microsoft 365*. En mappe kan indeholde videoer, præsentationer, PDF'er og links. Oversigten viser hver mappe med antallet af hver slags.
+
+### Se og hent
+
+- Siderne kan læses **uden login** på `https://chronicle.fynbus.net/kursus/`, så adressen kan sendes til kolleger, der ikke bruger Chronicle. Det er kun visning: at oprette, lægge op, rette og slette kræver login som redaktør. Uden login står det ikke, hvem der har lagt materialet op, og siderne indekseres ikke af søgemaskiner.
+- **Videoer** afspilles direkte på siden: klik på titlen eller "Afspil". Man kan spole frem og tilbage uden at hente hele filen først.
+- **PDF'er** åbner i en ny fane. **Præsentationer** (PowerPoint og ODP) hentes ned og åbnes i PowerPoint eller LibreOffice.
+- **Links** åbner i en ny fane.
+- "Download" henter filen med sit oprindelige navn.
+
+### Opret mapper og læg materiale op (redaktører)
+
+1. Nederst på Kursusmateriale: skriv navn (og evt. en beskrivelse) under **Ny mappe** og klik "Opret mappe"
+2. I mappen, under **Tilføj materiale**: vælg **Fil** eller **Link**
+   - **Fil:** video (MP4, MOV, M4V, WebM, højst 1,5 GB), PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF (højst 200 MB). Titlen bliver filnavnet, hvis feltet er tomt. En bjælke viser, hvor langt uploaden er nået
+   - **Link:** adressen og en titel
+3. "Rediger" ved et element retter titel, beskrivelse og link, og kan flytte elementet til en anden mappe. "Slet" fjerner elementet og filen
+4. "Rediger mappe" øverst omdøber mappen eller sletter den med alt indhold
+
+> **Bemærk:** Filen kontrolleres, ikke kun navnet: en fil, der ikke er det, den hedder, afvises. Læg kun materiale op, som FynBus må dele, da siderne kan ses uden login.
 
 ---
 

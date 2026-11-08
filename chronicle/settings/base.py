@@ -51,6 +51,7 @@ LOCAL_APPS = [
     "apps.images",
     "apps.planner",
     "apps.servicedesk",
+    "apps.courses",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -163,6 +164,12 @@ IMAGE_FILES_DIR = Path(config("IMAGE_FILES_DIR", default=str(Path(config("SQLITE
 # beside the database on the persisted volume, served only by a login-gated view.
 CVE_FILES_DIR = Path(config("CVE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "cve_files")))
 CVE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024
+# Course material (Kursusmateriale): videos, slides and PDFs. Beside the
+# database on the persisted volume, served by a view (readable without
+# login, by design). The proxy in front (NPM) accepts bodies up to 2000 MB.
+COURSE_FILES_DIR = Path(config("COURSE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "course_files")))
+COURSE_VIDEO_MAX_BYTES = 1536 * 1024 * 1024
+COURSE_DOCUMENT_MAX_BYTES = 200 * 1024 * 1024
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

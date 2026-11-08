@@ -45,6 +45,7 @@ urlpatterns = [
     path("images/", include("apps.images.urls")),
     path("planner/", include("apps.planner.urls")),
     path("servicedesk/", include("apps.servicedesk.urls")),
+    path("kursus/", include("apps.courses.urls")),
     path("api/v1/", include("apps.api.urls")),
     path("allauth/", include("allauth.urls")),
 ]

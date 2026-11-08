@@ -2,6 +2,19 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.20.0 — 2026-11-08
+
+### Added
+- **Ny side: Kursusmateriale** (i menuen, `/kursus/`). Materiale fra kurser samlet i mapper, fx *Anthropic*.
+  - En mappe kan indeholde videoer (MP4, MOV, M4V, WebM, højst 1,5 GB), præsentationer (PPTX, PPT, PPSX, ODP), PDF'er (højst 200 MB) og links.
+  - Videoer afspilles på siden og kan spoles i; PDF'er åbner i en ny fane, præsentationer hentes ned. Alt kan downloades med sit oprindelige filnavn.
+  - Siderne kan ses uden login (de indekseres ikke af søgemaskiner, og navnet på den, der lagde materialet op, vises kun for indloggede). Kun redaktører kan oprette mapper, lægge op, rette, flytte og slette.
+  - Uploads viser en fremdriftsbjælke, og filens indhold kontrolleres, ikke kun navnet.
+
+### Changed
+- Webserveren (gunicorn) har fået længere timeout (300 s), så store videoer kan nå at blive gemt.
+- Rapport-videoer og kursusmateriale sendes nu af den samme kode, med korrekt filnavn ved danske tegn.
+
 ## 1.19.1 — 2026-11-07
 
 ### Added

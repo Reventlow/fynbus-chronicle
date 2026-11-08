@@ -6,23 +6,15 @@ site's theme tokens. If the stored HTML is not already a full document, it
 is wrapped in a minimal skeleton with the report title.
 """
 
-import os
-import re
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.http import (
-    FileResponse,
-    Http404,
-    HttpRequest,
-    HttpResponse,
-    StreamingHttpResponse,
-)
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.accounts.permissions import editor_required, is_editor
+from chronicle.http import serve_file
 
 from .forms import ReportUploadForm
 from .models import Report
@@ -82,46 +74,13 @@ def _serve_video(request: HttpRequest, report: Report) -> HttpResponse:
     seek. ``?download=1`` sends it as an attachment named after the slug."""
     if not report.video:
         raise Http404
-    path = report.video.path
-    try:
-        size = os.path.getsize(path)
-    except OSError as exc:
-        raise Http404 from exc
-    filename = f"{report.slug}.mp4"
-    disposition = ("attachment" if request.GET.get("download") == "1" else "inline") + f'; filename="{filename}"'
-    range_header = request.META.get("HTTP_RANGE", "")
-    m = re.match(r"bytes=(\d*)-(\d*)$", range_header)
-    if m and (m.group(1) or m.group(2)):
-        start = int(m.group(1)) if m.group(1) else max(0, size - int(m.group(2)))
-        end = int(m.group(2)) if m.group(1) and m.group(2) else size - 1
-        end = min(end, size - 1)
-        if start > end or start >= size:
-            resp = HttpResponse(status=416)
-            resp["Content-Range"] = f"bytes */{size}"
-            return resp
-        length = end - start + 1
-
-        def chunks(f, remaining, block=512 * 1024):
-            with f:
-                f.seek(start)
-                while remaining > 0:
-                    data = f.read(min(block, remaining))
-                    if not data:
-                        break
-                    remaining -= len(data)
-                    yield data
-
-        resp = StreamingHttpResponse(chunks(open(path, "rb"), length), status=206, content_type="video/mp4")
-        resp["Content-Range"] = f"bytes {start}-{end}/{size}"
-        resp["Content-Length"] = str(length)
-    else:
-        resp = FileResponse(open(path, "rb"), content_type="video/mp4")
-        resp["Content-Length"] = str(size)
-    resp["Accept-Ranges"] = "bytes"
-    resp["Content-Disposition"] = disposition
-    resp["X-Robots-Tag"] = "noindex, nofollow"
-    resp["Cache-Control"] = "private, no-store"
-    return resp
+    return serve_file(
+        request,
+        report.video.path,
+        content_type="video/mp4",
+        filename=f"{report.slug}.mp4",
+        as_attachment=request.GET.get("download") == "1",
+    )
 
 
 def report_video(request: HttpRequest, slug: str) -> HttpResponse:
