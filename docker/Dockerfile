@@ -102,4 +102,8 @@ RUN python manage.py collectstatic --noinput --clear 2>/dev/null || true
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "chronicle.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
+# --timeout 300: storing a large course video (up to 1.5 GB) means copying it
+# from the upload temp file to the data volume, which can outlast the 30 s
+# default. The proxy (NPM) buffers the upload itself, so a slow client never
+# holds a worker.
+CMD ["gunicorn", "chronicle.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "300"]

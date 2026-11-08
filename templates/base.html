@@ -89,7 +89,7 @@
               {% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
                 <a href="{% url 'dashboard:index' %}">Chronicle</a>
                 <span class="sep">/</span>
-                <span class="current">{% if app == 'logbook' %}Ugelog{% elif app == 'oncall' %}Rådighedsvagt{% elif app == 'feedback' %}Forslag{% elif app == 'cves' %}Sårbarheder og hændelser{% elif app == 'reports' %}Rapporter{% elif app == 'planner' %}Planner{% elif app == 'servicedesk' %}ServiceDesk{% elif name == 'statistics' %}Statistik{% elif 'docs' in name %}Dokumentation{% elif app == 'accounts' %}Konto{% elif app == 'themes' %}Temaer{% else %}Kontrolpanel{% endif %}</span>
+                <span class="current">{% if app == 'logbook' %}Ugelog{% elif app == 'oncall' %}Rådighedsvagt{% elif app == 'feedback' %}Forslag{% elif app == 'cves' %}Sårbarheder og hændelser{% elif app == 'reports' %}Rapporter{% elif app == 'planner' %}Planner{% elif app == 'servicedesk' %}ServiceDesk{% elif app == 'courses' %}Kursusmateriale{% elif name == 'statistics' %}Statistik{% elif 'docs' in name %}Dokumentation{% elif app == 'accounts' %}Konto{% elif app == 'themes' %}Temaer{% else %}Kontrolpanel{% endif %}</span>
               {% endwith %}
             {% endblock %}
           </nav>
@@ -115,6 +115,7 @@
           <a href="{% url 'servicedesk:tickets' %}" class="nav-link">ServiceDesk</a>
           <a href="{% url 'feedback:board' %}" class="nav-link">Forslag</a>
           <a href="{% url 'reports:list' %}" class="nav-link">Rapporter</a>
+          <a href="{% url 'courses:index' %}" class="nav-link">Kursusmateriale</a>
           <a href="{% url 'dashboard:statistics' %}" class="nav-link">Statistik</a>
           <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
           <hr class="hr-soft" style="margin: 8px 0;">

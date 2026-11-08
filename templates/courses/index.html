@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Kursusmateriale — FynBus Chronicle{% endblock %}
+{% block extra_css %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter);">
+
+  {% if not user.is_authenticated %}
+    <div class="flex items-center justify-between gap-3" style="font-size: 13px; color: var(--ink-3);">
+      <span><strong style="color: var(--ink-1);">FynBus Chronicle</strong> · Kursusmateriale</span>
+      <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline btn-sm">Log ind</a>
+    </div>
+  {% endif %}
+
+  {# Editorial header #}
+  <div class="flex flex-wrap items-end justify-between gap-6"
+       style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
+    <div>
+      <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
+        <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
+        <span>{{ folders|length }} mappe{{ folders|length|pluralize:"r" }}</span>
+      </div>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
+        Kursusmateriale <span class="display-italic" style="color: var(--ink-3);">at lære af.</span>
+      </h1>
+      <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
+        Videoer, præsentationer, PDF'er og links fra kurser, samlet i mapper efter udbyder eller emne.
+      </p>
+    </div>
+  </div>
+
+  {% if folders %}
+    <div class="km-grid">
+      {% for f in folders %}
+        <a href="{{ f.get_absolute_url }}" class="card km-folder">
+          <div class="km-folder-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            </svg>
+            <span class="km-folder-name">{{ f.name }}</span>
+          </div>
+          {% if f.description %}<p class="km-folder-desc">{{ f.description }}</p>{% endif %}
+          <div class="km-counts">
+            {% if f.n_total %}
+              {% if f.n_video %}<span>{{ f.n_video }} video{{ f.n_video|pluralize:"er" }}</span>{% endif %}
+              {% if f.n_slides %}<span>{{ f.n_slides }} præsentation{{ f.n_slides|pluralize:"er" }}</span>{% endif %}
+              {% if f.n_pdf %}<span>{{ f.n_pdf }} PDF{{ f.n_pdf|pluralize:"'er" }}</span>{% endif %}
+              {% if f.n_link %}<span>{{ f.n_link }} link{{ f.n_link|pluralize:"s" }}</span>{% endif %}
+            {% else %}
+              <span>Tom</span>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="color: var(--ink-3);">
+      Ingen mapper endnu.{% if can_edit %} Opret den første herunder, fx <em>Anthropic</em>.{% endif %}
+    </div>
+  {% endif %}
+
+  {% if can_edit %}
+    <div class="card" style="max-width: 720px;">
+      <div class="label-eyebrow" style="margin-bottom: 12px;">Ny mappe</div>
+      <form method="post" action="{% url 'courses:index' %}" class="km-fields">
+        {% csrf_token %}
+        <div>
+          <label class="input-label" for="{{ form.name.id_for_label }}">Navn</label>
+          {{ form.name }}
+          {% for e in form.name.errors %}<p class="km-error">{{ e }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="input-label" for="{{ form.description.id_for_label }}">Beskrivelse</label>
+          {{ form.description }}
+        </div>
+        <div><button type="submit" class="btn btn-primary btn-sm">Opret mappe</button></div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
