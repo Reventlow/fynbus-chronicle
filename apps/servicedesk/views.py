@@ -140,6 +140,7 @@ def decorate(tickets, now=None) -> list:
         ticket.age_text = age_text(ticket.age)
         ticket.age_color = age_color(ticket.age)
         ticket.links = links.get(ticket.sdp_id, [])
+        ticket.has_priority = any(link.priority_item_id for link in ticket.links)
     return tickets
 
 

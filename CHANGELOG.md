@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.20.3 — 2026-11-08
+
+### Added
+- **"+ Prioriteret opgave" direkte på hver ServiceDesk-sag.** Ét klik opretter en prioriteret opgave i denne uges ugelog med sagens emne, knytter den til sagen (ServiceDesk-pillen) og skriver en intern note i ServiceDesk. Knappen forsvinder, når sagen er knyttet til en prioriteret opgave; "Knyt" er der stadig til sager og eksisterende opgaver.
+
+### Fixed
+- **Kursusmateriale kan nu knyttes til afsluttede opgaver.** Listen i "Knyt til opgave" viste kun åbne prioriterede opgaver og sager, så fx en afsluttet "Deltog i Claude Code kursus" kunne ikke vælges. Nu kommer de senest afsluttede opgaver og færdigbehandlede sager med i egne grupper, og et søgefelt filtrerer listen.
+
 ## 1.20.2 — 2026-11-08
 
 ### Added

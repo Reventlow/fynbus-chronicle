@@ -5,8 +5,10 @@
 <form method="post" action="{{ action }}" class="planner-link-form km-link-form" aria-label="Knyt til en prioriteret opgave eller sag">
   {% csrf_token %}
   <div class="label-eyebrow">Knyt {% if material %}»{{ material.title|truncatechars:50 }}«{% else %}mappen{% endif %} til en opgave</div>
-  {% if priorities or cases %}
-    <select name="target" class="input" required>
+  {% if priorities or cases or done_priorities or done_cases %}
+    <input type="search" class="input km-link-filter" placeholder="Søg i opgaver og sager" aria-label="Søg i listen"
+           oninput="const q = this.value.toLowerCase(), sel = this.nextElementSibling; for (const o of sel.options) o.hidden = q && !o.text.toLowerCase().includes(q); const first = [...sel.options].find(o => !o.hidden); if (first) sel.value = first.value;">
+    <select name="target" class="input" required size="8">
       {% if priorities %}
         <optgroup label="Prioriterede opgaver">
           {% for item in priorities %}<option value="p{{ item.pk }}">{{ item.title }}</option>{% endfor %}
@@ -17,13 +19,23 @@
           {% for case in cases %}<option value="c{{ case.pk }}">#{{ case.pk }} {{ case.title }} ({{ case.get_kind_display|lower }})</option>{% endfor %}
         </optgroup>
       {% endif %}
+      {% if done_priorities %}
+        <optgroup label="Afsluttede prioriterede opgaver">
+          {% for item in done_priorities %}<option value="p{{ item.pk }}">{{ item.title }}</option>{% endfor %}
+        </optgroup>
+      {% endif %}
+      {% if done_cases %}
+        <optgroup label="Færdigbehandlede sager">
+          {% for case in done_cases %}<option value="c{{ case.pk }}">#{{ case.pk }} {{ case.title }} ({{ case.get_kind_display|lower }})</option>{% endfor %}
+        </optgroup>
+      {% endif %}
     </select>
     <div class="flex gap-2">
       <button type="submit" class="btn btn-sm btn-primary">Knyt</button>
       <button type="button" class="btn btn-sm btn-ghost" onclick="this.closest('.km-link-form').remove()">Annuller</button>
     </div>
   {% else %}
-    <p style="margin: 0; font-size: 13px; color: var(--ink-3);">Der er ingen åbne prioriterede opgaver eller sager at knytte til.</p>
+    <p style="margin: 0; font-size: 13px; color: var(--ink-3);">Der er ingen prioriterede opgaver eller sager at knytte til.</p>
     <button type="button" class="btn btn-sm btn-ghost" style="align-self: flex-start;" onclick="this.closest('.km-link-form').remove()">Luk</button>
   {% endif %}
 </form>

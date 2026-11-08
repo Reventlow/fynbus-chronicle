@@ -2456,6 +2456,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .sd-group-head p { margin: 4px 0 0; font-size: 12px; color: var(--ink-4); }
   .sd-empty { margin: 0; padding: 14px 24px 18px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-4); }
   .sd-ticket { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: start; gap: 14px; padding: var(--row-y, 12px) 24px; border-top: 1px solid var(--hairline); }
+  .sd-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
   .sd-age { display: flex; flex-direction: column; align-items: flex-start; padding-left: 9px; border-left: 3px solid var(--age, var(--ink-5)); line-height: 1.15; }
   .sd-age-num { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink-1); white-space: nowrap; }
   .sd-age-label { font-size: 10.5px; color: var(--ink-4); }
@@ -2475,6 +2476,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
     .sd-ticket { grid-template-columns: 1fr; gap: 8px; padding-left: 16px; padding-right: 16px; }
     .sd-age { flex-direction: row; gap: 6px; align-items: baseline; }
     .sd-link-btn { justify-self: start; }
+    .sd-actions { justify-content: flex-start; }
     .sd-group-head { padding-left: 16px; padding-right: 16px; }
   }
   .planner-me { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 10px 14px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-2); font-size: 13px; color: var(--ink-2); }
