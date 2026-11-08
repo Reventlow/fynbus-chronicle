@@ -67,6 +67,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
+# LibreOffice Impress without GUI converts course presentations to PDF so the
+# Kursusmateriale player can show them (apps/courses/convert.py). Carlito and
+# Caladea are metric-compatible with Calibri and Cambria, the default fonts of
+# most PowerPoint decks, so slides keep their layout.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libreoffice-impress-nogui \
+    fonts-crosextra-carlito \
+    fonts-crosextra-caladea \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy virtual environment from builder
 COPY --from=python-builder /opt/venv /opt/venv
 
@@ -102,7 +113,7 @@ RUN python manage.py collectstatic --noinput --clear 2>/dev/null || true
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-# --timeout 300: storing a large course video (up to 1.5 GB) means copying it
+# --timeout 300: storing a large course video (up to 2 GB) means copying it
 # from the upload temp file to the data volume, which can outlast the 30 s
 # default. The proxy (NPM) buffers the upload itself, so a slow client never
 # holds a worker.

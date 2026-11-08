@@ -25,7 +25,8 @@ class FolderForm(forms.ModelForm):
 
 
 class MaterialForm(forms.Form):
-    """Add one item: either a file (video, presentation, PDF) or a link."""
+    """Add one item: a file uploaded from this computer, a file fetched by
+    the server from a link ("Hent fra link"), or a link kept as a link."""
 
     title = forms.CharField(
         label="Titel", max_length=200, required=False,
@@ -38,6 +39,10 @@ class MaterialForm(forms.Form):
     file = forms.FileField(
         label="Fil", required=False,
         widget=forms.ClearableFileInput(attrs={"class": "field", "accept": ACCEPT}),
+    )
+    fetch_url = forms.URLField(
+        label="Link til filen", max_length=1000, required=False, assume_scheme="https",
+        widget=forms.URLInput(attrs={"class": "field", "placeholder": "https://…/kursus.mp4"}),
     )
     url = forms.URLField(
         label="Link", max_length=1000, required=False, assume_scheme="https",
@@ -54,7 +59,7 @@ class MaterialForm(forms.Form):
             raise forms.ValidationError(
                 "Filtypen kan ikke lægges op. Brug video (MP4, MOV, M4V, WebM), PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF."
             )
-        limit = settings.COURSE_VIDEO_MAX_BYTES if ft.kind == "video" else settings.COURSE_DOCUMENT_MAX_BYTES
+        limit = settings.COURSE_FILE_MAX_BYTES
         if f.size > limit:
             raise forms.ValidationError(f"Filen er større end {filesizeformat(limit)}.")
         if f.size == 0:
@@ -63,15 +68,26 @@ class MaterialForm(forms.Form):
             raise forms.ValidationError(f"Filen ligner ikke en {ext[1:].upper()}-fil.")
         return f
 
+    def clean_fetch_url(self):
+        url = self.cleaned_data.get("fetch_url")
+        if url:
+            from .fetch import FetchError, check_url
+
+            try:
+                check_url(url)
+            except FetchError as e:
+                raise forms.ValidationError(str(e)) from None
+        return url
+
     def clean(self):
         data = super().clean()
-        has_file, has_url = bool(data.get("file")), bool(data.get("url"))
+        given = [k for k in ("file", "fetch_url", "url") if data.get(k)]
         if not self.errors:
-            if has_file and has_url:
-                raise forms.ValidationError("Vælg enten en fil eller et link, ikke begge.")
-            if not has_file and not has_url:
+            if len(given) > 1:
+                raise forms.ValidationError("Vælg én ting: en fil, et link til en fil eller et link, ikke flere.")
+            if not given:
                 raise forms.ValidationError("Vælg en fil eller skriv et link.")
-            if has_url and not data.get("title"):
+            if given == ["url"] and not data.get("title"):
                 self.add_error("title", "Giv linket en titel.")
         return data
 

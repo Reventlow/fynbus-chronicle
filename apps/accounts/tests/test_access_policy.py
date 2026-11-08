@@ -43,6 +43,8 @@ PUBLIC_ROUTES = {
     "kursus/": "course material overview (folder creation still needs an editor)",
     "kursus/<slug:slug>/": "a course material folder",
     "kursus/fil/<str:key>/": "a course material file; the key is random",
+    "kursus/visning/<str:key>/": "PDF rendition of a course presentation; the key is random",
+    "kursus/<slug:slug>/se/<str:key>/": "the course material player",
     "dashboard/statistik/delt/<str:token>/data.json": "statistics share link; token is the key (else 404)",
     "dashboard/statistik/delt/<str:token>/vejledning.md": "guide for a statistics share link (else 404)",
     # Microsoft SSO, only reachable with SSO_ENABLED (otherwise these lead

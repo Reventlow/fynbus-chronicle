@@ -168,8 +168,13 @@ CVE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024
 # database on the persisted volume, served by a view (readable without
 # login, by design). The proxy in front (NPM) accepts bodies up to 2000 MB.
 COURSE_FILES_DIR = Path(config("COURSE_FILES_DIR", default=str(Path(config("SQLITE_DIR", default=str(BASE_DIR))) / "course_files")))
-COURSE_VIDEO_MAX_BYTES = 1536 * 1024 * 1024
-COURSE_DOCUMENT_MAX_BYTES = 200 * 1024 * 1024
+# One limit for every course file. Browser uploads also pass NPM, whose
+# proxy host for Chronicle must allow bodies above this (client_max_body_size).
+COURSE_FILE_MAX_BYTES = 2 * 1024 * 1024 * 1024
+# Presentations are converted to PDF with LibreOffice (in the web image) so
+# the player can show them; a conversion that runs longer is given up.
+COURSE_SOFFICE = config("COURSE_SOFFICE", default="soffice")
+COURSE_CONVERT_TIMEOUT = 180
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

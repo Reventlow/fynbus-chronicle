@@ -2493,7 +2493,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .km-fields { display: flex; flex-direction: column; gap: 12px; }
   .km-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   .km-error { margin: 4px 0 0; font-size: 12.5px; color: var(--bad-ink); }
-  .km-mode { display: inline-flex; gap: 16px; margin-bottom: 12px; font-size: 13.5px; color: var(--ink-2); }
+  .km-mode { display: inline-flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; font-size: 13.5px; color: var(--ink-2); }
   .km-mode label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
   .km-progress { display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-3); }
   .km-progress[hidden] { display: none; }
@@ -2507,7 +2507,51 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .km-desc { margin: 3px 0 0; font-size: 13px; color: var(--ink-2); }
   .km-meta { margin-top: 4px; font-size: 12px; color: var(--ink-4); }
   .km-url { font-family: var(--font-mono); font-size: 11.5px; overflow-wrap: anywhere; }
-  .km-video { display: block; width: 100%; max-height: 70vh; margin-top: 12px; border-radius: 8px; background: #000; }
+  /* Player (/kursus/<mappe>/se/<key>/): stage + toolbar on the left, playlist on the right. */
+  .km-player-page { display: flex; flex-direction: column; gap: 18px; }
+  .km-player-title { margin: 0; font-size: 34px; line-height: 1.1; overflow-wrap: anywhere; }
+  .km-player-desc { margin: 8px 0 0; font-size: 14px; color: var(--ink-3); max-width: 720px; }
+  .km-player { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--gutter); align-items: start; }
+  .km-stage-col { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .km-stage { position: relative; border-radius: 12px; overflow: hidden; background: #111; }
+  .km-video-el { display: block; width: 100%; max-height: 74vh; background: #000; }
+  .km-stage-slides { display: flex; align-items: center; justify-content: center; min-height: 240px; padding: 0; outline: none; background: var(--surface-2); border: 1px solid var(--hairline); }
+  .km-stage-slides:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+  .km-stage-slides:fullscreen { background: #000; border: 0; border-radius: 0; }
+  .km-slide-canvas { display: block; max-width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,.12); background: #fff; }
+  .km-slide-hit { position: absolute; top: 0; bottom: 0; width: 50%; border: 0; padding: 0; background: transparent; cursor: pointer; }
+  .km-slide-hit:disabled { cursor: default; }
+  .km-slide-hit-prev { left: 0; cursor: w-resize; }
+  .km-slide-hit-next { right: 0; cursor: e-resize; }
+  .km-slide-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+  .km-slide-status { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 13.5px; color: var(--ink-3); pointer-events: none; }
+  .km-slide-status[hidden] { display: none; }
+  .km-stage-slides.is-error .km-slide-hit { display: none; }
+  .km-stage-empty { display: grid; place-items: center; min-height: 260px; padding: 24px; text-align: center; background: var(--surface-2); border: 1px dashed var(--hairline); }
+  .km-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .km-toolbar-spacer { flex: 1 1 auto; }
+  .km-slide-count { font-family: var(--font-mono); font-size: 13px; color: var(--ink-2); min-width: 64px; text-align: center; }
+  .km-hint { font-size: 12px; color: var(--ink-4); }
+  .km-item-meta { font-size: 12px; color: var(--ink-4); }
+  .km-prevnext { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .km-prevnext-link { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--hairline); border-radius: 10px; text-decoration: none; min-width: 0; }
+  .km-prevnext-link span { font-size: 11.5px; color: var(--ink-4); }
+  .km-prevnext-link strong { font-size: 13.5px; font-weight: 500; color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .km-prevnext-link:hover { border-color: var(--accent); }
+  .km-prevnext-next { grid-column: 2; text-align: right; }
+  .km-prevnext-next.is-up-next { border-color: var(--accent); background: var(--surface-2); }
+  .km-playlist ol { list-style: none; margin: 0; padding: 0 0 8px; max-height: 70vh; overflow-y: auto; }
+  .km-pl-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; text-decoration: none; border-left: 3px solid transparent; }
+  .km-pl-item:hover { background: var(--surface-2); }
+  .km-pl-item.is-current { border-left-color: var(--accent); background: var(--surface-2); }
+  .km-pl-text { display: flex; flex-direction: column; min-width: 0; }
+  .km-pl-title { font-size: 13px; font-weight: 500; color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .km-pl-sub { font-size: 11.5px; color: var(--ink-4); }
+  @media (max-width: 1000px) {
+    .km-player { grid-template-columns: minmax(0, 1fr); }
+    .km-hint { display: none; }
+    .km-player-title { font-size: 28px; }
+  }
   .km-edit { margin-top: 12px; padding: 14px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-2); max-width: 560px; }
   .km-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
   .km-menu { position: relative; }

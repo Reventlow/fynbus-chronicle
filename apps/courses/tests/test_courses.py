@@ -35,7 +35,22 @@ PPT = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 600
 @pytest.fixture(autouse=True)
 def files_dir(settings, tmp_path):
     settings.COURSE_FILES_DIR = tmp_path / "course_files"
+    # No LibreOffice unless a test installs the fake one below.
+    settings.COURSE_SOFFICE = str(tmp_path / "no-soffice-here")
     return settings.COURSE_FILES_DIR
+
+
+def fake_soffice(settings, tmp_path, body: str):
+    """Install a stand-in for LibreOffice: a shell script whose body gets
+    the output directory as $OUT (the --outdir argument)."""
+    script = tmp_path / "soffice"
+    script.write_text(
+        "#!/bin/sh\n"
+        'while [ $# -gt 0 ]; do [ "$1" = --outdir ] && OUT="$2"; shift; done\n'
+        'mkdir -p "$OUT"\n' + body + "\n"
+    )
+    script.chmod(0o755)
+    settings.COURSE_SOFFICE = str(script)
 
 
 @pytest.fixture
@@ -125,6 +140,11 @@ def test_index_sorts_folders_by_name(client, editor, folder):
     assert html.index("Anthropic") < html.index("Cisco") < html.index("microsoft 365")
 
 
+def test_reserved_slug_is_avoided(client, editor):
+    client.post(reverse("courses:index"), {"name": "Fil"})
+    assert CourseFolder.objects.get().slug == "fil-2"
+
+
 def test_rename_folder_updates_slug(client, editor, folder):
     resp = client.post(reverse("courses:folder-edit", args=[folder.slug]), {"name": "Anthropic Academy", "description": ""})
     folder.refresh_from_db()
@@ -184,7 +204,7 @@ def test_upload_rejects_bad_files(client, editor, folder, name, data, error):
 
 
 def test_upload_size_limit(client, editor, folder, settings):
-    settings.COURSE_DOCUMENT_MAX_BYTES = 100
+    settings.COURSE_FILE_MAX_BYTES = 100
     resp = client.post(
         reverse("courses:material-add", args=[folder.slug]),
         {"file": SimpleUploadedFile("big.pdf", PDF)},
@@ -214,7 +234,7 @@ def test_link_needs_title_and_not_both(client, editor, folder):
     resp = client.post(url, {"url": "https://example.test"}, HTTP_HX_REQUEST="true")
     assert "Giv linket en titel" in resp.content.decode()
     resp = client.post(url, {"url": "https://example.test", "title": "x", "file": SimpleUploadedFile("a.pdf", PDF)}, HTTP_HX_REQUEST="true")
-    assert "ikke begge" in resp.content.decode()
+    assert "ikke flere" in resp.content.decode()
     resp = client.post(url, {}, HTTP_HX_REQUEST="true")
     assert "Vælg en fil eller skriv et link" in resp.content.decode()
     assert not CourseMaterial.objects.exists()
@@ -329,3 +349,128 @@ def test_titles_are_escaped(client, editor, folder):
 def test_nav_links_to_courses(client, editor):
     html = client.get(reverse("courses:index")).content.decode()
     assert 'href="/kursus/"' in html and "Kursusmateriale" in html
+
+
+# --- slide conversion (1.20.1) ---------------------------------------------------
+
+
+def test_presentation_is_converted_at_upload(client, editor, folder, settings, tmp_path):
+    fake_soffice(settings, tmp_path, 'printf "%%PDF-1.4 fake" > "$OUT/slides.pdf"')
+    upload(client, folder, "Workshop.pptx", PPTX)
+    m = CourseMaterial.objects.get()
+    assert m.preview and m.preview.name.endswith(".preview.pdf") and m.preview_error == ""
+    assert m.playable and m.href == m.get_player_url() and m.slides_url == reverse("courses:preview", args=[m.key])
+    resp = client.get(m.slides_url)
+    assert resp.status_code == 200 and resp["Content-Type"] == "application/pdf"
+    assert resp["Content-Disposition"].startswith("inline") and b"".join(resp.streaming_content) == b"%PDF-1.4 fake"
+    # the original is still what "Download" sends
+    assert client.get(m.get_download_url())["Content-Type"].startswith("application/vnd.openxmlformats")
+
+
+def test_failed_conversion_keeps_the_item(client, editor, folder, settings, tmp_path):
+    fake_soffice(settings, tmp_path, "exit 1")
+    upload(client, folder, "Workshop.pptx", PPTX)
+    m = CourseMaterial.objects.get()
+    assert not m.preview and "kunne ikke læse" in m.preview_error and not m.playable
+    html = client.get(m.get_player_url()).content.decode()
+    assert "kan ikke vises her endnu" in html and "Lav visning" in html and m.get_download_url() in html
+
+
+def test_missing_libreoffice_and_timeout(client, editor, folder, settings, tmp_path):
+    upload(client, folder, "Workshop.pptx", PPTX)
+    assert "ikke installeret" in CourseMaterial.objects.get().preview_error
+    CourseMaterial.objects.all().delete()
+    fake_soffice(settings, tmp_path, "sleep 5")
+    settings.COURSE_CONVERT_TIMEOUT = 1
+    upload(client, folder, "Workshop.pptx", PPTX)
+    assert "opgivet" in CourseMaterial.objects.get().preview_error
+
+
+def test_not_a_pdf_is_refused(client, editor, folder, settings, tmp_path):
+    fake_soffice(settings, tmp_path, 'echo "<html>" > "$OUT/slides.pdf"')
+    upload(client, folder, "Workshop.pptx", PPTX)
+    m = CourseMaterial.objects.get()
+    assert not m.preview and "gyldig PDF" in m.preview_error
+
+
+def test_retry_conversion(client, editor, folder, settings, tmp_path):
+    upload(client, folder, "Workshop.pptx", PPTX)
+    m = CourseMaterial.objects.get()
+    fake_soffice(settings, tmp_path, 'printf "%%PDF-1.4 ok" > "$OUT/slides.pdf"')
+    resp = client.post(reverse("courses:material-convert", args=[m.key]))
+    m.refresh_from_db()
+    assert resp["Location"] == m.get_player_url() and m.preview and m.preview_error == ""
+
+
+def test_retry_needs_an_editor(client, folder):
+    m = CourseMaterial.objects.create(folder=folder, kind="slides", title="x", file="ab/x.pptx", original_name="x.pptx")
+    resp = client.post(reverse("courses:material-convert", args=[m.key]))
+    assert resp.status_code == 302 and "/login" in resp["Location"]
+    User.objects.create_user("v", password="x").groups.add(Group.objects.get_or_create(name="Viewer")[0])
+    client.force_login(User.objects.get(username="v"))
+    assert client.post(reverse("courses:material-convert", args=[m.key])).status_code == 403
+
+
+def test_delete_removes_preview(client, editor, folder, settings, tmp_path):
+    fake_soffice(settings, tmp_path, 'printf "%%PDF-1.4 fake" > "$OUT/slides.pdf"')
+    upload(client, folder, "Workshop.pptx", PPTX)
+    m = CourseMaterial.objects.get()
+    paths = [m.file.path, m.preview.path]
+    client.post(reverse("courses:material-delete", args=[m.key]))
+    assert not any(os.path.exists(p) for p in paths)
+
+
+def test_management_command_converts_missing(client, editor, folder, settings, tmp_path):
+    from django.core.management import call_command
+
+    upload(client, folder, "Workshop.pptx", PPTX)
+    fake_soffice(settings, tmp_path, 'printf "%%PDF-1.4 fake" > "$OUT/slides.pdf"')
+    out = io.StringIO()
+    call_command("course_previews", stdout=out, stderr=io.StringIO())
+    assert "1 converted, 0 failed" in out.getvalue() and CourseMaterial.objects.get().preview
+
+
+# --- player ---------------------------------------------------------------------
+
+
+def test_player_video_with_playlist(client, editor, folder):
+    upload(client, folder, "Guide.pdf", PDF)
+    upload(client, folder, "Intro.mp4", MP4)
+    upload(client, folder, "Del 2.mp4", MP4)
+    client.post(reverse("courses:material-add", args=[folder.slug]), {"url": "https://example.test", "title": "Academy"})
+    intro = CourseMaterial.objects.get(title="Intro")
+    resp = client.get(intro.get_player_url())
+    html = resp.content.decode()
+    assert resp.status_code == 200 and resp["X-Robots-Tag"] == "noindex, nofollow"
+    assert f'src="{intro.get_file_url()}"' in html and 'data-rate="1.5"' in html and "course-player.js" in html
+    # playlist: videos first, then the PDF; no links
+    assert html.index(">Intro<") < html.index(">Del 2<") < html.index(">Guide<") and ">Academy<" not in html
+    assert "1 af 3" in html and "Næste →" in html and "← Forrige" not in html
+
+
+def test_player_pdf_uses_slide_viewer(client, editor, folder):
+    upload(client, folder, "Guide.pdf", PDF)
+    m = CourseMaterial.objects.get()
+    html = client.get(m.get_player_url()).content.decode()
+    assert f'data-src="{m.get_file_url()}"' in html and "pdfjs/pdf.min.mjs" in html and "pdf.worker.min.mjs" in html
+
+
+def test_player_is_public_and_guards_keys(client, editor, folder):
+    upload(client, folder, "Intro.mp4", MP4)
+    m = CourseMaterial.objects.get()
+    other = CourseFolder.objects.create(name="Andet")
+    client.logout()
+    assert client.get(m.get_player_url()).status_code == 200
+    assert client.get(reverse("courses:player", args=[other.slug, m.key])).status_code == 404
+    link = CourseMaterial.objects.create(folder=folder, kind="link", title="x", url="https://example.test/a")
+    resp = client.get(reverse("courses:player", args=[folder.slug, link.key]))
+    assert resp.status_code == 302 and resp["Location"] == "https://example.test/a"
+
+
+def test_folder_page_links_to_player(client, editor, folder):
+    upload(client, folder, "Intro.mp4", MP4)
+    upload(client, folder, "Guide.pdf", PDF)
+    html = client.get(folder.get_absolute_url()).content.decode()
+    for m in CourseMaterial.objects.all():
+        assert f'href="{m.get_player_url()}"' in html
+    assert ">Afspil<" in html and ">Vis<" in html

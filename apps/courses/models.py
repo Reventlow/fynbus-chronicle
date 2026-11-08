@@ -8,6 +8,7 @@ download, without logging in; only editors can change anything.
 """
 
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -51,6 +52,10 @@ def _material_path(instance: "CourseMaterial", filename: str) -> str:
     return f"{instance.key[:2]}/{instance.key}{extension(filename)}"
 
 
+def _preview_path(instance: "CourseMaterial", filename: str) -> str:
+    return f"{instance.key[:2]}/{instance.key}.preview.pdf"
+
+
 class CourseFolder(models.Model):
     name = models.CharField("Navn", max_length=100, unique=True)
     slug = models.SlugField("Slug", max_length=120, unique=True)
@@ -76,11 +81,14 @@ class CourseFolder(models.Model):
             self.slug = self.unique_slug(self.name)
         super().save(*args, **kwargs)
 
+    # First path segments under /kursus/ that are not folders (see urls.py).
+    RESERVED_SLUGS = {"fil", "visning", "element", "hentning"}
+
     @classmethod
     def unique_slug(cls, name: str, exclude_pk: int | None = None) -> str:
         base = _ascii_slug(name, "mappe")[:110]
         slug, n = base, 2
-        while cls.objects.filter(slug=slug).exclude(pk=exclude_pk).exists():
+        while slug in cls.RESERVED_SLUGS or cls.objects.filter(slug=slug).exclude(pk=exclude_pk).exists():
             slug = f"{base}-{n}"
             n += 1
         return slug
@@ -108,6 +116,10 @@ class CourseMaterial(models.Model):
     original_name = models.CharField("Filnavn", max_length=255, blank=True)
     size = models.PositiveBigIntegerField("Størrelse (bytes)", default=0)
     url = models.URLField("Link", max_length=1000, blank=True)
+    # Presentations only: a PDF rendition made with LibreOffice at upload,
+    # which the player shows slide by slide (browsers cannot show .pptx).
+    preview = models.FileField(storage=CourseFileStorage(), upload_to=_preview_path, max_length=200, blank=True)
+    preview_error = models.CharField("Visningsfejl", max_length=300, blank=True)
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
         verbose_name="Tilføjet af",
@@ -151,8 +163,22 @@ class CourseMaterial(models.Model):
 
     @property
     def opens_in_browser(self) -> bool:
-        """Videos and PDFs open in the browser; presentations are downloaded."""
+        """Videos and PDFs can be sent to the browser as they are."""
         return self.kind in (self.Kind.VIDEO, self.Kind.PDF)
+
+    @property
+    def playable(self) -> bool:
+        """Shown in the player: videos, PDFs, and presentations once they have a PDF rendition."""
+        return self.opens_in_browser or (self.kind == self.Kind.SLIDES and bool(self.preview))
+
+    @property
+    def slides_url(self) -> str:
+        """The PDF the player renders page by page, or "" for a video or link."""
+        if self.kind == self.Kind.PDF:
+            return self.get_file_url()
+        if self.kind == self.Kind.SLIDES and self.preview:
+            return reverse("courses:preview", kwargs={"key": self.key})
+        return ""
 
     def get_file_url(self) -> str:
         return reverse("courses:file", kwargs={"key": self.key})
@@ -160,16 +186,80 @@ class CourseMaterial(models.Model):
     def get_download_url(self) -> str:
         return self.get_file_url() + "?download=1"
 
+    def get_player_url(self) -> str:
+        return reverse("courses:player", kwargs={"slug": self.folder.slug, "key": self.key})
+
     @property
     def href(self) -> str:
-        """Where clicking the title goes: the link itself, or the file."""
+        """Where clicking the title goes: the player, the link itself, or a download."""
         if self.is_link:
             return self.url
-        return self.get_file_url() if self.opens_in_browser else self.get_download_url()
+        return self.get_player_url() if self.playable else self.get_download_url()
+
+
+class CourseImport(models.Model):
+    """A file being fetched from a link into a folder ("Hent fra link").
+
+    Lives only while the fetch runs or after it failed: on success the
+    material is created and this row is deleted (see fetch.py).
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Venter"
+        RUNNING = "running", "Henter"
+        FAILED = "failed", "Fejlede"
+
+    # A fetch with no progress for this long died with its worker (e.g. a
+    # redeploy) and is shown as failed, so it can be retried.
+    STALLED_AFTER = timedelta(minutes=10)
+
+    folder = models.ForeignKey(CourseFolder, on_delete=models.CASCADE, related_name="imports")
+    url = models.URLField("Link til filen", max_length=1000)
+    title = models.CharField("Titel", max_length=200, blank=True)
+    description = models.CharField("Beskrivelse", max_length=500, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    error = models.CharField(max_length=300, blank=True)
+    bytes_done = models.PositiveBigIntegerField(default=0)
+    bytes_total = models.PositiveBigIntegerField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Hentning fra link"
+        verbose_name_plural = "Hentninger fra link"
+        ordering = ["created_at", "pk"]
+
+    def __str__(self) -> str:
+        return self.title or self.url
+
+    @property
+    def is_failed(self) -> bool:
+        return self.status == self.Status.FAILED or self.is_stalled
+
+    @property
+    def is_stalled(self) -> bool:
+        return self.status != self.Status.FAILED and timezone.now() - self.updated_at > self.STALLED_AFTER
+
+    @property
+    def shown_error(self) -> str:
+        if self.is_stalled:
+            return "Hentningen blev afbrudt (fx af en genstart). Prøv igen."
+        return self.error
+
+    @property
+    def percent(self) -> int | None:
+        if self.bytes_total:
+            return min(100, round(self.bytes_done * 100 / self.bytes_total))
+        return None
 
 
 @receiver(post_delete, sender=CourseMaterial)
 def _delete_file(sender, instance: CourseMaterial, **kwargs) -> None:
-    """Remove the stored file with the row, also when a whole folder is deleted."""
+    """Remove the stored files with the row, also when a whole folder is deleted."""
     if instance.file:
         instance.file.delete(save=False)
+    if instance.preview:
+        instance.preview.delete(save=False)

@@ -1,0 +1,37 @@
+{% comment %}
+  "Hentes fra link" card (editors): fetches in progress or failed. While
+  any is running the card polls itself every 2 s; the view answers with
+  HX-Refresh once a watched fetch is done, so the new item shows.
+  Context: folder, imports, import_watch ("pk,pk" of running fetches).
+{% endcomment %}
+<div id="km-imports">
+{% if imports %}
+  <section class="card km-section" style="padding: 0;" aria-label="Hentes fra link"
+           {% if import_watch %}hx-get="{% url 'courses:imports' folder.slug %}?watch={{ import_watch }}" hx-trigger="every 2s" hx-target="#km-imports" hx-swap="outerHTML"{% endif %}>
+    <header class="sd-group-head"><h2>Hentes fra link <span class="tab-count">{{ imports|length }}</span></h2></header>
+    {% for i in imports %}
+      <div class="km-item">
+        <div class="km-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></div>
+        <div class="km-main">
+          <div class="km-title">{{ i.title|default:"Fil fra link" }}</div>
+          <div class="km-meta"><span class="km-url">{{ i.url }}</span></div>
+          {% if i.is_failed %}
+            <p class="km-error">{{ i.shown_error }}</p>
+          {% else %}
+            <div class="km-progress" style="margin-top: 6px;">
+              <progress max="100"{% if i.percent is not None %} value="{{ i.percent }}"{% endif %}></progress>
+              <span>{% if i.bytes_done %}Henter… {{ i.bytes_done|filesizeformat }}{% if i.bytes_total %} af {{ i.bytes_total|filesizeformat }}{% endif %}{% else %}Forbinder…{% endif %}</span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="km-actions">
+          {% if i.is_failed %}
+            <form method="post" action="{% url 'courses:import-retry' i.pk %}">{% csrf_token %}<button type="submit" class="btn btn-outline btn-sm">Prøv igen</button></form>
+          {% endif %}
+          <form method="post" action="{% url 'courses:import-delete' i.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if i.is_failed %}Fjern{% else %}Annuller{% endif %}</button></form>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+{% endif %}
+</div>
