@@ -2,6 +2,19 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.20.1 — 2026-11-08
+
+### Added
+- **Afspiller til kursusmateriale.** Videoer, præsentationer og PDF'er åbner i en afspiller med mappens øvrige materiale i en liste ved siden af og *Forrige*/*Næste*.
+  - Videoer: valg af hastighed (0,75×–2×, huskes) og *Fortsæt fra* hvor man slap.
+  - Præsentationer og PDF'er vises slide for slide: piletaster, klik, stryg på mobil og fuld skærm (F). Sidetallet står i adressen, så man kan linke til en bestemt slide.
+  - PowerPoint og ODP laves om til en visning med LibreOffice, når de lægges op; ingen filer sendes til andre tjenester. Lykkes det ikke, kan filen stadig hentes, og redaktører kan prøve igen med "Lav visning".
+- **Hent fil fra link:** i stedet for at lægge en fil op fra computeren kan man give et direkte link til filen. Chronicle henter den i baggrunden og viser fremdriften i mappen. Links til interne adresser afvises.
+
+### Changed
+- Grænsen for kursusfiler er nu **2 GB** for alle typer (før 1,5 GB for video og 200 MB for dokumenter).
+- Webbilledet indeholder nu LibreOffice Impress (uden brugerflade) og skrifterne Carlito og Caladea, der svarer til Calibri og Cambria.
+
 ## 1.20.0 — 2026-11-08
 
 ### Added

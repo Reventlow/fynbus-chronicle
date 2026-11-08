@@ -4,7 +4,7 @@
   valid one answers with HX-Redirect to the folder. Context: folder, form.
 {% endcomment %}
 <form id="km-add-form" method="post" action="{% url 'courses:material-add' folder.slug %}" enctype="multipart/form-data"
-      class="km-add" x-data="{ mode: '{% if form.url.value %}link{% else %}file{% endif %}', pct: null }"
+      class="km-add" x-data="{ mode: '{% if form.fetch_url.value %}fetch{% elif form.url.value %}link{% else %}file{% endif %}' }"
       hx-post="{% url 'courses:material-add' folder.slug %}" hx-encoding="multipart/form-data"
       hx-target="this" hx-swap="outerHTML" hx-disabled-elt="find button[type=submit]"
       hx-on::before-request="this.querySelector('.km-progress').hidden = false"
@@ -16,7 +16,8 @@
   {% if form.non_field_errors %}<div class="alert alert-error" style="margin-bottom: 12px;">{{ form.non_field_errors|join:" " }}</div>{% endif %}
 
   <div class="km-mode" role="group" aria-label="Type">
-    <label><input type="radio" name="_mode" value="file" x-model="mode"> Fil</label>
+    <label><input type="radio" name="_mode" value="file" x-model="mode"> Fil fra computeren</label>
+    <label><input type="radio" name="_mode" value="fetch" x-model="mode"> Hent fil fra link</label>
     <label><input type="radio" name="_mode" value="link" x-model="mode"> Link</label>
   </div>
 
@@ -24,13 +25,19 @@
     <fieldset class="km-fieldset" x-show="mode === 'file'" :disabled="mode !== 'file'">
       <label class="input-label" for="{{ form.file.id_for_label }}">Fil</label>
       {{ form.file }}
-      <p class="input-help">Video (MP4, MOV, M4V, WebM) højst {{ video_limit|filesizeformat }}; PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF højst {{ document_limit|filesizeformat }}.</p>
+      <p class="input-help">Video (MP4, MOV, M4V, WebM), PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF, højst 2 GB.</p>
       {% for e in form.file.errors %}<p class="km-error">{{ e }}</p>{% endfor %}
+    </fieldset>
+    <fieldset class="km-fieldset" x-show="mode === 'fetch'" :disabled="mode !== 'fetch'"{% if not form.fetch_url.value %} x-cloak disabled{% endif %}>
+      <label class="input-label" for="{{ form.fetch_url.id_for_label }}">Link til filen</label>
+      {{ form.fetch_url }}
+      <p class="input-help">Et direkte link til en video, PowerPoint eller PDF, fx et delingslink med <code>?download=1</code>. Chronicle henter filen i baggrunden og gemmer den i mappen; samme typer og grænser som ved upload.</p>
+      {% for e in form.fetch_url.errors %}<p class="km-error">{{ e }}</p>{% endfor %}
     </fieldset>
     <fieldset class="km-fieldset" x-show="mode === 'link'" :disabled="mode !== 'link'"{% if not form.url.value %} x-cloak disabled{% endif %}>
       <label class="input-label" for="{{ form.url.id_for_label }}">Link</label>
       {{ form.url }}
-      <p class="input-help">Fx et kursus på anthropic.com eller en video på YouTube.</p>
+      <p class="input-help">Gemmes som et link, fx et kursus på anthropic.com eller en video på YouTube.</p>
       {% for e in form.url.errors %}<p class="km-error">{{ e }}</p>{% endfor %}
     </fieldset>
     <div>
@@ -45,7 +52,7 @@
   </div>
 
   <div class="flex flex-wrap items-center gap-3" style="margin-top: 14px;">
-    <button type="submit" class="btn btn-primary btn-sm">Tilføj</button>
+    <button type="submit" class="btn btn-primary btn-sm" x-text="mode === 'fetch' ? 'Hent' : 'Tilføj'">Tilføj</button>
     <div class="km-progress" hidden aria-live="polite">
       <progress max="100" value="0"></progress>
       <span class="km-progress-label">Lægger op…</span>

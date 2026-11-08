@@ -56,29 +56,23 @@
     {% endif %}
   </div>
 
+  {% if can_edit %}{% include 'courses/partials/imports.html' %}{% endif %}
+
   {% for section in sections %}
     <section class="card km-section" aria-labelledby="km-{{ section.kind }}" style="padding: 0;">
       <header class="sd-group-head">
         <h2 id="km-{{ section.kind }}">{{ section.heading }} <span class="tab-count">{{ section.items|length }}</span></h2>
       </header>
       {% for m in section.items %}
-        <div class="km-item" id="m-{{ m.key }}" x-data="{ play: false, edit: false }">
+        <div class="km-item" id="m-{{ m.key }}" x-data="{ edit: false }">
           <div class="km-icon km-icon-{{ m.kind }}">{% include 'courses/partials/kind_icon.html' with kind=m.kind %}</div>
           <div class="km-main">
-            <a class="km-title" href="{{ m.href }}"{% if m.is_link or m.kind == 'pdf' %} target="_blank" rel="noopener noreferrer"{% endif %}
-               {% if m.kind == 'video' %}@click.prevent="play = !play"{% endif %}>{{ m.title }}{% if m.is_link %} <span aria-hidden="true">↗</span>{% endif %}</a>
+            <a class="km-title" href="{{ m.href }}"{% if m.is_link %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ m.title }}{% if m.is_link %} <span aria-hidden="true">↗</span>{% endif %}</a>
             {% if m.description %}<p class="km-desc">{{ m.description }}</p>{% endif %}
             <div class="km-meta">
               {{ m.format_label }}{% if m.size %} · {{ m.size|filesizeformat }}{% endif %}{% if m.is_link %} · <span class="km-url">{{ m.url }}</span>{% endif %}
               · tilføjet {{ m.added_at|date:"j. M Y" }}{% if m.added_by and user.is_authenticated %} af {{ m.added_by.get_full_name|default:m.added_by.username }}{% endif %}
             </div>
-            {% if m.kind == 'video' %}
-              <template x-if="play">
-                <video class="km-video" controls autoplay preload="metadata" src="{{ m.get_file_url }}">
-                  Din browser kan ikke afspille videoen. <a href="{{ m.get_download_url }}">Download den</a>.
-                </video>
-              </template>
-            {% endif %}
             {% if can_edit %}
               <form x-show="edit" x-cloak method="post" action="{% url 'courses:material-edit' m.key %}" class="km-fields km-edit">
                 {% csrf_token %}
@@ -110,12 +104,12 @@
             {% endif %}
           </div>
           <div class="km-actions">
-            {% if m.kind == 'video' %}
-              <button type="button" class="btn btn-outline btn-sm" @click="play = !play" x-text="play ? 'Luk' : 'Afspil'">Afspil</button>
-            {% elif m.is_link %}
+            {% if m.is_link %}
               <a href="{{ m.url }}" class="btn btn-outline btn-sm" target="_blank" rel="noopener noreferrer">Åbn</a>
-            {% elif m.kind == 'pdf' %}
-              <a href="{{ m.get_file_url }}" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Åbn</a>
+            {% elif m.playable %}
+              <a href="{{ m.get_player_url }}" class="btn btn-outline btn-sm">{% if m.kind == 'video' %}Afspil{% else %}Vis{% endif %}</a>
+            {% elif can_edit and m.preview_error %}
+              <a href="{{ m.get_player_url }}" class="btn btn-outline btn-sm" title="{{ m.preview_error }}">Kan ikke vises</a>
             {% endif %}
             {% if not m.is_link %}<a href="{{ m.get_download_url }}" class="btn btn-ghost btn-sm" title="Download {{ m.original_name }}">Download</a>{% endif %}
             {% if can_edit %}

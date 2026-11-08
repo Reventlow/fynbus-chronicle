@@ -471,17 +471,20 @@ Menuen **Kursusmateriale** samler materiale fra kurser i **mapper**, fx *Anthrop
 ### Se og hent
 
 - Siderne kan læses **uden login** på `https://chronicle.fynbus.net/kursus/`, så adressen kan sendes til kolleger, der ikke bruger Chronicle. Det er kun visning: at oprette, lægge op, rette og slette kræver login som redaktør. Uden login står det ikke, hvem der har lagt materialet op, og siderne indekseres ikke af søgemaskiner.
-- **Videoer** afspilles direkte på siden: klik på titlen eller "Afspil". Man kan spole frem og tilbage uden at hente hele filen først.
-- **PDF'er** åbner i en ny fane. **Præsentationer** (PowerPoint og ODP) hentes ned og åbnes i PowerPoint eller LibreOffice.
+- Klik på en titel, "Afspil" eller "Vis" for at åbne **afspilleren**: materialet vises stort, med mappens øvrige videoer, præsentationer og PDF'er i en liste ved siden af og *Forrige*/*Næste* nedenunder.
+- **Videoer:** vælg hastighed (0,75× til 2×; valget huskes). Stopper du midt i en video, tilbyder afspilleren næste gang at *fortsætte fra* hvor du kom til.
+- **Præsentationer og PDF'er** vises en side ad gangen. Skift med piletasterne, PageUp/PageDown, knapperne eller ved at klikke i venstre/højre halvdel (stryg på mobil). **F** eller "Fuld skærm" viser dem i fuld skærm. Adressen viser sidetallet (fx `#5`), så et link kan pege på en bestemt slide.
+- PowerPoint-filer laves om til en visning, når de lægges op. Hvis det mislykkes, kan filen stadig hentes, og redaktører kan klikke "Lav visning" for at prøve igen.
 - **Links** åbner i en ny fane.
-- "Download" henter filen med sit oprindelige navn.
+- "Download" henter den oprindelige fil med sit oprindelige navn.
 
 ### Opret mapper og læg materiale op (redaktører)
 
 1. Nederst på Kursusmateriale: skriv navn (og evt. en beskrivelse) under **Ny mappe** og klik "Opret mappe"
-2. I mappen, under **Tilføj materiale**: vælg **Fil** eller **Link**
-   - **Fil:** video (MP4, MOV, M4V, WebM, højst 1,5 GB), PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF (højst 200 MB). Titlen bliver filnavnet, hvis feltet er tomt. En bjælke viser, hvor langt uploaden er nået
-   - **Link:** adressen og en titel
+2. I mappen, under **Tilføj materiale**, vælg én af tre:
+   - **Fil fra computeren:** video (MP4, MOV, M4V, WebM), PowerPoint (PPTX, PPT, PPSX, ODP) eller PDF, højst 2 GB. Titlen bliver filnavnet, hvis feltet er tomt. En bjælke viser, hvor langt uploaden er nået
+   - **Hent fil fra link:** et direkte link til filen, fx et delingslink med `?download=1`. Chronicle henter filen i baggrunden (samme typer og grænse), og kortet *Hentes fra link* øverst i mappen viser, hvor langt den er. Når filen er hentet, dukker den op i mappen af sig selv. Fejler det, står grunden der sammen med "Prøv igen". Links til interne adresser hentes ikke
+   - **Link:** gemmes som et link, fx et kursus på anthropic.com eller en YouTube-video. Kræver en titel
 3. "Rediger" ved et element retter titel, beskrivelse og link, og kan flytte elementet til en anden mappe. "Slet" fjerner elementet og filen
 4. "Rediger mappe" øverst omdøber mappen eller sletter den med alt indhold
 
