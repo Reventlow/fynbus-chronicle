@@ -6,6 +6,9 @@ Generates a Markdown document from a WeekLog instance.
 
 from datetime import datetime
 
+from apps.courses.templatetags.course_tags import (
+    markdown_links as course_markdown_links,
+)
 from apps.oncall.models import OnCallDuty, OnCallSegment
 from apps.planner.templatetags.planner_tags import markdown_links
 from apps.servicedesk.templatetags.servicedesk_tags import (
@@ -131,7 +134,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
     # Priority items — iterate appearances so we get this week's description.
     appearances = list(
         weeklog.priority_appearances.select_related("priority_item")
-        .prefetch_related("priority_item__planner_links", "priority_item__ticket_links").order_by("order", "id")
+        .prefetch_related("priority_item__planner_links", "priority_item__ticket_links", "priority_item__course_links__folder", "priority_item__course_links__material__folder").order_by("order", "id")
     )
     if appearances:
         lines.append("## Prioriterede Opgaver")
@@ -143,7 +146,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
             desc = a.description or "-"
             desc = desc.replace("\n", " ").replace("\r", "")
             lines.append(
-                f"| {item.title}{markdown_links(item)}{ticket_markdown_links(item)} | {item.get_priority_display()} | "
+                f"| {item.title}{markdown_links(item)}{ticket_markdown_links(item)}{course_markdown_links(item)} | {item.get_priority_display()} | "
                 f"{item.get_status_display()} | {desc} |"
             )
         lines.append("")

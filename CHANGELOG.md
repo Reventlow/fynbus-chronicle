@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.20.2 — 2026-11-08
+
+### Added
+- **Knyt kursusmateriale til en opgave.** En mappe eller et enkelt element under *Kursusmateriale* kan knyttes til en prioriteret opgave eller en sag (fx en planlagt opgave) med "Knyt til opgave" / "Knyt".
+  - Opgaven eller sagen får en **🎓 Kursus**-pille alle steder, den står: ugelogen, søgningen, *Sager*, kontrolpanelet, opgavens og sagens side og **ugelogs-eksporten** (PDF, HTML, mail og Markdown). Pillen åbner mappen eller afspilleren.
+  - Kursussiderne viser de knyttede opgaver for indloggede; × fjerner et link.
+
 ## 1.20.1 — 2026-11-08
 
 ### Added

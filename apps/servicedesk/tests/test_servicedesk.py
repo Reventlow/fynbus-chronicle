@@ -411,6 +411,6 @@ def test_export_pdf_has_clickable_ticket_links(export_week):
     from apps.logbook.exports.pdf import generate_pdf
 
     pdf = generate_pdf(export_week)
-    text = pdf + b"".join(zlib.decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
+    text = pdf + b"".join(zlib.decompressobj().decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
                           if m[:1] == b"x")
     assert b"woID=4711" in text and b"woID=4712" in text

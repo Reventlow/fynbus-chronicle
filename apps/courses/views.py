@@ -13,7 +13,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.db.models.functions import Lower
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -26,7 +26,7 @@ from chronicle.http import serve_file
 from . import convert, fetch
 from .filetypes import TYPES, extension
 from .forms import FolderForm, MaterialEditForm, MaterialForm
-from .models import CourseFolder, CourseImport, CourseMaterial
+from .models import CourseFolder, CourseImport, CourseLink, CourseMaterial
 
 # (kind, heading) in the order the folder page lists them.
 SECTIONS = [
@@ -83,8 +83,15 @@ def _imports_context(folder) -> dict:
     return {"imports": rows, "import_watch": ",".join(str(i.pk) for i in rows if not i.is_failed)}
 
 
+_LINK_WORK = ("priority_item", "case")
+
+
 def _folder_context(request, folder, *, form=None, folder_form=None):
-    materials = list(folder.materials.select_related("added_by"))
+    signed_in = request.user.is_authenticated
+    qs = folder.materials.select_related("added_by", "folder")
+    if signed_in:
+        qs = qs.prefetch_related(Prefetch("links", queryset=CourseLink.objects.select_related(*_LINK_WORK)))
+    materials = list(qs)
     sections = []
     for kind, heading in SECTIONS:
         items = [m for m in materials if m.kind == kind]
@@ -95,6 +102,7 @@ def _folder_context(request, folder, *, form=None, folder_form=None):
         **_imports_context(folder if is_editor(request.user) else None),
         "sections": sections,
         "count": len(materials),
+        "folder_links": list(folder.links.select_related(*_LINK_WORK)) if signed_in else [],
         "folders": CourseFolder.objects.all(),
         "form": form or MaterialForm(),
         "folder_form": folder_form or FolderForm(instance=folder),
@@ -311,3 +319,73 @@ def import_delete(request: HttpRequest, pk: int) -> HttpResponse:
     folder = imp.folder
     imp.delete()
     return redirect(folder)
+
+
+# --- links to priorities and cases ------------------------------------------------
+
+
+def _link_targets() -> dict:
+    """What a course item can be tied to: open priorities and open cases."""
+    from apps.cves.models import CVECase
+    from apps.logbook.models import PriorityItem
+
+    return {
+        "priorities": PriorityItem.objects.active().exclude(status=PriorityItem.Status.COMPLETED).order_by("title")[:300],
+        "cases": CVECase.objects.open().order_by("-updated_at")[:300],
+    }
+
+
+def _course_side(slug: str | None, key: str | None) -> dict:
+    if key:
+        return {"material": get_object_or_404(CourseMaterial.objects.select_related("folder"), key=key)}
+    return {"folder": get_object_or_404(CourseFolder, slug=slug)}
+
+
+def _back(side: dict) -> str:
+    folder = side["material"].folder if "material" in side else side["folder"]
+    anchor = f"#m-{side['material'].key}" if "material" in side else ""
+    return folder.get_absolute_url() + anchor
+
+
+@login_required
+@editor_required
+def link(request: HttpRequest, slug: str | None = None, key: str | None = None) -> HttpResponse:
+    """GET: the picker (loaded into the row). POST ``target=p<pk>|c<pk>``: tie
+    the folder or item to that priority or case."""
+    from apps.cves.models import CVECase
+    from apps.logbook.models import PriorityItem
+
+    side = _course_side(slug, key)
+    if request.method != "POST":
+        return render(request, "courses/partials/link_form.html", {
+            **side, **_link_targets(), "action": request.path,
+        })
+    target = request.POST.get("target", "")
+    work = {}
+    if target[:1] == "p" and target[1:].isdigit():
+        work["priority_item"] = get_object_or_404(PriorityItem, pk=int(target[1:]))
+    elif target[:1] == "c" and target[1:].isdigit():
+        work["case"] = get_object_or_404(CVECase, pk=int(target[1:]))
+    else:
+        messages.error(request, "Vælg en prioriteret opgave eller en sag.")
+        return redirect(_back(side))
+    obj, created = CourseLink.objects.get_or_create(**side, **work, defaults={"created_by": request.user})
+    if created:
+        messages.success(request, f"Knyttet til {obj.work_label}.")
+    else:
+        messages.info(request, "Det er allerede knyttet.")
+    return redirect(_back(side))
+
+
+@login_required
+@editor_required
+@require_POST
+def unlink(request: HttpRequest, pk: int) -> HttpResponse:
+    obj = get_object_or_404(CourseLink.objects.select_related("folder", "material__folder"), pk=pk)
+    side = {"material": obj.material} if obj.material_id else {"folder": obj.folder}
+    obj.delete()
+    messages.success(request, "Linket er fjernet.")
+    nxt = request.POST.get("next", "")
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return redirect(nxt)
+    return redirect(_back(side))

@@ -67,6 +67,6 @@ def test_pdf_has_clickable_planner_links(week):
 
     pdf = generate_pdf(week)
     # WeasyPrint compresses objects; the link annotations sit in those streams.
-    text = pdf + b"".join(zlib.decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
+    text = pdf + b"".join(zlib.decompressobj().decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
                           if m[:1] == b"x")
     assert pdf.startswith(b"%PDF") and b"Home/Task/task-item" in text and b"Home/Task/task-case" in text

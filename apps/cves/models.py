@@ -693,7 +693,7 @@ def weeklog_cves(weeklog) -> dict:
     for cve in cves:
         cve.solved_this_week = cve.solved_within(start, end)
     cases = list(CVECase.objects.open_during(start, end)
-                 .prefetch_related("cves", "links", "attachments", "comments__author", "planner_links", "ticket_links").open_first())
+                 .prefetch_related("cves", "links", "attachments", "comments__author", "planner_links", "ticket_links", "course_links__folder", "course_links__material__folder").open_first())
     for case in cases:
         case.solved_this_week = case.solved_within(start, end)
         # Only what the case's "Vis i ugelogs-eksport" boxes allow; comments

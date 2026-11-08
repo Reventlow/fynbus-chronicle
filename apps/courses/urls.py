@@ -11,6 +11,8 @@ urlpatterns = [
     path("fil/<str:key>/", views.material_file, name="file"),
     path("visning/<str:key>/", views.material_preview, name="preview"),
     path("element/<str:key>/convert/", views.material_convert, name="material-convert"),
+    path("element/<str:key>/knyt/", views.link, name="material-link"),
+    path("knytning/<int:pk>/fjern/", views.unlink, name="unlink"),
     path("hentning/<int:pk>/retry/", views.import_retry, name="import-retry"),
     path("hentning/<int:pk>/delete/", views.import_delete, name="import-delete"),
     path("element/<str:key>/edit/", views.material_edit, name="material-edit"),
@@ -21,4 +23,5 @@ urlpatterns = [
     path("<slug:slug>/add/", views.material_add, name="material-add"),
     path("<slug:slug>/se/<str:key>/", views.player, name="player"),
     path("<slug:slug>/hentninger/", views.imports, name="imports"),
+    path("<slug:slug>/knyt/", views.link, name="folder-link"),
 ]

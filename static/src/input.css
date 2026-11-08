@@ -2507,6 +2507,21 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .km-desc { margin: 3px 0 0; font-size: 13px; color: var(--ink-2); }
   .km-meta { margin-top: 4px; font-size: 12px; color: var(--ink-4); }
   .km-url { font-family: var(--font-mono); font-size: 11.5px; overflow-wrap: anywhere; }
+  /* Course links: pill on priorities/cases, work chips on the course side. */
+  .pill-course { display: inline-flex; align-items: center; gap: 4px; flex: none; white-space: nowrap; font-size: 11px; font-weight: 600; line-height: 1.4; padding: 2px 8px; border-radius: 999px; color: oklch(0.42 0.08 240); background: oklch(0.95 0.02 240); border: 1px solid oklch(0.85 0.04 240); text-decoration: none; letter-spacing: -0.005em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  a.pill-course:hover { border-color: oklch(0.65 0.08 240); }
+  html.dark .pill-course { color: oklch(0.85 0.06 240); background: oklch(0.30 0.04 240); border-color: oklch(0.42 0.06 240); }
+  .km-work { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .km-work-chip { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 2px 4px 2px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--hairline); font-size: 12px; }
+  .km-work-chip a { color: var(--ink-2); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .km-work-chip a:hover { text-decoration: underline; }
+  .km-work-chip form { display: inline; margin: 0; }
+  .km-work-x { border: 0; background: none; color: var(--ink-4); cursor: pointer; padding: 0 5px; font-size: 14px; line-height: 1; }
+  .km-work-x:hover { color: var(--bad-ink); }
+  .km-link-slot:empty { display: none; }
+  .km-link-slot { margin-top: 10px; max-width: 560px; }
+  .km-link-form { display: flex; flex-direction: column; gap: 8px; }
+
   /* Player (/kursus/<mappe>/se/<key>/): stage + toolbar on the left, playlist on the right. */
   .km-player-page { display: flex; flex-direction: column; gap: 18px; }
   .km-player-title { margin: 0; font-size: 34px; line-height: 1.1; overflow-wrap: anywhere; }

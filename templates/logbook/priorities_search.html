@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load planner_tags %}{% load servicedesk_tags %}
+{% load planner_tags %}{% load servicedesk_tags %}{% load course_tags %}
 {% load static %}
 
 {% block title %}Opgavesøgning — FynBus Chronicle{% endblock %}
@@ -95,7 +95,7 @@
             </div>
           </a>
           <span class="inline-flex items-center gap-2">
-            {% planner_pill item %}{% ticket_pill item %}
+            {% planner_pill item %}{% ticket_pill item %}{% course_pill item %}
             <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}">
               {{ item.get_priority_display }}
             </span>

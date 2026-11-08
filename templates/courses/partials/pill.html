@@ -1,0 +1,1 @@
+{% for link in links %}<a href="{{ link.course_url }}" class="pill-course" title="Kursusmateriale: {{ link.course_label }}">{% include 'courses/partials/cap_icon.html' %} {{ link.course_label|truncatechars:40 }} ↗</a>{% endfor %}

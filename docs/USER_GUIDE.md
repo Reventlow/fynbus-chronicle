@@ -488,6 +488,15 @@ Menuen **Kursusmateriale** samler materiale fra kurser i **mapper**, fx *Anthrop
 3. "Rediger" ved et element retter titel, beskrivelse og link, og kan flytte elementet til en anden mappe. "Slet" fjerner elementet og filen
 4. "Rediger mappe" øverst omdøber mappen eller sletter den med alt indhold
 
+### Knyt kursusmateriale til en opgave (redaktører)
+
+En mappe eller et enkelt element kan knyttes til en **prioriteret opgave** eller en **sag** (fx en planlagt opgave), så man kan se, hvilket kursus en opgave handler om:
+
+1. Klik "Knyt til opgave" øverst i mappen, eller "Knyt" ved et element
+2. Vælg opgaven eller sagen på listen og klik "Knyt"
+
+Opgaven eller sagen får en blå **🎓 Kursus**-pille med mappens (eller elementets) navn alle steder, den står: i ugelogen, søgningen, under *Sager*, på kontrolpanelet, på opgavens og sagens side og i ugelogs-eksporten (PDF, HTML, mail og Markdown). Pillen åbner mappen, eller afspilleren for et enkelt element. Kursussiderne viser, hvilke opgaver de er knyttet til, men kun for dem, der er logget ind. × ved en opgave fjerner linket.
+
 > **Bemærk:** Filen kontrolleres, ikke kun navnet: en fil, der ikke er det, den hedder, afvises. Læg kun materiale op, som FynBus må dele, da siderne kan ses uden login.
 
 ---

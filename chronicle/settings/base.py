@@ -16,6 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost", cast=Csv())
+# Chronicle's public address, for absolute links in output that has no
+# request to take the host from (the week log exports, the mail).
+SITE_URL = config("SITE_URL", default="https://chronicle.fynbus.net").rstrip("/")
 
 # Application definition
 DJANGO_APPS = [
