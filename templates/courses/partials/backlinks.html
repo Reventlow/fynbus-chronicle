@@ -1,0 +1,7 @@
+{% comment %}Priority / case page: the linked course material.{% endcomment %}
+{% for link in links %}
+  <a href="{{ link.course_url }}" class="pill-course" title="Åbn kursusmaterialet">
+    {% include 'courses/partials/cap_icon.html' %}
+    Kursus: {{ link.course_label|truncatechars:70 }} ↗
+  </a>
+{% endfor %}

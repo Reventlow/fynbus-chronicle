@@ -53,7 +53,7 @@ def generate_pdf(weeklog: WeekLog) -> bytes:
     context = {
         "weeklog": weeklog,
         "priority_items": weeklog.priority_appearances.select_related("priority_item")
-        .prefetch_related("priority_item__planner_links", "priority_item__ticket_links").all(),
+        .prefetch_related("priority_item__planner_links", "priority_item__ticket_links", "priority_item__course_links__folder", "priority_item__course_links__material__folder").all(),
         "absences": weeklog.absences.all(),
         "incidents": weeklog.incidents.all(),
         "oncall": OnCallDuty.get_for_week(weeklog.year, weeklog.week_number),

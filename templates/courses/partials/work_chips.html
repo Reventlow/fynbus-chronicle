@@ -1,0 +1,18 @@
+{% comment %}
+  Course side (folder header or item row, logged-in users): the priorities
+  and cases this is tied to, with × for editors. Context: links, can_edit.
+{% endcomment %}
+{% if links %}
+  <div class="km-work">
+    {% for link in links %}
+      <span class="km-work-chip">
+        <a href="{{ link.work_url }}" title="{{ link.work_label }}">{{ link.work_label|truncatechars:60 }}</a>
+        {% if can_edit %}
+          <form method="post" action="{% url 'courses:unlink' link.pk %}" onsubmit="return confirm('Fjern linket til {{ link.work_label|escapejs }}?')">{% csrf_token %}
+            <button type="submit" class="km-work-x" aria-label="Fjern linket til {{ link.work_label }}">×</button>
+          </form>
+        {% endif %}
+      </span>
+    {% endfor %}
+  </div>
+{% endif %}

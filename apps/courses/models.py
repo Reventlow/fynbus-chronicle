@@ -82,7 +82,7 @@ class CourseFolder(models.Model):
         super().save(*args, **kwargs)
 
     # First path segments under /kursus/ that are not folders (see urls.py).
-    RESERVED_SLUGS = {"fil", "visning", "element", "hentning"}
+    RESERVED_SLUGS = {"fil", "visning", "element", "hentning", "knytning"}
 
     @classmethod
     def unique_slug(cls, name: str, exclude_pk: int | None = None) -> str:
@@ -254,6 +254,91 @@ class CourseImport(models.Model):
         if self.bytes_total:
             return min(100, round(self.bytes_done * 100 / self.bytes_total))
         return None
+
+
+class CourseLink(models.Model):
+    """Ties course material to Chronicle work: a folder or a single item on
+    one side, a priority item or a case on the other. The priority or case
+    then carries a "Kursus" pill wherever it is listed, and the course page
+    lists the work (to logged-in users only, since course pages are public).
+    """
+
+    folder = models.ForeignKey(CourseFolder, null=True, blank=True, on_delete=models.CASCADE, related_name="links")
+    material = models.ForeignKey(CourseMaterial, null=True, blank=True, on_delete=models.CASCADE, related_name="links")
+    priority_item = models.ForeignKey(
+        "logbook.PriorityItem", null=True, blank=True, on_delete=models.CASCADE, related_name="course_links",
+    )
+    case = models.ForeignKey("cves.CVECase", null=True, blank=True, on_delete=models.CASCADE, related_name="course_links")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Kursuslink"
+        verbose_name_plural = "Kursuslinks"
+        ordering = ["created_at", "pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(folder__isnull=False, material__isnull=True)
+                | models.Q(folder__isnull=True, material__isnull=False),
+                name="courselink_one_course_side",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(priority_item__isnull=False, case__isnull=True)
+                | models.Q(priority_item__isnull=True, case__isnull=False),
+                name="courselink_one_work_side",
+            ),
+            models.UniqueConstraint(fields=["folder", "priority_item"], name="courselink_folder_priority",
+                                    condition=models.Q(folder__isnull=False, priority_item__isnull=False)),
+            models.UniqueConstraint(fields=["folder", "case"], name="courselink_folder_case",
+                                    condition=models.Q(folder__isnull=False, case__isnull=False)),
+            models.UniqueConstraint(fields=["material", "priority_item"], name="courselink_material_priority",
+                                    condition=models.Q(material__isnull=False, priority_item__isnull=False)),
+            models.UniqueConstraint(fields=["material", "case"], name="courselink_material_case",
+                                    condition=models.Q(material__isnull=False, case__isnull=False)),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.course_label} ↔ {self.work_label}"
+
+    # --- the course side -------------------------------------------------
+
+    @property
+    def course_title(self) -> str:
+        return self.material.title if self.material_id else self.folder.name
+
+    @property
+    def course_label(self) -> str:
+        """For the pill: the folder name, or "Folder: item" for a single item."""
+        if self.material_id:
+            return f"{self.material.folder.name}: {self.material.title}"
+        return self.folder.name
+
+    @property
+    def course_url(self) -> str:
+        if self.material_id:
+            m = self.material
+            return m.url if m.is_link else (m.get_player_url() if m.playable else m.folder.get_absolute_url())
+        return self.folder.get_absolute_url()
+
+    # --- the work side ---------------------------------------------------
+
+    @property
+    def work(self):
+        return self.priority_item if self.priority_item_id else self.case
+
+    @property
+    def work_label(self) -> str:
+        if self.priority_item_id:
+            return f"Prioriteret opgave: {self.priority_item.title}"
+        return f"{self.case.get_kind_display()} #{self.case.pk}: {self.case.title}"
+
+    @property
+    def work_url(self) -> str:
+        if self.priority_item_id:
+            return reverse("logbook:priority-item-history", kwargs={"pk": self.priority_item_id})
+        return reverse("cves:case-detail", kwargs={"pk": self.case_id})
 
 
 @receiver(post_delete, sender=CourseMaterial)

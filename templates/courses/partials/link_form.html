@@ -1,0 +1,29 @@
+{% comment %}
+  "Knyt til opgave": loaded into the slot under a folder header or an item
+  row. Context: folder or material, priorities, cases, action.
+{% endcomment %}
+<form method="post" action="{{ action }}" class="planner-link-form km-link-form" aria-label="Knyt til en prioriteret opgave eller sag">
+  {% csrf_token %}
+  <div class="label-eyebrow">Knyt {% if material %}»{{ material.title|truncatechars:50 }}«{% else %}mappen{% endif %} til en opgave</div>
+  {% if priorities or cases %}
+    <select name="target" class="input" required>
+      {% if priorities %}
+        <optgroup label="Prioriterede opgaver">
+          {% for item in priorities %}<option value="p{{ item.pk }}">{{ item.title }}</option>{% endfor %}
+        </optgroup>
+      {% endif %}
+      {% if cases %}
+        <optgroup label="Åbne sager">
+          {% for case in cases %}<option value="c{{ case.pk }}">#{{ case.pk }} {{ case.title }} ({{ case.get_kind_display|lower }})</option>{% endfor %}
+        </optgroup>
+      {% endif %}
+    </select>
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-sm btn-primary">Knyt</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="this.closest('.km-link-form').remove()">Annuller</button>
+    </div>
+  {% else %}
+    <p style="margin: 0; font-size: 13px; color: var(--ink-3);">Der er ingen åbne prioriterede opgaver eller sager at knytte til.</p>
+    <button type="button" class="btn btn-sm btn-ghost" style="align-self: flex-start;" onclick="this.closest('.km-link-form').remove()">Luk</button>
+  {% endif %}
+</form>

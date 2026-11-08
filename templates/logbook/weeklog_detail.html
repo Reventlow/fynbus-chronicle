@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load planner_tags %}{% load servicedesk_tags %}
+{% load planner_tags %}{% load servicedesk_tags %}{% load course_tags %}
 {% load static %}
 
 {% block title %}{{ weeklog.week_label }} — FynBus Chronicle{% endblock %}
@@ -262,7 +262,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </a>
         {% planner_rows case %}
-        {% ticket_rows case %}
+        {% ticket_rows case %}{% course_rows case %}
       {% endfor %}
       {% for cve in week_cves %}
         <a href="{% url 'cves:detail' cve.pk %}" class="incident-row">
