@@ -299,6 +299,35 @@ def test_add_note_without_settings(settings):
     assert "ikke sat op" in ServiceDeskClient().add_note(1, "x")
 
 
+# --- "+ Prioriteret opgave" straight on the ticket (1.20.3) --------------------------------
+
+
+@pytest.mark.django_db
+def test_direct_priority_button_creates_and_tags(client, anna, sd, notes, week):
+    ticket(4711, subject="Skærm flimrer")
+    html = client.get(reverse("servicedesk:tickets")).content.decode()
+    assert "+ Prioriteret opgave" in html and '"action": "priority"' in html
+    response = client.post(reverse("servicedesk:link", args=[4711]), {"action": "priority"})
+    link = TicketLink.objects.get()
+    assert link.priority_item.title == "Skærm flimrer" and len(notes.calls) == 1
+    assert PriorityItemAppearance.objects.filter(priority_item=link.priority_item, weeklog=week).exists()
+    # the re-rendered row no longer offers it, but still offers "Knyt"
+    row = response.content.decode()
+    assert "+ Prioriteret opgave" not in row and ">Knyt</button>" in row
+
+
+@pytest.mark.django_db
+def test_direct_priority_button_hidden_when_linked_or_viewer(client, anna, sd, week):
+    ticket(4711)
+    ticket(4712, technician="Bo")
+    item = PriorityItem.objects.create(origin_weeklog=week, title="Printere")
+    TicketLink.objects.create(sdp_id=4711, subject="Printer", priority_item=item)
+    html = client.get(reverse("servicedesk:tickets")).content.decode()
+    assert html.count("+ Prioriteret opgave") == 1  # only #4712
+    anna.groups.add(Group.objects.get_or_create(name="Viewer")[0])
+    assert "+ Prioriteret opgave" not in client.get(reverse("servicedesk:tickets")).content.decode()
+
+
 # --- the pill on priorities and cases -----------------------------------------------------
 
 

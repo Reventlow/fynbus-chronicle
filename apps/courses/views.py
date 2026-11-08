@@ -325,13 +325,18 @@ def import_delete(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 def _link_targets() -> dict:
-    """What a course item can be tied to: open priorities and open cases."""
-    from apps.cves.models import CVECase
+    """What a course item can be tied to. Unlike ServiceDesk links, finished
+    work counts: a course is often linked after the fact ("Deltog i …").
+    Open priorities and cases first, then the most recently finished ones."""
+    from apps.cves.models import CVE, CVECase
     from apps.logbook.models import PriorityItem
 
+    live = PriorityItem.objects.active()
     return {
-        "priorities": PriorityItem.objects.active().exclude(status=PriorityItem.Status.COMPLETED).order_by("title")[:300],
+        "priorities": live.exclude(status=PriorityItem.Status.COMPLETED).order_by("title")[:300],
+        "done_priorities": live.filter(status=PriorityItem.Status.COMPLETED).order_by("-last_active_at")[:200],
         "cases": CVECase.objects.open().order_by("-updated_at")[:300],
+        "done_cases": CVECase.objects.filter(state=CVE.State.SOLVED).order_by("-solved_at")[:200],
     }
 
 

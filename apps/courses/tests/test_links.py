@@ -64,6 +64,19 @@ def test_picker_lists_open_priorities_and_cases(client, editor, folder, item, ca
     assert f'value="p{item.pk}"' in html and f'value="c{case.pk}"' in html and "Knyt mappen" in html
 
 
+def test_picker_includes_finished_work(client, editor, folder, week):
+    from apps.cves.models import CVE
+
+    done = PriorityItem.objects.create(origin_weeklog=week, title="Deltog i Claude Code kursus",
+                                       status=PriorityItem.Status.COMPLETED)
+    solved = CVECase.objects.create(kind=CVECase.Kind.TASK, title="Kursusdag", state=CVE.State.SOLVED)
+    html = client.get(reverse("courses:folder-link", args=[folder.slug])).content.decode()
+    assert "Afsluttede prioriterede opgaver" in html and f'value="p{done.pk}"' in html
+    assert "Færdigbehandlede sager" in html and f'value="c{solved.pk}"' in html and "Søg i opgaver" in html
+    client.post(reverse("courses:folder-link", args=[folder.slug]), {"target": f"p{done.pk}"})
+    assert CourseLink.objects.get().priority_item == done
+
+
 def test_link_folder_to_priority(client, editor, folder, item):
     resp = client.post(reverse("courses:folder-link", args=[folder.slug]), {"target": f"p{item.pk}"})
     link = CourseLink.objects.get()

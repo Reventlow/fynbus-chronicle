@@ -403,6 +403,7 @@ Fanen **Uløste** viser de sager, der er åbne nu, ældste først. **Lukkede** v
 - Hver sag viser nummer, emne, status, kategori, tekniker og afdeling. **Nummeret er et link** til sagen i ServiceDesk.
 - **Liggetid** står til venstre: for en åben sag hvor længe den har været åben, for en lukket sag hvor lang tid den tog. Farven er den samme som i ugelogens liggetid.
 - Listen kommer fra Chronicles kopi af ServiceDesk, som synkroniseres med få minutters mellemrum. Linjen under titlen viser hvornår (rød, hvis synkroniseringen er gået i stå). **Synk nu** henter ændringer med det samme og genindlæser siden.
+- **+ Prioriteret opgave** (redaktører) opretter med ét klik en prioriteret opgave i denne uges ugelog med sagens emne og knytter den til sagen. Knappen vises kun, så længe sagen ikke er knyttet til en prioriteret opgave.
 - **Knyt** (redaktører) knytter sagen til en prioriteret opgave eller en sag i Chronicle: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende. Opgaven eller sagen får en *ServiceDesk #nummer*-pille, der åbner sagen i ServiceDesk, i ugelogen, i søgningen, under *Sager*, på kontrolpanelet og på sin egen side.
 - Samtidig får sagen i ServiceDesk en **intern note** (ikke synlig for brugeren, ingen mail) med et link til opgaven eller sagen i Chronicle og dit navn. Kunne noten ikke tilføjes, står årsagen ved linket, med *Prøv igen*.
 - **×** ved linket fjerner det igen, og ServiceDesk får en note om det.
@@ -493,7 +494,7 @@ Menuen **Kursusmateriale** samler materiale fra kurser i **mapper**, fx *Anthrop
 En mappe eller et enkelt element kan knyttes til en **prioriteret opgave** eller en **sag** (fx en planlagt opgave), så man kan se, hvilket kursus en opgave handler om:
 
 1. Klik "Knyt til opgave" øverst i mappen, eller "Knyt" ved et element
-2. Vælg opgaven eller sagen på listen og klik "Knyt"
+2. Vælg opgaven eller sagen på listen og klik "Knyt". Listen viser åbne opgaver og sager først og derefter de senest afsluttede, så et kursus også kan knyttes til en afsluttet opgave som "Deltog i …". Søgefeltet over listen filtrerer den
 
 Opgaven eller sagen får en blå **🎓 Kursus**-pille med mappens (eller elementets) navn alle steder, den står: i ugelogen, søgningen, under *Sager*, på kontrolpanelet, på opgavens og sagens side og i ugelogs-eksporten (PDF, HTML, mail og Markdown). Pillen åbner mappen, eller afspilleren for et enkelt element. Kursussiderne viser, hvilke opgaver de er knyttet til, men kun for dem, der er logget ind. × ved en opgave fjerner linket.
 

@@ -1,7 +1,8 @@
 {% comment %}
   One ticket: age, number (link to ServiceDesk), subject, status line, and
-  the Chronicle priorities / cases it is linked to. Editors get "Knyt",
-  which opens the link form in .sd-link-slot.
+  the Chronicle priorities / cases it is linked to. Editors get
+  "+ Prioriteret opgave" (one click, hidden once a priority is linked) and
+  "Knyt", which opens the link form in .sd-link-slot.
 {% endcomment %}
 <div class="sd-ticket" id="ticket-{{ ticket.sdp_id }}">
   <span class="sd-age" style="--age: {{ ticket.age_color }};"
@@ -56,8 +57,16 @@
     <div class="sd-link-slot"></div>
   </div>
   {% if can_link %}
-    <button type="button" class="btn btn-sm btn-ghost sd-link-btn" hx-get="{% url 'servicedesk:link' ticket.sdp_id %}"
-            hx-target="#ticket-{{ ticket.sdp_id }} .sd-link-slot" hx-swap="innerHTML"
-            title="Knyt sagen til en prioriteret opgave eller sag i Chronicle">Knyt</button>
+    <div class="sd-actions">
+      {% if not ticket.has_priority %}
+        {# One click: a priority on this week's log named after the ticket, tagged to it, with the internal note in ServiceDesk. #}
+        <button type="button" class="btn btn-sm btn-outline sd-new-priority" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}"
+                hx-vals='{"action": "priority"}' hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this"
+                title="Opret en prioriteret opgave i denne uges ugelog, knyttet til #{{ ticket.sdp_id }}">+ Prioriteret opgave</button>
+      {% endif %}
+      <button type="button" class="btn btn-sm btn-ghost sd-link-btn" hx-get="{% url 'servicedesk:link' ticket.sdp_id %}"
+              hx-target="#ticket-{{ ticket.sdp_id }} .sd-link-slot" hx-swap="innerHTML"
+              title="Knyt sagen til en ny sag eller en eksisterende opgave eller sag i Chronicle">Knyt</button>
+    </div>
   {% endif %}
 </div>
