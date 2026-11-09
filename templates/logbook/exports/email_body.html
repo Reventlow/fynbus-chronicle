@@ -90,7 +90,28 @@
           <tr>
             <td>
 
-  <h1>FynBus IT Ugelog - {{ weeklog.week_label }}</h1>
+  {% comment %}
+    Content mirrors weekly_report.html (the PDF/HTML download) section for
+    section; only the markup differs. apps/logbook/tests/test_export_parity.py
+    checks that every fact reaches the mail, the downloads and the Markdown.
+  {% endcomment %}
+  <h1>FynBus IT Ugelog</h1>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; background-color:#FAF9F7; border:1px solid #E5E0D8; margin:0 0 15px 0;" bgcolor="#FAF9F7">
+    <tr>
+      <td style="padding:12px 15px; font-size:14px; color:#2C2825; border:none;">
+        <div><strong>Periode:</strong> {{ weeklog.week_label }}</div>
+        <div><strong>Genereret:</strong> {% now "d. F Y H:i" %}</div>
+        {% if oncall_split %}
+        <div><strong>Rådighedsvagt:</strong> {{ oncall_split }}</div>
+        {% elif oncall %}
+        <div><strong>Rådighedsvagt:</strong> {{ oncall.user.get_full_name|default:oncall.user.username }}</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <h2>Helpdesk Statistik</h2>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; background-color:#FAF9F7; border:1px solid #E5E0D8; margin:15px 0;" bgcolor="#FAF9F7">
     <tr>
@@ -100,15 +121,15 @@
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{{ weeklog.helpdesk_closed }}</div>
-        <div style="font-size:12px; color:#6B635B;">Lukkede</div>
+        <div style="font-size:12px; color:#6B635B;">Lukkede sager</div>
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{{ weeklog.helpdesk_open }}</div>
-        <div style="font-size:12px; color:#6B635B;">Åbne</div>
+        <div style="font-size:12px; color:#6B635B;">Åbne sager</div>
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
-        <div style="font-size:12px; color:#6B635B;">Netto</div>
+        <div style="font-size:12px; color:#6B635B;">Netto ændring</div>
       </td>
     </tr>
     {% if avg_new is not None and avg_closed is not None %}
@@ -225,7 +246,7 @@
   {% endif %}
 
   {% if priority_items %}
-  <h2>Prioriterede Opgaver ({{ priority_items.count }})</h2>
+  <h2>Prioriterede Opgaver</h2>
   {% for item in priority_items %}
   <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;">
     <div>
@@ -238,12 +259,15 @@
     {% if item.description %}
     <div class="md" style="font-size: 13px; color: #6B635B; margin-top: 6px;">{{ item.description|render_markdown_inline }}</div>
     {% endif %}
+    {% if item.priority_item.notes %}
+    <div class="md" style="font-size: 13px; color: #6B635B; margin-top: 6px;"><strong>Noter:</strong> {{ item.priority_item.notes|render_markdown_inline }}</div>
+    {% endif %}
   </div>
   {% endfor %}
   {% endif %}
 
   {% if absences %}
-  <h2>Bemanding ({{ absences.count }})</h2>
+  <h2>Bemanding</h2>
   {% for absence in absences %}
   <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;">
     <div>
@@ -260,7 +284,7 @@
   {% endif %}
 
   {% if incidents %}
-  <h2>Hændelser ({{ incidents.count }})</h2>
+  <h2>Hændelser</h2>
   {% for incident in incidents %}
   <div style="background-color: #FAF9F7; border: 1px solid #E5E0D8; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px;{% if not incident.resolved %} border-left: 4px solid #A65D57;{% endif %}">
     <div>
@@ -271,7 +295,7 @@
       </span>
     </div>
     <div style="font-size: 13px; color: #6B635B; margin-top: 6px;">
-      {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d. M Y H:i" }}
+      {{ incident.get_incident_type_display }} &middot; {{ incident.occurred_at|date:"d/m/Y H:i" }}
     </div>
     <div class="md" style="font-size: 13px; color: #6B635B; margin-top: 4px;">{{ incident.description|render_markdown_inline }}</div>
     {% if incident.resolution %}

@@ -1,14 +1,18 @@
 """
 Markdown export functionality for week logs.
 
-Generates a Markdown document from a WeekLog instance.
+Generates a Markdown document from a WeekLog instance. The content
+mirrors the PDF/HTML download and the mail (weekly_report.html and
+email_body.html) section for section, without the charts;
+apps/logbook/tests/test_export_parity.py keeps them in step.
 """
 
-from datetime import datetime
+from django.utils import dateformat, timezone
 
 from apps.courses.templatetags.course_tags import (
     markdown_links as course_markdown_links,
 )
+from apps.cves.models import weeklog_cves
 from apps.oncall.models import OnCallDuty, OnCallSegment
 from apps.planner.templatetags.planner_tags import markdown_links
 from apps.servicedesk.templatetags.servicedesk_tags import (
@@ -34,7 +38,8 @@ def generate_markdown(weeklog: WeekLog) -> str:
     lines.append("# FynBus IT Ugelog")
     lines.append("")
     lines.append(f"**Periode:** {weeklog.week_label}")
-    lines.append(f"**Genereret:** {datetime.now().strftime('%d. %B %Y %H:%M')}")
+    now = timezone.localtime()
+    lines.append(f"**Genereret:** {dateformat.format(now, 'd. F Y H:i')}")
     oncall = OnCallDuty.get_for_week(weeklog.year, weeklog.week_number)
     oncall_split = OnCallSegment.split_week_display(weeklog.year, weeklog.week_number)
     if oncall_split:
@@ -52,17 +57,18 @@ def generate_markdown(weeklog: WeekLog) -> str:
     delta_str = f"+{delta}" if delta > 0 else str(delta)
     lines.append(
         f"**Nye sager:** {weeklog.helpdesk_new} | "
-        f"**Lukkede:** {weeklog.helpdesk_closed} | "
-        f"**Åbne:** {weeklog.helpdesk_open} | "
-        f"**Netto:** {delta_str}"
+        f"**Lukkede sager:** {weeklog.helpdesk_closed} | "
+        f"**Åbne sager:** {weeklog.helpdesk_open} | "
+        f"**Netto ændring:** {delta_str}"
     )
     lines.append("")
     avgs = WeekLog.helpdesk_weekly_averages()
-    lines.append(
-        f"**Gns. nye/uge:** {avgs['avg_new']} | "
-        f"**Gns. lukkede/uge:** {avgs['avg_closed']}"
-    )
-    lines.append("")
+    if avgs["avg_new"] is not None and avgs["avg_closed"] is not None:
+        lines.append(
+            f"**Gns. nye/uge:** {avgs['avg_new']} | "
+            f"**Gns. lukkede/uge:** {avgs['avg_closed']}"
+        )
+        lines.append("")
 
     # Liggetid — open tickets by age, as a plain table
     if weeklog.has_helpdesk_age_breakdown:
@@ -113,6 +119,8 @@ def generate_markdown(weeklog: WeekLog) -> str:
         lines.append("")
         lines.append(f"> {weeklog.summary}")
         lines.append("")
+
+    lines.extend(_week_cases(weeklog))
 
     # Meeting minutes
     if weeklog.meeting_skipped:
@@ -202,6 +210,64 @@ def generate_markdown(weeklog: WeekLog) -> str:
     # Footer
     lines.append("---")
     lines.append("")
-    lines.append(f"*FynBus IT Chronicle | Genereret {datetime.now().strftime('%d/%m/%Y %H:%M')}*")
+    lines.append(f"*FynBus IT Chronicle | Genereret {dateformat.format(now, 'd/m/Y H:i')}*")
 
     return "\n".join(lines)
+
+
+def _one_line(text: str) -> str:
+    return " ".join((text or "").split())
+
+
+def _week_cases(weeklog: WeekLog) -> list[str]:
+    """"Sårbarheder og hændelser", as in _week_cases.html: the per-kind
+    counts (every case), then each case its export boxes allow, with only
+    the parts those boxes allow. Attachments by name and TLP only."""
+    ctx = weeklog_cves(weeklog)
+    if not ctx["week_cases"]:
+        return []
+    lines = ["## Sårbarheder og hændelser", "",
+             "| | Åbne | Færdigbehandlet |", "| --- | ---: | ---: |"]
+    for row in ctx["week_summary"]:
+        lines.append(f"| {row['label']} | {row['open']} | {row['solved']} |")
+    lines += ["", "*Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.*", ""]
+    for case in ctx["export_cases"]:
+        lines.append(
+            f"### {case.get_kind_display()} · sag #{case.pk} · {case.title}"
+            f"{markdown_links(case)}{ticket_markdown_links(case)}{course_markdown_links(case)}"
+        )
+        lines.append("")
+        facts = [f"**Status:** {case.outcome_label}"]
+        if case.source:
+            facts.append(case.source_label)
+        if case.reference:
+            facts.append(case.reference)
+        cves = [f"`{c.cve_id}`" for c in case.cves.all()]
+        if cves:
+            facts.append(", ".join(cves))
+        elif case.is_vulnerability:
+            facts.append("Ingen CVE")
+        if case.solved_this_week:
+            facts.append("Færdigbehandlet denne uge")
+        lines += [" · ".join(facts), ""]
+        if case.export_assessment and case.assessment:
+            lines += [f"**Vurdering:** {case.assessment}", ""]
+        if case.export_solution and case.solution:
+            lines += [f"**Løsning / handling:** {case.solution}", ""]
+        if case.week_comments:
+            lines.append("**Kommentarer denne uge:**")
+            for c in case.week_comments:
+                who = f" · {c.author.get_full_name() or c.author.username}" if c.author else ""
+                when = dateformat.format(timezone.localtime(c.created_at), "d/m H:i")
+                lines.append(f"- {when}{who}: {_one_line(c.text)}")
+            lines.append("")
+        if case.export_links_list:
+            lines.append("**Links:**")
+            lines += [f"- [{link.label or link.url}]({link.url})" for link in case.export_links_list]
+            lines.append("")
+        if case.export_attachments_list:
+            lines.append("**Vedhæftninger** *(hentes i Chronicle)*:")
+            lines += [f"- {a.display_title}" + (f" · **{a.get_tlp_display()}**" if a.tlp else "")
+                      for a in case.export_attachments_list]
+            lines.append("")
+    return lines

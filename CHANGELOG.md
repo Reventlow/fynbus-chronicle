@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.20.4 — 2026-11-09
+
+### Fixed
+- **Ugelogs-mailen og eksporterne har nu det samme indhold.** Mailen manglede *Periode*, *Genereret* og *Rådighedsvagt* øverst, overskriften *Helpdesk Statistik* og *Noter* på ældre opgaver, som PDF, HTML og Markdown viste. Markdown-filen manglede hele afsnittet *Sårbarheder og hændelser*; det står nu samme sted som i de andre, med optællingen pr. type og de sager, der må komme med i eksporten.
+- Ens ordvalg alle fire steder: "Lukkede sager", "Åbne sager" og "Netto ændring", ingen antal i mailens overskrifter, og hændelsers tidspunkt skrives dd/mm/åååå tt:mm. Datoen i Markdown-filen står på dansk.
+- En ny test fylder alle afsnit i en uge og tjekker, at hver oplysning og rækkefølgen af afsnittene er den samme i PDF, HTML, Markdown og mail.
+
 ## 1.20.3 — 2026-11-08
 
 ### Added
