@@ -413,6 +413,8 @@ Fanen **Uløste** viser de sager, der er åbne nu, ældste først. **Lukkede** v
 
 ## Eksporter rapporter
 
+Ugeloggen kan hentes som PDF, HTML eller Markdown og sendes som mail. **Alle fire har det samme indhold i samme rækkefølge**: periode og rådighedsvagt, helpdesk-statistik, ugeoversigt, sårbarheder og hændelser, mødereferat, prioriterede opgaver (med pillerne og evt. gamle noter), bemanding og hændelser. Markdown-filen har ingen diagrammer; tallene står i tabeller i stedet.
+
 Uger fra før liggetid-opdelingen blev indført viser ikke afsnittet. Administratoren kan genskabe tallene for en lukket uge fra ServiceDesk-historikken med `python manage.py backfill_liggetid <år> <uge>` (køres i sync-containeren).
 
 Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: en bjælke pr. aldersgruppe (under 1 uge, 1-2 uger, 2 uger-1 måned, 1-3 måneder, 3-6 måneder, 6-12 måneder og over 12 måneder) med antal og andel, samt en linje der opsummerer hvor mange af de åbne sager der har ligget i mere end 1 måned. Afsnittet vises kun for uger hvor opdelingen er registreret.
