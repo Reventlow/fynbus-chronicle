@@ -24,7 +24,7 @@ COPY static/js/description-images.js ./static/js/
 RUN npm run build:css
 
 # Stage 2: Python dependencies (use full image for building - has more libs)
-FROM python:3.12-bookworm AS python-builder
+FROM python:3.15-bookworm AS python-builder
 
 WORKDIR /build
 
@@ -44,7 +44,7 @@ COPY requirements/lock/requirements-prod.txt ./requirements/lock/
 RUN pip install --no-cache-dir --require-hashes -r requirements/lock/requirements-prod.txt
 
 # Stage 3: Production image
-FROM python:3.12-slim AS production
+FROM python:3.15-slim AS production
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
