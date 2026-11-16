@@ -94,3 +94,26 @@ class StatisticsShareLink(models.Model):
 
     def get_guide_path(self) -> str:
         return reverse("dashboard:statistics-shared-guide", kwargs={"token": self.token})
+
+
+class DashboardLayout(models.Model):
+    """One user's Kontrolpanel: section order and hidden sections/cards.
+
+    Both fields hold keys from ``apps.dashboard.layout.SECTIONS`` and are
+    always read through ``layout.build_layout``, which ignores unknown keys
+    and fills in sections added after the user saved.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="dashboard_layout"
+    )
+    order = models.JSONField(default=list, blank=True)
+    hidden = models.JSONField(default=list, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Kontrolpanel-layout"
+        verbose_name_plural = "Kontrolpanel-layouts"
+
+    def __str__(self) -> str:
+        return f"Kontrolpanel for {self.user}"

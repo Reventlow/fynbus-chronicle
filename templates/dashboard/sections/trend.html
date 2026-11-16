@@ -1,0 +1,79 @@
+{% load star_wars %}
+{# 03 Udvikling: flow per week and open tickets over time, each hideable. #}
+  <section class="dash-section js-dashboard-graphs">
+    {% with right="Kilde: ManageEngine · synk hver "|add:sync_minutes|add:". min" %}
+      {% include 'components/section_label.html' with n=section.n title="Udvikling" sub="Helpdesk-flow over tid" right_eyebrow=right %}
+    {% endwith %}
+    <div class="trend-grid">
+      {% if section.show.flow %}
+      {# New vs. closed per week #}
+      <div class="card overflow-hidden" style="padding: 0;"
+           x-data="{
+             win: parseInt(localStorage.getItem('flowChartWindow') || '12'),
+             set(n) {
+               this.win = n;
+               localStorage.setItem('flowChartWindow', String(n));
+               window.dispatchEvent(new CustomEvent('flow-chart-window', { detail: n }));
+             },
+             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+           }">
+        <div class="card-head" style="padding: 18px 24px 8px; margin: 0;">
+          <div>
+            <div class="label-eyebrow">{% sw_phrase "Ny vs. lukket" "Nye vs. fuldførte" "Oprørere vs. fanget" "Nye vs. hjembragte" trek="Nye vs. fuldførte" klingon="Nye vs. vundne" %} · <span x-text="label()">12 uger</span></div>
+            <h3>{% sw_phrase "Flow pr. uge" "Missioner pr. uge" "Oprørere pr. uge" "Kapringer pr. uge" trek="Missioner pr. uge" klingon="Kampe pr. uge" %}</h3>
+          </div>
+          <div class="segmented">
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 12 }" @click="set(12)">12U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 26 }" @click="set(26)">26U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 52 }" @click="set(52)">12M</button>
+          </div>
+        </div>
+        <div hx-get="{% url 'dashboard:partial-helpdesk-flow-chart' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div style="padding: 0 24px;">
+            <div class="skeleton" style="height: 220px; width: 100%;"></div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <span><span class="chart-swatch chart-swatch-info"></span>Nye</span>
+          <span><span class="chart-swatch chart-swatch-good"></span>Lukkede</span>
+        </div>
+      </div>
+
+      {% endif %}
+
+      {% if section.show.open_chart %}
+      {# Open tickets over time #}
+      <div class="card overflow-hidden" style="padding: 0;"
+           x-data="{
+             win: parseInt(localStorage.getItem('openChartWindow') || '12'),
+             set(n) {
+               this.win = n;
+               localStorage.setItem('openChartWindow', String(n));
+               window.dispatchEvent(new CustomEvent('open-chart-window', { detail: n }));
+             },
+             label() { return this.win === 52 ? '12 måneder' : this.win + ' uger'; }
+           }">
+        <div class="card-head" style="padding: 18px 24px 8px; margin: 0;">
+          <div>
+            <div class="label-eyebrow">{% sw_phrase "Åbne sager" "Aktive missioner" "Aktive oprørere" "Åbne kapringer" trek="Aktive missioner" klingon="Aktive kampe" %} · <span x-text="label()">12 uger</span></div>
+            <h3>Udvikling pr. uge</h3>
+          </div>
+          <div class="segmented">
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 12 }" @click="set(12)">12U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 26 }" @click="set(26)">26U</button>
+            <button type="button" class="segmented-btn" :class="{ 'segmented-btn-active': win === 52 }" @click="set(52)">12M</button>
+          </div>
+        </div>
+        <div hx-get="{% url 'dashboard:partial-helpdesk-chart' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div style="padding: 0 24px 20px;">
+            <div class="skeleton" style="height: 240px; width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>

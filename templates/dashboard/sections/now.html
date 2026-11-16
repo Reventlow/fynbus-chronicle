@@ -1,0 +1,65 @@
+{% comment %}
+  01 Nu: cases (left) and on-call + the current week (right). Cards the
+  user hid are not rendered (section.show, apps/dashboard/layout.py); with
+  one card left, .is-single gives it the full width.
+{% endcomment %}
+  <section class="dash-section js-dashboard-extras">
+    {% url 'cves:case-list' as url_cases %}
+    {% include 'components/section_label.html' with n=section.n title="Nu" sub="Sårbarheder, hændelser, planlagte opgaver, ugens log" link_url=url_cases link_label="Se alle sager" %}
+    <div class="now-grid{% if section.shown_parts == 1 %} is-single{% endif %}">
+      {% if section.show.cases %}
+      {% comment %}Left column: the cases card (vulnerabilities and incidents). The old
+         incidents card is gone since 1.12.0: incidents are cases now.{% endcomment %}
+      <div class="flex flex-col" style="gap: var(--gutter); min-width: 0;">
+        {# Cases (open first, with their CVEs), then CVEs without a case #}
+        <div style="flex: 1 1 auto; min-height: 0;" hx-get="{% url 'dashboard:partial-cves' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card" style="padding: 0;">
+            <div style="padding: 18px 24px 10px;">
+              <div class="skeleton" style="height: 11px; width: 140px; margin-bottom: 8px;"></div>
+              <div class="skeleton" style="height: 16px; width: 160px;"></div>
+            </div>
+            {% for _ in "123" %}
+              <div style="padding: var(--row-y) 24px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px;">
+                <div class="skeleton" style="height: 14px; width: 70%;"></div>
+                <div class="skeleton" style="height: 11px; width: 40%;"></div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {% endif %}
+
+      {% if section.show.week %}
+      {# Right column: on-call (when the sidebar hides it) and the current week #}
+      <div class="flex flex-col" style="gap: var(--gutter); min-width: 0;">
+        {% comment %}
+          The sidebar shows who is on call, so this card only appears when
+          the sidebar's card cannot be seen: on phones (no sidebar) and with
+          the sidebar collapsed to icons (.dash-oncall, input.css).
+        {% endcomment %}
+        <div class="dash-oncall" hx-get="{% url 'dashboard:partial-oncall' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card">
+            <div class="skeleton" style="height: 11px; width: 100px; margin-bottom: 14px;"></div>
+            <div class="skeleton" style="height: 44px; width: 220px;"></div>
+          </div>
+        </div>
+
+        <div hx-get="{% url 'dashboard:partial-current-week' %}"
+             hx-trigger="load, every 60s"
+             hx-swap="innerHTML">
+          <div class="card">
+            <div class="skeleton" style="height: 11px; width: 180px; margin-bottom: 10px;"></div>
+            <div class="skeleton" style="height: 16px; width: 80px; margin-bottom: 14px;"></div>
+            <div class="skeleton" style="height: 14px; width: 100%; margin-bottom: 8px;"></div>
+            <div class="skeleton" style="height: 14px; width: 90%;"></div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>

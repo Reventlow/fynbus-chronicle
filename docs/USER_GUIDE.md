@@ -61,7 +61,7 @@ Alle brugere er redaktører som standard og har fuld adgang til at:
 Brugere der er tilføjet til gruppen "Viewer" har kun læseadgang:
 
 - **Kan se**: Kontrolpanel, ugelogs, vagtkalender, statistik, forslag, rapporter og dokumentation
-- **Kan ikke**: Oprette, redigere, slette, sortere eller eksportere noget
+- **Kan ikke**: Oprette, redigere, slette, sortere eller eksportere noget (undtagen deres eget kontrolpanel, se [Tilpas dit kontrolpanel](#tilpas-dit-kontrolpanel))
 
 Læsere ser ikke nogen handlingsknapper (Tilføj, Rediger, Slet, Eksporter osv.). Forsøg på at tilgå skrivebeskyttede funktioner direkte via URL returnerer en fejlside.
 
@@ -122,9 +122,19 @@ To grafer: nye mod lukkede sager pr. uge og antallet af åbne sager ved ugens ud
 
 Nederst står den **seneste ændring** i Chronicle; klik for at se hele ændringsloggen.
 
+### Tilpas dit kontrolpanel
+
+Knappen **Tilpas** øverst åbner en liste over kontrolpanelets dele: *Nøgletal*, *Nu*, *Åbne sager*, *Udvikling* og *Seneste ændring*.
+- **Flyt** en del med pilene, eller træk i håndtaget ⠿ til venstre (det virker også på mobil).
+- **Skjul** en del ved at fjerne fluebenet. Under *Nu*, *Åbne sager* og *Udvikling* kan de enkelte kort skjules hver for sig, fx kun *Ugens log og rådighedsvagt*. Står der kun ét kort tilbage i *Nu*, fylder det hele bredden.
+- Tryk **Gem**. Numrene 01, 02, 03 følger din rækkefølge.
+- **Nulstil til standard** glemmer dine valg, så du igen får standardopsætningen, også når den ændrer sig i en senere version.
+
+Opsætningen gælder kun dig og følger din bruger, så den er den samme på alle dine enheder. Læsere kan også tilpasse deres eget kontrolpanel. Skjulte dele hentes slet ikke, så siden belaster serveren mindre. Kommer der en ny del på kontrolpanelet i en senere version, dukker den op nederst hos dem, der har tilpasset deres.
+
 ### Densitet
 
-Under tandhjulet → **Densitet**:
+Densitet virker oven på din egen opsætning. Under tandhjulet → **Densitet**:
 - **Komfort** viser alt.
 - **Kompakt** er tættere og skjuler graferne og afsnittet *Åbne sager*.
 - **Dashboard** viser kun nøgletal og grafer — godt til en skærm på væggen.

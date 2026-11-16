@@ -1,0 +1,135 @@
+{% comment %}
+  "Tilpas kontrolpanel" — the user's own section order and which sections
+  and cards show. Opens on the window event open-dashboard-layout (the
+  "Tilpas" button in the header, or the empty-page hint). Sections move
+  with the arrow buttons or by dragging the grip (SortableJS, as on the
+  week log and the boards; it also works on touch); the checkboxes show and
+  hide a section or one of its cards. "Gem" posts order[] and hidden[] to
+  dashboard:layout, which cleans them (apps/dashboard/layout.py);
+  "Nulstil til standard" posts reset from its own form (the button points
+  at it with form=…), so Enter in the dialog can only ever mean "Gem".
+  Starts from layout_editor (json_script).
+{% endcomment %}
+{{ layout_editor|json_script:"dashboard-layout-data" }}
+<div x-data="{
+       open: false,
+       rows: [],
+       sortable: null,
+       load() { this.rows = JSON.parse(document.getElementById('dashboard-layout-data').textContent); },
+       show() {
+         this.load();
+         this.open = true;
+         this.$nextTick(() => {
+           this.initSortable();
+           this.$root.querySelector('.dl-row input[type=checkbox]')?.focus();
+         });
+       },
+       initSortable() {
+         if (this.sortable || !window.Sortable) return;
+         this.sortable = Sortable.create(this.$refs.list, {
+           handle: '.dl-grip',
+           draggable: '.dl-row',
+           animation: 150,
+           ghostClass: 'is-dragging',
+           onEnd: (e) => {
+             if (e.oldIndex === e.newIndex) return;
+             // Put the row back where Alpine left it and let Alpine move it,
+             // so x-for's keyed DOM and the rows array never disagree.
+             e.from.removeChild(e.item);
+             e.from.insertBefore(e.item, e.from.querySelectorAll(':scope > .dl-row')[e.oldIndex] || null);
+             this.move(e.oldIndex, e.newIndex - e.oldIndex);
+           },
+         });
+       },
+       move(i, d) {
+         const j = i + d;
+         if (j < 0 || j >= this.rows.length) return;
+         const r = this.rows.splice(i, 1)[0];
+         this.rows.splice(j, 0, r);
+       },
+       hiddenKeys() {
+         const out = [];
+         for (const r of this.rows) {
+           if (r.hidden) out.push(r.key);
+           for (const p of r.parts) if (!p.shown) out.push(r.key + '.' + p.key);
+         }
+         return out;
+       }
+     }"
+     @open-dashboard-layout.window="show()"
+     @keydown.escape.window="open = false">
+  {# Layout lives in .dl-overlay, not inline: x-show overwrites an inline display. #}
+  <div x-show="open" x-cloak role="dialog" aria-modal="true" aria-labelledby="dashboard-layout-title" class="dl-overlay"
+       @click.self="open = false">
+    <form method="post" action="{% url 'dashboard:layout' %}" class="card"
+          style="max-width: 560px; width: calc(100% - 32px); max-height: 86vh; display: flex; flex-direction: column; padding: 0;">
+      {% csrf_token %}
+      <div class="flex items-start justify-between" style="padding: 20px 24px 14px; border-bottom: 1px solid var(--hairline); gap: 12px;">
+        <div>
+          <div class="label-eyebrow">Kun for dig</div>
+          <h2 id="dashboard-layout-title" style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Tilpas kontrolpanel</h2>
+          <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.5;">
+            Træk eller brug pilene for at flytte en sektion. Fjern fluebenet for at skjule en sektion eller et kort.
+          </p>
+        </div>
+        <button type="button" class="icon-btn" @click="open = false" aria-label="Luk">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <ol class="dl-list" x-ref="list" style="flex: 1 1 auto; overflow-y: auto;">
+        <template x-for="(row, i) in rows" :key="row.key">
+          <li class="dl-row" :class="{ 'is-off': row.hidden }">
+            <input type="hidden" name="order" :value="row.key">
+            <div class="dl-main">
+              <span class="dl-grip" aria-hidden="true" title="Træk for at flytte">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+              </span>
+              <label class="dl-label">
+                <input type="checkbox" class="checkbox-field" :checked="!row.hidden" @change="row.hidden = !$event.target.checked">
+                <span>
+                  <span class="dl-title" x-text="row.title"></span>
+                  <span class="dl-help" x-text="row.help"></span>
+                </span>
+              </label>
+              <span class="dl-moves">
+                <button type="button" class="icon-btn" @click="move(i, -1)" :disabled="i === 0" :aria-label="'Flyt ' + row.title + ' op'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+                <button type="button" class="icon-btn" @click="move(i, 1)" :disabled="i === rows.length - 1" :aria-label="'Flyt ' + row.title + ' ned'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </span>
+            </div>
+            <template x-if="row.parts.length">
+              <div class="dl-parts" x-show="!row.hidden">
+                <template x-for="part in row.parts" :key="part.key">
+                  <label class="dl-part">
+                    <input type="checkbox" class="checkbox-field" :checked="part.shown" @change="part.shown = $event.target.checked">
+                    <span x-text="part.title"></span>
+                  </label>
+                </template>
+              </div>
+            </template>
+          </li>
+        </template>
+      </ol>
+      <template x-for="key in hiddenKeys()" :key="key">
+        <input type="hidden" name="hidden" :value="key">
+      </template>
+
+      <div class="flex items-center justify-between" style="padding: 14px 24px; border-top: 1px solid var(--hairline); gap: 10px; flex-wrap: wrap;">
+        <button type="submit" form="dashboard-layout-reset" class="btn btn-ghost btn-sm"
+                title="Glem dine valg og brug standardopsætningen">Nulstil til standard</button>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm" @click="open = false">Annullér</button>
+          <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<form id="dashboard-layout-reset" method="post" action="{% url 'dashboard:layout' %}" hidden>
+  {% csrf_token %}
+  <input type="hidden" name="reset" value="1">
+</form>
