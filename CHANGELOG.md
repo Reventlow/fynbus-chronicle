@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.21.0 — 2026-11-16
+
+### Added
+- **Personligt kontrolpanel** (forslag #17). Knappen **Tilpas** på kontrolpanelet lader hver bruger vælge rækkefølgen på delene (*Nøgletal*, *Nu*, *Åbne sager*, *Udvikling*, *Seneste ændring*) og skjule hele dele eller enkelte kort i dem.
+  - Flyt med pile eller ved at trække (også på mobil); numrene 01, 02, 03 følger rækkefølgen.
+  - Opsætningen gemmes på brugeren, så den er den samme på alle enheder og kun gælder én selv; læsere kan også tilpasse deres. **Nulstil til standard** glemmer valgene.
+  - Skjulte kort hentes ikke, så de heller ikke opdateres i baggrunden. Densitet (Komfort/Kompakt/Dashboard) virker som før oven på opsætningen.
+
 ## 1.20.4 — 2026-11-09
 
 ### Fixed

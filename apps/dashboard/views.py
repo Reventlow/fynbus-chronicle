@@ -24,6 +24,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 from apps.accounts.permissions import editor_required
@@ -31,6 +32,8 @@ from apps.cves.models import CVECase
 from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
 from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
 
+from .layout import clean, empty_in, layout_for
+from .models import DashboardLayout
 from .overview import (
     age_groups,
     changelog_strip,
@@ -104,7 +107,42 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         interval = getattr(settings, "SERVICEDESK_SYNC_INTERVAL", 300)
         context["sync_minutes"] = str(max(1, round(interval / 60)))
         context["latest_change"] = _read_latest_changelog_entry()
+        layout = layout_for(self.request.user)
+        context["layout"] = layout
+        context["empty_in"] = empty_in(layout)
+        # What the "Tilpas" dialog starts from (json_script in index.html).
+        context["layout_editor"] = [
+            {
+                "key": s.key,
+                "title": s.section.title,
+                "help": s.section.help,
+                "hidden": s.key_hidden,
+                "parts": [{"key": p.key, "title": p.title, "shown": s.show[p.key]} for p in s.section.parts],
+            }
+            for s in layout
+        ]
         return context
+
+
+@login_required
+@require_POST
+def dashboard_layout(request):
+    """Save the user's own Kontrolpanel layout from the "Tilpas" dialog.
+
+    Every signed-in user may change their own layout, viewers too: it
+    changes nothing but their own page. ``order`` lists section keys,
+    ``hidden`` the hidden section and card keys; both are cleaned against
+    ``layout.SECTIONS``. ``reset`` drops the saved layout, so the user
+    follows the standard layout again (including future changes to it).
+    """
+    if request.POST.get("reset"):
+        DashboardLayout.objects.filter(user=request.user).delete()
+        messages.success(request, "Kontrolpanelet er sat tilbage til standard.")
+    else:
+        order, hidden = clean(request.POST.getlist("order"), request.POST.getlist("hidden"))
+        DashboardLayout.objects.update_or_create(user=request.user, defaults={"order": order, "hidden": hidden})
+        messages.success(request, "Dit kontrolpanel er gemt.")
+    return redirect("dashboard:index")
 
 
 def headline_context() -> dict:

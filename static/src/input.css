@@ -2234,6 +2234,35 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .dash-oncall { display: none; }
   @media (max-width: 767px) { .dash-oncall { display: block; } }
   html[data-sidebar="collapsed"] .dash-oncall { display: block; }
+  /* One card left in "Nu" after the user hid the other (Tilpas): full width. */
+  .now-grid.is-single { grid-template-columns: minmax(0, 1fr); }
+  /* "Tilpas kontrolpanel" dialog (templates/dashboard/partials/layout_dialog.html). */
+  /* "Nothing to show" hint: always for dash-empty-all, otherwise only in the
+     density that hides every section the user kept (index.html). */
+  .dash-empty { display: none; }
+  .dash-empty-all,
+  html[data-density="compact"] .dash-empty-compact,
+  html[data-density="dashboard"] .dash-empty-dashboard { display: block; }
+  .dl-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: oklch(0 0 0 / 0.45);
+  }
+  .dl-list { list-style: none; margin: 0; padding: 6px 0; }
+  .dl-row { padding: 10px 24px; border-bottom: 1px solid var(--hairline); background: var(--surface-1); }
+  .dl-row:last-child { border-bottom: 0; }
+  .dl-row.is-dragging { opacity: 0.45; }
+  .dl-row.is-off .dl-title { color: var(--ink-4); text-decoration: line-through; }
+  .dl-main { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .dl-grip { color: var(--ink-4); cursor: grab; display: inline-flex; }
+  .dl-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; min-width: 0; }
+  .dl-label .checkbox-field { margin-top: 2px; }
+  .dl-title { display: block; font-weight: 600; font-size: 14px; color: var(--ink-1); }
+  .dl-help { display: block; font-size: 12.5px; color: var(--ink-3); }
+  .dl-moves { display: inline-flex; gap: 2px; }
+  .dl-moves .icon-btn:disabled { opacity: 0.35; cursor: default; }
+  .dl-parts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 2px 50px; }
+  .dl-part { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
   .trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: var(--gutter); }
   .chart-legend {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px;

@@ -1,0 +1,13 @@
+{# Nøgletal: the KPI strip (helpdesk stats), polled every 30 s. #}
+  <div id="helpdesk-stats-container" class="kpi-grid"
+       hx-get="{% url 'dashboard:partial-helpdesk-stats' %}"
+       hx-trigger="load, every 30s"
+       hx-swap="innerHTML">
+    {% for _ in "1234" %}
+      <div class="card flex flex-col gap-3">
+        <div class="skeleton" style="height: 11px; width: 90px;"></div>
+        <div class="skeleton" style="height: 38px; width: 64px;"></div>
+        <div class="skeleton" style="height: 34px; width: 100%;"></div>
+      </div>
+    {% endfor %}
+  </div>

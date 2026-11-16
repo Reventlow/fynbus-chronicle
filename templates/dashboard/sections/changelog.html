@@ -1,0 +1,7 @@
+{# Latest changelog entry: a flat dashed strip, polled every 300 s. #}
+  <div class="changelog-strip js-dashboard-extras js-dashboard-changelog"
+       hx-get="{% url 'dashboard:partial-latest-change' %}"
+       hx-trigger="every 300s"
+       hx-swap="innerHTML">
+    {% include 'dashboard/partials/latest_change.html' %}
+  </div>
