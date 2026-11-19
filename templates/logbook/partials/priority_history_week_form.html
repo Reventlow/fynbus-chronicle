@@ -1,0 +1,36 @@
+{% comment %}
+  Inline edit of one week's description on the history page.
+  Context: `a` (PriorityItemAppearance), `form` (PriorityItemAppearanceForm).
+  Saving or cancelling swaps this back to the timeline row.
+{% endcomment %}
+<div id="history-week-{{ a.pk }}"
+     style="padding: 16px 24px; border-top: 1px solid var(--hairline);"
+     x-data x-init="$nextTick(() => $el.querySelector('textarea')?.focus())">
+  <form hx-post="{% url 'logbook:priority-history-week-edit' a.pk %}"
+        hx-target="#history-week-{{ a.pk }}"
+        hx-swap="outerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+    <div>
+      <label for="{{ form.description.id_for_label }}" class="input-label">Beskrivelse · {{ a.weeklog.week_label }}</label>
+      {{ form.description }}
+      {% if form.description.errors %}
+        <p class="input-error-message">{{ form.description.errors.0 }}</p>
+      {% endif %}
+      <p class="input-help">
+        Markdown understøttes: **fed**, lister, tabeller, <code>`kode`</code> og
+        ```-blokke med sprog (fx ```bash) for farvelægning.
+      </p>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button type="button"
+              hx-get="{% url 'logbook:priority-history-week' a.pk %}"
+              hx-target="#history-week-{{ a.pk }}"
+              hx-swap="outerHTML"
+              class="btn btn-sm">
+        Annuller
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+    </div>
+  </form>
+</div>

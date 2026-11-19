@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models as db_models
-from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -238,6 +238,30 @@ def weeklog_legacy_edit_redirect(request: HttpRequest, pk: int) -> HttpResponse:
 # =============================================================================
 
 
+def save_task_form(form) -> PriorityItem:
+    """Save a form bound to a ``PriorityItem`` the way every edit does.
+
+    Shared by the weeklog row form and the history page, so a status
+    change means the same in both places: the task is marked active
+    (``last_active_at``), and going from completed to anything else
+    reopens it, which also puts it on the current ISO week.
+    """
+    item = form.save(commit=False)
+    was_completed = (
+        PriorityItem.objects.filter(pk=item.pk).values_list("status", flat=True).first()
+        == PriorityItem.Status.COMPLETED
+    )
+    item.touch(save=False)
+    item.save()
+    form.save_m2m()
+
+    if was_completed and item.status != PriorityItem.Status.COMPLETED:
+        # Reopen even when this week has no weeklog yet (as the ↺ button
+        # does): otherwise auto_closed/closed_at would stay set on an open task.
+        item.reopen(into_weeklog=WeekLog.get_current_week())
+    return item
+
+
 class PriorityItemCreateView(EditorRequiredMixin, CreateView):
     """HTMX view: create a new priority task on a given weeklog.
 
@@ -322,26 +346,10 @@ class PriorityItemUpdateView(EditorRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form) -> HttpResponse:
-        item = form.save(commit=False)
-        # Was the item completed before this save?
-        was_completed = (
-            self.model.objects.filter(pk=item.pk)
-            .values_list("status", flat=True)
-            .first()
-            == self.model.Status.COMPLETED
-        )
-        item.touch(save=False)
-        item.save()
-
-        # Update this week's appearance description.
+        # This week's description lives on the appearance, the rest on the task.
         self._appearance.description = form.cleaned_data.get("description", "") or ""
         self._appearance.save(update_fields=["description", "updated_at"])
-
-        # Reopen flow: completed → active auto-adds to the current ISO week.
-        if was_completed and item.status != self.model.Status.COMPLETED:
-            current = WeekLog.get_current_week()
-            if current is not None:
-                item.reopen(into_weeklog=current)
+        item = save_task_form(form)
 
         from django.template.response import TemplateResponse
 
@@ -464,7 +472,7 @@ def priority_item_history(request: HttpRequest, pk: int) -> HttpResponse:
         PriorityItem.objects.select_related("origin_weeklog", "merged_into"), pk=pk
     )
     appearances = (
-        item.appearances.select_related("weeklog")
+        item.appearances.select_related("weeklog", "priority_item")
         .order_by("-weeklog__year", "-weeklog__week_number")
     )
     from django.shortcuts import render
@@ -474,6 +482,91 @@ def priority_item_history(request: HttpRequest, pk: int) -> HttpResponse:
         "logbook/priority_item_history.html",
         {"item": item, "appearances": appearances},
     )
+
+
+def _editable_item(pk: int) -> PriorityItem:
+    """The task behind a history-page edit; 404 for deleted or merged ones.
+
+    A deleted task is restored first (button on the page), and a merged one
+    lives on in the task it was merged into, so neither is edited in place.
+    """
+    item = get_object_or_404(PriorityItem.objects.select_related("origin_weeklog"), pk=pk)
+    if item.is_deleted or item.is_merged:
+        raise Http404("Opgaven er slettet eller flettet.")
+    return item
+
+
+@login_required
+@editor_required
+@require_http_methods(["GET", "POST"])
+def priority_item_task_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    """Edit the task itself (title, priority, status) from its history page.
+
+    GET returns the inline form. A valid POST saves through
+    ``save_task_form`` and refreshes the page: a reopened task gains a week
+    in the timeline, so a partial swap of the header would be stale.
+    """
+    from .forms import PriorityItemTaskForm
+
+    item = _editable_item(pk)
+    # Read before validation: is_valid() copies the posted status onto item.
+    was_completed = item.status == PriorityItem.Status.COMPLETED
+    form = PriorityItemTaskForm(request.POST or None, instance=item)
+    if request.method == "POST" and form.is_valid():
+        save_task_form(form)
+        messages.success(request, f"”{item.title}” er gemt.")
+        response = HttpResponse(status=204)
+        response["HX-Refresh"] = "true"
+        return response
+    return render(
+        request,
+        "logbook/partials/priority_history_task_form.html",
+        {"form": form, "item": item, "was_completed": was_completed},
+    )
+
+
+def _history_week(pk: int) -> PriorityItemAppearance:
+    """One week of a task's timeline, for the history page's week edit."""
+    appearance = get_object_or_404(
+        PriorityItemAppearance.objects.select_related("priority_item", "weeklog"), pk=pk
+    )
+    _editable_item(appearance.priority_item_id)
+    return appearance
+
+
+@login_required
+@editor_required
+@require_http_methods(["GET", "POST"])
+def priority_history_week_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    """Edit one week's description from the history page (appearance pk).
+
+    Same field as the weeklog row form's description, and the same rule
+    that an edit marks the task active.
+    """
+    from .forms import PriorityItemAppearanceForm
+
+    appearance = _history_week(pk)
+    form = PriorityItemAppearanceForm(request.POST or None, instance=appearance)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        appearance.priority_item.touch()
+        return render(
+            request, "logbook/partials/priority_history_week.html", {"a": appearance}
+        )
+    return render(
+        request,
+        "logbook/partials/priority_history_week_form.html",
+        {"form": form, "a": appearance},
+    )
+
+
+@login_required
+def priority_history_week(request: HttpRequest, pk: int) -> HttpResponse:
+    """One timeline row of the history page (cancel of the week edit)."""
+    appearance = get_object_or_404(
+        PriorityItemAppearance.objects.select_related("priority_item", "weeklog"), pk=pk
+    )
+    return render(request, "logbook/partials/priority_history_week.html", {"a": appearance})
 
 
 @login_required

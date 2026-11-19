@@ -1,0 +1,58 @@
+{% comment %}
+  Inline edit of the task itself on its history page.
+  Context: `item` (PriorityItem), `form` (PriorityItemTaskForm).
+  Loaded into #task-edit-slot; a valid save refreshes the page (HX-Refresh),
+  an invalid one comes back here with the errors.
+{% endcomment %}
+<div class="card" style="margin-top: 16px; padding: 18px 20px;"
+     x-data x-init="$nextTick(() => { $el.scrollIntoView({behavior: 'smooth', block: 'center'}); $el.querySelector('input[type=text]')?.focus(); })">
+  <form hx-post="{% url 'logbook:priority-item-task-edit' item.pk %}"
+        hx-target="#task-edit-slot"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    <div>
+      <label for="{{ form.title.id_for_label }}" class="input-label">Titel</label>
+      {{ form.title }}
+      {% if form.title.errors %}<p class="input-error-message">{{ form.title.errors.0 }}</p>{% endif %}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="{{ form.priority.id_for_label }}" class="input-label">Prioritet</label>
+        {{ form.priority }}
+      </div>
+      <div>
+        <label for="{{ form.status.id_for_label }}" class="input-label">Status</label>
+        {{ form.status }}
+      </div>
+    </div>
+    {% if was_completed %}
+      <p class="input-help" style="margin-top: -8px;">Vælger du en anden status end Afsluttet, bliver opgaven genåbnet som Igangværende og lagt på denne uge.</p>
+    {% endif %}
+
+    {% if "notes" in form.fields %}
+      <div>
+        <label for="{{ form.notes.id_for_label }}" class="input-label">{{ form.notes.label }}</label>
+        {{ form.notes }}
+        <p class="input-help">{{ form.notes.help_text }}</p>
+      </div>
+    {% endif %}
+
+    <p class="input-help">Ugebeskrivelserne retter du på hver uge i tidslinjen nedenfor.</p>
+
+    <div class="flex justify-end gap-2">
+      <button type="button" onclick="document.getElementById('task-edit-slot').innerHTML = ''" class="btn btn-sm">
+        Annuller
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">Gem</button>
+    </div>
+  </form>
+</div>
