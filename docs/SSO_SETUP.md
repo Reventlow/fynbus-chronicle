@@ -62,6 +62,8 @@ In **Enterprise applications** → your SSO app:
 
 Entra then refuses everyone else before they reach Chronicle. This is the main control over who gets in.
 
+Check the list afterwards: only the group(s) should be there. An admin who accepts the consent prompt while signing in is assigned to the app on their own, and such a direct assignment lets that account in even though it is not in the group. Remove those. `SSO_REQUIRED_GROUPS` (Step 6) makes Chronicle refuse them anyway.
+
 ## Step 6: Configure FynBus Chronicle
 
 From the app registration's **Overview** page take the **Application (client) ID** and the **Directory (tenant) ID**, then set in `web.env` (production: `/srv/docker/chronicle/env/web.env` on fbdocker01):
@@ -71,6 +73,7 @@ SSO_ENABLED=True
 SSO_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx     # the SSO app
 SSO_CLIENT_SECRET=your-client-secret-value
 MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # tenant GUID, required
+SSO_REQUIRED_GROUPS=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # object id of the group(s) from Step 5, comma-separated
 # Optional (defaults shown):
 # SSO_ALLOWED_EMAIL_DOMAINS=fynbus.dk
 # SSO_ALLOW_GUESTS=False
@@ -78,6 +81,7 @@ MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # tenant GUID, require
 ```
 
 - Chronicle **refuses to start** with `SSO_ENABLED=True` unless `MICROSOFT_TENANT_ID` is the tenant GUID. `common`, `organizations` or a domain name would let accounts from other organisations sign in.
+- `SSO_REQUIRED_GROUPS`: the **Object ID** from the group's Overview page in Entra (up to 20, comma-separated). At every Microsoft login Chronicle asks Microsoft Graph (`POST /me/checkMemberGroups`, which needs only `User.Read`) whether the account is in one of them, and refuses it if not, or if Graph can't answer. Nested groups count. Without it Chronicle relies on Entra's assignment alone, and `manage.py check` warns (`accounts.W002`). Anything but GUIDs refuses to start.
 - `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` fall back to `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` (the shared app used by Graph mail), but a separate SSO app is recommended.
 
 ### Who gets an account
@@ -85,7 +89,8 @@ MICROSOFT_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # tenant GUID, require
 - **Self sign-up is closed.** allauth's own pages (`/allauth/signup/`, `/allauth/login/`, password reset, …) all lead to Chronicle's login page.
 - **Existing users:** the first Microsoft sign-in is linked to the active Chronicle user with the same e-mail address (only one may have it). From then on the Entra object id alone decides, so a later change of address doesn't move the login to someone else.
 - **New people** (in an assigned group, but with no Chronicle user yet) get a user in the **Viewer** group: read-only. Staff promote them by removing them from Viewer in Django Admin. With `SSO_AUTO_CREATE_USERS=False`, staff must create the user first.
-- **Refused:** guest accounts (`#EXT#`) unless `SSO_ALLOW_GUESTS=True`, and addresses outside `SSO_ALLOWED_EMAIL_DOMAINS`. The user sees a message on the login page; the reason is logged.
+- **Refused:** guest accounts (`#EXT#`) unless `SSO_ALLOW_GUESTS=True`, addresses outside `SSO_ALLOWED_EMAIL_DOMAINS`, and, with `SSO_REQUIRED_GROUPS` set, accounts in none of those groups (also existing users, at their next login). The user sees a message on the login page; the reason is logged.
+- No "confirm your e-mail" mail is sent to accounts that come in through Microsoft.
 
 If using Docker:
 
@@ -114,6 +119,8 @@ SESSION_MAX_HOURS=12   # recommended: a disabled user loses access by the next d
 - Existing sessions run until they expire (`SESSION_MAX_HOURS`); the rule applies at the next login.
 
 ## Step 7: Configure Django Sites
+
+Since 1.21.1 a migration renames Django's placeholder site (`example.com`) to `chronicle.fynbus.net` / *FynBus Chronicle*. Only for another domain:
 
 1. Log into Django Admin (`/admin/`)
 2. Go to **Sites**
@@ -175,7 +182,9 @@ Only users from your tenant can sign in: `MICROSOFT_TENANT_ID` must be your tena
 
 ### Group-Based Access
 
-Use **Assignment required = Yes** on the enterprise application (Step 5) and assign only the groups that should use Chronicle. Entra enforces it, so nothing is needed in Chronicle.
+Use **Assignment required = Yes** on the enterprise application (Step 5) and assign only the groups that should use Chronicle. Entra enforces it before anyone reaches Chronicle.
+
+Also set `SSO_REQUIRED_GROUPS` (Step 6), so Chronicle checks the same groups itself. A direct user assignment left over from setup, or the switch turned off by mistake, then isn't enough to get in.
 
 ### Secret Rotation
 
