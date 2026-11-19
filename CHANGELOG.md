@@ -2,6 +2,18 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.22.0 — 2026-11-19
+
+### Added
+- **Ret en opgave direkte fra dens historik** (forslag #18). Redaktører har nu **Rediger** på *priorities/…/history/*: titel, prioritet og status rettes på siden, uden at man først skal finde den uge, opgaven står i. Det er der, man lander fra søgningen, ServiceDesk-noter og Planner-pillen.
+  - Statusskift virker som i ugeloggen: en afsluttet opgave, der får en anden status, genåbnes og lægges på denne uge, og Planner-synk og ServiceDesk-links følger med.
+  - Hver uge i tidslinjen har sin egen blyant til den uges beskrivelse.
+  - Har opgaven *Noter* (det ældre felt, som API'et stadig skriver i), kan de rettes eller tømmes her. Et tomt notefelt vises ikke, så nye noter fortsat skrives i ugebeskrivelsen.
+  - Slettede og flettede opgaver kan ikke rettes; læsere ser ingen knapper.
+
+### Fixed
+- En afsluttet opgave, der fik en anden status i ugeloggen, før denne uges ugelog fandtes, blev ikke rigtigt genåbnet: den stod stadig som *auto-lukket*. Nu genåbnes den som ved ↺-knappen i søgningen (Igangværende, ikke længere lukket); den lægges på denne uge, så snart ugeloggen findes.
+
 ## 1.21.1 — 2026-11-17
 
 ### Security

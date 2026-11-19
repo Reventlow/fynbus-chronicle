@@ -241,6 +241,8 @@ Siden version 1.12.0 registreres hændelser ikke længere i ugeloggen. En hænde
 **Ugelog → Opgavesøgning** (eller feltet *Søg i opgaver* øverst) søger i alle prioriterede opgaver på tværs af uger: titel, beskrivelse og ugebeskrivelser. Filtrér på status (åbne, lukkede, slettede, flettede) og år.
 
 - Klik på en opgave for at se dens **historik**: alle uger, den har været med i, og hvad der blev skrevet hver uge. Historikken kan eksporteres og sendes som email ligesom ugeloggen.
+- **Ret opgaven fra historikken** (redaktører): **Rediger** øverst retter titel, prioritet og status uden at du skal finde den uge, opgaven står i. Sætter du en afsluttet opgave til en anden status, bliver den genåbnet og lagt på denne uge, præcis som i ugeloggen. Hver uge i tidslinjen har sin egen blyant, som retter netop den uges beskrivelse.
+- Har en opgave *Noter* (det ældre felt, som stadig udfyldes af API'et), kan de rettes eller tømmes samme sted. Nye noter skrives i ugebeskrivelsen. Slettede og flettede opgaver kan ikke rettes: gendan den slettede, eller ret den opgave, den er flettet ind i.
 - **Genåbn en afsluttet opgave** med ↺-knappen: den sættes til igangværende og lægges på indeværende uge. Du bliver stående i søgningen med de filtre, du havde.
 
 ---

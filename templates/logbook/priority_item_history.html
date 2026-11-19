@@ -55,6 +55,18 @@
 
       {% if is_editor %}
         <span style="flex: 1;"></span>
+        {% if not item.is_deleted and not item.is_merged %}
+          <button hx-get="{% url 'logbook:priority-item-task-edit' item.pk %}"
+                  hx-target="#task-edit-slot"
+                  hx-swap="innerHTML"
+                  class="btn btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Rediger
+          </button>
+        {% endif %}
         <div class="relative" x-data="{ open: false }">
           <button @click="open = !open" class="btn btn-sm">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -101,6 +113,7 @@
         {% endif %}
       {% endif %}
     </div>
+    <div id="task-edit-slot"></div>
     {% if item.notes %}
       <div class="md" style="margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ item.notes|render_markdown }}</div>
     {% endif %}
@@ -115,27 +128,7 @@
     </div>
     {% if appearances %}
       {% for a in appearances %}
-        <div class="grid gap-3"
-             style="grid-template-columns: 140px 1fr;
-                    padding: 16px 24px;
-                    border-top: 1px solid var(--hairline);">
-          <div>
-            <a href="{% url 'logbook:weeklog-detail' a.weeklog.year a.weeklog.week_number %}"
-               class="num" style="color: var(--ink-1); text-decoration: none; font-weight: 600; font-size: 13px;">
-              {{ a.weeklog.week_label }}
-            </a>
-            <div class="num" style="color: var(--ink-4); font-size: 11.5px; margin-top: 2px;">
-              {{ a.created_at|date:"j. M · H:i" }}
-            </div>
-          </div>
-          <div>
-            {% if a.description %}
-              <div class="md" style="margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55;">{{ a.description|render_markdown }}</div>
-            {% else %}
-              <p style="margin: 0; font-size: 13px; color: var(--ink-5); font-style: italic;">Ingen ugebeskrivelse.</p>
-            {% endif %}
-          </div>
-        </div>
+        {% include "logbook/partials/priority_history_week.html" %}
       {% endfor %}
     {% else %}
       <p style="text-align: center; color: var(--ink-4); padding: 32px;">Ingen historik endnu.</p>

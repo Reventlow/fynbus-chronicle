@@ -168,6 +168,39 @@ class PriorityItemForm(forms.ModelForm):
         }
 
 
+class PriorityItemTaskForm(forms.ModelForm):
+    """The task itself, edited from its history page (no week in sight).
+
+    Title, priority and status, like the weeklog form but without the
+    per-week description: on the history page each week has its own edit
+    button for that. ``notes`` is only offered when the task already has
+    notes, so older tasks (and tasks created through the API, which still
+    writes the field) can be corrected or cleared. New text belongs in the
+    week description, which is why an empty field is never offered.
+    """
+
+    class Meta:
+        model = PriorityItem
+        fields = ["title", "priority", "status", "notes"]
+        labels = {"notes": "Noter (ældre felt)"}
+        help_texts = {
+            "notes": "Skriv nye ting i ugebeskrivelsen. Tøm feltet for at fjerne noterne.",
+        }
+        widgets = {
+            "title": forms.TextInput(
+                attrs={"class": "input-field", "placeholder": "Opgavens titel"}
+            ),
+            "priority": forms.Select(attrs={"class": "select-field"}),
+            "status": forms.Select(attrs={"class": "select-field"}),
+            "notes": forms.Textarea(attrs={"class": "textarea-field", "rows": 8}),
+        }
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if not (self.instance and self.instance.notes):
+            del self.fields["notes"]
+
+
 class PriorityItemAppearanceForm(forms.ModelForm):
     """Edit only the per-week description (and optionally re-order)."""
 

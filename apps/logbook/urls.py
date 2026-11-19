@@ -83,6 +83,14 @@ urlpatterns = [
         views.priority_item_history,
         name="priority-item-history",
     ),
+    # History-page editing: the task by PriorityItem pk, a week by appearance pk.
+    path("priorities/<int:pk>/edit/", views.priority_item_task_edit, name="priority-item-task-edit"),
+    path("priorities/week/<int:pk>/", views.priority_history_week, name="priority-history-week"),
+    path(
+        "priorities/week/<int:pk>/edit/",
+        views.priority_history_week_edit,
+        name="priority-history-week-edit",
+    ),
     path("priorities/<int:pk>/export/pdf/", views.priority_export_pdf, name="priority-export-pdf"),
     path("priorities/<int:pk>/export/markdown/", views.priority_export_markdown, name="priority-export-markdown"),
     path("priorities/<int:pk>/export/html/", views.priority_export_html, name="priority-export-html"),
