@@ -275,6 +275,9 @@
     static/js/description-images.js. Only editors can upload, so the
     script is only loaded for them.
   {% endcomment %}
+  {# Links marked data-new-tab open in a new tab even when an extension strips target="_blank" (static/js/new-tab.js). #}
+  <script src="{% static 'js/new-tab.js' %}" defer></script>
+
   {% if is_editor %}
   <script src="{% static 'js/description-images.js' %}" defer
           data-upload-url="{% url 'images:upload' %}"
