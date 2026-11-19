@@ -7,6 +7,9 @@ All notable changes to FynBus Chronicle are documented here.
 ### Security
 - **Chronicle tjekker selv gruppen ved Microsoft-login.** Med `SSO_REQUIRED_GROUPS` (Entra-gruppens object id) spørger Chronicle Microsoft Graph ved hvert login, om kontoen er med i gruppen, og afviser den ellers. Det gælder også eksisterende brugere og stopper, hvis Graph ikke kan svare. Indtil nu afgjorde Entras *Assignment required* det alene; nu skal begge sige ja. `manage.py check` advarer (`accounts.W002`), hvis SSO er slået til uden grupper.
 
+### Changed
+- **ServiceDesk-siden: sager åbner i en ny fane.** Klik på emnet åbner nu sagen i ServiceDesk, ligesom nummeret, og *Prioriteret opgave*/*Sag*-pillerne under en sag åbner også i en ny fane, så listen bliver stående.
+
 ### Fixed
 - Nye brugere fra Microsoft-login får ikke længere en mail om at bekræfte deres adresse. Mailen havde emnet "[example.com] …", fordi sitet aldrig var omdøbt; det hedder nu chronicle.fynbus.net / FynBus Chronicle.
 

@@ -115,6 +115,24 @@ def test_ticket_links_to_servicedesk_and_shows_age(client, anna, sd):
     assert "15 dage" in html  # took 15 days to close
 
 
+@pytest.mark.django_db
+def test_every_link_in_a_ticket_opens_a_new_tab(client, anna, sd, week):
+    """Number, subject and the linked Chronicle items all open in a new tab,
+    so the ticket list stays where it was."""
+    import re
+
+    ticket(4711, subject="Skærm flimrer")
+    item = PriorityItem.objects.create(origin_weeklog=week, title="Skærme på værkstedet")
+    TicketLink.objects.create(sdp_id=4711, priority_item=item, subject="Skærm flimrer", created_by=anna)
+    html = client.get(reverse("servicedesk:tickets")).content.decode()
+    row = re.search(r'<div class="sd-ticket" id="ticket-4711">.*?<div class="sd-link-slot">', html, re.S).group(0)
+    links = re.findall(r"<a [^>]*>", row)
+    assert len(links) == 3  # number, subject, the linked priority
+    assert all('target="_blank"' in a and "noopener" in a for a in links), links
+    subject = next(a for a in links if 'class="sd-subject"' in a)
+    assert f"{SD}/WorkOrder.do?woMode=viewWO&amp;woID=4711" in subject
+
+
 @pytest.mark.parametrize("delta, text", [
     (timedelta(minutes=20), "under 1 t"), (timedelta(hours=5), "5 t"),
     (timedelta(days=1, hours=2), "1 dag"), (timedelta(days=12), "12 dage"),
