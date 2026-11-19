@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.22.1 — 2026-11-19
+
+### Fixed
+- **ServiceDesk-sager åbner nu rigtigt i en ny fane.** Linkene havde `target="_blank"`, men nogle browserudvidelser fjerner den egenskab, når siden indlæses, så et klik åbnede sagen i samme fane. Linkene til sager (nummer, emne, *Prioriteret opgave*/*Sag* og *Åbn ServiceDesk*) åbnes nu i en ny fane fra selve klikket. Ctrl-, Cmd- og midterklik virker som før.
+
 ## 1.22.0 — 2026-11-19
 
 ### Added

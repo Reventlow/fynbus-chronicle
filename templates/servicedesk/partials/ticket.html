@@ -1,7 +1,9 @@
 {% comment %}
   One ticket: age, number and subject (both link to ServiceDesk), status
   line, and the Chronicle priorities / cases it is linked to. Every link
-  opens in a new tab, so the ticket list stays where it was. Editors get
+  opens in a new tab, so the ticket list stays where it was (target="_blank"
+  plus data-new-tab for static/js/new-tab.js, since some browser extensions
+  strip the target). Editors get
   "+ Prioriteret opgave" (one click, hidden once a priority is linked) and
   "Knyt", which opens the link form in .sd-link-slot.
 {% endcomment %}
@@ -14,8 +16,8 @@
   <div class="sd-main">
     <div class="sd-title">
       {% if ticket.servicedesk_url %}
-        <a href="{{ ticket.servicedesk_url }}" target="_blank" rel="noopener noreferrer" class="sd-num" title="Åbn sagen i ServiceDesk">#{{ ticket.sdp_id }} ↗</a>
-        <a href="{{ ticket.servicedesk_url }}" target="_blank" rel="noopener noreferrer" class="sd-subject" title="{{ ticket.subject }} (åbner i ServiceDesk)">{{ ticket.subject|default:"(intet emne)" }}</a>
+        <a href="{{ ticket.servicedesk_url }}" target="_blank" data-new-tab rel="noopener noreferrer" class="sd-num" title="Åbn sagen i ServiceDesk">#{{ ticket.sdp_id }} ↗</a>
+        <a href="{{ ticket.servicedesk_url }}" target="_blank" data-new-tab rel="noopener noreferrer" class="sd-subject" title="{{ ticket.subject }} (åbner i ServiceDesk)">{{ ticket.subject|default:"(intet emne)" }}</a>
       {% else %}
         <span class="sd-num">#{{ ticket.sdp_id }}</span>
         <span class="sd-subject" title="{{ ticket.subject }}">{{ ticket.subject|default:"(intet emne)" }}</span>
@@ -36,7 +38,7 @@
       <div class="sd-links">
         {% for link in ticket.links %}
           <span class="sd-link">
-            <a href="{{ link.target_url }}" target="_blank" rel="noopener" class="pill-sd" title="Åbn i Chronicle (ny fane)">
+            <a href="{{ link.target_url }}" target="_blank" data-new-tab rel="noopener" class="pill-sd" title="Åbn i Chronicle (ny fane)">
               {% if link.priority_item_id %}Prioriteret opgave{% else %}Sag #{{ link.case_id }}{% endif %}: {{ link.target_title|truncatechars:60 }}
             </a>
             {% if link.note_error %}

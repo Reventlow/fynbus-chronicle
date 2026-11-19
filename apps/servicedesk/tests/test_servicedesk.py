@@ -118,7 +118,8 @@ def test_ticket_links_to_servicedesk_and_shows_age(client, anna, sd):
 @pytest.mark.django_db
 def test_every_link_in_a_ticket_opens_a_new_tab(client, anna, sd, week):
     """Number, subject and the linked Chronicle items all open in a new tab,
-    so the ticket list stays where it was."""
+    so the ticket list stays where it was, also when an extension has
+    stripped target="_blank" (data-new-tab + static/js/new-tab.js)."""
     import re
 
     ticket(4711, subject="Skærm flimrer")
@@ -129,6 +130,9 @@ def test_every_link_in_a_ticket_opens_a_new_tab(client, anna, sd, week):
     links = re.findall(r"<a [^>]*>", row)
     assert len(links) == 3  # number, subject, the linked priority
     assert all('target="_blank"' in a and "noopener" in a for a in links), links
+    # Some browser extensions strip target="_blank"; new-tab.js opens these from the click instead.
+    assert all("data-new-tab" in a for a in links), links
+    assert "js/new-tab.js" in html
     subject = next(a for a in links if 'class="sd-subject"' in a)
     assert f"{SD}/WorkOrder.do?woMode=viewWO&amp;woID=4711" in subject
 
