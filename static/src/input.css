@@ -2494,6 +2494,8 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   .sd-num { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent-ink); text-decoration: none; white-space: nowrap; flex: none; }
   a.sd-num:hover { text-decoration: underline; }
   .sd-subject { font-size: 13.5px; font-weight: 500; color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  a.sd-subject { text-decoration: none; }
+  a.sd-subject:hover { color: var(--accent-ink); text-decoration: underline; }
   .sd-links { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 7px; }
   .sd-link { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
   .sd-unlink { appearance: none; border: 0; background: transparent; color: var(--ink-4); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }

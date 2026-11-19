@@ -230,6 +230,14 @@ SSO_ALLOWED_EMAIL_DOMAINS = config("SSO_ALLOWED_EMAIL_DOMAINS", default="fynbus.
 SSO_ALLOW_GUESTS = config("SSO_ALLOW_GUESTS", default=False, cast=bool)
 # A FynBus account without a Chronicle user gets one, read-only (Viewer).
 SSO_AUTO_CREATE_USERS = config("SSO_AUTO_CREATE_USERS", default=True, cast=bool)
+# Entra group object ids (at most 20). When set, every Microsoft login must
+# belong to at least one of them, checked with Graph at each login, on top
+# of the enterprise app's "Assignment required". Empty = no check by
+# Chronicle (manage.py check warns, accounts.W002).
+SSO_REQUIRED_GROUPS = [g.strip().lower() for g in config("SSO_REQUIRED_GROUPS", default="", cast=Csv()) if g.strip()]
+# Addresses from Entra are set by our own admins: no "confirm your e-mail"
+# mail for accounts that come in through Microsoft sign-in.
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 # Microsoft sign-in only: passwords are refused except for the break-glass
 # accounts below (usernames), kept for when Entra is unavailable. Their
 # form is at /accounts/login/?local=1. See apps/accounts/backends.py.
@@ -251,6 +259,13 @@ if SSO_ENABLED:
         raise ImproperlyConfigured(
             "SSO_ENABLED needs MICROSOFT_TENANT_ID set to the tenant GUID "
             "(not 'common', 'organizations' or a domain)."
+        )
+    if len(SSO_REQUIRED_GROUPS) > 20 or not all(
+        _re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", g)
+        for g in SSO_REQUIRED_GROUPS
+    ):
+        raise ImproperlyConfigured(
+            "SSO_REQUIRED_GROUPS must be up to 20 Entra group object ids (GUIDs), comma-separated."
         )
     SOCIALACCOUNT_PROVIDERS = {
         "microsoft": {
