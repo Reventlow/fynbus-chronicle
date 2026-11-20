@@ -118,6 +118,7 @@
           <a href="{% url 'courses:index' %}" class="nav-link">Kursusmateriale</a>
           <a href="{% url 'dashboard:statistics' %}" class="nav-link">Statistik</a>
           <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link">Admin</a>{% endif %}
           <hr class="hr-soft" style="margin: 8px 0;">
           <div style="padding: 4px 4px 0;">{% include 'components/settings_controls.html' %}</div>
           <hr class="hr-soft" style="margin: 8px 0;">

@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.22.2 — 2026-11-20
+
+### Changed
+- **Admin i menuen.** Medarbejdere med adgang til administrationen (*staff*) har nu **Admin** nederst i sidemenuen og i mobilmenuen, så Django-administrationen er ét klik væk. Andre brugere ser ikke linket. Det findes stadig også i brugermenuen og i sidefoden.
+
 ## 1.22.1 — 2026-11-19
 
 ### Fixed
