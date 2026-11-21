@@ -71,6 +71,26 @@ def test_ignored_task_needs_a_note(case, editor):
     assert task.status == CVETask.Status.IGNORED and task.note == "Beslutning: bliver stående"
 
 
+def test_system_removed_closes_task_without_a_note(case, editor):
+    """A decommissioned system leaves nothing to patch: the task closes
+    without a note, and the sag moves on to review like done/ignored."""
+    task = CVETask.add(case, title="Patch gammel server", user=editor)
+    assert task.set_status(CVETask.Status.REMOVED, editor)
+    assert not task.is_open and not task.is_overdue
+    case.refresh_from_db()
+    assert case.state == CVE.State.REVIEW
+    assert case.task_counts()[CVETask.Status.REMOVED] == 1
+    added = CVETask.add(case, title="Allerede fjernet", user=editor, status=CVETask.Status.REMOVED)
+    assert not added.is_open
+
+
+def test_api_accepts_system_removed(client, case, write_key):
+    url = reverse("api:cve-case-task-create", args=[case.pk])
+    response = _api(client, write_key, "post", url, {"title": "Taget ud af drift", "status": "removed"})
+    assert response.status_code == 201, response.content
+    assert CVETask.objects.get(case=case).status == CVETask.Status.REMOVED
+
+
 def test_sag_without_tasks_keeps_manual_states(case, member, editor):
     case.set_state(CVE.State.SOLVED, editor, resolution="not_affected")
     case.refresh_from_db()
