@@ -16,13 +16,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Prefetch, Q
+from django.contrib.auth import get_user_model
+from django.db.models import Count, F, Prefetch, Q
 from django.db.models.functions import Length
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import CreateView, DetailView, UpdateView
@@ -32,7 +34,9 @@ from apps.accounts.permissions import EditorRequiredMixin, editor_required
 from .forms import (
     CVEAttachmentForm, CVECaseAddForm, CVECaseForm, CVECommentForm, CVECreateForm, CVEEditForm, CVELinkForm,
 )
-from .models import CVE, CaseConflict, CVEAttachment, CVECase, CVEComment, CVELink, normalise_cve_id
+from .models import (
+    CVE, CaseConflict, CaseTasksOpen, CVEAttachment, CVECase, CVEComment, CVELink, CVETask, normalise_cve_id,
+)
 
 # Solved CVEs older than this drop off the list unless "Alle" is picked.
 SOLVED_WINDOW_DAYS = 90
@@ -545,6 +549,10 @@ class CVECaseDetailView(LoginRequiredMixin, DetailView):
             "comment_form": CVECommentForm(),
             "add_form": CVECaseAddForm(),
             "outcomes": OUTCOMES_BY_KIND[case.kind],
+            "case_tasks": case.tasks.select_related("assignee"),
+            "task_counts": case.task_counts(),
+            "task_statuses": CVETask.Status.choices,
+            "assignable_users": get_user_model().objects.filter(is_active=True).order_by("username"),
         })
         return context
 
@@ -560,13 +568,15 @@ INCIDENT_OUTCOMES = [
 CASE_OUTCOMES = [
     (CVE.State.IDENTIFIED, "", "Identificeret"),
     (CVE.State.PATCHING, "", "Patcher"),
+    (CVE.State.REVIEW, "", "Klar til gennemsyn"),
     (CVE.State.SOLVED, CVECase.Resolution.PATCHED, "Færdigbehandlet — patchet"),
     (CVE.State.SOLVED, CVECase.Resolution.NOT_AFFECTED, "Færdigbehandlet — ikke berørt"),
     (CVE.State.SOLVED, CVECase.Resolution.RISK_ACCEPTED, "Færdigbehandlet — risiko accepteret"),
 ]
 
 # The state buttons on a planned task (labels as CVECase.TASK_STATE_LABELS).
-TASK_OUTCOMES = [(state, "", CVECase.TASK_STATE_LABELS[state]) for state in CVE.State.values]
+TASK_OUTCOMES = [(state, "", CVECase.TASK_STATE_LABELS[state]) for state in CVE.State.values
+                 if state != CVE.State.REVIEW]
 
 OUTCOMES_BY_KIND = {
     CVECase.Kind.VULNERABILITY: CASE_OUTCOMES,
@@ -656,7 +666,12 @@ def case_state(request: HttpRequest, pk: int) -> HttpResponse:
     resolution = request.POST.get("resolution", "")
     if new_state not in CVE.State.values or (resolution and resolution not in CVECase.Resolution.values):
         return HttpResponse("Ugyldig status", status=400)
-    if case.set_state(new_state, request.user, resolution=resolution):
+    try:
+        changed = case.set_state(new_state, request.user, resolution=resolution)
+    except CaseTasksOpen as exc:
+        messages.error(request, f"Sagen kan ikke gøres klar eller færdigbehandlet endnu: {exc}.")
+        return redirect(case.get_absolute_url())
+    if changed:
         messages.success(request, f"Sag #{case.pk}: {case.outcome_label}.")
     return redirect(case.get_absolute_url())
 
@@ -707,3 +722,82 @@ def cve_join_case(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect(cve.get_absolute_url())
     messages.success(request, f"{cve.cve_id} er føjet til sag #{case.pk}.")
     return redirect(case.get_absolute_url())
+
+
+# -- case tasks (1.23.0) -----------------------------------------------------
+
+@login_required
+@editor_required
+@require_POST
+def task_create(request: HttpRequest, pk: int) -> HttpResponse:
+    """Add a task to a case (``POST title, status, note, assignee, due_date``)."""
+    case = get_object_or_404(CVECase, pk=pk)
+    if not case.tasks_gate:
+        messages.error(request, "En planlagt opgave har ingen delopgaver.")
+        return redirect(case.get_absolute_url())
+    assignee = None
+    if request.POST.get("assignee"):
+        assignee = get_user_model().objects.filter(pk=request.POST["assignee"]).first()
+    try:
+        task = CVETask.add(
+            case, title=request.POST.get("title", ""), user=request.user,
+            status=request.POST.get("status") or CVETask.Status.OPEN,
+            note=request.POST.get("note", ""), assignee=assignee,
+            due_date=parse_date(request.POST.get("due_date") or "") or None,
+        )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, f"Opgave tilføjet: {task.title}")
+    return redirect(case.get_absolute_url() + "#opgaver")
+
+
+@login_required
+@editor_required
+@require_POST
+def task_status(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
+    """Change a task's status and note (``POST status, note``). Ignoring needs a note."""
+    case = get_object_or_404(CVECase, pk=pk)
+    task = get_object_or_404(CVETask, pk=task_pk, case=case)
+    try:
+        changed = task.set_status(request.POST.get("status", ""), request.user, note=request.POST.get("note", ""))
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    else:
+        if changed:
+            messages.success(request, f"{task.title}: {task.get_status_display()}.")
+    return redirect(case.get_absolute_url() + "#opgaver")
+
+
+TASK_LIST_FILTERS = {
+    "active": "Aktive (åbne og ventende)",
+    "all": "Alle",
+    **{value: label for value, label in CVETask.Status.choices},
+}
+
+
+@login_required
+def task_list(request: HttpRequest) -> HttpResponse:
+    """All case tasks in one place. ``?status=`` picks a status; the default
+    "active" is everything still open or waiting. Tasks of planned tasks are
+    not listed (they have no sub-tasks)."""
+    status = request.GET.get("status") or "active"
+    if status not in TASK_LIST_FILTERS:
+        status = "active"
+    base = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
+    qs = base.select_related("case", "assignee")
+    if status == "active":
+        qs = qs.filter(status__in=CVETask.OPEN_STATUSES)
+    elif status != "all":
+        qs = qs.filter(status=status)
+    totals = {value: 0 for value in CVETask.Status.values}
+    for row in base.values("status").annotate(n=Count("id")):
+        totals[row["status"]] = row["n"]
+    tiles = [{"key": value, "label": label, "count": totals[value]} for value, label in CVETask.Status.choices]
+    return render(request, "cves/task_list.html", {
+        "tasks": qs.order_by(F("due_date").asc(nulls_last=True), "created_at", "id"),
+        "status": status,
+        "filters": TASK_LIST_FILTERS,
+        "tiles": tiles,
+        "active_count": sum(totals[s] for s in CVETask.OPEN_STATUSES),
+    })

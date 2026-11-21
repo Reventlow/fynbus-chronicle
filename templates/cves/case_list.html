@@ -28,6 +28,7 @@
       </p>
     </div>
     {% if is_editor %}
+      <a href="{% url 'cves:task-list' %}" class="btn btn-sm">Opgaver</a>
       <a href="{% url 'cves:case-create' %}?kind=task" class="btn btn-sm">Ny planlagt opgave</a>
       <a href="{% url 'cves:case-create' %}?kind=incident" class="btn btn-sm">Ny hændelse</a>
       <a href="{% url 'cves:case-create' %}" class="btn btn-primary btn-sm">Ny sag</a>

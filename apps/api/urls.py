@@ -67,6 +67,9 @@ urlpatterns = [
     # CVE cases: several CVEs with one assessment and fix. GET lists, POST creates or extends.
     path("cve-cases/", views.case_collection, name="cve-case-list"),
     path("cve-cases/<int:pk>/", views.case_detail, name="cve-case-detail"),
+    path("cve-cases/<int:pk>/tasks/", views.case_tasks_read, name="cve-case-tasks"),
+    path("cve-cases/<int:pk>/tasks/new/", views.case_tasks_create, name="cve-case-task-create"),
+    path("cve-tasks/<int:pk>/", views.case_task_update, name="cve-task-update"),
     # Reports
     path("reports/", views.reports_list, name="reports-list"),
     path("reports/<slug:slug>/", views.report_upsert, name="report-upsert"),

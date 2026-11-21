@@ -30,7 +30,7 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.urls import reverse
 from django.utils import timezone
 
@@ -107,6 +107,7 @@ class CVE(models.Model):
     class State(models.TextChoices):
         IDENTIFIED = "identified", "Identificeret"
         PATCHING = "patching", "Patcher"
+        REVIEW = "review", "Klar til gennemsyn"
         SOLVED = "solved", "Færdigbehandlet"
 
     class Severity(models.TextChoices):
@@ -253,6 +254,7 @@ class CVE(models.Model):
         return {
             self.State.IDENTIFIED: "var(--bad)",
             self.State.PATCHING: "var(--warn)",
+            self.State.REVIEW: "var(--info)",
             self.State.SOLVED: "var(--good)",
         }.get(self.state, "var(--ink-4)")
 
@@ -312,6 +314,14 @@ class CaseConflict(Exception):
     def __init__(self, cves: list["CVE"]):
         self.cves = cves
         super().__init__(", ".join(f"{c.cve_id} (sag #{c.case_id})" for c in cves))
+
+
+class CaseTasksOpen(Exception):
+    """A case with open tasks cannot be ready for review or solved."""
+
+    def __init__(self, case: "CVECase"):
+        self.case = case
+        super().__init__(f"Sag #{case.pk} har {case.open_task_count()} åbne opgaver")
 
 
 class CVECaseQuerySet(models.QuerySet):
@@ -446,7 +456,7 @@ class CVECase(models.Model):
         return self.kind == self.Kind.VULNERABILITY
 
     # A planned task's states in its own words (see TASK_OUTCOMES in views).
-    TASK_STATE_LABELS = {"identified": "Planlagt", "patching": "I gang", "solved": "Udført"}
+    TASK_STATE_LABELS = {"identified": "Planlagt", "patching": "I gang", "review": "Til gennemsyn", "solved": "Udført"}
 
     @property
     def state_label(self) -> str:
@@ -528,6 +538,8 @@ class CVECase(models.Model):
             raise ValueError(f"Unknown CVE state: {new_state!r}")
         if resolution and resolution not in self.Resolution.values:
             raise ValueError(f"Unknown resolution: {resolution!r}")
+        if new_state in (self.State.REVIEW, self.State.SOLVED) and self.open_task_count():
+            raise CaseTasksOpen(self)
         if new_state != self.State.SOLVED:
             resolution = ""
         old_label = self.outcome_label
@@ -575,6 +587,133 @@ class CVECase(models.Model):
         CVEComment.objects.create(cve=cve, kind=CVEComment.Kind.STATE, author=user,
                                   text=f"Fjernet fra sag #{self.pk}: {self.title}")
         self._log(f"Fjernet: {cve.cve_id}", user)
+        return True
+
+    # -- tasks (1.23.0) ------------------------------------------------------
+
+    @property
+    def tasks_gate(self) -> bool:
+        """Tasks gate a vulnerability or incident case. A planned task has its own states."""
+        return not self.is_task
+
+    def open_task_count(self) -> int:
+        if not self.tasks_gate or self.pk is None:
+            return 0
+        return self.tasks.filter(status__in=CVETask.OPEN_STATUSES).count()
+
+    def task_counts(self) -> dict:
+        """How many tasks are in each status (all statuses present, zero-filled)."""
+        counts = {status: 0 for status in CVETask.Status.values}
+        if self.pk is None:
+            return counts
+        for row in self.tasks.values("status").annotate(n=Count("id")):
+            counts[row["status"]] = row["n"]
+        return counts
+
+    def sync_task_state(self, user=None) -> None:
+        """Apply the task gate. Any open task keeps the sag in Patcher; when the
+        last one is closed (done or ignored) the sag becomes ready for review.
+        A sag without tasks keeps its manual state."""
+        if not self.tasks_gate or not self.tasks.exists():
+            return
+        if self.open_task_count():
+            if self.state != self.State.PATCHING:
+                self.set_state(self.State.PATCHING, user)
+        elif self.state in (self.State.IDENTIFIED, self.State.PATCHING):
+            self.set_state(self.State.REVIEW, user)
+
+
+class CVETask(models.Model):
+    """A piece of work a sag needs before it can be closed.
+
+    Open tasks keep the sag in Patcher. The waiting statuses say what the work
+    is blocked on (a vendor patch or a new release), so statistics can show it
+    apart from our own backlog. An ignored task needs a note with the decision
+    and its reason, e.g. "no update licence; migrating to X in 2027"; it counts
+    as closed.
+    """
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Åben"
+        WAITING_PATCH = "waiting_patch", "Venter på patch"
+        WAITING_RELEASE = "waiting_release", "Venter på ny version"
+        DONE = "done", "Udført"
+        IGNORED = "ignored", "Ignoreret"
+
+    OPEN_STATUSES = (Status.OPEN, Status.WAITING_PATCH, Status.WAITING_RELEASE)
+    CLOSED_STATUSES = (Status.DONE, Status.IGNORED)
+
+    case = models.ForeignKey(CVECase, on_delete=models.CASCADE, related_name="tasks", verbose_name="Sag")
+    title = models.CharField(verbose_name="Opgave", max_length=200)
+    status = models.CharField(verbose_name="Status", max_length=16, choices=Status.choices, default=Status.OPEN)
+    note = models.TextField(verbose_name="Note", blank=True,
+                            help_text="Påkrævet ved Ignoreret: hvad der er besluttet, og hvorfor.")
+    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name="cve_tasks", verbose_name="Ansvarlig")
+    due_date = models.DateField(verbose_name="Frist", null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="cve_tasks_created", verbose_name="Oprettet af")
+    created_at = models.DateTimeField(verbose_name="Oprettet", default=timezone.now)
+    updated_at = models.DateTimeField(verbose_name="Opdateret", auto_now=True)
+    decided_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="cve_tasks_decided", verbose_name="Sidst ændret af")
+    decided_at = models.DateTimeField(verbose_name="Sidst ændret", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Sagsopgave"
+        verbose_name_plural = "Sagsopgaver"
+        ordering = ["created_at", "id"]
+
+    def __str__(self) -> str:
+        return f"Sag #{self.case_id}: {self.title}"
+
+    @property
+    def is_open(self) -> bool:
+        return self.status in self.OPEN_STATUSES
+
+    @property
+    def is_overdue(self) -> bool:
+        return bool(self.is_open and self.due_date and self.due_date < timezone.localdate())
+
+    @classmethod
+    def add(cls, case: "CVECase", *, title: str, user=None, status: str = Status.OPEN,
+            note: str = "", assignee=None, due_date=None) -> "CVETask":
+        """Add a task to a case and apply the gate."""
+        title = (title or "").strip()
+        note = (note or "").strip()
+        if not title:
+            raise ValueError("A task needs a title.")
+        if status not in cls.Status.values:
+            raise ValueError(f"Unknown task status: {status!r}")
+        if status == cls.Status.IGNORED and not note:
+            raise ValueError("An ignored task needs a note with the decision.")
+        task = cls.objects.create(
+            case=case, title=title[:200], status=status, note=note, assignee=assignee,
+            due_date=due_date, created_by=user, decided_by=user, decided_at=timezone.now(),
+        )
+        case._log(f"Opgave tilføjet: {task.title} ({task.get_status_display()})", user)
+        case.sync_task_state(user)
+        return task
+
+    def set_status(self, status: str, user=None, *, note: str = "") -> bool:
+        """Change status (and optionally the note) and apply the gate.
+        Returns False when nothing changed."""
+        if status not in self.Status.values:
+            raise ValueError(f"Unknown task status: {status!r}")
+        note = (note or "").strip()
+        if status == self.Status.IGNORED and not (note or self.note):
+            raise ValueError("An ignored task needs a note with the decision.")
+        if status == self.status and (not note or note == self.note):
+            return False
+        old_label = self.get_status_display()
+        self.status = status
+        if note:
+            self.note = note
+        self.decided_by, self.decided_at = user, timezone.now()
+        self.save(update_fields=["status", "note", "decided_by", "decided_at", "updated_at"])
+        suffix = f": {note}" if note else ""
+        self.case._log(f"Opgave: {self.title} — {old_label} → {self.get_status_display()}{suffix}", user)
+        self.case.sync_task_state(user)
         return True
 
 

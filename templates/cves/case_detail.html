@@ -89,6 +89,8 @@
 
   {# Member CVEs (an incident shows the card only if it holds any) #}
   {% if case.is_vulnerability or cves %}
+  {% if case.tasks_gate %}{% include "cves/partials/case_tasks.html" %}{% endif %}
+
   <div class="card overflow-hidden" style="padding: 0;">
     <div style="padding: 20px 24px 14px;">
       <div class="label-eyebrow">Omfatter</div>

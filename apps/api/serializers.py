@@ -299,6 +299,7 @@ def serialize_case(case: CVECase, *, url: str, cve_url) -> dict[str, Any]:
         "created_at": case.created_at.isoformat() if case.created_at else None,
         "updated_at": case.updated_at.isoformat() if case.updated_at else None,
         "solved_at": case.solved_at.isoformat() if case.solved_at else None,
+        "open_tasks": case.open_task_count(),
         "cves": [
             {"cve_id": c.cve_id, "subject": c.subject, "state": c.state, "url": cve_url(c)}
             for c in case.cves.order_by("cve_id")

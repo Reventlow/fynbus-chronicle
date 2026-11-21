@@ -2,6 +2,23 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.23.0 — 2026-11-21
+
+### Added
+- **Opgaver på sager.** En sag kan have opgaver, der skal være løst, før sagen kan lukkes. Hver opgave har en status:
+  *Åben*, *Venter på patch*, *Venter på ny version*, *Udført* eller *Ignoreret*. Ventende opgaver tæller for sig,
+  så det ses, hvad der venter på en leverandør, og hvad vi selv kan tage fat på.
+  - Så længe en opgave er åben eller venter, står sagen i *Patcher*.
+  - Når den sidste opgave er *Udført* eller *Ignoreret*, skifter sagen automatisk til **Klar til gennemsyn** (ny status). Derfra vælges *Færdigbehandlet* med udfald som før.
+  - En ny åben opgave på en færdigbehandlet sag åbner sagen igen.
+  - *Ignoreret* kræver en note med beslutningen og begrundelsen, fx "ingen opdateringslicens; migrerer til X i 2027". Alle kolleger kan ignorere en opgave.
+- **Central opgaveliste** (*Opgaver*, under Sager): tællere pr. status på tværs af sagerne og filter på status. Planlagte opgaver har ingen delopgaver.
+- **API:** `GET /api/v1/cve-cases/<id>/tasks/`, `POST /api/v1/cve-cases/<id>/tasks/new/` (skrivenøgle) og `PATCH /api/v1/cve-tasks/<id>/` (skrivenøgle). Sagens svar har nu `open_tasks`. Sendes en sag med åbne opgaver som *Færdigbehandlet*, svarer API'et 409.
+- Sagens statusknapper har *Klar til gennemsyn*.
+
+### Notes
+- Eksisterende sager får ingen opgaver automatisk og beholder deres status. Reglen slår først ind, når en sag har opgaver.
+
 ## 1.22.2 — 2026-11-20
 
 ### Changed

@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.api_auth import api_auth
-from apps.cves.models import CVE, CVECase, CVEComment, normalise_cve_id
+from apps.cves.models import CVE, CaseTasksOpen, CVECase, CVEComment, CVETask, normalise_cve_id
 from apps.feedback.models import FeatureRequest
 from apps.logbook.models import (
     Incident,
@@ -875,52 +875,55 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
 
     user = request.api_user
     created = case is None
-    with transaction.atomic():
-        if created:
-            case = CVECase.objects.create(
-                title=title, assessment=assessment or "", solution=solution or "",
-                source=source or ("harbinger" if source_url else "api"), reference=reference or "",
-                source_url=source_url, created_by=user,
-            )
-        else:
-            changed = []
-            for field, value in (("title", title), ("assessment", assessment), ("solution", solution),
-                                 ("reference", reference)):
-                if value is not None and (value or field != "title") and getattr(case, field) != value:
-                    setattr(case, field, value)
-                    changed.append(field)
-            if source_url and not case.source_url:
-                case.source_url, case.source = source_url, source or "harbinger"
-                changed += ["source_url", "source"]
-            elif source and case.source != source:
-                case.source = source
-                changed.append("source")
-            if changed:
-                case.save(update_fields=[*changed, "updated_at"])
-        cves = []
-        for fields in inputs:
-            cve = existing.get(fields["cve_id"])
-            if cve is None:
-                try:
-                    with transaction.atomic():
-                        cve = _create_cve(fields, user)
-                except IntegrityError:  # created concurrently by a single-CVE push
-                    cve = CVE.objects.get(cve_id=fields["cve_id"])
-                    if cve.case_id and cve.case_id != case.pk:
-                        transaction.set_rollback(True)
-                        return JsonResponse({"error": "conflict", "detail": f"{cve.cve_id} joined another case meanwhile"}, status=409)
-            cves.append(cve)
-        if created:
-            # The new case starts in the requested state, so its CVEs join in that state.
-            if state:
-                case.set_state(state, user, resolution=resolution)
-            case.add_cves(cves, user)
-        else:
-            case.add_cves(cves, user)
-            if state:
-                case.set_state(state, user, resolution=resolution)
-        if comment:
-            CVEComment.objects.create(case=case, text=comment, author=user)
+    try:
+        with transaction.atomic():
+            if created:
+                case = CVECase.objects.create(
+                    title=title, assessment=assessment or "", solution=solution or "",
+                    source=source or ("harbinger" if source_url else "api"), reference=reference or "",
+                    source_url=source_url, created_by=user,
+                )
+            else:
+                changed = []
+                for field, value in (("title", title), ("assessment", assessment), ("solution", solution),
+                                     ("reference", reference)):
+                    if value is not None and (value or field != "title") and getattr(case, field) != value:
+                        setattr(case, field, value)
+                        changed.append(field)
+                if source_url and not case.source_url:
+                    case.source_url, case.source = source_url, source or "harbinger"
+                    changed += ["source_url", "source"]
+                elif source and case.source != source:
+                    case.source = source
+                    changed.append("source")
+                if changed:
+                    case.save(update_fields=[*changed, "updated_at"])
+            cves = []
+            for fields in inputs:
+                cve = existing.get(fields["cve_id"])
+                if cve is None:
+                    try:
+                        with transaction.atomic():
+                            cve = _create_cve(fields, user)
+                    except IntegrityError:  # created concurrently by a single-CVE push
+                        cve = CVE.objects.get(cve_id=fields["cve_id"])
+                        if cve.case_id and cve.case_id != case.pk:
+                            transaction.set_rollback(True)
+                            return JsonResponse({"error": "conflict", "detail": f"{cve.cve_id} joined another case meanwhile"}, status=409)
+                cves.append(cve)
+            if created:
+                # The new case starts in the requested state, so its CVEs join in that state.
+                if state:
+                    case.set_state(state, user, resolution=resolution)
+                case.add_cves(cves, user)
+            else:
+                case.add_cves(cves, user)
+                if state:
+                    case.set_state(state, user, resolution=resolution)
+            if comment:
+                CVEComment.objects.create(case=case, text=comment, author=user)
+    except CaseTasksOpen as exc:
+        return JsonResponse({"error": "conflict", "detail": str(exc)}, status=409)
     case.refresh_from_db()
     return JsonResponse({**_case_payload(request, case), "created": created}, status=201 if created else 200)
 
@@ -950,3 +953,100 @@ def case_detail(request: HttpRequest, pk: int) -> JsonResponse:
     if case is None:
         return JsonResponse({"error": "not_found", "detail": f"No case {pk}"}, status=404)
     return JsonResponse(_case_payload(request, case))
+
+
+# -------------------------------------------------------------------------
+# Case tasks (1.23.0): work a sag needs done before it can be closed
+# -------------------------------------------------------------------------
+
+
+def _task_payload(task: CVETask) -> dict:
+    return {
+        "id": task.id,
+        "case_id": task.case_id,
+        "title": task.title,
+        "status": task.status,
+        "status_label": task.get_status_display(),
+        "note": task.note,
+        "due_date": task.due_date.isoformat() if task.due_date else None,
+        "overdue": task.is_overdue,
+        "assignee": task.assignee.username if task.assignee_id else None,
+        "created_at": task.created_at.isoformat() if task.created_at else None,
+        "updated_at": task.updated_at.isoformat() if task.updated_at else None,
+    }
+
+
+def _task_text(data: dict, field: str, limit: int) -> str | None:
+    value = data.get(field)
+    if value is None:
+        return None
+    if not isinstance(value, str) or len(value) > limit:
+        raise _InputError(_invalid(field, f"{field} must be text of at most {limit} characters"))
+    return value.strip()
+
+
+@require_GET
+@api_auth(scope="read")
+def case_tasks_read(request: HttpRequest, pk: int) -> JsonResponse:
+    case = get_object_or_404(CVECase, pk=pk)
+    return JsonResponse({
+        "case_id": case.pk,
+        "open": case.open_task_count(),
+        "counts": case.task_counts(),
+        "tasks": [_task_payload(t) for t in case.tasks.select_related("assignee")],
+    })
+
+
+@require_POST
+@api_auth(scope="write")
+def case_tasks_create(request: HttpRequest, pk: int) -> JsonResponse:
+    """Add a task: ``title`` required; ``status`` (open, waiting_patch,
+    waiting_release, done, ignored), ``note`` (required when ignored), ``due_date`` (YYYY-MM-DD)."""
+    case = get_object_or_404(CVECase, pk=pk)
+    if not case.tasks_gate:
+        return JsonResponse({"error": "invalid_case", "detail": "A planned task has no sub-tasks"}, status=400)
+    try:
+        data = _parse_json_body(request)
+        title = _task_text(data, "title", 200)
+        if not title:
+            return _invalid("title", "title is required")
+        status = data.get("status") or CVETask.Status.OPEN
+        due = data.get("due_date")
+        due_date = None
+        if due:
+            try:
+                due_date = datetime.strptime(due, "%Y-%m-%d").date()
+            except (TypeError, ValueError):
+                return _invalid("due_date", "due_date must be YYYY-MM-DD")
+        task = CVETask.add(case, title=title, user=request.api_user, status=status,
+                           note=_task_text(data, "note", 5000) or "", due_date=due_date)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    except _InputError as exc:
+        return exc.response
+    return JsonResponse({"task": _task_payload(task), "case": {"id": case.pk, "state": case.state,
+                         "open": case.open_task_count()}}, status=201)
+
+
+@require_http_methods(["PATCH"])
+@api_auth(scope="write")
+def case_task_update(request: HttpRequest, pk: int) -> JsonResponse:
+    """Change a task's ``status`` and/or ``note``. Ignoring needs a note (sent now or already there)."""
+    task = get_object_or_404(CVETask.objects.select_related("case", "assignee"), pk=pk)
+    try:
+        data = _parse_json_body(request)
+        status = data.get("status")
+        if status is not None and status not in CVETask.Status.values:
+            return _invalid("status", f"status must be one of {', '.join(CVETask.Status.values)}")
+        note = _task_text(data, "note", 5000) or ""
+        if status is None and not note:
+            return _invalid("status", "send status and/or note")
+        task.set_status(status or task.status, request.api_user, note=note)
+    except ValueError as exc:
+        return JsonResponse({"error": "invalid_body", "detail": str(exc)}, status=400)
+    except _InputError as exc:
+        return exc.response
+    task.refresh_from_db()
+    task.case.refresh_from_db()
+    return JsonResponse({"task": _task_payload(task), "case": {"id": task.case_id, "state": task.case.state,
+                         "open": task.case.open_task_count()}})
