@@ -2,6 +2,11 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.23.1 — 2026-11-21
+
+### Fixed
+- Opgaver-listen: titlen på en opgave er nu et link til opgaven på sagen (scroller til rækken), så den ikke er død tekst.
+
 ## 1.23.0 — 2026-11-21
 
 ### Added
