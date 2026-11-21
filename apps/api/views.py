@@ -1001,7 +1001,7 @@ def case_tasks_read(request: HttpRequest, pk: int) -> JsonResponse:
 @api_auth(scope="write")
 def case_tasks_create(request: HttpRequest, pk: int) -> JsonResponse:
     """Add a task: ``title`` required; ``status`` (open, waiting_patch,
-    waiting_release, done, ignored), ``note`` (required when ignored), ``due_date`` (YYYY-MM-DD)."""
+    waiting_release, done, ignored, removed), ``note`` (required when ignored), ``due_date`` (YYYY-MM-DD)."""
     case = get_object_or_404(CVECase, pk=pk)
     if not case.tasks_gate:
         return JsonResponse({"error": "invalid_case", "detail": "A planned task has no sub-tasks"}, status=400)

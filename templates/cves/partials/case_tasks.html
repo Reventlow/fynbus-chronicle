@@ -1,6 +1,7 @@
 {% comment %}
   Opgaver på en sag (1.23.0). Sagen kan ikke gøres klar eller færdigbehandlet,
-  mens en opgave er åben eller venter. Ignoreret kræver en note.
+  mens en opgave er åben eller venter. Ignoreret kræver en note;
+  System fjernet lukker opgaven, når systemet er taget ud af drift.
 {% endcomment %}
 <div class="card overflow-hidden" style="padding: 0;" id="opgaver">
   <div style="padding: 20px 24px 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between;">
@@ -11,7 +12,7 @@
     <div style="font-size: 13px; color: var(--ink-3);">
       {% with open=case.open_task_count %}{{ open }} åben{{ open|pluralize:"e" }}{% endwith %}
       · {{ task_counts.waiting_patch }} venter på patch · {{ task_counts.waiting_release }} venter på ny version
-      · {{ task_counts.done }} udført · {{ task_counts.ignored }} ignoreret
+      · {{ task_counts.done }} udført · {{ task_counts.ignored }} ignoreret · {{ task_counts.removed }} system fjernet
     </div>
   </div>
   {% for task in case_tasks %}

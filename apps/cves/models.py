@@ -612,7 +612,8 @@ class CVECase(models.Model):
 
     def sync_task_state(self, user=None) -> None:
         """Apply the task gate. Any open task keeps the sag in Patcher; when the
-        last one is closed (done or ignored) the sag becomes ready for review.
+        last one is closed (done, ignored or system removed) the sag becomes
+        ready for review.
         A sag without tasks keeps its manual state."""
         if not self.tasks_gate or not self.tasks.exists():
             return
@@ -630,7 +631,9 @@ class CVETask(models.Model):
     is blocked on (a vendor patch or a new release), so statistics can show it
     apart from our own backlog. An ignored task needs a note with the decision
     and its reason, e.g. "no update licence; migrating to X in 2027"; it counts
-    as closed.
+    as closed. "System removed" closes a task whose affected system has been
+    decommissioned or uninstalled, so there is nothing left to patch; the note
+    is optional.
     """
 
     class Status(models.TextChoices):
@@ -639,9 +642,10 @@ class CVETask(models.Model):
         WAITING_RELEASE = "waiting_release", "Venter på ny version"
         DONE = "done", "Udført"
         IGNORED = "ignored", "Ignoreret"
+        REMOVED = "removed", "System fjernet"
 
     OPEN_STATUSES = (Status.OPEN, Status.WAITING_PATCH, Status.WAITING_RELEASE)
-    CLOSED_STATUSES = (Status.DONE, Status.IGNORED)
+    CLOSED_STATUSES = (Status.DONE, Status.IGNORED, Status.REMOVED)
 
     case = models.ForeignKey(CVECase, on_delete=models.CASCADE, related_name="tasks", verbose_name="Sag")
     title = models.CharField(verbose_name="Opgave", max_length=200)

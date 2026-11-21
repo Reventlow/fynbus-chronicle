@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.24.0 — 2026-11-21
+
+### Added
+- **Ny opgavestatus: *System fjernet*.** Er det berørte system taget ud af drift eller afinstalleret, kan opgaven lukkes
+  med *System fjernet* i stedet for *Udført* eller *Ignoreret*. Den tæller som lukket, så sagen går videre til
+  *Klar til gennemsyn* som ved de andre lukkede statusser. Note er valgfri (fx hvornår og af hvem systemet blev fjernet).
+  Statussen har sin egen tæller på sagen og i den centrale opgaveliste, og API'et tager `status: "removed"`.
+
 ## 1.23.1 — 2026-11-21
 
 ### Fixed
