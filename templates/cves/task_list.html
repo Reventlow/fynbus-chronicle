@@ -47,9 +47,9 @@
       <div class="incident-row" style="grid-template-columns: minmax(0, 1fr) auto;">
         <span class="incident-rail" style="background: {{ task.case.state_color }};"></span>
         <div style="min-width: 0;">
-          <div class="incident-title">{{ task.title }}</div>
+          <div class="incident-title"><a href="{% url 'cves:case-detail' task.case.pk %}#task-{{ task.pk }}" style="color: inherit; text-decoration: none;">{{ task.title }}</a></div>
           <div class="incident-meta">
-            <a href="{% url 'cves:case-detail' task.case.pk %}#opgaver">Sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</a>
+            <a href="{% url 'cves:case-detail' task.case.pk %}#task-{{ task.pk }}">Sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</a>
             <span> · {{ task.get_status_display }}</span>
             {% if task.assignee %}<span> · {{ task.assignee.get_full_name|default:task.assignee.username }}</span>{% endif %}
             {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}</span>{% endif %}

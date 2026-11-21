@@ -15,7 +15,7 @@
     </div>
   </div>
   {% for task in case_tasks %}
-    <div class="incident-row" style="grid-template-columns: minmax(0, 1fr){% if is_editor %} auto{% endif %};">
+    <div class="incident-row" id="task-{{ task.pk }}" style="grid-template-columns: minmax(0, 1fr){% if is_editor %} auto{% endif %};">
       <div style="min-width: 0;">
         <div class="incident-title">{{ task.title }}</div>
         <div class="incident-meta">
