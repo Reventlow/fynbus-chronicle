@@ -231,6 +231,9 @@ def _week_cases(weeklog: WeekLog) -> list[str]:
     for row in ctx["week_summary"]:
         lines.append(f"| {row['label']} | {row['open']} | {row['solved']} |")
     lines += ["", "*Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.*", ""]
+    if stats := ctx["week_task_stats"]:
+        lines += [f"**Delopgaver på sårbarheder:** {stats['open']} åbne · "
+                  f"{stats['waiting']} venter på leverandør", ""]
     for case in ctx["export_cases"]:
         lines.append(
             f"### {case.get_kind_display()} · sag #{case.pk} · {case.title}"

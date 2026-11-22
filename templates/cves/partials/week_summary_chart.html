@@ -7,6 +7,8 @@
   bgcolor, so the markup survives the PDF stylesheet and mail clients that
   strip CSS. Shared by the week log page, the HTML/PDF export and the mail.
   Param ``fs``: font size (default 9.5pt for print; the mail passes 13px).
+  Under it, when ``week_task_stats`` is set (1.27.0): the delopgaver on
+  vulnerability sager, how many are open and how many wait on a vendor.
 {% endcomment %}
 {% with fs=fs|default:"9.5pt" %}
 <table class="age-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8; margin:4px 0 0 0;" bgcolor="#FAF9F7">
@@ -42,4 +44,16 @@
   {% endfor %}
 </table>
 <p style="margin:2px 0 10px 0; font-size:{% if fs == "13px" %}12px{% else %}9pt{% endif %}; color:#6B635B;">Åbne = stadig åbne ved ugens udgang. Færdigbehandlet = færdigbehandlet i løbet af ugen.</p>
+{% if week_task_stats %}
+<table class="vuln-task-stats" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8; margin:0 0 10px 0;" bgcolor="#FAF9F7">
+  <tr>
+    <td style="padding:8px 14px; border:none; vertical-align:middle; font-size:{{ fs }}; color:#4A4540; font-weight:600;">Delopgaver på sårbarheder</td>
+    <td align="right" style="padding:8px 14px; border:none; vertical-align:middle; font-size:{{ fs }}; color:#4A4540; white-space:nowrap;">
+      <strong>{{ week_task_stats.open }}</strong> <span style="color:#6B635B;">åbne</span>
+      &nbsp;&middot;&nbsp;
+      <strong style="color:#B3832F;">{{ week_task_stats.waiting }}</strong> <span style="color:#6B635B;">venter på leverandør</span>
+    </td>
+  </tr>
+</table>
+{% endif %}
 {% endwith %}
