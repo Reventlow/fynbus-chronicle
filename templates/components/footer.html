@@ -7,7 +7,9 @@
   <div class="footer-rule" aria-hidden="true"></div>
   <div class="footer-inner">
     <div class="footer-copyright">
-      <span class="num">© {% now "Y" %}</span> FynBus IT.
+      <span class="num">© {% now "Y" %}</span> FynBus IT. Bygget af
+      {# udviklingsgruppen.dk is a homelab site: noreferrer keeps Chronicle's addresses out of its logs #}
+      <a href="https://udviklingsgruppen.dk" class="footer-link" target="_blank" rel="noopener noreferrer">udviklingsgruppen</a>.
     </div>
     <div class="footer-links">
       {% if IS_STAR_WARS_DAY %}

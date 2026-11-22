@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.27.1 — 2026-11-22
+
+### Added
+- **Bundlinjen linker til udviklingsgruppen.** Ved siden af *© FynBus IT* står nu *Bygget af udviklingsgruppen*, med et
+  link til [udviklingsgruppen.dk](https://udviklingsgruppen.dk). Linket åbner i en ny fane og sender ikke Chronicles
+  adresse med (`noreferrer`).
+
 ## 1.27.0 — 2026-11-22
 
 ### Added
