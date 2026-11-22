@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.25.0.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.25.1.
 
 ## Indhold
 
@@ -358,7 +358,8 @@ En sårbarhedssag eller en hændelse kan have **delopgaver**: det arbejde, der s
 - En delopgave har status *Åben*, *Venter på patch*, *Venter på ny version*, *Udført*, *Ignoreret* eller *System fjernet*, og kan have en ansvarlig og en frist. Ventende delopgaver tæller for sig, så det ses, hvad der venter på en leverandør, og hvad vi selv kan tage fat på.
 - Så længe en delopgave er åben eller venter, står sagen i *Patcher*. Når den sidste er lukket, skifter sagen af sig selv til **Klar til gennemsyn**, og derfra vælges *Færdigbehandlet* med udfald. En ny åben delopgave på en færdigbehandlet sag åbner sagen igen.
 - *Ignoreret* kræver en note med beslutningen og begrundelsen. *System fjernet* bruges, når systemet er taget ud af drift eller afinstalleret.
-- Fanen **Delopgaver** viser delopgaverne på tværs af sagerne. Rækken af felter øverst er filteret: *Aktive*, *Alle* og hver status. En overskreden frist står med ordet *overskredet*, og antallet står i toppen. Sagens status står ved hver delopgave som *Sag: …*.
+- Fanen **Delopgaver** viser delopgaverne på tværs af sagerne. Rækken af felter er filteret: *Aktive*, *Overskredet*, *Alle* og hver status. En overskreden frist står med ordet *overskredet*, og antallet står i toppen. Sagens status står ved hver delopgave som *Sag: …*. Listen er sorteret efter frist.
+- **Mine delopgaver**: knappen **Alle | Mine** øverst skifter mellem alles delopgaver og dem, du står som ansvarlig på. Felterne tæller så kun dine. På en sag står *Dig* ved dine delopgaver. Har du aktive delopgaver, står *Mine delopgaver: N aktive · M overskredet →* på Sårbarheder-kortet på Kontrolpanelet, og linket går direkte til din liste (til de overskredne, hvis der er nogen).
 - Et link fra listen åbner sagen med *← Tilbage til delopgaverne*, og når du gemmer en delopgave, kommer du tilbage til listen med samme filter.
 
 ### Hændelser

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load cve_extras %}
 
-{% block title %}Delopgaver — FynBus Chronicle{% endblock %}
+{% block title %}{% if mine %}Mine delopgaver{% else %}Delopgaver{% endif %} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
   <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>
@@ -17,7 +17,7 @@
       <span>{{ active_count }} aktiv{{ active_count|pluralize:"e" }}{% if overdue_count %} · <span style="color: var(--bad-ink);">{{ overdue_count }} overskredet</span>{% endif %}</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
-      Delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>
+      {% if mine %}Mine delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>{% else %}Delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>{% endif %}
     </h1>
     <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
       Det arbejde, en sag kræver, før den kan lukkes. Ventende delopgaver tæller for sig, så det er tydeligt,
@@ -29,12 +29,19 @@
 
   {% cve_section_nav %}
 
-  {# One row of tiles is the filter: Aktive, Alle, then each status. #}
+  {% comment %}Scope switch: everyone's delopgaver or only those assigned to me.
+     It keeps the status filter; the tiles below count within the scope.{% endcomment %}
+  <div class="segmented" role="group" aria-label="Hvis delopgaver" style="align-self: flex-start;">
+    <a href="?status={{ status }}" class="segmented-btn{% if not mine %} segmented-btn-active{% endif %}"{% if not mine %} aria-current="true"{% endif %}>Alle · {{ everyone_active }} aktive</a>
+    <a href="?status={{ status }}&amp;mine=1" class="segmented-btn{% if mine %} segmented-btn-active{% endif %}"{% if mine %} aria-current="true"{% endif %}>Mine · {{ my_active }} aktive</a>
+  </div>
+
+  {# One row of tiles is the filter: Aktive, Overskredet, Alle, then each status. #}
   <nav aria-label="Filtrér delopgaver" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
     {% for tile in tiles %}
-      <a href="?status={{ tile.key }}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
-        <div class="label-eyebrow">{{ tile.label }}</div>
-        <div class="display" style="font-size: 32px; margin-top: 6px;">{{ tile.count }}</div>
+      <a href="?status={{ tile.key }}{% if mine %}&amp;mine=1{% endif %}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
+        <div class="label-eyebrow"{% if tile.bad %} style="color: var(--bad-ink);"{% endif %}>{{ tile.label }}</div>
+        <div class="display" style="font-size: 32px; margin-top: 6px;{% if tile.bad %} color: var(--bad-ink);{% endif %}">{{ tile.count }}</div>
       </a>
     {% endfor %}
   </nav>
@@ -57,7 +64,7 @@
         <span class="task-status" style="align-self: center;" title="Sagens status"><span class="pill-dot" style="background: {{ task.case.state_color }};"></span>Sag: {{ task.case.get_state_display }}</span>
       </div>
     {% empty %}
-      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">Ingen delopgaver her.</p>
+      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">{% if mine %}Du har ingen delopgaver her.{% if status == 'active' %} Delopgaver, du står som ansvarlig på, kommer her.{% endif %}{% else %}Ingen delopgaver her.{% endif %}</p>
     {% endfor %}
   </div>
 </div>

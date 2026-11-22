@@ -815,39 +815,64 @@ def task_status(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
 
 TASK_LIST_FILTERS = {
     "active": "Aktive",
+    "overdue": "Overskredet",
     "all": "Alle",
     **{value: label for value, label in CVETask.Status.choices},
 }
 
 
+def my_task_counts(user) -> dict:
+    """The user's own delopgaver: how many are active, how many overdue.
+
+    Used by the task list's "Mine" switch and the Kontrolpanel card.
+    """
+    mine = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK).filter(
+        assignee=user, status__in=CVETask.OPEN_STATUSES)
+    return {"active": mine.count(), "overdue": mine.filter(due_date__lt=timezone.localdate()).count()}
+
+
 @login_required
 def task_list(request: HttpRequest) -> HttpResponse:
-    """Every sag's delopgaver in one place. ``?status=`` picks a status; the
-    default "active" is everything still open or waiting. Planlagt arbejde has
-    no delopgaver, so none are listed for it. One row of tiles is the filter:
-    Aktive, Alle, then each status with its count."""
+    """Every sag's delopgaver in one place.
+
+    ``?mine=1`` narrows to the delopgaver assigned to the user ("Mine"); the
+    tiles then count only those. ``?status=`` picks a filter: "active" (the
+    default: open or waiting), "overdue" (active and past the deadline),
+    "all", or one status. Planlagt arbejde has no delopgaver, so none are
+    listed for it. Overdue ones come first, as the list is sorted by deadline.
+    """
     status = request.GET.get("status") or "active"
     if status not in TASK_LIST_FILTERS:
         status = "active"
-    base = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
+    mine = request.GET.get("mine") == "1"
+    everyone = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
+    base = everyone.filter(assignee=request.user) if mine else everyone
+    today = timezone.localdate()
     qs = base.select_related("case", "assignee")
     if status == "active":
         qs = qs.filter(status__in=CVETask.OPEN_STATUSES)
+    elif status == "overdue":
+        qs = qs.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=today)
     elif status != "all":
         qs = qs.filter(status=status)
     totals = {value: 0 for value in CVETask.Status.values}
     for row in base.values("status").annotate(n=Count("id")):
         totals[row["status"]] = row["n"]
     active = sum(totals[s] for s in CVETask.OPEN_STATUSES)
+    overdue = base.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=today).count()
     tiles = [{"key": "active", "label": "Aktive", "count": active},
+             {"key": "overdue", "label": "Overskredet", "count": overdue, "bad": bool(overdue)},
              {"key": "all", "label": "Alle", "count": sum(totals.values())},
              *({"key": value, "label": label, "count": totals[value]} for value, label in CVETask.Status.choices)]
-    overdue = base.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=timezone.localdate()).count()
+    everyone_active = everyone.filter(status__in=CVETask.OPEN_STATUSES).count()
     return render(request, "cves/task_list.html", {
         "tasks": qs.order_by(F("due_date").asc(nulls_last=True), "created_at", "id"),
         "status": status,
+        "mine": mine,
         "tiles": tiles,
         "active_count": active,
         "overdue_count": overdue,
+        "everyone_active": everyone_active,
+        "my_active": active if mine else my_task_counts(request.user)["active"],
         "here": request.get_full_path(),
     })
