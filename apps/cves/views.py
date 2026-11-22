@@ -894,8 +894,9 @@ def task_list(request: HttpRequest) -> HttpResponse:
 
     ``?mine=1`` narrows to the delopgaver assigned to the user ("Mine"); the
     tiles then count only those. ``?mine=0`` shows everyone's. Without the
-    parameter, editors get "Mine" (they are the ones delopgaver are
-    assigned to) and viewers get everyone's. ``?status=`` picks a filter: "active" (the
+    parameter, an editor with active delopgaver of their own gets "Mine";
+    everyone else (viewers, and editors with nothing assigned) gets
+    everyone's, rather than an empty page. ``?status=`` picks a filter: "active" (the
     default: open or waiting), "overdue" (active and past the deadline),
     "all", or one status. Planlagt arbejde has no delopgaver, so none are
     listed for it. Overdue ones come first, as the list is sorted by deadline.
@@ -904,7 +905,11 @@ def task_list(request: HttpRequest) -> HttpResponse:
     if status not in TASK_LIST_FILTERS:
         status = "active"
     mine_param = request.GET.get("mine")
-    mine = mine_param == "1" if mine_param in ("0", "1") else is_editor(request.user)
+    my_counts = my_task_counts(request.user)
+    if mine_param in ("0", "1"):
+        mine = mine_param == "1"
+    else:
+        mine = is_editor(request.user) and my_counts["active"] > 0
     everyone = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
     base = everyone.filter(assignee=request.user) if mine else everyone
     today = timezone.localdate()
@@ -933,6 +938,6 @@ def task_list(request: HttpRequest) -> HttpResponse:
         "active_count": active,
         "overdue_count": overdue,
         "everyone_active": everyone_active,
-        "my_active": active if mine else my_task_counts(request.user)["active"],
+        "my_active": my_counts["active"],
         "here": request.get_full_path(),
     })
