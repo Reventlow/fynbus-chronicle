@@ -28,9 +28,29 @@ if not settings.SSO_ENABLED:
     _UNUSED_ALLAUTH += r"|microsoft|3rdparty|social"
 _to_login = RedirectView.as_view(pattern_name="accounts:login", query_string=True)
 
+
+def admin_login(request, extra_context=None):
+    """Django admin's login page, but SSO users sign in at Chronicle's.
+
+    Staff who signed in with Microsoft have the admin pages (Django's own
+    rule: an active staff user). Django admin's login page only takes a
+    password, which SSO_ONLY refuses to everyone but break-glass, so a
+    signed-out visit to /admin/ (a bookmark) would end there. With SSO on,
+    a signed-out visitor goes to Chronicle's login page instead (Microsoft
+    button, ?local=1 for break-glass) and comes back via ``next``. A
+    signed-in user who is not staff still gets Django's "not authorised"
+    page: sending them to accounts:login would only bounce to the dashboard.
+    A posted password still goes to Django admin, where the backend applies
+    SSO_ONLY as before (break-glass only).
+    """
+    if settings.SSO_ENABLED and request.method == "GET" and not request.user.is_authenticated:
+        return _to_login(request)
+    return admin.site.login(request, extra_context)
+
 urlpatterns = [
     re_path(rf"^allauth/(?:{_UNUSED_ALLAUTH})(?:/|$)", _to_login),
     path("", root_redirect, name="root"),
+    path("admin/login/", admin_login),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
