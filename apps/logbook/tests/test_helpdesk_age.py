@@ -186,9 +186,9 @@ class TestReportOutput:
             "logbook/exports/weekly_report.html", {"weeklog": weeklog}
         )
 
-        assert "Åbne sager fordelt på liggetid" in html
+        assert "Åbne tickets fordelt på liggetid" in html
         assert "Over 12 måneder" in html
-        assert "12 af 40 åbne sager har ligget i mere end 1 måned." in html
+        assert "12 af 40 åbne tickets har ligget i mere end 1 måned." in html
 
     def test_html_report_omits_the_section_without_data(self, weeklog_without_breakdown):
         html = render_to_string(
@@ -223,12 +223,12 @@ class TestReportOutput:
     def test_email_body_renders_the_breakdown(self, weeklog):
         html = render_to_string("logbook/exports/email_body.html", {"weeklog": weeklog})
 
-        assert "Åbne sager fordelt på liggetid" in html
+        assert "Åbne tickets fordelt på liggetid" in html
 
     def test_markdown_report_renders_a_table(self, weeklog):
         markdown = generate_markdown(weeklog)
 
-        assert "### Åbne sager fordelt på liggetid" in markdown
+        assert "### Åbne tickets fordelt på liggetid" in markdown
         assert "| Under 1 uge | 14 | 35% |" in markdown
 
     def test_markdown_report_omits_the_section_without_data(

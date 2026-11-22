@@ -51,7 +51,8 @@ class TestList:
 
     def test_breadcrumb_names_the_section(self, editor_client, cve):
         html = editor_client.get(reverse("cves:list")).content.decode()
-        assert '<span class="current">Sårbarheder og hændelser</span>' in html
+        assert f'<a href="{reverse("cves:case-list")}">Sårbarheder og hændelser</a>' in html
+        assert '<span class="current">CVE\'er</span>' in html
         assert '<span class="current">Kontrolpanel</span>' not in html
 
 
@@ -123,11 +124,13 @@ class TestCreate:
         )
         cve = CVE.objects.get(cve_id="CVE-2026-8888")
         assert response.status_code == 302
-        assert response.url == reverse("cves:detail", args=[cve.pk])
+        # Every CVE belongs to a sag: a new one is started and the user lands on it.
+        assert cve.case is not None and cve.case.title == "Citrix" and cve.case.kind == "vulnerability"
+        assert response.url == cve.case.get_absolute_url()
         assert cve.created_by == editor
         assert cve.severity == "high"
         assert cve.source == ""
-        assert cve.comments.get().text == "Rammer NetScaler"
+        assert cve.comments.filter(text="Rammer NetScaler").count() == 1
 
     def test_prefilled_source_url_marks_harbinger(self, editor_client):
         editor_client.post(
@@ -165,12 +168,12 @@ class TestEdit:
 
 
 class TestStateView:
-    def test_editor_moves_state(self, editor_client, cve, editor):
+    def test_a_cve_has_no_state_of_its_own(self, editor_client, cve):
+        """1.25.0: the sag owns the state; a CVE outside one is told to join one."""
         response = editor_client.post(reverse("cves:state", args=[cve.pk]), {"state": "solved"})
-        assert response.status_code == 302
+        assert response.status_code == 302 and response.url.endswith("#sag")
         cve.refresh_from_db()
-        assert cve.state == "solved"
-        assert cve.solved_by == editor
+        assert cve.state == "identified"
 
     def test_invalid_state(self, editor_client, cve):
         response = editor_client.post(reverse("cves:state", args=[cve.pk]), {"state": "bogus"})

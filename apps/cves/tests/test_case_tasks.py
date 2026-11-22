@@ -143,7 +143,7 @@ def test_state_button_refuses_solving_with_open_tasks(editor_client, case, edito
                                   {"state": "solved", "resolution": "patched"}, follow=True)
     case.refresh_from_db()
     assert case.state == CVE.State.PATCHING
-    assert "åbne opgaver" in response.content.decode()
+    assert "åbne delopgaver" in response.content.decode()
 
 
 def test_task_list_shows_counts_and_filters(editor_client, case, editor):

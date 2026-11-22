@@ -57,7 +57,7 @@ def test_headline_states_open_tickets_and_the_weekly_change(logged_in):
     weeklog.save()
     HelpdeskTicket.objects.create(sdp_id=1, created_at=timezone.now(), is_open=True, status="Åben")
     body = logged_in.get(reverse("dashboard:index")).content.decode()
-    assert '<span class="num">134</span> åbne sager' in body
+    assert '<span class="num">134</span> åbne tickets' in body
     assert "fire færre</span> end sidste uge." in body
     assert "Synk med ServiceDesk fejlede" not in body
 
@@ -70,7 +70,7 @@ def test_failing_sync_is_called_out(logged_in):
 
 def test_numbered_sections_and_shell(logged_in):
     body = logged_in.get(reverse("dashboard:index")).content.decode()
-    for n, title in (("01", "Nu"), ("02", "Åbne sager"), ("03", "Udvikling")):
+    for n, title in (("01", "Nu"), ("02", "Åbne tickets"), ("03", "Udvikling")):
         assert f'<span class="section-label-n">{n}</span>' in body
         assert f'<h2 class="display">{title}</h2>' in body
     assert '<aside class="sidebar"' in body
@@ -119,4 +119,4 @@ def test_headline_refreshes_itself(logged_in):
     assert reverse("dashboard:partial-headline") in page and "every 60s, refresh" in page
     partial = logged_in.get(reverse("dashboard:partial-headline")).content.decode()
     assert 'id="dash-headline"' in partial
-    assert "åbne sager" in partial or "åben sag" in partial
+    assert "åbne tickets" in partial or "åben ticket" in partial

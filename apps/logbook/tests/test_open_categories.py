@@ -79,17 +79,17 @@ def test_weeklog_uses_the_week_end_for_a_past_week():
 def test_week_report_html_and_markdown(open_tickets):
     weeklog = WeekLog.get_or_create_current_week()
     html = generate_html(weeklog)
-    assert "Åbne sager fordelt på kategori" in html
-    assert "4 åbne sager ved ugens udgang, heraf 1 uden kategori" in html
+    assert "Åbne tickets fordelt på kategori" in html
+    assert "4 åbne tickets ved ugens udgang, heraf 1 uden kategori" in html
     markdown = generate_markdown(weeklog)
-    assert "### Åbne sager fordelt på kategori" in markdown
+    assert "### Åbne tickets fordelt på kategori" in markdown
     assert "| Hardware & enheder | 2 | 50% |" in markdown
 
 
 def test_week_report_without_mirror_has_no_section():
     weeklog = WeekLog.get_or_create_current_week()
-    assert "Åbne sager fordelt på kategori" not in generate_html(weeklog)
-    assert "Åbne sager fordelt på kategori" not in generate_markdown(weeklog)
+    assert "Åbne tickets fordelt på kategori" not in generate_html(weeklog)
+    assert "Åbne tickets fordelt på kategori" not in generate_markdown(weeklog)
 
 
 def test_week_report_email_attaches_the_donut(settings, open_tickets):

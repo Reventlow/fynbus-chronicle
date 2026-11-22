@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
+{% load cve_extras %}
 
-{% block title %}Opgaver — FynBus Chronicle{% endblock %}
+{% block title %}Delopgaver — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
+  <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
-  <a href="{% url 'cves:case-list' %}">Sager</a>
-  <span class="sep">/</span>
-  <span class="current">Opgaver</span>
+  <span class="current">Delopgaver</span>
 {% endblock %}
 
 {% block content %}
@@ -15,52 +14,50 @@
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>{{ active_count }} aktiv{{ active_count|pluralize:"e" }}</span>
+      <span>{{ active_count }} aktiv{{ active_count|pluralize:"e" }}{% if overdue_count %} · <span style="color: var(--bad-ink);">{{ overdue_count }} overskredet</span>{% endif %}</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
-      Opgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>
+      Delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>
     </h1>
     <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
-      Det arbejde, en sag kræver, før den kan lukkes. Ventende opgaver tæller for sig, så det er tydeligt,
+      Det arbejde, en sag kræver, før den kan lukkes. Ventende delopgaver tæller for sig, så det er tydeligt,
       hvad der venter på en leverandør eller en ny version, og hvad vi selv kan tage fat på.
-      Ignorerede opgaver har en note med det besluttede og begrundelsen.
-      <em>System fjernet</em> lukker en opgave, hvis systemet er taget ud af drift eller afinstalleret.
+      Ignorerede delopgaver har en note med det besluttede og begrundelsen.
+      <em>System fjernet</em> lukker en delopgave, hvis systemet er taget ud af drift eller afinstalleret.
     </p>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+  {% cve_section_nav %}
+
+  {# One row of tiles is the filter: Aktive, Alle, then each status. #}
+  <nav aria-label="Filtrér delopgaver" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
     {% for tile in tiles %}
-      <a href="?status={{ tile.key }}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}">
+      <a href="?status={{ tile.key }}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
         <div class="label-eyebrow">{{ tile.label }}</div>
         <div class="display" style="font-size: 32px; margin-top: 6px;">{{ tile.count }}</div>
       </a>
     {% endfor %}
-  </div>
-
-  <div class="flex flex-wrap gap-2" style="font-size: 13px;">
-    {% for key, label in filters.items %}
-      <a href="?status={{ key }}" class="btn btn-sm"{% if status == key %} style="font-weight: 600;"{% endif %}>{{ label }}</a>
-    {% endfor %}
-  </div>
+  </nav>
 
   <div class="card overflow-hidden" style="padding: 0;">
     {% for task in tasks %}
       <div class="incident-row" style="grid-template-columns: minmax(0, 1fr) auto;">
         <span class="incident-rail" style="background: {{ task.case.state_color }};"></span>
         <div style="min-width: 0;">
-          <div class="incident-title"><a href="{% url 'cves:case-detail' task.case.pk %}#task-{{ task.pk }}" style="color: inherit; text-decoration: none;">{{ task.title }}</a></div>
+          {% comment %}next= brings the user back to this filtered list after saving the delopgave on the sag.{% endcomment %}
+          <div class="incident-title"><a href="{% url 'cves:case-detail' task.case.pk %}?next={{ here|urlencode }}#task-{{ task.pk }}" style="color: inherit; text-decoration: none;">{{ task.title }}</a></div>
           <div class="incident-meta">
-            <a href="{% url 'cves:case-detail' task.case.pk %}#task-{{ task.pk }}">Sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</a>
+            <a href="{% url 'cves:case-detail' task.case.pk %}?next={{ here|urlencode }}#task-{{ task.pk }}">{% include "cves/partials/case_kind_icon.html" with case=task.case %}{{ task.case.get_kind_display }} · sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</a>
             <span> · {{ task.get_status_display }}</span>
             {% if task.assignee %}<span> · {{ task.assignee.get_full_name|default:task.assignee.username }}</span>{% endif %}
-            {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}</span>{% endif %}
+            {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}{% if task.is_overdue %} (overskredet){% endif %}</span>{% endif %}
           </div>
           {% if task.note %}<div class="incident-meta" style="white-space: pre-wrap; margin-top: 4px;">{{ task.note }}</div>{% endif %}
         </div>
-        <span class="task-status" style="align-self: center;"><span class="pill-dot" style="background: {{ task.case.state_color }};"></span>{{ task.case.get_state_display }}</span>
+        <span class="task-status" style="align-self: center;" title="Sagens status"><span class="pill-dot" style="background: {{ task.case.state_color }};"></span>Sag: {{ task.case.get_state_display }}</span>
       </div>
     {% empty %}
-      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">Ingen opgaver her.</p>
+      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">Ingen delopgaver her.</p>
     {% endfor %}
   </div>
 </div>

@@ -5,7 +5,7 @@
 {% endcomment %}
   <section class="dash-section js-dashboard-extras">
     {% url 'cves:case-list' as url_cases %}
-    {% include 'components/section_label.html' with n=section.n title="Nu" sub="Sårbarheder, hændelser, planlagte opgaver, ugens log" link_url=url_cases link_label="Se alle sager" %}
+    {% include 'components/section_label.html' with n=section.n title="Nu" sub="Sårbarheder, hændelser, planlagt arbejde, ugens log" link_url=url_cases link_label="Se alle sager" %}
     <div class="now-grid{% if section.shown_parts == 1 %} is-single{% endif %}">
       {% if section.show.cases %}
       {% comment %}Left column: the cases card (vulnerabilities and incidents). The old

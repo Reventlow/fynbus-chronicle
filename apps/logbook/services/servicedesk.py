@@ -460,7 +460,7 @@ class ServiceDeskClient:
         if response.status_code in (401, 403):
             return f"ServiceDesk afviste noten (HTTP {response.status_code}). Må API-nøglen skrive noter?"
         if response.status_code == 404:
-            return "Sagen findes ikke længere i ServiceDesk."
+            return "Ticketen findes ikke længere i ServiceDesk."
         messages = status.get("messages") or []
         detail = (messages[0].get("message") if messages and isinstance(messages[0], dict) else "") or ""
         return f"ServiceDesk afviste noten (HTTP {response.status_code}){': ' + detail[:120] if detail else ''}."

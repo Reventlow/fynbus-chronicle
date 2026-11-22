@@ -1,4 +1,4 @@
-"""Kontrolpanel "Åbne sager" bento: technicians, categories and age groups."""
+"""Kontrolpanel "Åbne tickets" bento: technicians, categories and age groups."""
 
 from datetime import timedelta
 
@@ -33,7 +33,7 @@ def get_bento(client) -> str:
 def test_bento_is_on_the_dashboard(logged_in):
     body = logged_in.get(reverse("dashboard:index")).content.decode()
     assert reverse("dashboard:partial-open-breakdown") in body
-    assert "Åbne sager" in body and 'class="card bento"' in body
+    assert "Åbne tickets" in body and 'class="card bento"' in body
 
 
 def test_technician_bars_scale_to_the_largest_and_mute_unassigned(logged_in):
@@ -74,7 +74,7 @@ def test_age_buckets_and_over_one_month_pill(logged_in):
 def test_without_data(logged_in):
     WeekLog.get_or_create_current_week()
     body = get_bento(logged_in)
-    assert "Ingen åbne sager" in body
+    assert "Ingen åbne tickets" in body
     assert "Ingen opdeling på liggetid" in body
 
 

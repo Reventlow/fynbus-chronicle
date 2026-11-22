@@ -2,6 +2,41 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.25.0 — 2026-11-22
+
+Navigationen i *Sårbarheder og hændelser* er bygget om efter en gennemgang med en UI-ekspert og to brugertests.
+
+### Changed
+- **Sektionen åbner på Sager.** Sidemenuen, mobilmenuen og brødkrummen fører til listen over sager, hvor status,
+  vurdering og delopgaver bor. CVE-listen er én fane væk.
+- **Faner på alle sider i sektionen: Sager | CVE'er | Delopgaver.** De står på lister, sager, CVE'er og formularer,
+  den aktive fane er markeret, og tallet er antallet af åbne (holdt musen over: åbne og i alt). Delopgave-listen er
+  nu en fane for alle i stedet for en knap, kun redaktører så.
+- **Ord med én betydning.** *Sag* bruges kun om sikkerhedssager; ServiceDesk-henvendelser hedder nu **ticket** overalt
+  (ServiceDesk-siden, Kontrolpanelet, Statistik, ugeloggen og eksporterne). Opgaverne under en sag hedder
+  **delopgaver**, og sagstypen *Planlagt opgave* hedder nu **Planlagt arbejde**. Formularen hedder *Ny hændelse*,
+  *Ny sårbarhedssag* eller *Nyt planlagt arbejde* efter typen.
+- **Alle CVE'er hører til en sag.** *Ny CVE* har et felt *Sag*: en ny sag med CVE'en (standard) eller en eksisterende.
+  Man lander på sagen bagefter. En CVE har ikke længere sine egne statusknapper; status skiftes på sagen. Åbne CVE'er
+  uden sag (ældre eller oprettet via API'et) vises som en linje øverst på Sager med et link til dem.
+- **Brødkrummer følger sagen.** En CVE i en sag viser *Sager / Sag #N / CVE-…*. Fra delopgave-listen fører linket til
+  sagen med *← Tilbage til delopgaverne*, og når en delopgave gemmes, kommer man tilbage til listen med samme filter.
+- **Delopgave-listen** har én række felter som filter (Aktive, Alle og hver status), viser overskredne frister med
+  ordet *overskredet* og antallet i toppen, og sagens status står som *Sag: …*.
+- **En søgning på CVE'er finder alle**, også færdigbehandlede ældre end 90 dage, som på Sager.
+- *Klar til gennemsyn* sorteres nu blandt de åbne sager, før de færdigbehandlede.
+- Formularen til nye delopgaver har synlige feltnavne (Ny delopgave, Status, Ansvarlig, Frist, Note).
+- *Annullér* på *Ny sag med denne CVE* går tilbage til CVE'en. Mobilmenuen markerer den side, man er på.
+
+### Fixed
+- **En hændelse uden CVE'er viste ikke sine delopgaver.** Kortet lå inde i betingelsen for CVE-kortet, så delopgaverne
+  hverken kunne ses eller opdateres, men stadig blokerede for at lukke sagen. Redaktører kan nu også tilføje en CVE
+  til en hændelse fra en sammenfoldet boks.
+- Tælleren på en sags delopgaver talte ventende delopgaver med to gange.
+- "åbene" → "åbne" på Sager, Kontrolpanelet og ugeloggen.
+- Uge-listen viste "0 hændelser", fordi den talte den gamle hændelsestabel; den tæller nu hændelses-sager,
+  der er oprettet i ugen (uger med gamle hændelser beholder deres tal).
+
 ## 1.24.0 — 2026-11-21
 
 ### Added

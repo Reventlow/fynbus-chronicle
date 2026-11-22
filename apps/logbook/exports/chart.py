@@ -96,8 +96,8 @@ def generate_helpdesk_chart(weeklog) -> str | None:
     )
 
     # Styling
-    ax.set_title("Åbne sager over tid", fontsize=12, color=color_dark, pad=10)
-    ax.set_ylabel("Åbne sager", fontsize=10, color=color_dark)
+    ax.set_title("Åbne tickets over tid", fontsize=12, color=color_dark, pad=10)
+    ax.set_ylabel("Åbne tickets", fontsize=10, color=color_dark)
     ax.tick_params(axis="both", colors=color_dark, labelsize=9)
     ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
     ax.grid(axis="y", color=color_grid, linewidth=0.8)
@@ -157,7 +157,7 @@ def generate_helpdesk_flow_chart(weeklog) -> str | None:
     ax.bar(x + width / 2, closed_counts, width, label="Lukkede", color=color_sage,
            edgecolor=color_dark, linewidth=0.5, zorder=2)
 
-    ax.set_title("Nye vs. lukkede sager", fontsize=12, color=color_dark, pad=10)
+    ax.set_title("Nye vs. lukkede tickets", fontsize=12, color=color_dark, pad=10)
     ax.set_ylabel("Antal", fontsize=10, color=color_dark)
     ax.set_xticks(x)
     ax.set_xticklabels(labels)

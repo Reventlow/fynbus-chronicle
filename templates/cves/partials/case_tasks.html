@@ -1,16 +1,17 @@
 {% comment %}
-  Opgaver på en sag (1.23.0). Sagen kan ikke gøres klar eller færdigbehandlet,
-  mens en opgave er åben eller venter. Ignoreret kræver en note;
-  System fjernet lukker opgaven, når systemet er taget ud af drift.
+  Delopgaver på en sag (1.23.0). Sagen kan ikke gøres klar eller færdigbehandlet,
+  mens en delopgave er åben eller venter. Ignoreret kræver en note;
+  System fjernet lukker delopgaven, når systemet er taget ud af drift.
+  next_url (from the task list) rides along in the forms, so saving returns there.
 {% endcomment %}
 <div class="card overflow-hidden" style="padding: 0;" id="opgaver">
   <div style="padding: 20px 24px 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between;">
     <div>
-      <div class="label-eyebrow">Opgaver</div>
+      <div class="label-eyebrow">Delopgaver</div>
       <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Det skal gøres, før sagen lukkes</h2>
     </div>
     <div style="font-size: 13px; color: var(--ink-3);">
-      {% with open=case.open_task_count %}{{ open }} åben{{ open|pluralize:"e" }}{% endwith %}
+      {% with open=task_counts.open %}{{ open }} {% if open == 1 %}åben{% else %}åbne{% endif %}{% endwith %}
       · {{ task_counts.waiting_patch }} venter på patch · {{ task_counts.waiting_release }} venter på ny version
       · {{ task_counts.done }} udført · {{ task_counts.ignored }} ignoreret · {{ task_counts.removed }} system fjernet
     </div>
@@ -22,13 +23,14 @@
         <div class="incident-meta">
           <span>{{ task.get_status_display }}</span>
           {% if task.assignee %}<span> · {{ task.assignee.get_full_name|default:task.assignee.username }}</span>{% endif %}
-          {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}</span>{% endif %}
+          {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}{% if task.is_overdue %} (overskredet){% endif %}</span>{% endif %}
         </div>
         {% if task.note %}<div class="incident-meta" style="white-space: pre-wrap; margin-top: 4px;">{{ task.note }}</div>{% endif %}
       </div>
       {% if is_editor %}
         <form method="post" action="{% url 'cves:case-task-status' case.pk task.pk %}" class="flex flex-wrap items-start gap-2" style="margin: 0;">
           {% csrf_token %}
+          {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
           <select name="status" class="field" aria-label="Status">
             {% for value, label in task_statuses %}<option value="{{ value }}"{% if value == task.status %} selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
@@ -38,23 +40,40 @@
       {% endif %}
     </div>
   {% empty %}
-    <p style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen opgaver. Sagen kan lukkes uden.</p>
+    <p style="text-align: center; color: var(--ink-4); padding: 18px 24px; margin: 0; border-top: 1px solid var(--hairline);">Ingen delopgaver. Sagen kan lukkes uden.</p>
   {% endfor %}
   {% if is_editor %}
-    <form method="post" action="{% url 'cves:case-task-create' case.pk %}" class="flex flex-wrap items-start gap-2"
+    {# Visible labels: a bare date field and two selects read as unlabelled boxes. #}
+    <form method="post" action="{% url 'cves:case-task-create' case.pk %}" class="flex flex-wrap items-end gap-2"
           style="padding: 12px 24px 16px; border-top: 1px solid var(--hairline); background: var(--surface-2); margin: 0;">
       {% csrf_token %}
-      <input type="text" name="title" class="field" placeholder="Ny opgave, fx Opdatér til 8.5.13" required style="flex: 2 1 260px; min-width: 0;">
-      <select name="status" class="field" aria-label="Status">
-        {% for value, label in task_statuses %}<option value="{{ value }}"{% if value == 'open' %} selected{% endif %}>{{ label }}</option>{% endfor %}
-      </select>
-      <select name="assignee" class="field" aria-label="Ansvarlig">
-        <option value="">Ingen ansvarlig</option>
-        {% for user in assignable_users %}<option value="{{ user.pk }}">{{ user.get_full_name|default:user.username }}</option>{% endfor %}
-      </select>
-      <input type="date" name="due_date" class="field" aria-label="Frist">
-      <input type="text" name="note" class="field" placeholder="Note (påkrævet ved Ignoreret)" style="flex: 1 1 220px; min-width: 0;">
-      <button type="submit" class="btn btn-sm">Tilføj opgave</button>
+      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+      <div style="flex: 2 1 260px; min-width: 0;">
+        <label for="task-new-title" class="input-label">Ny delopgave</label>
+        <input type="text" id="task-new-title" name="title" class="field" placeholder="Fx Opdatér til 8.5.13" required style="width: 100%;">
+      </div>
+      <div>
+        <label for="task-new-status" class="input-label">Status</label>
+        <select id="task-new-status" name="status" class="field">
+          {% for value, label in task_statuses %}<option value="{{ value }}"{% if value == 'open' %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="task-new-assignee" class="input-label">Ansvarlig</label>
+        <select id="task-new-assignee" name="assignee" class="field">
+          <option value="">Ingen ansvarlig</option>
+          {% for user in assignable_users %}<option value="{{ user.pk }}">{{ user.get_full_name|default:user.username }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="task-new-due" class="input-label">Frist</label>
+        <input type="date" id="task-new-due" name="due_date" class="field">
+      </div>
+      <div style="flex: 1 1 220px; min-width: 0;">
+        <label for="task-new-note" class="input-label">Note</label>
+        <input type="text" id="task-new-note" name="note" class="field" placeholder="Påkrævet ved Ignoreret" style="width: 100%;">
+      </div>
+      <button type="submit" class="btn btn-sm">Tilføj delopgave</button>
     </form>
   {% endif %}
 </div>

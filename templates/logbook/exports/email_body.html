@@ -117,15 +117,15 @@
     <tr>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{{ weeklog.helpdesk_new }}</div>
-        <div style="font-size:12px; color:#6B635B;">Nye sager</div>
+        <div style="font-size:12px; color:#6B635B;">Nye tickets</div>
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{{ weeklog.helpdesk_closed }}</div>
-        <div style="font-size:12px; color:#6B635B;">Lukkede sager</div>
+        <div style="font-size:12px; color:#6B635B;">Lukkede tickets</div>
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{{ weeklog.helpdesk_open }}</div>
-        <div style="font-size:12px; color:#6B635B;">Åbne sager</div>
+        <div style="font-size:12px; color:#6B635B;">Åbne tickets</div>
       </td>
       <td width="25%" align="center" style="padding:15px 8px;">
         <div style="font-size:24px; font-weight:bold; color:#4A4540;">{% if weeklog.helpdesk_delta > 0 %}+{% endif %}{{ weeklog.helpdesk_delta }}</div>
@@ -151,7 +151,7 @@
     bars survive mail clients that strip CSS.
   {% endcomment %}
   {% if weeklog.has_helpdesk_age_breakdown %}
-  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne sager fordelt på liggetid</h2>
+  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne tickets fordelt på liggetid</h2>
   <table class="age-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8;" bgcolor="#FAF9F7">
     {% for bucket in weeklog.helpdesk_age_buckets %}
     <tr>
@@ -173,7 +173,7 @@
     {% endfor %}
   </table>
   <p style="margin:2px 0 0 0; font-size:12px; color:#6B635B;">
-    {{ weeklog.helpdesk_open_stale }} af {{ weeklog.helpdesk_open_bucketed }} åbne sager har ligget i mere end 1 måned.
+    {{ weeklog.helpdesk_open_stale }} af {{ weeklog.helpdesk_open_bucketed }} åbne tickets har ligget i mere end 1 måned.
   </p>
   {% endif %}
 
@@ -182,19 +182,19 @@
     legend table (_open_donut.html, Outlook-safe). Colours match the dashboard.
   {% endcomment %}
   {% if open_categories.total %}
-  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne sager fordelt på kategori</h2>
-  {% include "logbook/exports/_open_donut.html" with slices=open_categories.categories cid=category_chart_cid alt="Åbne sager fordelt på kategori" fs="13px" %}
+  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne tickets fordelt på kategori</h2>
+  {% include "logbook/exports/_open_donut.html" with slices=open_categories.categories cid=category_chart_cid alt="Åbne tickets fordelt på kategori" fs="13px" %}
   <p style="margin:2px 0 0 0; font-size:12px; color:#6B635B;">
-    {{ open_categories.total }} åbne sager ved ugens udgang{% if open_categories.uncategorised %}, heraf {{ open_categories.uncategorised }} uden kategori i ServiceDesk{% endif %}.
+    {{ open_categories.total }} åbne tickets ved ugens udgang{% if open_categories.uncategorised %}, heraf {{ open_categories.uncategorised }} uden kategori i ServiceDesk{% endif %}.
   </p>
   {% endif %}
 
   {# Open tickets by technician at the end of the week; same layout as above. #}
   {% if open_technicians.total %}
-  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne sager fordelt på tekniker</h2>
-  {% include "logbook/exports/_open_donut.html" with slices=open_technicians.technicians cid=technician_chart_cid alt="Åbne sager fordelt på tekniker" fs="13px" %}
+  <h2 style="font-size:16px; color:#4A4540; margin:18px 0 8px 0;">Åbne tickets fordelt på tekniker</h2>
+  {% include "logbook/exports/_open_donut.html" with slices=open_technicians.technicians cid=technician_chart_cid alt="Åbne tickets fordelt på tekniker" fs="13px" %}
   <p style="margin:2px 0 0 0; font-size:12px; color:#6B635B;">
-    {{ open_technicians.total }} åbne sager ved ugens udgang{% if open_technicians.unassigned %}, heraf {{ open_technicians.unassigned }} ikke tildelt en tekniker{% endif %}.
+    {{ open_technicians.total }} åbne tickets ved ugens udgang{% if open_technicians.unassigned %}, heraf {{ open_technicians.unassigned }} ikke tildelt en tekniker{% endif %}.
   </p>
   {% endif %}
 
@@ -209,12 +209,12 @@
     <tr>
       {% if chart_cid %}
       <td width="50%" valign="top" style="padding:0 4px 0 0;">
-        <img src="cid:{{ chart_cid }}" width="286" height="114" style="display:block; width:286px; height:auto;" alt="Åbne sager over tid">
+        <img src="cid:{{ chart_cid }}" width="286" height="114" style="display:block; width:286px; height:auto;" alt="Åbne tickets over tid">
       </td>
       {% endif %}
       {% if flow_chart_cid %}
       <td width="50%" valign="top" style="padding:0 0 0 4px;">
-        <img src="cid:{{ flow_chart_cid }}" width="286" height="114" style="display:block; width:286px; height:auto;" alt="Nye vs. lukkede sager">
+        <img src="cid:{{ flow_chart_cid }}" width="286" height="114" style="display:block; width:286px; height:auto;" alt="Nye vs. lukkede tickets">
       </td>
       {% endif %}
     </tr>

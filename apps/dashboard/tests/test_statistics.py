@@ -247,7 +247,7 @@ def test_statistics_page_renders(client):
     assert "Statistik" in body
     assert 'id="stats-data"' in body
     assert "Morten" in body
-    assert "Sager pr. afdeling" in body and "Kundecenter" in body
+    assert "Tickets pr. afdeling" in body and "Kundecenter" in body
 
 
 def test_statistics_page_without_data_explains_itself(client):

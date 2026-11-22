@@ -39,13 +39,13 @@ class TestTaskKind:
 
     def test_page_has_task_buttons_and_no_cve_card(self, editor_client, task):
         body = editor_client.get(task.get_absolute_url()).content.decode()
-        assert "Planlagt opgave · sag #" in body and "case-kind-task" in body
+        assert "Planlagt arbejde · sag #" in body and "case-kind-task" in body
         assert ">I gang<" in body and ">Udført<" in body and "Patcher" not in body
         assert "Frist 15. " in body and "2026" in body
         assert "CVE&#x27;er i sagen" not in body and "CVE'er i sagen" not in body
 
     def test_new_task_button_prefills_the_type(self, editor_client):
-        assert "Ny planlagt opgave" in editor_client.get(reverse("cves:case-list")).content.decode()
+        assert "Nyt planlagt arbejde" in editor_client.get(reverse("cves:case-list")).content.decode()
         body = editor_client.get(reverse("cves:case-create") + "?kind=task").content.decode()
         assert 'value="task" id="id_kind_2" checked' in body and 'name="due_date"' in body
 
@@ -66,7 +66,7 @@ class TestKontrolpanel:
 
     def test_headline_counts_open_tasks(self, editor_client, task):
         body = editor_client.get(reverse("dashboard:partial-headline")).content.decode()
-        assert "planlagte opgave" in body
+        assert "sag med planlagt arbejde" in body
 
 
 class TestWeekChart:

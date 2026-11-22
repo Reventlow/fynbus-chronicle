@@ -108,16 +108,19 @@
 
         {# Mobile menu: the sidebar's links and settings as a sheet under the toolbar. #}
         <div class="mobile-sheet md:hidden" x-show="mobileOpen" x-cloak @click.outside="mobileOpen = false">
-          <a href="{% url 'dashboard:index' %}" class="nav-link">Kontrolpanel</a>
-          <a href="{% url 'logbook:weeklog-list' %}" class="nav-link">Ugelog</a>
-          <a href="{% url 'oncall:calendar' %}" class="nav-link">Rådighedsvagt</a>
-          <a href="{% url 'cves:list' %}" class="nav-link">Sårbarheder og hændelser</a>
-          <a href="{% url 'servicedesk:tickets' %}" class="nav-link">ServiceDesk</a>
-          <a href="{% url 'feedback:board' %}" class="nav-link">Forslag</a>
-          <a href="{% url 'reports:list' %}" class="nav-link">Rapporter</a>
-          <a href="{% url 'courses:index' %}" class="nav-link">Kursusmateriale</a>
-          <a href="{% url 'dashboard:statistics' %}" class="nav-link">Statistik</a>
-          <a href="{% url 'dashboard:docs-index' %}" class="nav-link">Dokumentation</a>
+          {# Same active highlight as the sidebar, so the sheet also says where you are. #}
+          {% with app=request.resolver_match.app_name name=request.resolver_match.url_name %}
+          <a href="{% url 'dashboard:index' %}" class="nav-link{% if app == 'dashboard' and name == 'index' %} nav-link-active{% endif %}">Kontrolpanel</a>
+          <a href="{% url 'logbook:weeklog-list' %}" class="nav-link{% if app == 'logbook' %} nav-link-active{% endif %}">Ugelog</a>
+          <a href="{% url 'oncall:calendar' %}" class="nav-link{% if app == 'oncall' %} nav-link-active{% endif %}">Rådighedsvagt</a>
+          <a href="{% url 'cves:case-list' %}" class="nav-link{% if app == 'cves' %} nav-link-active{% endif %}">Sårbarheder og hændelser</a>
+          <a href="{% url 'servicedesk:tickets' %}" class="nav-link{% if app == 'servicedesk' %} nav-link-active{% endif %}">ServiceDesk</a>
+          <a href="{% url 'feedback:board' %}" class="nav-link{% if app == 'feedback' %} nav-link-active{% endif %}">Forslag</a>
+          <a href="{% url 'reports:list' %}" class="nav-link{% if app == 'reports' %} nav-link-active{% endif %}">Rapporter</a>
+          <a href="{% url 'courses:index' %}" class="nav-link{% if app == 'courses' %} nav-link-active{% endif %}">Kursusmateriale</a>
+          <a href="{% url 'dashboard:statistics' %}" class="nav-link{% if name == 'statistics' %} nav-link-active{% endif %}">Statistik</a>
+          <a href="{% url 'dashboard:docs-index' %}" class="nav-link{% if 'docs' in name %} nav-link-active{% endif %}">Dokumentation</a>
+          {% endwith %}
           {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link">Admin</a>{% endif %}
           <hr class="hr-soft" style="margin: 8px 0;">
           <div style="padding: 4px 4px 0;">{% include 'components/settings_controls.html' %}</div>

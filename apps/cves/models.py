@@ -86,12 +86,13 @@ class CVEQuerySet(models.QuerySet):
         )
 
     def open_first(self) -> "CVEQuerySet":
-        """Open CVEs first (patching, then identified), then solved; newest
+        """Open CVEs first (patching, identified, ready for review), then solved; newest
         activity first within each state."""
         rank = Case(
             When(state=CVE.State.PATCHING, then=Value(0)),
             When(state=CVE.State.IDENTIFIED, then=Value(1)),
-            default=Value(2),
+            When(state=CVE.State.REVIEW, then=Value(2)),  # still open: waits for a last look
+            default=Value(3),
             output_field=IntegerField(),
         )
         return self.annotate(state_rank=rank).order_by("state_rank", "-updated_at")
@@ -321,7 +322,7 @@ class CaseTasksOpen(Exception):
 
     def __init__(self, case: "CVECase"):
         self.case = case
-        super().__init__(f"Sag #{case.pk} har {case.open_task_count()} åbne opgaver")
+        super().__init__(f"Sag #{case.pk} har {case.open_task_count()} åbne delopgaver")
 
 
 class CVECaseQuerySet(models.QuerySet):
@@ -334,7 +335,8 @@ class CVECaseQuerySet(models.QuerySet):
         rank = Case(
             When(state=CVE.State.PATCHING, then=Value(0)),
             When(state=CVE.State.IDENTIFIED, then=Value(1)),
-            default=Value(2),
+            When(state=CVE.State.REVIEW, then=Value(2)),  # still open: waits for a last look
+            default=Value(3),
             output_field=IntegerField(),
         )
         return self.annotate(state_rank=rank).order_by("state_rank", "-updated_at")
@@ -363,7 +365,7 @@ class CVECase(models.Model):
     class Kind(models.TextChoices):
         VULNERABILITY = "vulnerability", "Sårbarhed"
         INCIDENT = "incident", "Hændelse"
-        TASK = "task", "Planlagt opgave"
+        TASK = "task", "Planlagt arbejde"
 
     class Resolution(models.TextChoices):
         PATCHED = "patched", "Patchet"
@@ -387,7 +389,7 @@ class CVECase(models.Model):
                                            "Til advarsler uden CVE-nummer.")
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
     due_date = models.DateField(verbose_name="Frist", null=True, blank=True,
-                                help_text="Til planlagte opgaver: hvornår den skal være gjort. Valgfri.")
+                                help_text="Til planlagt arbejde: hvornår det skal være gjort. Valgfri.")
 
     # Which sections the week log export shows for this case (see EXPORT_SECTIONS).
     export_assessment = models.BooleanField(verbose_name="Vurdering i ugelogs-eksport", default=True)
@@ -648,7 +650,7 @@ class CVETask(models.Model):
     CLOSED_STATUSES = (Status.DONE, Status.IGNORED, Status.REMOVED)
 
     case = models.ForeignKey(CVECase, on_delete=models.CASCADE, related_name="tasks", verbose_name="Sag")
-    title = models.CharField(verbose_name="Opgave", max_length=200)
+    title = models.CharField(verbose_name="Delopgave", max_length=200)
     status = models.CharField(verbose_name="Status", max_length=16, choices=Status.choices, default=Status.OPEN)
     note = models.TextField(verbose_name="Note", blank=True,
                             help_text="Påkrævet ved Ignoreret: hvad der er besluttet, og hvorfor.")
@@ -664,8 +666,8 @@ class CVETask(models.Model):
     decided_at = models.DateTimeField(verbose_name="Sidst ændret", null=True, blank=True)
 
     class Meta:
-        verbose_name = "Sagsopgave"
-        verbose_name_plural = "Sagsopgaver"
+        verbose_name = "Delopgave"
+        verbose_name_plural = "Delopgaver"
         ordering = ["created_at", "id"]
 
     def __str__(self) -> str:

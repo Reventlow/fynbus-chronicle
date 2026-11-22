@@ -55,21 +55,21 @@
         <h3 class="label-eyebrow" style="margin: 0 0 12px;">Helpdesk statistik</h3>
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label for="{{ form.helpdesk_new.id_for_label }}" class="input-label">Nye sager</label>
+            <label for="{{ form.helpdesk_new.id_for_label }}" class="input-label">Nye tickets</label>
             {{ form.helpdesk_new }}
             {% if form.helpdesk_new.errors %}
               <p class="input-error-message">{{ form.helpdesk_new.errors.0 }}</p>
             {% endif %}
           </div>
           <div>
-            <label for="{{ form.helpdesk_closed.id_for_label }}" class="input-label">Lukkede sager</label>
+            <label for="{{ form.helpdesk_closed.id_for_label }}" class="input-label">Lukkede tickets</label>
             {{ form.helpdesk_closed }}
             {% if form.helpdesk_closed.errors %}
               <p class="input-error-message">{{ form.helpdesk_closed.errors.0 }}</p>
             {% endif %}
           </div>
           <div>
-            <label for="{{ form.helpdesk_open.id_for_label }}" class="input-label">Åbne sager</label>
+            <label for="{{ form.helpdesk_open.id_for_label }}" class="input-label">Åbne tickets</label>
             {{ form.helpdesk_open }}
             {% if form.helpdesk_open.errors %}
               <p class="input-error-message">{{ form.helpdesk_open.errors.0 }}</p>
@@ -84,8 +84,8 @@
         Leaving every field at 0 simply omits the section from the reports.
       {% endcomment %}
       <div>
-        <h3 class="label-eyebrow" style="margin: 0 0 6px;">Åbne sager fordelt på liggetid</h3>
-        <p class="input-help mb-3">Skal summe til antallet af åbne sager — eller lad alle felter stå på 0.</p>
+        <h3 class="label-eyebrow" style="margin: 0 0 6px;">Åbne tickets fordelt på liggetid</h3>
+        <p class="input-help mb-3">Skal summe til antallet af åbne tickets — eller lad alle felter stå på 0.</p>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <label for="{{ form.helpdesk_open_0_7.id_for_label }}" class="input-label">Under 1 uge</label>

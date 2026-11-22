@@ -9,7 +9,7 @@
     <button type="button" class="btn btn-sm" hx-post="{% url 'planner:link' task.id %}" hx-vals='{"action": "priority"}'
             hx-target="closest .planner-card" hx-swap="outerHTML">Ny prioriteret opgave</button>
     <button type="button" class="btn btn-sm" hx-post="{% url 'planner:link' task.id %}" hx-vals='{"action": "case"}'
-            hx-target="closest .planner-card" hx-swap="outerHTML">Ny sag (planlagt opgave)</button>
+            hx-target="closest .planner-card" hx-swap="outerHTML">Ny sag (planlagt arbejde)</button>
   </div>
   {% if priorities or cases %}
     <label class="planner-link-existing">

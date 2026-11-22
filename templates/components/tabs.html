@@ -1,18 +1,20 @@
 {% comment %}
   Tabs (bottom-border indicator).
   Params:
-    tabs         — list of {label, key, count, url} dicts
+    tabs         — list of {label, key, count, url, title?} dicts
     current_tab  — key of active tab
-  Each tab links via plain anchor; HTMX wiring can be added by passing url with hx attrs.
+    nav_label    — optional aria-label; given, the tabs are a <nav> landmark
+  Each tab links via plain anchor; the active one carries aria-current. The
+  row scrolls sideways on a narrow screen instead of wrapping.
 {% endcomment %}
-<div class="tab-list">
+<{% if nav_label %}nav aria-label="{{ nav_label }}"{% else %}div{% endif %} class="tab-list" style="overflow-x: auto;">
   {% for tab in tabs %}
     <a href="{{ tab.url }}"
-       class="tab-link{% if tab.key == current_tab %} tab-link-active{% endif %}">
+       class="tab-link{% if tab.key == current_tab %} tab-link-active{% endif %}"{% if tab.key == current_tab %} aria-current="page"{% endif %}>
       {{ tab.label }}
       {% if tab.count is not None and tab.count != "" %}
-        <span class="tab-count num">{{ tab.count }}</span>
+        <span class="tab-count num"{% if tab.title %} title="{{ tab.title }}"{% endif %}>{{ tab.count }}</span>
       {% endif %}
     </a>
   {% endfor %}
-</div>
+</{% if nav_label %}nav{% else %}div{% endif %}>

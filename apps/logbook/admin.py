@@ -127,7 +127,7 @@ class WeekLogAdmin(admin.ModelAdmin):
                     ),
                 ],
                 "description": (
-                    "Liggetid-felterne skal summe til «Åbne sager» "
+                    "Liggetid-felterne skal summe til «Åbne tickets» "
                     "— eller stå på 0, hvis ugen ikke har en opdeling."
                 ),
             },

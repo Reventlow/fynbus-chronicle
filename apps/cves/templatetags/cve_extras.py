@@ -35,3 +35,38 @@ def cve_markdown(value: str) -> str:
 def owner_url(owner, name: str, *args) -> str:
     """URL of a per-owner view for a CVE or a case: ``{% owner_url owner 'link-create' %}``."""
     return owner.owner_url(name, *args)
+
+
+def _tab_count(open_count: int, total: int) -> dict:
+    """Tab badge: the open count on the badge, both numbers in its tooltip."""
+    return {"count": f"{open_count} åben" if open_count == 1 else f"{open_count} åbne",
+            "title": f"{open_count} {'åben' if open_count == 1 else 'åbne'} · {total} i alt"}
+
+
+@register.inclusion_tag("components/tabs.html", takes_context=True)
+def cve_section_nav(context) -> dict:
+    """The "Sager | CVE'er | Delopgaver" tabs on every page of the section.
+
+    The active tab follows the URL name: case pages → Sager, the task list →
+    Delopgaver, everything else (CVE list, detail, forms) → CVE'er.
+    """
+    from django.urls import reverse
+
+    from ..models import CVE, CVECase, CVETask
+
+    match = getattr(context.get("request"), "resolver_match", None)
+    name = match.url_name if match else ""
+    current = "tasks" if name == "task-list" else "cases" if name.startswith("case-") else "cves"
+    tasks = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
+    return {
+        "tabs": [
+            {"key": "cases", "label": "Sager", "url": reverse("cves:case-list"),
+             **_tab_count(CVECase.objects.open().count(), CVECase.objects.count())},
+            {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"),
+             **_tab_count(CVE.objects.open().count(), CVE.objects.count())},
+            {"key": "tasks", "label": "Delopgaver", "url": reverse("cves:task-list"),
+             **_tab_count(tasks.filter(status__in=CVETask.OPEN_STATUSES).count(), tasks.count())},
+        ],
+        "current_tab": current,
+        "nav_label": "Sårbarheder og hændelser",
+    }

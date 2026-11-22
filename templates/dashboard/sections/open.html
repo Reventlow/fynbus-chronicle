@@ -1,7 +1,7 @@
-{# 02 Åbne sager: the breakdown bento and the newest/oldest lists, each hideable. #}
+{# 02 Åbne tickets: the breakdown bento and the newest/oldest lists, each hideable. #}
   <section class="dash-section js-dashboard-graphs">
-    {% with sub=open_now_mirror|stringformat:"d"|add:" sager lige nu · fordelt på tekniker, kategori og liggetid" %}
-      {% include 'components/section_label.html' with n=section.n title="Åbne sager" sub=sub %}
+    {% with sub=open_now_mirror|stringformat:"d"|add:" tickets lige nu · fordelt på tekniker, kategori og liggetid" %}
+      {% include 'components/section_label.html' with n=section.n title="Åbne tickets" sub=sub %}
     {% endwith %}
     {% if section.show.breakdown %}
     <div class="card bento"

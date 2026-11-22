@@ -7,7 +7,7 @@
 
 {# Legend footer: the series, and the change across the visible window. #}
 <div class="chart-legend">
-  <span><span class="chart-swatch" style="background: var(--accent);"></span>Åbne sager, ugens slutning</span>
+  <span><span class="chart-swatch" style="background: var(--accent);"></span>Åbne tickets, ugens slutning</span>
   <span id="stat-open-delta" class="num" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-4);"></span>
 </div>
 
@@ -105,7 +105,7 @@
         data: {
           labels: sliced.map(w => w.label),
           datasets: [{
-            label: 'Åbne sager',
+            label: 'Åbne tickets',
             data: sliced.map(w => w.open),
             borderColor: rgba(P.accent, 1),
             borderWidth: 2.25,
@@ -140,7 +140,7 @@
               padding: 10,
               cornerRadius: 8,
               displayColors: false,
-              callbacks: { label: c => 'Åbne sager: ' + c.parsed.y }
+              callbacks: { label: c => 'Åbne tickets: ' + c.parsed.y }
             }
           },
           scales: {

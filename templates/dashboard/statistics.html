@@ -84,13 +84,13 @@
     {% if period_error %}
       <span class="stats-note" role="alert" style="color: var(--bad-ink);">{{ period_error }}</span>
     {% elif not period.live %}
-      <span class="stats-note">Åbne sager vises, som de stod ved periodens slutning. Aktive opgaver er altid dagens tal.</span>
+      <span class="stats-note">Åbne tickets vises, som de stod ved periodens slutning. Aktive opgaver er altid dagens tal.</span>
     {% endif %}
   </form>
 
   {% if not helpdesk.has_data %}
     <div class="card" style="color: var(--ink-3);">
-      Der er endnu ingen helpdesk-sager i Chronicle. Synkroniseringen henter dem automatisk
+      Der er endnu ingen helpdesk-tickets i Chronicle. Synkroniseringen henter dem automatisk
       (første gang tager det et halvt minut), eller kør
       <code>python manage.py sync_helpdesk_tickets --full</code>.
     </div>
@@ -99,19 +99,19 @@
   {# === KPI strip ========================================================= #}
   <section class="stats-kpis">
     <div class="card stats-kpi">
-      <div class="label-eyebrow">Sager oprettet</div>
+      <div class="label-eyebrow">Tickets oprettet</div>
       <div class="stats-kpi-value num">{{ helpdesk.total_created }}</div>
       <div class="stats-kpi-note">heraf {{ helpdesk.cancelled }} annulleret</div>
     </div>
     <div class="card stats-kpi">
       <div class="label-eyebrow">Kolleger der skrev</div>
       <div class="stats-kpi-value num">{{ helpdesk.requesters }}</div>
-      <div class="stats-kpi-note">{{ helpdesk.per_requester|floatformat:1 }} sager pr. kollega</div>
+      <div class="stats-kpi-note">{{ helpdesk.per_requester|floatformat:1 }} tickets pr. kollega</div>
     </div>
     <div class="card stats-kpi">
       <div class="label-eyebrow">Gns. pr. måned</div>
       <div class="stats-kpi-value num">{{ helpdesk.per_month|floatformat:0 }}</div>
-      <div class="stats-kpi-note">nye sager</div>
+      <div class="stats-kpi-note">nye tickets</div>
     </div>
     <div class="card stats-kpi">
       <div class="label-eyebrow">Median løsningstid</div>
@@ -125,16 +125,16 @@
     </div>
   </section>
 
-  {% include 'components/section_label.html' with n="01" title="Hvornår" sub="Hvornår kollegerne skriver, og hvor hurtigt sagerne bliver løst" %}
+  {% include 'components/section_label.html' with n="01" title="Hvornår" sub="Hvornår kollegerne skriver, og hvor hurtigt tickets bliver løst" %}
 
   {# === When do people write ============================================== #}
   <section class="stats-grid stats-grid-wide">
     <div class="card stats-card">
       <div class="label-eyebrow">Ugedage</div>
-      <h2 class="stats-title">Nye sager pr. ugedag, i gennemsnit</h2>
+      <h2 class="stats-title">Nye tickets pr. ugedag, i gennemsnit</h2>
       <p class="stats-sub">
         {% if helpdesk.busiest_day %}Travleste dag er <strong>{{ helpdesk.busiest_day|lower }}</strong>.{% endif %}
-        Tallet er sager på en gennemsnitlig dag af den slags.
+        Tallet er tickets på en gennemsnitlig dag af den slags.
       </p>
       <div class="stats-chart"><canvas id="chart-weekdays"></canvas></div>
     </div>
@@ -143,8 +143,8 @@
       <div class="label-eyebrow">Tidspunkt</div>
       <h2 class="stats-title">Hvornår på dagen skriver kollegerne?</h2>
       <p class="stats-sub">
-        {% if helpdesk.busiest_hour is not None %}Flest sager kommer mellem kl. <strong>{{ helpdesk.busiest_hour|stringformat:"02d" }}–{{ helpdesk.busiest_hour|add:1|stringformat:"02d" }}</strong>.{% endif %}
-        Tallene er nye sager i perioden pr. ugedag og time; hold musen over et felt for gennemsnittet pr. dag.
+        {% if helpdesk.busiest_hour is not None %}Flest tickets kommer mellem kl. <strong>{{ helpdesk.busiest_hour|stringformat:"02d" }}–{{ helpdesk.busiest_hour|add:1|stringformat:"02d" }}</strong>.{% endif %}
+        Tallene er nye tickets i perioden pr. ugedag og time; hold musen over et felt for gennemsnittet pr. dag.
       </p>
       <div class="stats-heatmap-wrap">
         <table class="stats-heatmap">
@@ -162,7 +162,7 @@
                 <th scope="row">{{ row.day }}</th>
                 {% for cell in row.cells %}
                   <td data-value="{{ cell.count }}"
-                      title="{{ row.day }} kl. {{ cell.hour|stringformat:'02d' }}: {{ cell.count }} sager i alt, {{ cell.avg|floatformat:2 }} i gns. pr. dag">{% if cell.count %}{{ cell.count }}{% endif %}</td>
+                      title="{{ row.day }} kl. {{ cell.hour|stringformat:'02d' }}: {{ cell.count }} tickets i alt, {{ cell.avg|floatformat:2 }} i gns. pr. dag">{% if cell.count %}{{ cell.count }}{% endif %}</td>
                 {% endfor %}
               </tr>
             {% endfor %}
@@ -170,7 +170,7 @@
         </table>
       </div>
       <div class="stats-heat-legend">
-        <span>Få</span><span class="stats-heat-scale"></span><span>Mange ({{ helpdesk.heat_max }} sager)</span>
+        <span>Få</span><span class="stats-heat-scale"></span><span>Mange ({{ helpdesk.heat_max }} tickets)</span>
       </div>
     </div>
   </section>
@@ -178,46 +178,46 @@
   {# === Resolution time =================================================== #}
   <section class="card stats-card">
     <div class="label-eyebrow">Løsningstid</div>
-    <h2 class="stats-title">Hvor hurtigt bliver sagerne løst?</h2>
+    <h2 class="stats-title">Hvor hurtigt bliver tickets løst?</h2>
     <p class="stats-sub">
-      Tid fra oprettelse til lukning for {{ helpdesk.resolution.count }} løste sager oprettet i perioden.
-      Kalendertid — nætter og weekender tæller med. Annullerede sager er ikke med.
+      Tid fra oprettelse til lukning for {{ helpdesk.resolution.count }} løste tickets oprettet i perioden.
+      Kalendertid — nætter og weekender tæller med. Annullerede tickets er ikke med.
     </p>
     <div class="stats-figures">
       <div>
         <span class="num">{{ helpdesk.resolution.median }}</span><small>median</small>
-        <p class="stats-explain">Den typiske sag. Halvdelen er løst hurtigere, halvdelen langsommere — enkelte meget lange sager trækker ikke tallet op.</p>
+        <p class="stats-explain">Den typiske ticket. Halvdelen er løst hurtigere, halvdelen langsommere — enkelte meget lange tickets trækker ikke tallet op.</p>
       </div>
       <div>
         <span class="num">{{ helpdesk.resolution.mean }}</span><small>gennemsnit</small>
-        <p class="stats-explain">Alle løsningstider lagt sammen og delt med antallet. De få sager, der ligger åbne i uger eller måneder, trækker det op — derfor er det langt over medianen.</p>
+        <p class="stats-explain">Alle løsningstider lagt sammen og delt med antallet. De få tickets, der ligger åbne i uger eller måneder, trækker det op — derfor er det langt over medianen.</p>
       </div>
       <div>
         <span class="num">{{ helpdesk.resolution.p90 }}</span><small>9 ud af 10 er løst inden</small>
-        <p class="stats-explain">90 % af sagerne er lukket inden for denne tid; de sidste 10 % tager længere. Viser, hvor lang halen af langsomme sager er.</p>
+        <p class="stats-explain">90 % af alle tickets er lukket inden for denne tid; de sidste 10 % tager længere. Viser, hvor lang halen af langsomme tickets er.</p>
       </div>
       <div>
         <span class="num">{{ helpdesk.resolution.within_day }}%</span><small>løst inden for et døgn</small>
-        <p class="stats-explain">Andelen af sagerne, der blev lukket mindre end 24 timer efter, de blev oprettet.</p>
+        <p class="stats-explain">Andelen af tickets, der blev lukket mindre end 24 timer efter, de blev oprettet.</p>
       </div>
     </div>
     <div class="stats-chart"><canvas id="chart-resolution"></canvas></div>
   </section>
 
-  {% include 'components/section_label.html' with n="02" title="Udvikling" sub="Åbne, oprettede og løste sager uge for uge" %}
+  {% include 'components/section_label.html' with n="02" title="Udvikling" sub="Åbne, oprettede og løste tickets uge for uge" %}
 
   {# === Weekly flow ======================================================= #}
   <section class="stats-grid">
     <div class="card stats-card">
-      <div class="label-eyebrow">Åbne sager</div>
-      <h2 class="stats-title">Åbne sager ved ugens udgang</h2>
-      <p class="stats-sub">Genberegnet ud fra hver sags oprettelse og lukning; slettede sager kan ikke tælles med.</p>
+      <div class="label-eyebrow">Åbne tickets</div>
+      <h2 class="stats-title">Åbne tickets ved ugens udgang</h2>
+      <p class="stats-sub">Genberegnet ud fra hver tickets oprettelse og lukning; slettede tickets kan ikke tælles med.</p>
       <div class="stats-chart"><canvas id="chart-open"></canvas></div>
     </div>
     <div class="card stats-card">
       <div class="label-eyebrow">Flow</div>
       <h2 class="stats-title">Oprettet vs. løst pr. uge</h2>
-      <p class="stats-sub">Oprettet i alt {{ helpdesk.total_created }}, løst i alt {{ helpdesk.total_solved }}. Annullerede sager tæller ikke som løst.</p>
+      <p class="stats-sub">Oprettet i alt {{ helpdesk.total_created }}, løst i alt {{ helpdesk.total_solved }}. Annullerede tickets tæller ikke som løst.</p>
       <div class="stats-chart"><canvas id="chart-flow"></canvas></div>
       <div class="stats-legend">
         <span><i class="chart-swatch chart-swatch-info"></i> Oprettet</span>
@@ -232,7 +232,7 @@
   <section class="stats-grid stats-grid-3">
     <div class="card stats-card">
       <div class="label-eyebrow">Kategorier</div>
-      <h2 class="stats-title">Sager fordelt på kategori</h2>
+      <h2 class="stats-title">Tickets fordelt på kategori</h2>
       {% if helpdesk.categories %}
         <div class="stats-chart stats-chart-round"><canvas id="chart-categories"></canvas></div>
         <ul class="stats-list">
@@ -243,7 +243,7 @@
       {% endif %}
       {% if helpdesk.uncategorised %}
         <p class="stats-note">
-          {{ helpdesk.uncategorised }} af {{ helpdesk.total_created }} sager ({{ helpdesk.uncategorised_share }}%) har ingen kategori i ServiceDesk
+          {{ helpdesk.uncategorised }} af {{ helpdesk.total_created }} tickets ({{ helpdesk.uncategorised_share }}%) har ingen kategori i ServiceDesk
           {% if helpdesk.categories %}— fordelingen ovenfor er kun for de kategoriserede{% endif %}.
         </p>
       {% endif %}
@@ -251,7 +251,7 @@
 
     <div class="card stats-card">
       <div class="label-eyebrow">Teknikere</div>
-      <h2 class="stats-title">Løste sager pr. tekniker</h2>
+      <h2 class="stats-title">Løste tickets pr. tekniker</h2>
       <ul class="stats-bars">
         {% for t in helpdesk.technicians %}
           <li>
@@ -259,15 +259,15 @@
             <div class="stats-bar"><div style="width: {{ t.share|floatformat:'1u' }}%;"></div></div>
           </li>
         {% empty %}
-          <li class="stats-note">Ingen løste sager i perioden.</li>
+          <li class="stats-note">Ingen løste tickets i perioden.</li>
         {% endfor %}
       </ul>
-      <p class="stats-note">Den tekniker, sagen stod på, da den blev lukket. Tidligere medarbejdere er anonymiseret af ServiceDesk.</p>
+      <p class="stats-note">Den tekniker, ticketen stod på, da den blev lukket. Tidligere medarbejdere er anonymiseret af ServiceDesk.</p>
     </div>
 
     <div class="card stats-card">
       <div class="label-eyebrow">Liggetid</div>
-      <h2 class="stats-title">Åbne sager efter alder</h2>
+      <h2 class="stats-title">Åbne tickets efter alder</h2>
       <ul class="stats-bars">
         {% for b in helpdesk.open_by_age %}
           <li>
@@ -276,13 +276,13 @@
           </li>
         {% endfor %}
       </ul>
-      <p class="stats-note">{{ helpdesk.open_now }} åbne sager i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
+      <p class="stats-note">{{ helpdesk.open_now }} åbne tickets i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
     </div>
   </section>
 
   <section class="card stats-card">
     <div class="label-eyebrow">Afdelinger</div>
-    <h2 class="stats-title">Sager pr. afdeling</h2>
+    <h2 class="stats-title">Tickets pr. afdeling</h2>
     <ul class="stats-bars stats-bars-cols" style="--rows: {{ helpdesk.department_rows }};">
       {% for d in helpdesk.departments %}
         <li>
@@ -290,10 +290,10 @@
           <div class="stats-bar"><div style="width: {{ d.share|floatformat:'1u' }}%;"></div></div>
         </li>
       {% empty %}
-        <li class="stats-note">Ingen sager i perioden.</li>
+        <li class="stats-note">Ingen tickets i perioden.</li>
       {% endfor %}
     </ul>
-    <p class="stats-note">Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk. Annullerede sager tæller med.</p>
+    <p class="stats-note">Den afdeling, som den person, der oprettede ticketen, hører til i ServiceDesk. Annullerede tickets tæller med.</p>
   </section>
 
   {# === Chronicle ========================================================= #}
@@ -434,7 +434,7 @@
       type: "bar",
       data: {
         labels: data.weekdays.map(function (d) { return d.short; }),
-        datasets: [{ label: "Sager i gns.", data: data.weekdays.map(function (d) { return d.avg; }),
+        datasets: [{ label: "Tickets i gns.", data: data.weekdays.map(function (d) { return d.avg; }),
           backgroundColor: soft(C.info, 0.75), borderRadius: 6, maxBarThickness: 44 }],
       },
       options: { scales: axes({ yFormat: function (v) { return v; } }) },
@@ -445,7 +445,7 @@
       type: "bar",
       data: {
         labels: data.resolution.map(function (b) { return b.label; }),
-        datasets: [{ label: "Andel af løste sager (%)", data: data.resolution.map(function (b) { return b.share; }),
+        datasets: [{ label: "Andel af løste tickets (%)", data: data.resolution.map(function (b) { return b.share; }),
           backgroundColor: soft(C.good, 0.75), borderRadius: 6, maxBarThickness: 64 }],
       },
       options: { scales: axes({ yFormat: function (v) { return v + "%"; } }) },
@@ -456,7 +456,7 @@
       type: "line",
       data: {
         labels: data.weekly.map(function (w) { return w.label; }),
-        datasets: [{ label: "Åbne sager", data: data.weekly.map(function (w) { return w.open; }),
+        datasets: [{ label: "Åbne tickets", data: data.weekly.map(function (w) { return w.open; }),
           borderColor: C.accent, backgroundColor: soft(C.accent, 0.15), fill: true,
           tension: 0.3, borderWidth: 2.25, pointRadius: 0, pointHoverRadius: 4 }],
       },
