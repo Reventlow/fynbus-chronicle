@@ -16,7 +16,7 @@
   <div class="sd-main">
     <div class="sd-title">
       {% if ticket.servicedesk_url %}
-        <a href="{{ ticket.servicedesk_url }}" target="_blank" data-new-tab rel="noopener noreferrer" class="sd-num" title="Åbn sagen i ServiceDesk">#{{ ticket.sdp_id }} ↗</a>
+        <a href="{{ ticket.servicedesk_url }}" target="_blank" data-new-tab rel="noopener noreferrer" class="sd-num" title="Åbn ticketen i ServiceDesk">#{{ ticket.sdp_id }} ↗</a>
         <a href="{{ ticket.servicedesk_url }}" target="_blank" data-new-tab rel="noopener noreferrer" class="sd-subject" title="{{ ticket.subject }} (åbner i ServiceDesk)">{{ ticket.subject|default:"(intet emne)" }}</a>
       {% else %}
         <span class="sd-num">#{{ ticket.sdp_id }}</span>
@@ -70,7 +70,7 @@
       {% endif %}
       <button type="button" class="btn btn-sm btn-ghost sd-link-btn" hx-get="{% url 'servicedesk:link' ticket.sdp_id %}"
               hx-target="#ticket-{{ ticket.sdp_id }} .sd-link-slot" hx-swap="innerHTML"
-              title="Knyt sagen til en ny sag eller en eksisterende opgave eller sag i Chronicle">Knyt</button>
+              title="Knyt ticketen til en ny sag eller en eksisterende prioriteret opgave eller sag i Chronicle">Knyt</button>
     </div>
   {% endif %}
 </div>

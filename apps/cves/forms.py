@@ -7,12 +7,33 @@ from django.conf import settings
 from .models import CVE, CVEAttachment, CVECase, CVEComment, CVELink, normalise_cve_id
 
 
+class _CaseChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, case) -> str:
+        state = "" if case.is_open else f" ({case.get_state_display().lower()})"
+        return f"#{case.pk} · {case.get_kind_display()} · {case.title[:60]}{state}"
+
+
 class CVECreateForm(forms.ModelForm):
     """Register a CVE by hand (or from a prefilled link).
 
     ``source_url`` is hidden: it is carried over from the query string when
     another tool, such as Harbinger, links to the form.
+
+    ``sag``: every CVE belongs to a sag. Empty (the default) starts a new
+    vulnerability sag for it; otherwise it joins the chosen one. Only open
+    sager are offered: joining a færdigbehandlet sag would close the new CVE
+    at once (it takes the sag's state).
     """
+
+    sag = _CaseChoiceField(
+        label="Sag",
+        queryset=CVECase.objects.none(),
+        required=False,
+        empty_label="Ny sag med denne CVE",
+        help_text="Alle CVE'er hører til en sag, hvor vurdering, løsning og delopgaver samles. "
+                  "Vælg en eksisterende sag, hvis samme opdatering lukker den.",
+        widget=forms.Select(attrs={"class": "select-field"}),
+    )
 
     comment = forms.CharField(
         label="Første kommentar",
@@ -48,6 +69,7 @@ class CVECreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["severity"].required = False
         self.fields["severity"].choices = [("", "Udled af CVSS")] + list(CVE.Severity.choices)
+        self.fields["sag"].queryset = CVECase.objects.open().open_first()
 
     def clean_cve_id(self) -> str:
         return normalise_cve_id(self.cleaned_data.get("cve_id", ""))

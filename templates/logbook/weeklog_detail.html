@@ -75,17 +75,17 @@
   {% endcomment %}
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap: var(--gutter);">
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow" style="white-space: nowrap;">Nye sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Nye tickets</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_new }}</div>
       {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_new }}</span></div>{% endif %}
     </div>
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow" style="white-space: nowrap;">Lukkede sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Lukkede tickets</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_closed }}</div>
       {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_closed }}</span></div>{% endif %}
     </div>
     <div class="card flex flex-col gap-2">
-      <div class="label-eyebrow" style="white-space: nowrap;">Åbne sager</div>
+      <div class="label-eyebrow" style="white-space: nowrap;">Åbne tickets</div>
       <div class="num" style="font-size: 32px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink-1); line-height: 1;">{{ weeklog.helpdesk_open }}</div>
       {% if prev_weeklog %}<div style="font-size: 11.5px; color: var(--ink-4); white-space: nowrap;">vs. uge {{ prev_weeklog.week_number }}: <span class="num">{{ prev_weeklog.helpdesk_open }}</span></div>{% endif %}
     </div>
@@ -238,7 +238,7 @@
     <div class="flex items-start justify-between" style="padding: 20px 24px 14px;">
       <div>
         <div class="label-eyebrow">Sårbarheder og hændelser</div>
-        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if week_cases %}Sager og CVE'er{% else %}CVE'er{% endif %}{% if week_vuln_count %} · {{ week_vuln_count }} åben{{ week_vuln_count|pluralize:"e" }} i ugens løb{% endif %}</h2>
+        <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">{% if week_cases %}Sager og CVE'er{% else %}CVE'er{% endif %}{% if week_vuln_count %} · {{ week_vuln_count }} {% if week_vuln_count == 1 %}åben{% else %}åbne{% endif %} i ugens løb{% endif %}</h2>
       </div>
       <a href="{% url 'cves:list' %}" class="btn btn-sm btn-ghost">Alle CVE'er</a>
     </div>

@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.15.3.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.25.0.
 
 ## Indhold
 
@@ -92,41 +92,41 @@ Kontrolpanelet viser ugen lige nu. Alt opdaterer sig selv, mens siden er åben: 
 
 ### Overskrift
 
-Overskriften siger, hvor mange sager der er åbne, og om det er flere eller færre end ved udgangen af sidste uge — fx *"28 åbne sager, én flere end sidste uge."* Linjen under viser:
-- **Live · synk kl …**: hvornår sagerne sidst blev hentet fra ServiceDesk.
-- Hvor mange hændelser, sårbarheder og planlagte opgaver (sager) der er åbne. Klik for at åbne *Sager*.
+Overskriften siger, hvor mange tickets der er åbne i ServiceDesk, og om det er flere eller færre end ved udgangen af sidste uge — fx *"28 åbne tickets, én flere end sidste uge."* Linjen under viser:
+- **Live · synk kl …**: hvornår tallene sidst blev hentet fra ServiceDesk.
+- Hvor mange hændelser, sårbarheder og sager med planlagt arbejde der er åbne. Klik for at åbne *Sager*.
 - Ugeloggen for ugen og antallet af opgaver på den.
 
 Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
 
 ### Nøgletal
 
-Fire kort: åbne sager, nye og lukkede sager i ugen og nettoændringen. Pilen på *Åbne sager* starter en synkronisering.
+Fire kort: åbne tickets, nye og lukkede tickets i ugen og nettoændringen. Pilen på *Åbne tickets* starter en synkronisering.
 
 ### 01 Nu
 
 - **Aktuel ugelog**: ugens sammendrag, fravær og *alle* ugens opgaver med status. Afsluttede opgaver er nedtonede.
 - **Rådighedsvagt** vises kun her, når sidemenuen ikke viser den: på mobil og med menuen klappet sammen.
-- **Sårbarheder og hændelser**: sagerne (hver mærket *Sårbarhed*, *Hændelse* eller *Planlagt opgave* med sit ikon), hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
+- **Sårbarheder og hændelser**: sagerne (hver mærket *Sårbarhed*, *Hændelse* eller *Planlagt arbejde* med sit ikon), hver med sine CVE'er nedenunder, så man kan se, hvilke CVE'er der hører sammen. Åbne sager står først, og sager færdigbehandlet de sidste 30 dage kommer med. Derunder står *CVE'er uden sag* fra de sidste 30 dage. Overskriften tæller de åbne sager; linjen over tæller de åbne CVE'er og dem, der er færdigbehandlet i perioden. *Sager →* og *CVE'er →* åbner fanerne.
 
-### 02 Åbne sager
+### 02 Åbne tickets
 
-- **Tekniker**: hvor mange åbne sager hver tekniker har; *Ikke tildelt* er grå.
-- **Kategori**: åbne sager fordelt på ServiceDesk-kategori.
-- **Liggetid**: hvor længe de åbne sager har ligget, i de samme syv grupper som ugerapporten, og hvor mange der har ligget i over 1 måned.
-- **Nyeste uløste** og **Ældste uløste**: de seks nyeste og de seks ældste åbne sager med nummer, emne, tekniker og alder. Klik på en linje for at åbne sagen i ServiceDesk.
+- **Tekniker**: hvor mange åbne tickets hver tekniker har; *Ikke tildelt* er grå.
+- **Kategori**: åbne tickets fordelt på ServiceDesk-kategori.
+- **Liggetid**: hvor længe de åbne tickets har ligget, i de samme syv grupper som ugerapporten, og hvor mange der har ligget i over 1 måned.
+- **Nyeste uløste** og **Ældste uløste**: de seks nyeste og de seks ældste åbne tickets med nummer, emne, tekniker og alder. Klik på en linje for at åbne ticketen i ServiceDesk.
 
 ### 03 Udvikling
 
-To grafer: nye mod lukkede sager pr. uge og antallet af åbne sager ved ugens udgang. Vælg 12 uger, 26 uger eller 12 måneder over hver graf.
+To grafer: nye mod lukkede tickets pr. uge og antallet af åbne tickets ved ugens udgang. Vælg 12 uger, 26 uger eller 12 måneder over hver graf.
 
 Nederst står den **seneste ændring** i Chronicle; klik for at se hele ændringsloggen.
 
 ### Tilpas dit kontrolpanel
 
-Knappen **Tilpas** øverst åbner en liste over kontrolpanelets dele: *Nøgletal*, *Nu*, *Åbne sager*, *Udvikling* og *Seneste ændring*.
+Knappen **Tilpas** øverst åbner en liste over kontrolpanelets dele: *Nøgletal*, *Nu*, *Åbne tickets*, *Udvikling* og *Seneste ændring*.
 - **Flyt** en del med pilene, eller træk i håndtaget ⠿ til venstre (det virker også på mobil).
-- **Skjul** en del ved at fjerne fluebenet. Under *Nu*, *Åbne sager* og *Udvikling* kan de enkelte kort skjules hver for sig, fx kun *Ugens log og rådighedsvagt*. Står der kun ét kort tilbage i *Nu*, fylder det hele bredden.
+- **Skjul** en del ved at fjerne fluebenet. Under *Nu*, *Åbne tickets* og *Udvikling* kan de enkelte kort skjules hver for sig, fx kun *Ugens log og rådighedsvagt*. Står der kun ét kort tilbage i *Nu*, fylder det hele bredden.
 - Tryk **Gem**. Numrene 01, 02, 03 følger din rækkefølge.
 - **Nulstil til standard** glemmer dine valg, så du igen får standardopsætningen, også når den ændrer sig i en senere version.
 
@@ -136,7 +136,7 @@ Opsætningen gælder kun dig og følger din bruger, så den er den samme på all
 
 Densitet virker oven på din egen opsætning. Under tandhjulet → **Densitet**:
 - **Komfort** viser alt.
-- **Kompakt** er tættere og skjuler graferne og afsnittet *Åbne sager*.
+- **Kompakt** er tættere og skjuler graferne og afsnittet *Åbne tickets*.
 - **Dashboard** viser kun nøgletal og grafer — godt til en skærm på væggen.
 
 ---
@@ -152,8 +152,8 @@ Densitet virker oven på din egen opsætning. Under tandhjulet → **Densitet**:
 1. Klik **Ny ugelog**
 2. Udfyld:
    - **År og uge**: udfyldes automatisk med den aktuelle uge
-   - **Helpdesk statistik**: nye, lukkede og åbne sager
-   - **Åbne sager fordelt på liggetid**: under 1 uge, 1–2 uger, 2 uger–1 måned, 1–3 måneder, 3–6 måneder, 6–12 måneder og over 12 måneder. Felterne udfyldes automatisk af ServiceDesk-synkroniseringen; udfylder du dem i hånden, skal de summe til antallet af åbne sager (eller stå på 0)
+   - **Helpdesk statistik**: nye, lukkede og åbne tickets
+   - **Åbne tickets fordelt på liggetid**: under 1 uge, 1–2 uger, 2 uger–1 måned, 1–3 måneder, 3–6 måneder, 6–12 måneder og over 12 måneder. Felterne udfyldes automatisk af ServiceDesk-synkroniseringen; udfylder du dem i hånden, skal de summe til antallet af åbne tickets (eller stå på 0)
    - **Ugeoversigt**: kort beskrivelse af ugens aktiviteter
 3. Klik **Opret ugelog**
 
@@ -306,12 +306,12 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 **Statistik** i menuen viser helpdesk- og Chronicle-tal for de seneste 12 måneder:
 
-1. **Hvornår**: nye sager pr. ugedag, et varmekort over ugedag og time, og hvor hurtigt sagerne bliver løst (median, gennemsnit og fordeling).
-2. **Udvikling**: åbne sager ved hver uges udgang og oprettet mod løst pr. uge.
-3. **Hvem og hvad**: kategorier, løste sager pr. tekniker, åbne sager efter alder og sager pr. afdeling.
+1. **Hvornår**: nye tickets pr. ugedag, et varmekort over ugedag og time, og hvor hurtigt tickets bliver løst (median, gennemsnit og fordeling).
+2. **Udvikling**: åbne tickets ved hver uges udgang og oprettet mod løst pr. uge.
+3. **Hvem og hvad**: kategorier, løste tickets pr. tekniker, åbne tickets efter alder og tickets pr. afdeling.
 4. **Chronicle**: prioriterede opgaver og hændelser.
 
-**Vælg periode.** Felterne **Fra** og **Til** øverst vælger et andet tidsrum (begge dage er med). *Seneste 12 måneder* nulstiller. Slutter perioden før i dag, vises åbne sager, som de stod ved periodens slutning. Perioden står i adressen, så den kan bogmærkes eller deles.
+**Vælg periode.** Felterne **Fra** og **Til** øverst vælger et andet tidsrum (begge dage er med). *Seneste 12 måneder* nulstiller. Slutter perioden før i dag, vises åbne tickets, som de stod ved periodens slutning. Perioden står i adressen, så den kan bogmærkes eller deles.
 
 **Eksportér** (redaktører) henter siden som PDF, HTML, Markdown eller JSON for den valgte periode. **Del som link** laver et hemmeligt link til tallene som JSON — til værktøjer, der ikke kan logge ind, fx Claude Motion. Linket udløber efter 7, 30 eller 90 dage eller 1 år og kan tilbagekaldes når som helst.
 
@@ -319,26 +319,55 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 ## Sårbarheder og hændelser
 
-**Sårbarheder** i sidemenuen samler de sårbarheder, der rammer os, fra de bliver opdaget, til de er lukket.
+**Sårbarheder og hændelser** i sidemenuen samler sikkerhedssagerne: de sårbarheder, der rammer os, hændelser og planlagt arbejde, fra de bliver opdaget, til de er lukket. Ordet **sag** bruges kun om dem; en henvendelse i ServiceDesk hedder en *ticket*.
 
-- Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
-- Status er **Identificeret**, **Patcher** eller **Færdigbehandlet**. Ordet er valgt med vilje: en sikkerhedssag lukkes efter bedste viden, den er sjældent endegyldigt løst. Skift den med knapperne på CVE'ens side; hvert skift skrives i tidslinjen med navn og tidspunkt.
-- Under **Links** samles advisories, leverandørnoter og sager. Under **Kommentarer** skrives noter (Markdown virker), nyeste øverst. Din egen kommentar kan rettes med blyanten ved den; den får så mærket *redigeret* med tidspunkt. Andres kommentarer og statusskift kan ikke rettes, fordi tidslinjen er dokumentationen.
+- Sektionen åbner på **Sager**. Alle sider i sektionen har fanerne **Sager | CVE'er | Delopgaver**. Tallet på en fane er antallet af åbne; hold musen over det for at se åbne og i alt.
+- Brødkrummen følger sagen: en CVE i en sag viser *Sager / Sag #N / CVE-…*.
+- **Ugeloggen** viser af sig selv alle sager og CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. CVE'er i en sag har mærket *Sag #n*.
+
+### Sager
+
+En sag er en **Sårbarhed**, en **Hændelse** eller **Planlagt arbejde**. Opret den med knapperne **Ny sårbarhedssag**, **Ny hændelse** eller **Nyt planlagt arbejde** på *Sager*; formularen hedder *Ny sårbarhedssag*, *Ny hændelse* eller *Nyt planlagt arbejde*. På Kontrolpanelet, på *Sager* og i ugeloggen har hver sag et ikon for sin type: et skjold for en sårbarhed, en advarselstrekant for en hændelse og en kalender med et flueben for planlagt arbejde.
+
+- En **sårbarhedssag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
+- Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
+- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Klar til gennemsyn*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Ordet *færdigbehandlet* er valgt med vilje: en sikkerhedssag lukkes efter bedste viden, den er sjældent endegyldigt løst. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. Hvert skift skrives i sagens tidslinje med navn og tidspunkt, og hver CVE får skiftet i sin egen tidslinje med "(via sag #n)".
+- **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående. Harbinger kan sende en hel sag på én gang.
+- **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sårbarhedssag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
+- Listen viser åbne sager øverst og færdigbehandlede i 90 dage (*vis alle sager* viser også de ældre). Søgefeltet finder titel, kilde, reference og CVE-id, også i færdigbehandlede sager.
+- Er der åbne CVE'er uden sag (ældre eller oprettet via API'et), står der en linje om dem øverst på *Sager*; *Vis dem →* åbner listen over dem.
+
+### Fælles for sager og CVE'er
+
+- Under **Links** samles advisories, leverandørnoter og tickets. Under **Kommentarer** skrives noter (Markdown virker), nyeste øverst. Din egen kommentar kan rettes med blyanten ved den; den får så mærket *redigeret* med tidspunkt. Andres kommentarer og statusskift kan ikke rettes, fordi tidslinjen er dokumentationen.
 - Under **Vedhæftninger** lægges PDF'er, fx advisories fra FE-CSIRT. Vælg filen, giv den evt. en titel og kilde, angiv **TLP** (CLEAR, GREEN, AMBER, AMBER+STRICT, RED) og klik **Vedhæft PDF**. Klik på en PDF for at se den oven på siden; TLP-mærket står i toppen. Husk TLP, før du sender et dokument videre. PDF'er, ODT-dokumenter (.odt) og Outlook-mails (.msg), højst 25 MB. Et ODT-dokument kan ikke vises i browseren; klik på det for at hente det.
 - En **Outlook-mail (.msg)**, fx en advarsel fra FE-CSIRT, kan vedhæftes direkte: træk den ud af Outlook og vælg den. Klik på den for at læse afsender, dato og tekst; *Hent* giver den oprindelige mail. PDF'er i mailen pakkes ud som egne vedhæftninger med samme TLP, og vælger du ingen TLP, bruges den, der står i mailen.
-- Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. Søg på id eller emne. Linket *vis alle CVE'er* øverst (eller *Alle* under Status) viser også de ældre.
-- Klik **Ny CVE** for at oprette én. Findes id'et allerede, kommer du til den eksisterende i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
-- **Ugeloggen** viser af sig selv alle CVE'er, der var åbne på et tidspunkt i ugen, og markerer dem, der blev *færdigbehandlet denne uge*. Der er intet at overføre fra uge til uge. I HTML- og PDF-eksporten står CVE'erne kun som numre på deres sag (se nedenfor).
 
-### Hændelser som sager
+### CVE'er
 
-En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på fanen *Sager*. Det er en sag af typen **Hændelse**: den har vurdering, løsning, vedhæftninger, links og kommentarer ligesom en sårbarhed, men normalt ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Skriv typen og alvoren i vurderingen.
+- Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
+- **Alle CVE'er hører til en sag.** Klik **Ny CVE** på fanen *CVE'er*, og vælg i feltet **Sag** enten *Ny sag med denne CVE* (standard) eller en eksisterende sag. Bagefter lander du på sagen. Findes id'et allerede, kommer du til den eksisterende CVE i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
+- **En CVE har ingen statusknapper.** Status skiftes på sagen, og CVE'ens side har et link til sagen, hvor vurdering, løsning og dokumenter står.
+- En CVE uden sag har boksen *Ikke i en sag* på sin side: **Ny sag med denne CVE** starter en ny, og **Føj til eksisterende sag** vælger en åben eller færdigbehandlet sag. CVE'en får sagens status.
+- Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. *vis alle CVE'er* øverst (eller *Alle* under Status) viser også de ældre. En søgning på id eller emne finder CVE'er i alle statusser, også færdigbehandlede ældre end 90 dage. For hver CVE i en sag står et link til sagen (*↳ Sag #n · titel*).
 
-### Planlagte opgaver
+### Delopgaver
 
-En planlagt opgave er IT-arbejde, vi selv planlægger, fx en større opgradering eller en licensfornyelse. Opret den med **Ny planlagt opgave** på fanen *Sager*. Den er en sag af typen **Planlagt opgave** med vurdering, løsning, vedhæftninger, links og kommentarer, og den kan have en **frist**. Status er *Planlagt*, *I gang* eller *Udført*. En åben opgave, hvis frist er overskredet, får fristen vist med rødt.
+En sårbarhedssag eller en hændelse kan have **delopgaver**: det arbejde, der skal være gjort, før sagen kan lukkes. Planlagt arbejde har ingen delopgaver.
 
-På Kontrolpanelet, på fanen *Sager* og i ugeloggen har hver sag et ikon for sin type: et skjold for en sårbarhed, en advarselstrekant for en hændelse og en kalender med et flueben for en planlagt opgave.
+- En delopgave har status *Åben*, *Venter på patch*, *Venter på ny version*, *Udført*, *Ignoreret* eller *System fjernet*, og kan have en ansvarlig og en frist. Ventende delopgaver tæller for sig, så det ses, hvad der venter på en leverandør, og hvad vi selv kan tage fat på.
+- Så længe en delopgave er åben eller venter, står sagen i *Patcher*. Når den sidste er lukket, skifter sagen af sig selv til **Klar til gennemsyn**, og derfra vælges *Færdigbehandlet* med udfald. En ny åben delopgave på en færdigbehandlet sag åbner sagen igen.
+- *Ignoreret* kræver en note med beslutningen og begrundelsen. *System fjernet* bruges, når systemet er taget ud af drift eller afinstalleret.
+- Fanen **Delopgaver** viser delopgaverne på tværs af sagerne. Rækken af felter øverst er filteret: *Aktive*, *Alle* og hver status. En overskreden frist står med ordet *overskredet*, og antallet står i toppen. Sagens status står ved hver delopgave som *Sag: …*.
+- Et link fra listen åbner sagen med *← Tilbage til delopgaverne*, og når du gemmer en delopgave, kommer du tilbage til listen med samme filter.
+
+### Hændelser
+
+En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på *Sager*. Den har vurdering, løsning, delopgaver, vedhæftninger, links og kommentarer ligesom en sårbarhedssag, men normalt ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Skriv typen og alvoren i vurderingen. Delopgaverne vises også uden CVE'er, og redaktører kan tilføje en CVE fra den sammenfoldede boks **Tilføj CVE til sagen**.
+
+### Planlagt arbejde
+
+Planlagt arbejde er IT-arbejde, vi selv planlægger, fx en større opgradering eller en licensfornyelse. Opret det med **Nyt planlagt arbejde** på *Sager*. Det er en sag af typen **Planlagt arbejde** med vurdering, løsning, vedhæftninger, links og kommentarer, og den kan have en **frist**. Status er *Planlagt*, *I gang* eller *Udført*. Er fristen overskredet på en åben sag, vises den med rødt.
 
 ### Hvad kommer med i ugelogs-eksporten
 
@@ -349,22 +378,7 @@ Hvert afsnit på en sag (Vurdering, Løsning / handling, Vedhæftninger, Links o
 - Det samme gælder mailen med ugeloggen: både selve mailen og den vedhæftede PDF.
 - Kommentarer kommer kun med for den uge, de er skrevet i. Statusskift kommer ikke med.
 - Vedhæftninger står med navn og TLP, men selve filen sendes aldrig med. Den hentes i Chronicle. Husk TLP, før du slår vedhæftninger til.
-- Afsnittet står i eksporten og mailen lige efter *Ugeoversigt* og før *Referat af mandags møde*. Det starter med et søjlediagram over alle ugens sager, også dem, der ikke vises: hændelser, sårbarheder og (i uger med nogen) planlagte opgaver, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
-
-### Sager: flere CVE'er med samme løsning
-
-En **sag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
-
-- Vælg fanen **Sager** og klik **Ny sag**. Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
-- **Alle CVE'er skal høre til en sag.** En CVE uden sag har boksen *Ikke i en sag* på sin side: **Ny sag med denne CVE** starter en ny, og **Føj til eksisterende sag** vælger en åben eller færdigbehandlet sag. CVE'en får sagens status. I CVE-listen og på Kontrolpanelet er CVE'er uden sag markeret og linker direkte til boksen.
-- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. En enkelt CVE uden sag har intet udfald; skal risikoen accepteres, så læg den i en sag. Hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". På en CVE i en sag er statusknapperne skiftet ud med et link til sagen.
-- Vedhæftninger, links og kommentarer på sagen fungerer som på en CVE (også TLP og .msg).
-- **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående.
-- CVE'er i en sag har mærket *Sag #n* i ugeloggen. Harbinger kan sende en hel sag på én gang.
-- **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
-- **Ugeloggen og Kontrolpanelet** viser sagerne over CVE'erne. Ugeloggen viser hver sag, der var åben i løbet af ugen; Kontrolpanelet viser de åbne. En sag uden CVE'er kommer derfor med i ugens dokumentation.
-- Søgefeltet på **Sager** finder titel, kilde, reference og CVE-id, også i færdigbehandlede sager.
-- **Fanerne *CVE'er* og *Sager*** øverst under Sårbarheder viser sammenhængen begge veje. *Sager* viser hver sag med alle dens CVE'er. *CVE'er* viser for hver CVE i en sag et link til sagen (*↳ Sag #n · titel*).
+- Afsnittet står i eksporten og mailen lige efter *Ugeoversigt* og før *Referat af mandags møde*. Det starter med et søjlediagram over alle ugens sager, også dem, der ikke vises: hændelser, sårbarheder og (i uger med noget) planlagt arbejde, der var åbne ved ugens udgang, og dem, der blev færdigbehandlet i ugen. Samme diagram står på ugeloggens side.
 
 Læsere kan se alt, men ikke oprette eller ændre.
 
@@ -390,7 +404,7 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 - **Fuldfør eller genåbn** et kort ved at klikke på cirklen foran titlen.
 - **Flyt et kort** ved at trække det til en anden kolonne eller et andet sted i kolonnen, eller vælg *Flyt til* i kortets menu (**⋯**).
 - **Opret et kort** i feltet *+ Tilføj opgave* øverst i kolonnen (Enter gemmer).
-- **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen viser en *Planner ↗*-pille, der åbner kortet, i ugelogen, i søgningen, under *Sager* og på kontrolpanelet.
+- **Knyt et kort til Chronicle** med *⋯ → Knyt til Chronicle*: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt arbejde)* eller en eksisterende opgave eller sag. Kortet viser linket, og i Planner får det etiketten *Prioriteret opgave* eller *Sag* og et link tilbage. Opgaven eller sagen viser en *Planner ↗*-pille, der åbner kortet, i ugelogen, i søgningen, under *Sager* og på kontrolpanelet.
 - Mens en ændring er på vej, står der *Gemmer i Planner…* på kortet; det tager få sekunder. Afviser Planner den (fx hvis du ikke er medlem af planens gruppe), står årsagen på kortet, og tavlen retter sig selv ved næste opdatering.
 - **Status følges ad.** Fuldfører du et knyttet kort (på tavlen eller i Planner), afsluttes opgaven eller sagen i Chronicle, og afslutter du opgaven eller sagen i Chronicle, fuldføres kortet. Det samme gælder *Ikke startet* og *I gang*. Ændringer i Chronicle sendes i dit navn, hvis du har forbundet din Microsoft-konto; ellers står der på opgaven eller sagen, at ændringen ikke blev sendt.
 - **Opret i Planner:** på en prioriteret opgave eller sag uden kort kan du vælge en bucket og klikke *Opret i Planner*. Kortet får titel, beskrivelse, status og frist og knyttes begge veje.
@@ -404,20 +418,20 @@ Søg og filtrér på kategori og vigtighed over tavlen.
 
 ## ServiceDesk
 
-*ServiceDesk* i menuen viser helpdesk-sagerne fra ServiceDesk Plus i tre grupper:
+*ServiceDesk* i menuen viser **Helpdesk-tickets** fra ServiceDesk Plus i tre grupper:
 
-- **Mine sager**: tildelt dig (din e-mail eller dit navn som tekniker i ServiceDesk);
+- **Mine tickets**: tildelt dig (din e-mail eller dit navn som tekniker i ServiceDesk);
 - **Ikke tildelt**: ingen tekniker endnu;
 - **Alle andres**: tildelt en anden tekniker.
 
-Fanen **Uløste** viser de sager, der er åbne nu, ældste først. **Lukkede** viser sager lukket de sidste 7, 30 eller 90 dage, senest lukket først.
+Fanen **Uløste** viser de tickets, der er åbne nu, ældste først. **Lukkede** viser tickets lukket de sidste 7, 30 eller 90 dage, senest lukket først.
 
-- Hver sag viser nummer, emne, status, kategori, tekniker og afdeling. **Nummeret er et link** til sagen i ServiceDesk.
-- **Liggetid** står til venstre: for en åben sag hvor længe den har været åben, for en lukket sag hvor lang tid den tog. Farven er den samme som i ugelogens liggetid.
+- Hver ticket viser nummer, emne, status, kategori, tekniker og afdeling. **Nummeret er et link** til ticketen i ServiceDesk.
+- **Liggetid** står til venstre: for en åben ticket hvor længe den har været åben, for en lukket ticket hvor lang tid den tog. Farven er den samme som i ugelogens liggetid.
 - Listen kommer fra Chronicles kopi af ServiceDesk, som synkroniseres med få minutters mellemrum. Linjen under titlen viser hvornår (rød, hvis synkroniseringen er gået i stå). **Synk nu** henter ændringer med det samme og genindlæser siden.
-- **+ Prioriteret opgave** (redaktører) opretter med ét klik en prioriteret opgave i denne uges ugelog med sagens emne og knytter den til sagen. Knappen vises kun, så længe sagen ikke er knyttet til en prioriteret opgave.
-- **Knyt** (redaktører) knytter sagen til en prioriteret opgave eller en sag i Chronicle: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt opgave)* eller en eksisterende. Opgaven eller sagen får en *ServiceDesk #nummer*-pille, der åbner sagen i ServiceDesk, i ugelogen, i søgningen, under *Sager*, på kontrolpanelet og på sin egen side.
-- Samtidig får sagen i ServiceDesk en **intern note** (ikke synlig for brugeren, ingen mail) med et link til opgaven eller sagen i Chronicle og dit navn. Kunne noten ikke tilføjes, står årsagen ved linket, med *Prøv igen*.
+- **+ Prioriteret opgave** (redaktører) opretter med ét klik en prioriteret opgave i denne uges ugelog med ticketens emne og knytter den til ticketen. Knappen vises kun, så længe ticketen ikke er knyttet til en prioriteret opgave.
+- **Knyt** (redaktører) knytter ticketen til en prioriteret opgave eller en sag i Chronicle: *Ny prioriteret opgave* (lægges i denne uges ugelog), *Ny sag (planlagt arbejde)* eller en eksisterende. Opgaven eller sagen får en *ServiceDesk #nummer*-pille, der åbner ticketen i ServiceDesk, i ugelogen, i søgningen, under *Sager*, på kontrolpanelet og på sin egen side.
+- Samtidig får ticketen i ServiceDesk en **intern note** (ikke synlig for brugeren, ingen mail) med et link til opgaven eller sagen i Chronicle og dit navn. Kunne noten ikke tilføjes, står årsagen ved linket, med *Prøv igen*.
 - **×** ved linket fjerner det igen, og ServiceDesk får en note om det.
 - ServiceDesk-pillen kommer også med i ugelogs-eksporten (PDF, HTML, mail og Markdown).
 
@@ -429,7 +443,7 @@ Ugeloggen kan hentes som PDF, HTML eller Markdown og sendes som mail. **Alle fir
 
 Uger fra før liggetid-opdelingen blev indført viser ikke afsnittet. Administratoren kan genskabe tallene for en lukket uge fra ServiceDesk-historikken med `python manage.py backfill_liggetid <år> <uge>` (køres i sync-containeren).
 
-Alle tre formater indeholder afsnittet **"Åbne sager fordelt på liggetid"**: en bjælke pr. aldersgruppe (under 1 uge, 1-2 uger, 2 uger-1 måned, 1-3 måneder, 3-6 måneder, 6-12 måneder og over 12 måneder) med antal og andel, samt en linje der opsummerer hvor mange af de åbne sager der har ligget i mere end 1 måned. Afsnittet vises kun for uger hvor opdelingen er registreret.
+Alle tre formater indeholder afsnittet **"Åbne tickets fordelt på liggetid"**: en bjælke pr. aldersgruppe (under 1 uge, 1-2 uger, 2 uger-1 måned, 1-3 måneder, 3-6 måneder, 6-12 måneder og over 12 måneder) med antal og andel, samt en linje der opsummerer hvor mange af de åbne tickets der har ligget i mere end 1 måned. Afsnittet vises kun for uger hvor opdelingen er registreret.
 
 ### PDF rapport
 
@@ -505,7 +519,7 @@ Menuen **Kursusmateriale** samler materiale fra kurser i **mapper**, fx *Anthrop
 
 ### Knyt kursusmateriale til en opgave (redaktører)
 
-En mappe eller et enkelt element kan knyttes til en **prioriteret opgave** eller en **sag** (fx en planlagt opgave), så man kan se, hvilket kursus en opgave handler om:
+En mappe eller et enkelt element kan knyttes til en **prioriteret opgave** eller en **sag** (fx planlagt arbejde), så man kan se, hvilket kursus en opgave handler om:
 
 1. Klik "Knyt til opgave" øverst i mappen, eller "Knyt" ved et element
 2. Vælg opgaven eller sagen på listen og klik "Knyt". Listen viser åbne opgaver og sager først og derefter de senest afsluttede, så et kursus også kan knyttes til en afsluttet opgave som "Deltog i …". Søgefeltet over listen filtrerer den

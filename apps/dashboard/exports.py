@@ -108,9 +108,9 @@ def generate_json(data: dict) -> dict:
                 else f"Valgt periode: {data['period'].first_day:%d.%m.%Y} – {data['period'].last_day:%d.%m.%Y}."
             ),
             "open_figures": (
-                "Åbne sager er et øjebliksbillede nu."
+                "Åbne tickets er et øjebliksbillede nu."
                 if data["period"].live
-                else "Åbne sager er genberegnet til periodens slutning."
+                else "Åbne tickets er genberegnet til periodens slutning."
             ),
         },
         "sources": {
@@ -119,13 +119,13 @@ def generate_json(data: dict) -> dict:
             "chronicle": "FynBus Chronicle: prioriterede opgaver og hændelser",
         },
         "definitions": {
-            "solved": "Lukket og ikke annulleret. Annullerede sager lukker en sag, men tæller ikke som løst.",
+            "solved": "Lukket og ikke annulleret. En annulleret ticket er lukket, men tæller ikke som løst.",
             "resolution_time": "Kalendertid fra oprettelse til lukning; nætter og weekender tæller med.",
-            "median": "Den typiske sag: halvdelen er løst hurtigere, halvdelen langsommere.",
-            "mean": "Summen af alle løsningstider delt med antallet; trækkes op af få meget lange sager.",
-            "p90": "90 % af sagerne er løst inden for denne tid.",
-            "weekday_average": "Nye sager på en gennemsnitlig dag af den ugedag i perioden.",
-            "open_at_week_end": "Sager oprettet før ugens udgang og ikke lukket inden da (genberegnet).",
+            "median": "Den typiske ticket: halvdelen er løst hurtigere, halvdelen langsommere.",
+            "mean": "Summen af alle løsningstider delt med antallet; trækkes op af få meget lange tickets.",
+            "p90": "90 % af alle tickets er løst inden for denne tid.",
+            "weekday_average": "Nye tickets på en gennemsnitlig dag af den ugedag i perioden.",
+            "open_at_week_end": "Tickets oprettet før ugens udgang og ikke lukket inden da (genberegnet).",
             "times": "Lokal tid, Europe/Copenhagen.",
         },
         "helpdesk": {
@@ -143,7 +143,7 @@ def generate_json(data: dict) -> dict:
                 {"weekday": d["day"], "avg_new_tickets": d["avg"]} for d in h["weekday_avg"]
             ],
             "hourly_heatmap": {
-                "description": "Nye sager pr. ugedag (rækker) og time (kolonner 0–23) i perioden.",
+                "description": "Nye tickets pr. ugedag (rækker) og time (kolonner 0–23) i perioden.",
                 "hours": list(range(24)),
                 "rows": [
                     {
@@ -185,7 +185,7 @@ def generate_json(data: dict) -> dict:
             "categories": {
                 "uncategorised_count": h["uncategorised"],
                 "uncategorised_percent": h["uncategorised_share"],
-                "note": "Procenterne er af de kategoriserede sager.",
+                "note": "Procenterne er af de kategoriserede tickets.",
                 "categorised": [
                     {"category": x["label"], "count": x["count"], "percent": x["share"]}
                     for x in h["categories"]
@@ -269,16 +269,16 @@ def generate_markdown(data: dict) -> str:
     out += _table(
         ["Nøgletal", "Værdi"],
         [
-            ["Sager oprettet", f"{h['total_created']} (heraf {h['cancelled']} annulleret)"],
-            ["Sager løst", h["total_solved"]],
+            ["Tickets oprettet", f"{h['total_created']} (heraf {h['cancelled']} annulleret)"],
+            ["Tickets løst", h["total_solved"]],
             ["Kolleger der skrev", h["requesters"]],
-            ["Gns. nye sager pr. måned", f"{h['per_month']:.0f}"],
+            ["Gns. nye tickets pr. måned", f"{h['per_month']:.0f}"],
             [period.open_label, h["open_now"]],
         ],
     )
 
-    out += ["### Nye sager pr. ugedag (gennemsnit)", ""]
-    out += _table(["Ugedag", "Sager i gns."], [[d["day"], f"{d['avg']:.1f}"] for d in h["weekday_avg"]])
+    out += ["### Nye tickets pr. ugedag (gennemsnit)", ""]
+    out += _table(["Ugedag", "Tickets i gns."], [[d["day"], f"{d['avg']:.1f}"] for d in h["weekday_avg"]])
     if h["busiest_day"]:
         out += [
             f"Travleste dag: {h['busiest_day'].lower()}. "
@@ -286,25 +286,25 @@ def generate_markdown(data: dict) -> str:
             "",
         ]
 
-    out += ["### Hvornår skrives der (antal sager, kl. 06–18)", ""]
+    out += ["### Hvornår skrives der (antal tickets, kl. 06–18)", ""]
     hours = list(range(6, 19))
     out += _table(
         ["Dag"] + [f"{x:02d}" for x in hours],
         [[row["day"]] + [row["cells"][x]["count"] for x in hours] for row in h["heatmap"]],
     )
 
-    out += ["### Løsningstid", "", "Kalendertid fra oprettelse til lukning; annullerede sager er ikke med.", ""]
+    out += ["### Løsningstid", "", "Kalendertid fra oprettelse til lukning; annullerede tickets er ikke med.", ""]
     out += _table(
         ["Mål", "Værdi", "Betydning"],
         [
             ["Median", res["median"], "Halvdelen er løst hurtigere, halvdelen langsommere"],
-            ["Gennemsnit", res["mean"], "Trækkes op af få meget lange sager"],
+            ["Gennemsnit", res["mean"], "Trækkes op af få meget lange tickets"],
             ["9 ud af 10 løst inden", res["p90"], "De sidste 10 % tager længere"],
             ["Løst inden for et døgn", f"{res['within_day']} %", "Lukket under 24 timer efter oprettelse"],
         ],
     )
     out += _table(
-        ["Løsningstid", "Sager", "Andel"],
+        ["Løsningstid", "Tickets", "Andel"],
         [[b["label"], b["count"], _pct(b["share"])] for b in res["buckets"]],
     )
 
@@ -317,29 +317,29 @@ def generate_markdown(data: dict) -> str:
     out += ["### Kategorier", ""]
     if h["categories"]:
         out += _table(
-            ["Kategori", "Sager", "Andel"],
+            ["Kategori", "Tickets", "Andel"],
             [[x["label"], x["count"], _pct(x["share"])] for x in h["categories"]],
         )
     out += [
-        f"{h['uncategorised']} af {h['total_created']} sager ({h['uncategorised_share']} %) "
+        f"{h['uncategorised']} af {h['total_created']} tickets ({h['uncategorised_share']} %) "
         "har ingen kategori; andelene ovenfor er af de kategoriserede.",
         "",
     ]
 
-    out += ["### Sager pr. afdeling", "", "Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk.", ""]
+    out += ["### Tickets pr. afdeling", "", "Den afdeling, som den person, der oprettede ticketen, hører til i ServiceDesk.", ""]
     out += _table(
-        ["Afdeling", "Sager", "Andel"],
+        ["Afdeling", "Tickets", "Andel"],
         [[x["label"], x["count"], _pct(x["share"])] for x in h["departments"]],
     )
 
-    out += ["### Løste sager pr. tekniker", ""]
+    out += ["### Løste tickets pr. tekniker", ""]
     out += _table(
-        ["Tekniker", "Sager", "Andel"],
+        ["Tekniker", "Tickets", "Andel"],
         [[x["label"], x["count"], _pct(x["share"])] for x in h["technicians"]],
     )
 
-    out += ["### Åbne sager efter alder", ""]
-    out += _table(["Liggetid", "Sager"], [[b["label"], b["count"]] for b in h["open_by_age"]])
+    out += ["### Åbne tickets efter alder", ""]
+    out += _table(["Liggetid", "Tickets"], [[b["label"], b["count"]] for b in h["open_by_age"]])
 
     pr, inc = c["priorities"], c["incidents"]
     out += ["## Chronicle", "", "### Prioriterede opgaver", ""]

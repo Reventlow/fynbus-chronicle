@@ -61,19 +61,19 @@ class WeekLog(models.Model):
 
     # Helpdesk statistics
     helpdesk_new = models.PositiveIntegerField(
-        verbose_name="Nye sager",
+        verbose_name="Nye tickets",
         default=0,
-        help_text="Antal nye helpdesk-sager i ugen",
+        help_text="Antal nye helpdesk-tickets i ugen",
     )
     helpdesk_closed = models.PositiveIntegerField(
-        verbose_name="Lukkede sager",
+        verbose_name="Lukkede tickets",
         default=0,
-        help_text="Antal lukkede helpdesk-sager i ugen",
+        help_text="Antal lukkede helpdesk-tickets i ugen",
     )
     helpdesk_open = models.PositiveIntegerField(
-        verbose_name="Åbne sager",
+        verbose_name="Åbne tickets",
         default=0,
-        help_text="Samlet antal åbne sager ved ugens slutning",
+        help_text="Samlet antal åbne tickets ved ugens slutning",
     )
 
     # Age ("liggetid") breakdown of the open tickets above — a snapshot taken
@@ -82,37 +82,37 @@ class WeekLog(models.Model):
     helpdesk_open_0_7 = models.PositiveIntegerField(
         verbose_name="Åbne under 1 uge",
         default=0,
-        help_text="Åbne sager med en liggetid på 0-7 dage",
+        help_text="Åbne tickets med en liggetid på 0-7 dage",
     )
     helpdesk_open_8_14 = models.PositiveIntegerField(
         verbose_name="Åbne 1-2 uger",
         default=0,
-        help_text="Åbne sager med en liggetid på 8-14 dage",
+        help_text="Åbne tickets med en liggetid på 8-14 dage",
     )
     helpdesk_open_15_30 = models.PositiveIntegerField(
         verbose_name="Åbne 2 uger - 1 måned",
         default=0,
-        help_text="Åbne sager med en liggetid på 15-30 dage",
+        help_text="Åbne tickets med en liggetid på 15-30 dage",
     )
     helpdesk_open_31_90 = models.PositiveIntegerField(
         verbose_name="Åbne 1-3 måneder",
         default=0,
-        help_text="Åbne sager med en liggetid på 31-90 dage",
+        help_text="Åbne tickets med en liggetid på 31-90 dage",
     )
     helpdesk_open_91_180 = models.PositiveIntegerField(
         verbose_name="Åbne 3-6 måneder",
         default=0,
-        help_text="Åbne sager med en liggetid på 91-180 dage",
+        help_text="Åbne tickets med en liggetid på 91-180 dage",
     )
     helpdesk_open_181_365 = models.PositiveIntegerField(
         verbose_name="Åbne 6-12 måneder",
         default=0,
-        help_text="Åbne sager med en liggetid på 181-365 dage",
+        help_text="Åbne tickets med en liggetid på 181-365 dage",
     )
     helpdesk_open_over_365 = models.PositiveIntegerField(
         verbose_name="Åbne over 12 måneder",
         default=0,
-        help_text="Åbne sager med en liggetid på over 365 dage",
+        help_text="Åbne tickets med en liggetid på over 365 dage",
     )
 
     # Weekly summary
@@ -946,7 +946,7 @@ class HelpdeskTicket(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text="Udført, lukket eller annulleret. Tom mens sagen er åben.",
+        help_text="Udført, lukket eller annulleret. Tom mens ticketen er åben.",
     )
     status = models.CharField(verbose_name="Status", max_length=60)
     is_open = models.BooleanField(verbose_name="Åben", default=True)
@@ -964,7 +964,7 @@ class HelpdeskTicket(models.Model):
         verbose_name="Teknikerens e-mail",
         max_length=254,
         blank=True,
-        help_text="Bruges til at finde »mine sager« på ServiceDesk-siden.",
+        help_text="Bruges til at finde »mine tickets« på ServiceDesk-siden.",
     )
     subject = models.CharField(verbose_name="Emne", max_length=255, blank=True)
     sdp_updated_at = models.DateTimeField(
@@ -975,8 +975,8 @@ class HelpdeskTicket(models.Model):
     synced_at = models.DateTimeField(verbose_name="Synkroniseret", auto_now=True)
 
     class Meta:
-        verbose_name = "Helpdesk-sag"
-        verbose_name_plural = "Helpdesk-sager"
+        verbose_name = "Helpdesk-ticket"
+        verbose_name_plural = "Helpdesk-tickets"
         ordering = ["-created_at"]
 
     def __str__(self) -> str:

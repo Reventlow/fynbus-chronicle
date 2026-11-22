@@ -1,6 +1,6 @@
 """
 Helpers behind the v3 Kontrolpanel: the headline sentence, sync freshness,
-the "Åbne sager" bento, the CVE card and the changelog strip.
+the "Åbne tickets" bento, the CVE card and the changelog strip.
 
 Kept free of request handling so the views stay thin and the wording
 rules can be tested on their own.

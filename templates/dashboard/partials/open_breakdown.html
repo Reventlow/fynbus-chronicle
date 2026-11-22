@@ -1,5 +1,5 @@
 {% comment %}
-  "Åbne sager" bento: three cells inside one card (index.html provides the
+  "Åbne tickets" bento: three cells inside one card (index.html provides the
   .card.bento wrapper and polls this every minute).
     Tekniker — horizontal bars, unassigned muted, scaled to the largest.
     Kategori — SVG donut (overview.donut_segments) plus legend; colours
@@ -21,7 +21,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="stats-note">Ingen åbne sager, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+    <p class="stats-note">Ingen åbne tickets, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
   {% endif %}
 </div>
 
@@ -29,7 +29,7 @@
   <div class="card-head"><div class="label-eyebrow">Kategori</div></div>
   {% if donut %}
     <div class="bento-donut">
-      <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="{{ category_total }} åbne sager fordelt på kategori">
+      <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="{{ category_total }} åbne tickets fordelt på kategori">
         {% for seg in donut %}
           <circle cx="64" cy="64" r="48" fill="none" stroke="{{ seg.color }}" stroke-width="14"
                   stroke-dasharray="{{ seg.dash }}" stroke-dashoffset="{{ seg.offset }}" transform="rotate(-90 64 64)">
@@ -46,7 +46,7 @@
       </div>
     </div>
   {% else %}
-    <p class="stats-note">Ingen åbne sager, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
+    <p class="stats-note">Ingen åbne tickets, eller ServiceDesk-kopien er ikke synkroniseret endnu.</p>
   {% endif %}
 </div>
 

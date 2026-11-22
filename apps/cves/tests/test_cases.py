@@ -220,17 +220,19 @@ class TestCasePages:
         assert "CFCS · CERT-1" in body and "Ingen CVE" in body
 
     def test_tabs_on_both_lists(self, editor_client, case):
+        """Since 1.25.0 the tabs are Sager | CVE'er | Delopgaver; the badge shows
+        the open count, the tooltip open and total."""
+        import re
+
         for name, active in (("cves:list", "CVE&#x27;er"), ("cves:case-list", "Sager")):
-            response = editor_client.get(reverse(name))
-            assert response.context["current_tab"] == ("cves" if name == "cves:list" else "cases")
-            body = response.content.decode()
+            body = editor_client.get(reverse(name)).content.decode()
+            assert re.search(r'tab-link-active" aria-current="page">\s*' + re.escape(active), body)
             assert f'href="{reverse("cves:list")}"' in body and f'href="{reverse("cves:case-list")}"' in body
-            assert "tab-link-active" in body
-        counts = [t["count"] for t in response.context["tabs"]]
-        assert counts == ["2 ikke færdigbehandlet · 2 i alt", "1 ikke færdigbehandlet · 1 i alt"]
+        assert 'title="1 åben · 1 i alt">1 åben<' in body  # Sager
+        assert 'title="2 åbne · 2 i alt">2 åbne<' in body  # CVE'er
         CVE.objects.create(cve_id="CVE-2026-7001", subject="x", state=CVE.State.SOLVED)
-        counts = [t["count"] for t in editor_client.get(reverse("cves:list")).context["tabs"]]
-        assert counts[0] == "2 ikke færdigbehandlet · 3 i alt"  # the total includes færdigbehandlede
+        body = editor_client.get(reverse("cves:list")).content.decode()
+        assert 'title="2 åbne · 3 i alt">2 åbne<' in body  # the total includes færdigbehandlede
 
     def test_viewer_can_read_but_not_write(self, viewer_client, case):
         assert viewer_client.get(case.get_absolute_url()).status_code == 200

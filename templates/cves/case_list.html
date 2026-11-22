@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load cve_extras %}
 
 {% block title %}Sager — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
+  <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
   <span class="current">Sager</span>
 {% endblock %}
@@ -14,7 +15,7 @@
     <div>
       <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
         <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-        <span>{{ open_count }} åben{{ open_count|pluralize:"e" }}</span>
+        <span>{{ open_count }} {% if open_count == 1 %}åben{% else %}åbne{% endif %}</span>
       </div>
       <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
         Sager <span class="display-italic" style="color: var(--ink-3);">med samme løsning.</span>
@@ -23,19 +24,29 @@
         En sag samler CVE'er, der har samme vurdering og samme løsning — fx flere kerne-CVE'er, der lukkes af én opdatering.
         Vurdering, løsning og dokumenter skrives én gang på sagen, og sagens status gælder alle dens CVE'er.
         En advarsel uden CVE-nummer, fx fra CFCS, oprettes som en sag uden CVE'er med kilde og reference.
-        Hændelser og planlagte opgaver (fx en større opgradering med en frist) er også sager.
+        Hændelser og planlagt arbejde (fx en større opgradering med en frist) er også sager.
         Færdigbehandlede sager vises i {{ solved_window_days }} dage{% if state != 'all' %} — <a href="?state=all">vis alle sager</a>{% endif %}.
       </p>
     </div>
     {% if is_editor %}
-      <a href="{% url 'cves:task-list' %}" class="btn btn-sm">Opgaver</a>
-      <a href="{% url 'cves:case-create' %}?kind=task" class="btn btn-sm">Ny planlagt opgave</a>
-      <a href="{% url 'cves:case-create' %}?kind=incident" class="btn btn-sm">Ny hændelse</a>
-      <a href="{% url 'cves:case-create' %}" class="btn btn-primary btn-sm">Ny sag</a>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'cves:case-create' %}?kind=task" class="btn btn-sm">Nyt planlagt arbejde</a>
+        <a href="{% url 'cves:case-create' %}?kind=incident" class="btn btn-sm">Ny hændelse</a>
+        <a href="{% url 'cves:case-create' %}" class="btn btn-primary btn-sm">Ny sårbarhedssag</a>
+      </div>
     {% endif %}
   </div>
 
-  {% include "components/tabs.html" %}
+  {% cve_section_nav %}
+
+  {% if cves_without_case %}
+    {# Every CVE belongs to a sag; old or API-created ones may not yet. #}
+    <a href="{% url 'cves:list' %}?sag=ingen" class="card flex items-center gap-3"
+       style="padding: 12px 16px; text-decoration: none; color: inherit; border-left: 3px solid var(--warn-ink);">
+      <span style="flex: 1; font-size: 13.5px;"><strong class="num">{{ cves_without_case }}</strong> {% if cves_without_case == 1 %}åben{% else %}åbne{% endif %} CVE{{ cves_without_case|pluralize:"'er" }} er ikke i en sag endnu.</span>
+      <span style="color: var(--accent-ink); font-size: 13px;">Vis dem →</span>
+    </a>
+  {% endif %}
 
   <form method="get" class="card">
     <div class="filter-row">
@@ -43,7 +54,7 @@
         <label for="id_q" class="input-label">Søg</label>
         <input type="text" id="id_q" name="q" value="{{ q }}" class="field" placeholder="Titel, kilde, reference eller CVE-id…">
       </div>
-      <div style="align-self: end;"><button type="submit" class="btn btn-sm">Søg</button></div>
+      <div style="align-self: end;"><button type="submit" class="btn btn-primary">Filtrér</button></div>
     </div>
   </form>
 

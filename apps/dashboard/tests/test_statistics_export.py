@@ -77,9 +77,9 @@ def test_markdown_download(editor, tickets):
     assert response.status_code == 200
     body = response.content.decode()
     assert body.startswith("# FynBus IT — Statistik")
-    assert "| Sager oprettet |" in body
+    assert "| Tickets oprettet |" in body
     assert "Morten" in body
-    assert "### Sager pr. afdeling" in body and "| Jura |" in body
+    assert "### Tickets pr. afdeling" in body and "| Jura |" in body
 
 
 def test_html_download_is_standalone(editor, tickets):

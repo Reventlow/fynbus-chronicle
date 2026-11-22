@@ -71,10 +71,10 @@ def test_weeklog_uses_the_week_end_for_a_past_week():
 def test_week_report_html_and_markdown(open_tickets):
     weeklog = WeekLog.get_or_create_current_week()
     html = generate_html(weeklog)
-    assert "Åbne sager fordelt på tekniker" in html
-    assert "5 åbne sager ved ugens udgang, heraf 1 ikke tildelt en tekniker" in html
+    assert "Åbne tickets fordelt på tekniker" in html
+    assert "5 åbne tickets ved ugens udgang, heraf 1 ikke tildelt en tekniker" in html
     markdown = generate_markdown(weeklog)
-    assert "### Åbne sager fordelt på tekniker" in markdown
+    assert "### Åbne tickets fordelt på tekniker" in markdown
     assert "| Peter Malmborg | 2 | 40% |" in markdown
 
 

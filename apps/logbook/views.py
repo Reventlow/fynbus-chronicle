@@ -27,7 +27,7 @@ from django.views.generic import (
 )
 
 from apps.accounts.permissions import EditorRequiredMixin, editor_required
-from apps.cves.models import weeklog_cves
+from apps.cves.models import CVECase, iso_week_bounds, weeklog_cves
 
 from .exports.email import EMAIL_FORMATS, email_summary, send_weeklog_email
 from .exports.html import generate_html
@@ -54,6 +54,31 @@ from .models import (
 # =============================================================================
 
 logger = logging.getLogger(__name__)
+
+
+def _add_incident_cases(weeklogs) -> None:
+    """Count hændelser per week on the week list.
+
+    Hændelser are sager (CVECase, kind incident) since 1.12; the old logbook
+    ``Incident`` rows only exist for earlier weeks. Like those rows, the count
+    is the hændelser registered in the week: a week with old rows keeps their
+    count (so a copied-over incident is never counted twice), other weeks
+    count the hændelse-sager created in them. One query for the sager,
+    counted in Python (there are few). A week number that is not a real ISO
+    week is left alone instead of breaking the whole list.
+    """
+    weeklogs = list(weeklogs)
+    if not weeklogs:
+        return
+    created = list(CVECase.objects.filter(kind=CVECase.Kind.INCIDENT).values_list("created_at", flat=True))
+    for weeklog in weeklogs:
+        if getattr(weeklog, "incident_count", 0):
+            continue
+        try:
+            start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
+        except ValueError:
+            continue
+        weeklog.incident_count = sum(1 for at in created if start <= at < end)
 
 
 class WeekLogListView(LoginRequiredMixin, ListView):
@@ -89,6 +114,7 @@ class WeekLogListView(LoginRequiredMixin, ListView):
             WeekLog.objects.values_list("year", flat=True).distinct().order_by("-year")
         )
         context["selected_year"] = self.request.GET.get("year")
+        _add_incident_cases(context.get("weeklogs") or [])
         return context
 
     def get_template_names(self) -> list[str]:

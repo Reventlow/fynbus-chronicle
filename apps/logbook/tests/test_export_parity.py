@@ -41,9 +41,9 @@ pytestmark = pytest.mark.django_db
 FACTS = {
     "periode": "Uge 45",
     "rådighedsvagt": "Vagt Person",
-    "nye sager": "Nye sager",
-    "lukkede sager": "Lukkede sager",
-    "åbne sager": "Åbne sager",
+    "nye tickets": "Nye tickets",
+    "lukkede tickets": "Lukkede tickets",
+    "åbne tickets": "Åbne tickets",
     "netto": "Netto ændring",
     "ugeoversigt": "UGEOVERSIGT-TEKST",
     "deltagere": "DELTAGER-A",

@@ -5,15 +5,20 @@
 {% block title %}Sag #{{ case.pk }} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
+  <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>
   <span class="sep">/</span>
   <a href="{% url 'cves:case-list' %}">Sager</a>
   <span class="sep">/</span>
-  <span class="current">#{{ case.pk }}</span>
+  <span class="current">Sag #{{ case.pk }}</span>
 {% endblock %}
 
 {% block content %}
 <div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+  {% cve_section_nav %}
+  {% if next_url %}
+    {# Came from the task list: one click back to the same filter. #}
+    <a href="{{ next_url }}" style="font-size: 13px; align-self: flex-start;">← Tilbage til delopgaverne</a>
+  {% endif %}
 
   {# Header: title, outcome, state buttons (they move every CVE in the case) #}
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
@@ -87,11 +92,13 @@
     </div>
   </div>
 
-  {# Member CVEs (an incident shows the card only if it holds any) #}
-  {% if case.is_vulnerability or cves %}
+  {# Delopgaver: on every vulnerability sag and hændelse, with or without CVEs (planlagt arbejde has none) #}
   {% if case.tasks_gate %}{% include "cves/partials/case_tasks.html" %}{% endif %}
 
-  <div class="card overflow-hidden" style="padding: 0;">
+  {% comment %}Member CVEs. A vulnerability sag always shows the card; a hændelse or
+     planlagt arbejde only when it holds CVEs, and editors can still add one.{% endcomment %}
+  {% if case.is_vulnerability or cves %}
+  <div class="card overflow-hidden" style="padding: 0;" id="cves">
     <div style="padding: 20px 24px 14px;">
       <div class="label-eyebrow">Omfatter</div>
       <h2 style="margin: 4px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">CVE'er i sagen</h2>
@@ -128,6 +135,15 @@
       </form>
     {% endif %}
   </div>
+  {% elif is_editor %}
+  <details class="card" id="cves" style="padding: 12px 16px;">
+    <summary style="cursor: pointer; font-size: 13.5px; color: var(--ink-3);">Tilføj CVE til sagen</summary>
+    <form method="post" action="{% url 'cves:case-add-cves' case.pk %}" class="flex flex-wrap items-start gap-2" style="margin: 10px 0 0;">
+      {% csrf_token %}
+      <div style="flex: 1 1 320px; min-width: 0;">{{ add_form.cve_ids }}</div>
+      <button type="submit" class="btn btn-sm">Tilføj</button>
+    </form>
+  </details>
   {% endif %}
 
   {# Shared documents #}

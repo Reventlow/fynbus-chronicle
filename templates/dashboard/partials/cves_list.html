@@ -11,8 +11,8 @@
 <div class="card overflow-hidden" style="padding: 0; display: flex; flex-direction: column;">
   <div class="card-head" style="padding: 18px 24px 10px; margin: 0;">
     <div>
-      <div class="label-eyebrow">Sårbarheder, hændelser og opgaver · {{ window_days }} dage · {{ open_count }} åben{{ open_count|pluralize:"e" }} CVE{{ open_count|pluralize:"'er" }}, {{ solved_count }} færdigbehandlet</div>
-      <h3>{% if open_case_count %}{{ open_case_count }} åben{{ open_case_count|pluralize:"e" }} sag{{ open_case_count|pluralize:"er" }}{% else %}Ingen åbne sager{% endif %}</h3>
+      <div class="label-eyebrow">Sårbarheder, hændelser og planlagt arbejde · {{ window_days }} dage · {{ open_count }} {% if open_count == 1 %}åben{% else %}åbne{% endif %} CVE{{ open_count|pluralize:"'er" }}, {{ solved_count }} færdigbehandlet</div>
+      <h3>{% if open_case_count %}{{ open_case_count }} {% if open_case_count == 1 %}åben{% else %}åbne{% endif %} sag{{ open_case_count|pluralize:"er" }}{% else %}Ingen åbne sager{% endif %}</h3>
     </div>
     <div style="display: flex; gap: 14px; font-size: 12.5px;">
       <a href="{% url 'cves:case-list' %}" class="incident-toggle">Sager →</a>

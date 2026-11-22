@@ -22,7 +22,7 @@ from django.db.models.functions import Length
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -52,43 +52,41 @@ def _owned_by(owner) -> dict:
     return {"case": owner} if owner.is_case else {"cve": owner}
 
 
-def _tab_count(open_count: int, total: int) -> str:
-    """Tab badge text. A bare number read as "only 2 registered", so it
-    says what it counts and how many there are in all."""
-    return f"{open_count} ikke færdigbehandlet · {total} i alt"
+def _next_url(request: HttpRequest) -> str:
+    """A safe same-site ``next`` (GET or POST), or "".
 
-
-def _section_tabs(current: str) -> dict:
-    """The "CVE'er | Sager" tabs on top of both Sårbarheder lists, with
-    not-yet-færdigbehandlet and total counts."""
-    return {
-        "tabs": [
-            {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"),
-             "count": _tab_count(CVE.objects.open().count(), CVE.objects.count())},
-            {"key": "cases", "label": "Sager", "url": reverse("cves:case-list"),
-             "count": _tab_count(CVECase.objects.open().count(), CVECase.objects.count())},
-        ],
-        "current_tab": current,
-    }
+    The task list passes it to a sag page, so saving a delopgave returns the
+    user to the filtered list they came from.
+    """
+    candidate = request.POST.get("next") or request.GET.get("next") or ""
+    if candidate and url_has_allowed_host_and_scheme(candidate, allowed_hosts={request.get_host()},
+                                                     require_https=request.is_secure()):
+        return candidate
+    return ""
 
 
 @login_required
 def cve_list(request: HttpRequest) -> HttpResponse:
     """All CVEs, open ones first.
 
-    ``?q=`` searches id and subject. ``?state=`` narrows to one state, or
-    ``all`` to include solved CVEs older than SOLVED_WINDOW_DAYS days.
+    ``?q=`` searches id, subject and the sag, in every state (like the
+    Sager list). ``?state=`` narrows to one state, or ``all`` to include
+    solved CVEs older than SOLVED_WINDOW_DAYS days. ``?sag=ingen`` shows only
+    the open CVEs that are not in a sag yet (linked from the Sager list).
     """
     qs = CVE.objects.select_related("created_by", "case")
     q = (request.GET.get("q") or "").strip()
     state = request.GET.get("state") or ""
+    without_case = request.GET.get("sag") == "ingen"
 
+    if without_case:
+        qs = qs.open().filter(case__isnull=True)
     if q:
         qs = qs.filter(Q(cve_id__icontains=q) | Q(subject__icontains=q) | Q(case__title__icontains=q)
                        | Q(case__reference__icontains=q))
     if state in CVE.State.values:
         qs = qs.filter(state=state)
-    elif state != "all":
+    elif state != "all" and not q:
         cutoff = timezone.now() - timedelta(days=SOLVED_WINDOW_DAYS)
         qs = qs.filter(~Q(state=CVE.State.SOLVED) | Q(solved_at__gte=cutoff) | Q(updated_at__gte=cutoff))
 
@@ -103,7 +101,7 @@ def cve_list(request: HttpRequest) -> HttpResponse:
             "solved_window_days": SOLVED_WINDOW_DAYS,
             "open_count": CVE.objects.open().count(),
             "patching_count": CVE.objects.filter(state=CVE.State.PATCHING).count(),
-            **_section_tabs("cves"),
+            "without_case": without_case,
         },
     )
 
@@ -129,13 +127,17 @@ class CVEDetailView(LoginRequiredMixin, DetailView):
         context["comments"] = self.object.comments.select_related("author")
         context["link_form"] = CVELinkForm()
         context["comment_form"] = CVECommentForm()
-        context["states"] = CVE.State.choices
         return context
 
 
 class CVECreateView(EditorRequiredMixin, CreateView):
     """Register a CVE. Prefilled from the query string, so other tools can
-    link here; an id that already exists sends the user to that CVE."""
+    link here; an id that already exists sends the user to that CVE.
+
+    Every CVE belongs to a sag: the form's ``sag`` field puts it in a new
+    vulnerability sag (titled after the CVE) or an existing one, and the user
+    lands on that sag, where the assessment and the delopgaver are written.
+    ``?sag=<pk>`` preselects an existing sag."""
 
     model = CVE
     form_class = CVECreateForm
@@ -174,21 +176,33 @@ class CVECreateView(EditorRequiredMixin, CreateView):
                 initial[field] = value
         if "cve_id" in initial:
             initial["cve_id"] = initial["cve_id"].upper()
+        if (self.request.GET.get("sag") or "").isdigit():
+            initial["sag"] = self.request.GET["sag"]
         return initial
 
     def form_valid(self, form):
-        form.instance.created_by = self.request.user
+        from django.db import transaction
+
+        user = self.request.user
+        form.instance.created_by = user
         if form.instance.source_url and not form.instance.source:
             form.instance.source = "harbinger"
-        response = super().form_valid(form)
-        comment = (form.cleaned_data.get("comment") or "").strip()
-        if comment:
-            CVEComment.objects.create(cve=self.object, text=comment, author=self.request.user)
-        messages.success(self.request, f"{self.object.cve_id} er oprettet.")
-        return response
-
-    def get_success_url(self) -> str:
-        return self.object.get_absolute_url()
+        with transaction.atomic():
+            self.object = form.save()
+            comment = (form.cleaned_data.get("comment") or "").strip()
+            if comment:
+                CVEComment.objects.create(cve=self.object, text=comment, author=user)
+            case = form.cleaned_data["sag"]
+            if case is None:
+                # Carries the CVE's source (e.g. a Harbinger link), so the sag shows where it came from.
+                case = CVECase.objects.create(kind=CVECase.Kind.VULNERABILITY, created_by=user,
+                                              title=(self.object.subject or self.object.cve_id)[:200],
+                                              source=self.object.source[:40], source_url=self.object.source_url)
+                CVEComment.objects.create(case=case, kind=CVEComment.Kind.STATE, author=user,
+                                          text=f"Oprettet sammen med {self.object.cve_id}.")
+            case.add_cves([self.object], user)
+        messages.success(self.request, f"{self.object.cve_id} er oprettet i sag #{case.pk}.")
+        return redirect(case.get_absolute_url())
 
 
 class CVEUpdateView(EditorRequiredMixin, UpdateView):
@@ -208,17 +222,18 @@ class CVEUpdateView(EditorRequiredMixin, UpdateView):
 @editor_required
 @require_POST
 def set_state(request: HttpRequest, pk: int) -> HttpResponse:
-    """Move a CVE to the state in ``POST['state']``."""
+    """A CVE has no state of its own any more: it follows its sag (1.25.0).
+
+    Kept so an old form or bookmark gets an explanation instead of a 404.
+    """
     cve = get_object_or_404(CVE, pk=pk)
-    new_state = request.POST.get("state", "")
-    if new_state not in CVE.State.values:
+    if request.POST.get("state", "") not in CVE.State.values:
         return HttpResponse("Ugyldig status", status=400)
     if cve.case_id:
         messages.error(request, f"{cve.cve_id} er en del af sag #{cve.case_id} — skift status på sagen.")
         return redirect(cve.case.get_absolute_url())
-    if cve.set_state(new_state, request.user):
-        messages.success(request, f"{cve.cve_id}: {cve.get_state_display()}.")
-    return redirect(cve.get_absolute_url())
+    messages.error(request, f"{cve.cve_id} er ikke i en sag endnu. Læg den i en sag; status skiftes på sagen.")
+    return redirect(cve.get_absolute_url() + "#sag")
 
 
 # -------------------------------------------------------------------------
@@ -523,7 +538,7 @@ def case_list(request: HttpRequest) -> HttpResponse:
         "q": q,
         "solved_window_days": SOLVED_WINDOW_DAYS,
         "open_count": CVECase.objects.open().count(),
-        **_section_tabs("cases"),
+        "cves_without_case": CVE.objects.open().filter(case__isnull=True).count(),
     })
 
 
@@ -553,6 +568,7 @@ class CVECaseDetailView(LoginRequiredMixin, DetailView):
             "task_counts": case.task_counts(),
             "task_statuses": CVETask.Status.choices,
             "assignable_users": get_user_model().objects.filter(is_active=True).order_by("username"),
+            "next_url": _next_url(self.request),
         })
         return context
 
@@ -589,11 +605,23 @@ class CVECaseCreateView(EditorRequiredMixin, CreateView):
     """Start a case, optionally with CVE ids (``?cve_ids=`` prefills them,
     which the "Ny sag" button on a CVE page uses; ``?kind=incident`` or
     ``?kind=task`` start an incident or a planned task, from the "Ny
-    hændelse" and "Ny planlagt opgave" buttons)."""
+    hændelse" and "Nyt planlagt arbejde" buttons)."""
 
     model = CVECase
     form_class = CVECaseForm
     template_name = "cves/case_form.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        kind = self.request.GET.get("kind")
+        context["new_heading"] = {CVECase.Kind.INCIDENT: "Ny hændelse",
+                                  CVECase.Kind.TASK: "Nyt planlagt arbejde"}.get(kind, "Ny sårbarhedssag")
+        ids = [i for i in (self.request.GET.get("cve_ids") or "").split(",") if i.strip()]
+        if len(ids) == 1:
+            cve = CVE.objects.filter(cve_id=ids[0].strip().upper()).first()
+            if cve:
+                context["cancel_url"] = cve.get_absolute_url()
+        return context
 
     def get_initial(self) -> dict:
         initial = super().get_initial()
@@ -685,16 +713,16 @@ def case_add_cves(request: HttpRequest, pk: int) -> HttpResponse:
     form = CVECaseAddForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors["cve_ids"][0])
-        return redirect(case.get_absolute_url())
+        return redirect(case.get_absolute_url() + "#cves")
     taken = [c for c in form.cleaned_data["cves"] if c.case_id and c.case_id != case.pk]
     if taken:
         messages.error(request, "Allerede i en anden sag: " + ", ".join(f"{c.cve_id} (sag #{c.case_id})" for c in taken))
-        return redirect(case.get_absolute_url())
+        return redirect(case.get_absolute_url() + "#cves")
     cves, _ = _resolve_cve_ids(form.cleaned_data["cve_ids"], subject=case.title, user=request.user)
     added = case.add_cves(cves, request.user)
     if added:
         messages.success(request, "Tilføjet: " + ", ".join(c.cve_id for c in added))
-    return redirect(case.get_absolute_url())
+    return redirect(case.get_absolute_url() + "#cves")
 
 
 @login_required
@@ -704,8 +732,8 @@ def case_remove_cve(request: HttpRequest, pk: int, cve_pk: int) -> HttpResponse:
     case = get_object_or_404(CVECase, pk=pk)
     cve = get_object_or_404(CVE, pk=cve_pk, case=case)
     case.remove_cve(cve, request.user)
-    messages.success(request, f"{cve.cve_id} er taget ud af sagen.")
-    return redirect(case.get_absolute_url())
+    messages.success(request, f"{cve.cve_id} er taget ud af sagen. Den skal i en anden sag.")
+    return redirect(case.get_absolute_url() + "#cves")
 
 
 @login_required
@@ -724,16 +752,31 @@ def cve_join_case(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect(case.get_absolute_url())
 
 
-# -- case tasks (1.23.0) -----------------------------------------------------
+# -- delopgaver: a sag's tasks (1.23.0) ---------------------------------------
+
+
+def _after_task(request: HttpRequest, case: CVECase, *, ok: bool = True) -> HttpResponse:
+    """Back to the list the user came from (``next``), else the sag's delopgaver.
+
+    On an error (``ok=False``) the user stays on the sag to correct it, and
+    ``next`` rides along so the way back to the list is kept.
+    """
+    from urllib.parse import quote
+
+    next_url = _next_url(request)
+    if ok and next_url:
+        return redirect(next_url)
+    query = f"?next={quote(next_url, safe='')}" if next_url else ""
+    return redirect(case.get_absolute_url() + query + "#opgaver")
 
 @login_required
 @editor_required
 @require_POST
 def task_create(request: HttpRequest, pk: int) -> HttpResponse:
-    """Add a task to a case (``POST title, status, note, assignee, due_date``)."""
+    """Add a delopgave to a case (``POST title, status, note, assignee, due_date``)."""
     case = get_object_or_404(CVECase, pk=pk)
     if not case.tasks_gate:
-        messages.error(request, "En planlagt opgave har ingen delopgaver.")
+        messages.error(request, "Planlagt arbejde har ingen delopgaver.")
         return redirect(case.get_absolute_url())
     assignee = None
     if request.POST.get("assignee"):
@@ -747,30 +790,31 @@ def task_create(request: HttpRequest, pk: int) -> HttpResponse:
         )
     except ValueError as exc:
         messages.error(request, str(exc))
-    else:
-        messages.success(request, f"Opgave tilføjet: {task.title}")
-    return redirect(case.get_absolute_url() + "#opgaver")
+        return _after_task(request, case, ok=False)
+    messages.success(request, f"Delopgave tilføjet: {task.title}")
+    return _after_task(request, case)
 
 
 @login_required
 @editor_required
 @require_POST
 def task_status(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
-    """Change a task's status and note (``POST status, note``). Ignoring needs a note."""
+    """Change a delopgave's status and note (``POST status, note``). Ignoring needs a note.
+    With a valid ``next`` (the task list's filter) the user goes back there."""
     case = get_object_or_404(CVECase, pk=pk)
     task = get_object_or_404(CVETask, pk=task_pk, case=case)
     try:
         changed = task.set_status(request.POST.get("status", ""), request.user, note=request.POST.get("note", ""))
     except ValueError as exc:
         messages.error(request, str(exc))
-    else:
-        if changed:
-            messages.success(request, f"{task.title}: {task.get_status_display()}.")
-    return redirect(case.get_absolute_url() + "#opgaver")
+        return _after_task(request, case, ok=False)
+    if changed:
+        messages.success(request, f"{task.title}: {task.get_status_display()}.")
+    return _after_task(request, case)
 
 
 TASK_LIST_FILTERS = {
-    "active": "Aktive (åbne og ventende)",
+    "active": "Aktive",
     "all": "Alle",
     **{value: label for value, label in CVETask.Status.choices},
 }
@@ -778,9 +822,10 @@ TASK_LIST_FILTERS = {
 
 @login_required
 def task_list(request: HttpRequest) -> HttpResponse:
-    """All case tasks in one place. ``?status=`` picks a status; the default
-    "active" is everything still open or waiting. Tasks of planned tasks are
-    not listed (they have no sub-tasks)."""
+    """Every sag's delopgaver in one place. ``?status=`` picks a status; the
+    default "active" is everything still open or waiting. Planlagt arbejde has
+    no delopgaver, so none are listed for it. One row of tiles is the filter:
+    Aktive, Alle, then each status with its count."""
     status = request.GET.get("status") or "active"
     if status not in TASK_LIST_FILTERS:
         status = "active"
@@ -793,11 +838,16 @@ def task_list(request: HttpRequest) -> HttpResponse:
     totals = {value: 0 for value in CVETask.Status.values}
     for row in base.values("status").annotate(n=Count("id")):
         totals[row["status"]] = row["n"]
-    tiles = [{"key": value, "label": label, "count": totals[value]} for value, label in CVETask.Status.choices]
+    active = sum(totals[s] for s in CVETask.OPEN_STATUSES)
+    tiles = [{"key": "active", "label": "Aktive", "count": active},
+             {"key": "all", "label": "Alle", "count": sum(totals.values())},
+             *({"key": value, "label": label, "count": totals[value]} for value, label in CVETask.Status.choices)]
+    overdue = base.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=timezone.localdate()).count()
     return render(request, "cves/task_list.html", {
         "tasks": qs.order_by(F("due_date").asc(nulls_last=True), "created_at", "id"),
         "status": status,
-        "filters": TASK_LIST_FILTERS,
         "tiles": tiles,
-        "active_count": sum(totals[s] for s in CVETask.OPEN_STATUSES),
+        "active_count": active,
+        "overdue_count": overdue,
+        "here": request.get_full_path(),
     })

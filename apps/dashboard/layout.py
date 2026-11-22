@@ -37,20 +37,20 @@ class Section:
 
 
 SECTIONS: tuple[Section, ...] = (
-    Section("kpi", "Nøgletal", "Nye, lukkede og åbne helpdesk-sager",
+    Section("kpi", "Nøgletal", "Nye, lukkede og åbne helpdesk-tickets",
             "dashboard/sections/kpi.html", numbered=False),
     Section("now", "Nu", "Sager og ugens log",
             "dashboard/sections/now.html",
-            parts=(Part("cases", "Sårbarheder, hændelser og planlagte opgaver"),
+            parts=(Part("cases", "Sårbarheder, hændelser og planlagt arbejde"),
                    Part("week", "Ugens log og rådighedsvagt"))),
-    Section("open", "Åbne sager", "Fordeling og lister over åbne sager",
+    Section("open", "Åbne tickets", "Fordeling og lister over åbne tickets",
             "dashboard/sections/open.html",
             parts=(Part("breakdown", "Fordelt på tekniker, kategori og liggetid"),
-                   Part("lists", "Nyeste og ældste åbne sager"))),
+                   Part("lists", "Nyeste og ældste åbne tickets"))),
     Section("trend", "Udvikling", "Helpdesk-flow over tid",
             "dashboard/sections/trend.html",
             parts=(Part("flow", "Flow pr. uge"),
-                   Part("open_chart", "Åbne sager pr. uge"))),
+                   Part("open_chart", "Åbne tickets pr. uge"))),
     Section("changelog", "Seneste ændring", "Den nyeste post fra ændringsloggen",
             "dashboard/sections/changelog.html", numbered=False),
 )

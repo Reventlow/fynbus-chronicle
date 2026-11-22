@@ -57,7 +57,7 @@ CLOSED_DAYS = (7, 30, 90)
 DEFAULT_CLOSED_DAYS = 30
 
 GROUPS = (
-    ("mine", "Mine sager", "Tildelt dig i ServiceDesk."),
+    ("mine", "Mine tickets", "Tildelt dig i ServiceDesk."),
     ("unassigned", "Ikke tildelt", "Ingen tekniker endnu."),
     ("others", "Alle andres", "Tildelt en anden tekniker."),
 )
@@ -214,7 +214,7 @@ def _link_targets() -> dict:
 
 
 def _title(ticket: HelpdeskTicket) -> str:
-    return (ticket.subject or f"ServiceDesk-sag #{ticket.sdp_id}")[:200]
+    return (ticket.subject or f"ServiceDesk-ticket #{ticket.sdp_id}")[:200]
 
 
 def _priority_from(ticket: HelpdeskTicket, user) -> PriorityItem:
@@ -223,7 +223,7 @@ def _priority_from(ticket: HelpdeskTicket, user) -> PriorityItem:
     item = PriorityItem.objects.create(
         origin_weeklog=weeklog, title=_title(ticket), priority=PriorityItem.Priority.MEDIUM,
         status=PriorityItem.Status.ONGOING if ticket.status == "I gang" else PriorityItem.Status.NOT_STARTED,
-        notes=f"Fra ServiceDesk-sag #{ticket.sdp_id}.",
+        notes=f"Fra ServiceDesk-ticket #{ticket.sdp_id}.",
     )
     last = weeklog.priority_appearances.aggregate(m=models.Max("order"))["m"] or 0
     PriorityItemAppearance.objects.create(priority_item=item, weeklog=weeklog, order=last + 1)
@@ -234,7 +234,7 @@ def _case_from(ticket: HelpdeskTicket, user) -> CVECase:
     """A planned-task case named after the ticket."""
     return CVECase.objects.create(
         kind=CVECase.Kind.TASK, title=_title(ticket), created_by=user,
-        assessment=f"Fra ServiceDesk-sag #{ticket.sdp_id}.",
+        assessment=f"Fra ServiceDesk-ticket #{ticket.sdp_id}.",
         state=CVECase.State.PATCHING if ticket.status == "I gang" else CVECase.State.IDENTIFIED,
     )
 

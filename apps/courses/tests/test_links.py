@@ -123,7 +123,7 @@ def test_course_page_shows_work_to_signed_in_only(client, editor, folder, video,
     CourseLink.objects.create(folder=folder, priority_item=item)
     CourseLink.objects.create(material=video, case=case)
     html = client.get(folder.get_absolute_url()).content.decode()
-    assert "Prioriteret opgave: Deltog i Claude Code kursus" in html and f"Planlagt opgave #{case.pk}" in html
+    assert "Prioriteret opgave: Deltog i Claude Code kursus" in html and f"Planlagt arbejde #{case.pk}" in html
     assert "Knyt til opgave" in html
     client.logout()
     html = client.get(folder.get_absolute_url()).content.decode()

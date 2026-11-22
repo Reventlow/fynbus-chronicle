@@ -1,16 +1,26 @@
 {% extends 'base.html' %}
-{% load markdown_extras %}
+{% load markdown_extras %}{% load cve_extras %}
 
 {% block title %}{{ cve.cve_id }} — FynBus Chronicle{% endblock %}
 
 {% block crumbs %}
-  <a href="{% url 'cves:list' %}">Sårbarheder og hændelser</a>
+  <a href="{% url 'cves:case-list' %}">Sårbarheder og hændelser</a>
+  <span class="sep">/</span>
+  {% if cve.case %}
+    {# The sag is the parent: that is where the state, assessment and delopgaver live #}
+    <a href="{% url 'cves:case-list' %}">Sager</a>
+    <span class="sep">/</span>
+    <a href="{{ cve.case.get_absolute_url }}">Sag #{{ cve.case.pk }}</a>
+  {% else %}
+    <a href="{% url 'cves:list' %}">CVE'er</a>
+  {% endif %}
   <span class="sep">/</span>
   <span class="current">{{ cve.cve_id }}</span>
 {% endblock %}
 
 {% block content %}
 <div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 880px;">
+  {% cve_section_nav %}
 
   {# Header: id, subject, CVSS, state, outbound links, state buttons #}
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
@@ -59,26 +69,12 @@
         </div>
         <span style="color: var(--accent-ink); font-size: 13px;">Åbn sag →</span>
       </a>
-    {% elif is_editor %}
-      <div class="flex items-center flex-wrap gap-2" style="margin-top: 14px;">
-        <span class="label-eyebrow">Skift status</span>
-        {% for value, label in states %}
-          <form method="post" action="{% url 'cves:state' cve.pk %}" style="margin: 0;">
-            {% csrf_token %}
-            <input type="hidden" name="state" value="{{ value }}">
-            <button type="submit" class="btn btn-sm{% if value == cve.state %} btn-primary{% endif %}"
-                    {% if value == cve.state %}disabled aria-current="true"{% endif %}>{{ label }}</button>
-          </form>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    {% if not cve.case %}
-      {# Not in a case: every CVE should belong to one, so say so and offer both ways in #}
+    {% else %}
+      {# Not in a case (an old or API-created CVE): every CVE belongs to one, and the sag owns the state #}
       <div id="sag" class="card" style="margin-top: 14px; padding: 14px 16px; border-left: 3px solid var(--warn-ink);">
         <div class="label-eyebrow" style="color: var(--warn-ink);">Ikke i en sag</div>
         <p style="font-size: 13px; color: var(--ink-3); margin: 4px 0 0;">
-          Alle CVE'er skal høre til en sag, hvor vurdering, løsning og dokumenter samles.
+          Alle CVE'er hører til en sag, hvor vurdering, løsning, delopgaver og dokumenter samles, og hvor status skiftes.
           {% if is_editor %}Læg den i en eksisterende sag, eller start en ny. Den får sagens status.{% endif %}
         </p>
         {% if is_editor %}

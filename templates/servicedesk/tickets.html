@@ -13,10 +13,10 @@
         <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
         <span>ServiceDesk Plus</span>
       </div>
-      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">Helpdesk-sager</h1>
+      <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">Helpdesk-tickets</h1>
       <p style="margin: 12px 0 0; font-size: 13px; color: var(--ink-3);">
-        {% if sync.last_sync %}<span{% if sync.stale %} style="color: var(--bad);"{% endif %}>Sidst synkroniseret {{ sync.label }}{% if sync.stale %}; synkroniseringen ser ud til at være gået i stå{% endif %}.</span>{% else %}Ingen sager synkroniseret endnu.{% endif %}
-        {% if can_link %}Knyt en sag til en prioriteret opgave eller sag; ServiceDesk får en intern note med et link hertil.{% endif %}
+        {% if sync.last_sync %}<span{% if sync.stale %} style="color: var(--bad);"{% endif %}>Sidst synkroniseret {{ sync.label }}{% if sync.stale %}; synkroniseringen ser ud til at være gået i stå{% endif %}.</span>{% else %}Ingen tickets synkroniseret endnu.{% endif %}
+        {% if can_link %}Knyt en ticket til en prioriteret opgave eller sag; ServiceDesk får en intern note med et link hertil.{% endif %}
       </p>
     </div>
     <div class="flex flex-wrap items-center justify-end gap-2">
@@ -64,7 +64,7 @@
   </div>
 
   {% if not me_matched %}
-    <p class="planner-note">Din bruger har hverken e-mail eller navn, så »Mine sager« kan ikke findes.</p>
+    <p class="planner-note">Din bruger har hverken e-mail eller navn, så »Mine tickets« kan ikke findes.</p>
   {% endif %}
 
   {% for group in groups %}
@@ -78,7 +78,7 @@
       {% for ticket in group.tickets %}
         {% include 'servicedesk/partials/ticket.html' %}
       {% empty %}
-        <p class="sd-empty">{% if tab == 'open' %}Ingen uløste sager.{% else %}Ingen sager lukket de sidste {{ days }} dage.{% endif %}</p>
+        <p class="sd-empty">{% if tab == 'open' %}Ingen uløste tickets.{% else %}Ingen tickets lukket de sidste {{ days }} dage.{% endif %}</p>
       {% endfor %}
     </section>
   {% endfor %}

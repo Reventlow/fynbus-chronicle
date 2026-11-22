@@ -472,7 +472,7 @@ class HelpdeskFlowChartPartialView(LoginRequiredMixin, TemplateView):
 
 
 class OpenBreakdownPartialView(LoginRequiredMixin, TemplateView):
-    """HTMX partial: the "Åbne sager" bento — open tickets by technician,
+    """HTMX partial: the "Åbne tickets" bento — open tickets by technician,
     by category (SVG donut) and by age.
 
     Technicians and categories come from the live ServiceDesk mirror

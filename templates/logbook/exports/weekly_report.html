@@ -33,17 +33,17 @@
       <tr>
         <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_new }}</div>
-          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Nye sager</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Nye tickets</div>
         </td>
         <td width="2%" style="border:none;"></td>
         <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_closed }}</div>
-          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Lukkede sager</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Lukkede tickets</div>
         </td>
         <td width="2%" style="border:none;"></td>
         <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
           <div class="stat-value" style="font-size:18pt; font-weight:700; color:#4A4540;">{{ weeklog.helpdesk_open }}</div>
-          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Åbne sager</div>
+          <div class="stat-label" style="font-size:9pt; color:#6B635B;">Åbne tickets</div>
         </td>
         <td width="2%" style="border:none;"></td>
         <td class="stat-item" width="24%" style="text-align:center; padding:10px 8px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
@@ -77,7 +77,7 @@
   {% endcomment %}
   {% if weeklog.has_helpdesk_age_breakdown %}
   <div class="section">
-    <h2>Åbne sager fordelt på liggetid</h2>
+    <h2>Åbne tickets fordelt på liggetid</h2>
   <table class="age-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed; background-color:#FAF9F7; border:1px solid #E5E0D8;" bgcolor="#FAF9F7">
     {% for bucket in weeklog.helpdesk_age_buckets %}
     <tr>
@@ -99,7 +99,7 @@
     {% endfor %}
   </table>
   <p style="margin:2px 0 0 0; font-size:9pt; color:#6B635B;">
-    {{ weeklog.helpdesk_open_stale }} af {{ weeklog.helpdesk_open_bucketed }} åbne sager har ligget i mere end 1 måned.
+    {{ weeklog.helpdesk_open_stale }} af {{ weeklog.helpdesk_open_bucketed }} åbne tickets har ligget i mere end 1 måned.
   </p>
   </div>
   {% endif %}
@@ -110,10 +110,10 @@
   {% endcomment %}
   {% if open_categories.total %}
   <div class="section">
-    <h2>Åbne sager fordelt på kategori</h2>
-  {% include "logbook/exports/_open_donut.html" with slices=open_categories.categories image=category_chart_image alt="Åbne sager fordelt på kategori" fs="9.5pt" %}
+    <h2>Åbne tickets fordelt på kategori</h2>
+  {% include "logbook/exports/_open_donut.html" with slices=open_categories.categories image=category_chart_image alt="Åbne tickets fordelt på kategori" fs="9.5pt" %}
   <p style="margin:2px 0 0 0; font-size:9pt; color:#6B635B;">
-    {{ open_categories.total }} åbne sager ved ugens udgang{% if open_categories.uncategorised %}, heraf {{ open_categories.uncategorised }} uden kategori i ServiceDesk{% endif %}.
+    {{ open_categories.total }} åbne tickets ved ugens udgang{% if open_categories.uncategorised %}, heraf {{ open_categories.uncategorised }} uden kategori i ServiceDesk{% endif %}.
   </p>
   </div>
   {% endif %}
@@ -121,10 +121,10 @@
   {# Open tickets by technician at the end of the week; same layout as above. #}
   {% if open_technicians.total %}
   <div class="section">
-    <h2>Åbne sager fordelt på tekniker</h2>
-  {% include "logbook/exports/_open_donut.html" with slices=open_technicians.technicians image=technician_chart_image alt="Åbne sager fordelt på tekniker" fs="9.5pt" %}
+    <h2>Åbne tickets fordelt på tekniker</h2>
+  {% include "logbook/exports/_open_donut.html" with slices=open_technicians.technicians image=technician_chart_image alt="Åbne tickets fordelt på tekniker" fs="9.5pt" %}
   <p style="margin:2px 0 0 0; font-size:9pt; color:#6B635B;">
-    {{ open_technicians.total }} åbne sager ved ugens udgang{% if open_technicians.unassigned %}, heraf {{ open_technicians.unassigned }} ikke tildelt en tekniker{% endif %}.
+    {{ open_technicians.total }} åbne tickets ved ugens udgang{% if open_technicians.unassigned %}, heraf {{ open_technicians.unassigned }} ikke tildelt en tekniker{% endif %}.
   </p>
   </div>
   {% endif %}
@@ -142,12 +142,12 @@
       <tr>
         {% if chart_image %}
         <td class="chart-col" width="50%" style="vertical-align:top; padding:0 6px 0 0;">
-          <img src="{{ chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Åbne sager over tid">
+          <img src="{{ chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Åbne tickets over tid">
         </td>
         {% endif %}
         {% if flow_chart_image %}
         <td class="chart-col" width="50%" style="vertical-align:top; padding:0 0 0 6px;">
-          <img src="{{ flow_chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Nye vs. lukkede sager">
+          <img src="{{ flow_chart_image }}" width="380" height="152" style="width:100%; height:auto; display:block;" alt="Nye vs. lukkede tickets">
         </td>
         {% endif %}
       </tr>

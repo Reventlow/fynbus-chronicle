@@ -33,7 +33,7 @@
     <table class="stats-grid" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
       <tr>
         <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
-          <div class="stat-value">{{ h.total_created }}</div><div class="stat-label">Sager oprettet</div>
+          <div class="stat-value">{{ h.total_created }}</div><div class="stat-label">Tickets oprettet</div>
         </td>
         <td width="1%" style="border:none;"></td>
         <td class="stat-item" width="19%" style="width:19%; text-align:center; padding:10px 6px; background-color:#FAF9F7; border:1px solid #E5E0D8;">
@@ -53,28 +53,28 @@
         </td>
       </tr>
     </table>
-    <p class="muted">{{ h.total_solved }} sager løst og {{ h.cancelled }} annulleret i perioden · {{ h.per_requester|floatformat:1 }} sager pr. kollega.</p>
+    <p class="muted">{{ h.total_solved }} tickets løst og {{ h.cancelled }} annulleret i perioden · {{ h.per_requester|floatformat:1 }} tickets pr. kollega.</p>
   </div>
 
   <div class="section no-break">
-    <h3>Nye sager pr. ugedag (gennemsnit)</h3>
-    {% if h.busiest_day %}<p class="muted">Travleste dag er {{ h.busiest_day|lower }}. Tallet er sager på en gennemsnitlig dag af den slags.</p>{% endif %}
-    <img class="chart" src="{{ charts.weekdays }}" alt="Nye sager pr. ugedag">
+    <h3>Nye tickets pr. ugedag (gennemsnit)</h3>
+    {% if h.busiest_day %}<p class="muted">Travleste dag er {{ h.busiest_day|lower }}. Tallet er tickets på en gennemsnitlig dag af den slags.</p>{% endif %}
+    <img class="chart" src="{{ charts.weekdays }}" alt="Nye tickets pr. ugedag">
   </div>
 
   <div class="section no-break">
     <h3>Hvornår på dagen skriver kollegerne?</h3>
-    {% if h.busiest_hour is not None %}<p class="muted">Flest sager kommer mellem kl. {{ h.busiest_hour|stringformat:"02d" }}–{{ h.busiest_hour|add:1|stringformat:"02d" }}. Tallene er nye sager i perioden pr. ugedag og time.</p>{% endif %}
-    <img class="chart" src="{{ charts.heatmap }}" alt="Nye sager pr. ugedag og time">
+    {% if h.busiest_hour is not None %}<p class="muted">Flest tickets kommer mellem kl. {{ h.busiest_hour|stringformat:"02d" }}–{{ h.busiest_hour|add:1|stringformat:"02d" }}. Tallene er nye tickets i perioden pr. ugedag og time.</p>{% endif %}
+    <img class="chart" src="{{ charts.heatmap }}" alt="Nye tickets pr. ugedag og time">
   </div>
 
   <div class="section no-break">
     <h3>Løsningstid</h3>
-    <p class="muted">Tid fra oprettelse til lukning for {{ h.resolution.count }} løste sager oprettet i perioden. Kalendertid — nætter og weekender tæller med. Annullerede sager er ikke med.</p>
+    <p class="muted">Tid fra oprettelse til lukning for {{ h.resolution.count }} løste tickets oprettet i perioden. Kalendertid — nætter og weekender tæller med. Annullerede tickets er ikke med.</p>
     <table width="100%">
       <tr><th>Mål</th><th class="num">Værdi</th><th>Betydning</th></tr>
-      <tr><td>Median</td><td class="num">{{ h.resolution.median }}</td><td>Den typiske sag: halvdelen er løst hurtigere, halvdelen langsommere.</td></tr>
-      <tr><td>Gennemsnit</td><td class="num">{{ h.resolution.mean }}</td><td>Trækkes op af de få sager, der ligger åbne i uger eller måneder.</td></tr>
+      <tr><td>Median</td><td class="num">{{ h.resolution.median }}</td><td>Den typiske ticket: halvdelen er løst hurtigere, halvdelen langsommere.</td></tr>
+      <tr><td>Gennemsnit</td><td class="num">{{ h.resolution.mean }}</td><td>Trækkes op af de få tickets, der ligger åbne i uger eller måneder.</td></tr>
       <tr><td>9 ud af 10 løst inden</td><td class="num">{{ h.resolution.p90 }}</td><td>De sidste 10 % tager længere.</td></tr>
       <tr><td>Løst inden for et døgn</td><td class="num">{{ h.resolution.within_day }}%</td><td>Lukket under 24 timer efter oprettelse.</td></tr>
     </table>
@@ -82,68 +82,68 @@
   </div>
 
   <div class="section no-break">
-    <h3>Åbne sager ved ugens udgang</h3>
-    <p class="muted">Genberegnet ud fra hver sags oprettelse og lukning; slettede sager kan ikke tælles med.</p>
-    <img class="chart" src="{{ charts.open }}" alt="Åbne sager pr. uge">
+    <h3>Åbne tickets ved ugens udgang</h3>
+    <p class="muted">Genberegnet ud fra hver tickets oprettelse og lukning; slettede tickets kan ikke tælles med.</p>
+    <img class="chart" src="{{ charts.open }}" alt="Åbne tickets pr. uge">
   </div>
 
   <div class="section no-break">
     <h3>Oprettet vs. løst pr. uge</h3>
-    <p class="muted">Annullerede sager tæller ikke som løst.</p>
+    <p class="muted">Annullerede tickets tæller ikke som løst.</p>
     <img class="chart" src="{{ charts.flow }}" alt="Oprettet og løst pr. uge">
   </div>
 
   <div class="section no-break">
-    <h3>Sager fordelt på kategori</h3>
+    <h3>Tickets fordelt på kategori</h3>
     {% if h.categories %}
     <table width="100%">
-      <tr><th>Kategori</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      <tr><th>Kategori</th><th class="num">Tickets</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
       {% for x in h.categories %}
       <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
           <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
       {% endfor %}
     </table>
     {% endif %}
-    {% if h.uncategorised %}<p class="muted">{{ h.uncategorised }} af {{ h.total_created }} sager ({{ h.uncategorised_share }}%) har ingen kategori i ServiceDesk{% if h.categories %} — andelene ovenfor er af de kategoriserede{% endif %}.</p>{% endif %}
+    {% if h.uncategorised %}<p class="muted">{{ h.uncategorised }} af {{ h.total_created }} tickets ({{ h.uncategorised_share }}%) har ingen kategori i ServiceDesk{% if h.categories %} — andelene ovenfor er af de kategoriserede{% endif %}.</p>{% endif %}
   </div>
 
   <div class="section no-break">
-    <h3>Sager pr. afdeling</h3>
+    <h3>Tickets pr. afdeling</h3>
     <table width="100%">
-      <tr><th>Afdeling</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      <tr><th>Afdeling</th><th class="num">Tickets</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
       {% for x in h.departments %}
       <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
           <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
       {% empty %}
-      <tr><td colspan="4">Ingen sager i perioden.</td></tr>
+      <tr><td colspan="4">Ingen tickets i perioden.</td></tr>
       {% endfor %}
     </table>
-    <p class="muted">Den afdeling, som den person, der oprettede sagen, hører til i ServiceDesk.</p>
+    <p class="muted">Den afdeling, som den person, der oprettede ticketen, hører til i ServiceDesk.</p>
   </div>
 
   <div class="section no-break">
-    <h3>Løste sager pr. tekniker</h3>
+    <h3>Løste tickets pr. tekniker</h3>
     <table width="100%">
-      <tr><th>Tekniker</th><th class="num">Sager</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
+      <tr><th>Tekniker</th><th class="num">Tickets</th><th class="num">Andel</th><th class="bar-cell"></th></tr>
       {% for x in h.technicians %}
       <tr><td>{{ x.label }}</td><td class="num">{{ x.count }}</td><td class="num">{{ x.share|floatformat:0 }}%</td>
           <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ x.share|floatformat:'1u' }}%;"></div></div></td></tr>
       {% empty %}
-      <tr><td colspan="4">Ingen løste sager i perioden.</td></tr>
+      <tr><td colspan="4">Ingen løste tickets i perioden.</td></tr>
       {% endfor %}
     </table>
   </div>
 
   <div class="section no-break">
-    <h3>Åbne sager efter alder</h3>
+    <h3>Åbne tickets efter alder</h3>
     <table width="100%">
-      <tr><th>Liggetid</th><th class="num">Sager</th><th class="bar-cell"></th></tr>
+      <tr><th>Liggetid</th><th class="num">Tickets</th><th class="bar-cell"></th></tr>
       {% for b in h.open_by_age %}
       <tr><td>{{ b.label }}</td><td class="num">{{ b.count }}</td>
           <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width: {{ b.share|floatformat:'1u' }}%; background: {{ b.color }};"></div></div></td></tr>
       {% endfor %}
     </table>
-    <p class="muted">{{ h.open_now }} åbne sager i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
+    <p class="muted">{{ h.open_now }} åbne tickets i alt{% if not period.live %} ved periodens slutning{% endif %}, efter dage siden oprettelse.</p>
   </div>
 
   {% with p=c.priorities i=c.incidents %}

@@ -56,9 +56,9 @@ def generate_markdown(weeklog: WeekLog) -> str:
     delta = weeklog.helpdesk_delta
     delta_str = f"+{delta}" if delta > 0 else str(delta)
     lines.append(
-        f"**Nye sager:** {weeklog.helpdesk_new} | "
-        f"**Lukkede sager:** {weeklog.helpdesk_closed} | "
-        f"**Åbne sager:** {weeklog.helpdesk_open} | "
+        f"**Nye tickets:** {weeklog.helpdesk_new} | "
+        f"**Lukkede tickets:** {weeklog.helpdesk_closed} | "
+        f"**Åbne tickets:** {weeklog.helpdesk_open} | "
         f"**Netto ændring:** {delta_str}"
     )
     lines.append("")
@@ -72,7 +72,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
 
     # Liggetid — open tickets by age, as a plain table
     if weeklog.has_helpdesk_age_breakdown:
-        lines.append("### Åbne sager fordelt på liggetid")
+        lines.append("### Åbne tickets fordelt på liggetid")
         lines.append("")
         lines.append("| Liggetid | Antal | Andel |")
         lines.append("| --- | ---: | ---: |")
@@ -83,14 +83,14 @@ def generate_markdown(weeklog: WeekLog) -> str:
         lines.append("")
         lines.append(
             f"{weeklog.helpdesk_open_stale} af {weeklog.helpdesk_open_bucketed} "
-            "åbne sager har ligget i mere end 1 måned."
+            "åbne tickets har ligget i mere end 1 måned."
         )
         lines.append("")
 
     # Open tickets by category at the end of the week
     open_categories = weeklog.helpdesk_open_by_category()
     if open_categories["total"]:
-        lines.append("### Åbne sager fordelt på kategori")
+        lines.append("### Åbne tickets fordelt på kategori")
         lines.append("")
         lines.append("| Kategori | Antal | Andel |")
         lines.append("| --- | ---: | ---: |")
@@ -103,7 +103,7 @@ def generate_markdown(weeklog: WeekLog) -> str:
     # Open tickets by technician at the end of the week
     open_technicians = weeklog.helpdesk_open_by_technician()
     if open_technicians["total"]:
-        lines.append("### Åbne sager fordelt på tekniker")
+        lines.append("### Åbne tickets fordelt på tekniker")
         lines.append("")
         lines.append("| Tekniker | Antal | Andel |")
         lines.append("| --- | ---: | ---: |")

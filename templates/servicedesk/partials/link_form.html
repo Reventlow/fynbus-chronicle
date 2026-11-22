@@ -9,7 +9,7 @@
     <button type="button" class="btn btn-sm" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}" hx-vals='{"action": "priority"}'
             hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Ny prioriteret opgave</button>
     <button type="button" class="btn btn-sm" hx-post="{% url 'servicedesk:link' ticket.sdp_id %}" hx-vals='{"action": "case"}'
-            hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Ny sag (planlagt opgave)</button>
+            hx-target="closest .sd-ticket" hx-swap="outerHTML" hx-disabled-elt="this">Ny sag (planlagt arbejde)</button>
   </div>
   {% if priorities or cases %}
     <label class="planner-link-existing">

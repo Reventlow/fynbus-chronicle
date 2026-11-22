@@ -82,7 +82,7 @@ tooltip palette so contrast is reliable across browsers.
 
       // Multi-series chart — keep distinct line colours so the two series
       // stay visually separable (UI-expert guardrail). Only the area fill
-      // under "Nye sager" picks up --accent so the editorial accent still
+      // under "Nye tickets" picks up --accent so the editorial accent still
       // washes through the chart when the user changes the tweak.
       const buildPalette = () => ({
         info:    rgbVar('--chart-info'),
@@ -113,7 +113,7 @@ tooltip palette so contrast is reliable across browsers.
           labels: sliced.map(w => w.label),
           datasets: [
             {
-              label: 'Nye sager',
+              label: 'Nye tickets',
               data: sliced.map(w => w.new),
               borderColor: rgba(P.info, 1),
               backgroundColor: function(c) {
@@ -131,7 +131,7 @@ tooltip palette so contrast is reliable across browsers.
               pointBorderWidth: 1.5,
             },
             {
-              label: 'Lukkede sager',
+              label: 'Lukkede tickets',
               data: sliced.map(w => w.closed),
               borderColor: rgba(P.good, 1),
               backgroundColor: function(c) {
@@ -194,7 +194,7 @@ tooltip palette so contrast is reliable across browsers.
           c.data.datasets[1].data = s.map(w => w.closed);
           c.update();
         });
-        // Re-tint the "Nye sager" area fill when the tweaks-panel accent
+        // Re-tint the "Nye tickets" area fill when the tweaks-panel accent
         // (or dark mode) changes. Lines stay on --chart-info / --chart-good
         // so the two series remain distinct regardless of accent.
         window.addEventListener('accent-change', () => {

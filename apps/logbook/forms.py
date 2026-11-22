@@ -108,7 +108,7 @@ class WeekLogForm(forms.ModelForm):
 
         The breakdown is optional (leave every bucket at 0 and the report
         simply omits the section), but a partially filled breakdown that
-        does not add up to "Åbne sager" would be misleading, so it is
+        does not add up to "Åbne tickets" would be misleading, so it is
         rejected.
         """
         cleaned = super().clean()
@@ -120,7 +120,7 @@ class WeekLogForm(forms.ModelForm):
             self.add_error(
                 None,
                 f"Liggetid-opdelingen summer til {total}, "
-                f"men der er registreret {cleaned.get('helpdesk_open') or 0} åbne sager. "
+                f"men der er registreret {cleaned.get('helpdesk_open') or 0} åbne tickets. "
                 "Ret tallene, så de stemmer (eller lad alle liggetid-felter stå på 0).",
             )
 
