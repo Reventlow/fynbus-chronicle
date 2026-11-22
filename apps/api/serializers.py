@@ -300,6 +300,10 @@ def serialize_case(case: CVECase, *, url: str, cve_url) -> dict[str, Any]:
         "updated_at": case.updated_at.isoformat() if case.updated_at else None,
         "solved_at": case.solved_at.isoformat() if case.solved_at else None,
         "open_tasks": case.open_task_count(),
+        # Incident facts (1.26.0); empty on the other kinds.
+        "occurred_at": case.occurred_at.isoformat() if case.occurred_at else None,
+        "severity": case.severity,
+        "affected": case.affected,
         "cves": [
             {"cve_id": c.cve_id, "subject": c.subject, "state": c.state, "url": cve_url(c)}
             for c in case.cves.order_by("cve_id")

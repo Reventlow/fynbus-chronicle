@@ -1,6 +1,6 @@
 # Brugervejledning — FynBus Chronicle
 
-Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.25.1.
+Chronicle er IT-afdelingens ugelog: her planlægger, registrerer og følger vi ugens arbejde, helpdesk-tal, hændelser, sårbarheder og rådighedsvagt. Denne vejledning gælder version 1.26.0.
 
 ## Indhold
 
@@ -329,9 +329,10 @@ Ugekortet for den aktuelle uge har en farvet kant, og den der har vagten lige nu
 
 En sag er en **Sårbarhed**, en **Hændelse** eller **Planlagt arbejde**. Opret den med knapperne **Ny sårbarhedssag**, **Ny hændelse** eller **Nyt planlagt arbejde** på *Sager*; formularen hedder *Ny sårbarhedssag*, *Ny hændelse* eller *Nyt planlagt arbejde*. På Kontrolpanelet, på *Sager* og i ugeloggen har hver sag et ikon for sin type: et skjold for en sårbarhed, en advarselstrekant for en hændelse og en kalender med et flueben for planlagt arbejde.
 
+- **Kun en sårbarhedssag har CVE'er.** En hændelse eller planlagt arbejde kan ikke have CVE'er, og formularen viser kun feltet *CVE'er*, når typen er *Sårbarhed*. En sag med CVE'er kan ikke skiftes til en anden type, før CVE'erne er taget ud.
 - En **sårbarhedssag** samler CVE'er, der har samme vurdering og samme løsning, fx fire kerne-CVE'er, der lukkes af én kerneopdatering, eller Python- og Go-CVE'erne om den samme kompromitterede certifikatudsteder. Så skrives dokumentationen én gang.
 - Giv sagen en titel, skriv **Vurdering** (er vi berørt, og hvorfor?) og **Løsning / handling**, og skriv CVE-id'erne adskilt af komma eller linjeskift. Kendte CVE'er flyttes ind; ukendte oprettes med sagens titel som emne.
-- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Klar til gennemsyn*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Ordet *færdigbehandlet* er valgt med vilje: en sikkerhedssag lukkes efter bedste viden, den er sjældent endegyldigt løst. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. Hvert skift skrives i sagens tidslinje med navn og tidspunkt, og hver CVE får skiftet i sin egen tidslinje med "(via sag #n)".
+- **Sagens status gælder alle dens CVE'er.** Knapperne er *Identificeret*, *Patcher*, *Klar til gennemsyn*, *Færdigbehandlet — patchet*, *Færdigbehandlet — ikke berørt* og *Færdigbehandlet — risiko accepteret*. Ordet *færdigbehandlet* er valgt med vilje: en sikkerhedssag lukkes efter bedste viden, den er sjældent endegyldigt løst. Brug *risiko accepteret*, når vi bevidst ikke patcher (ingen rettelse, eller en anden foranstaltning dækker), og skriv begrundelsen i sagen. Hvert skift skrives i sagens tidslinje med navn og tidspunkt, og hver CVE får skiftet i sin egen tidslinje med "(via sag #n)". Retter nogen *Vurdering* eller *Løsning / handling*, står det også i tidslinjen (*Vurdering ændret* osv.).
 - **En CVE kan kun være i én sag.** Tag den ud med ✕ på sagen for at flytte den; dens status bliver stående. Harbinger kan sende en hel sag på én gang.
 - **Advarsler uden CVE-nummer**, fx fra CFCS: opret en sårbarhedssag og lad CVE-feltet stå tomt. Udfyld **Kilde** (fx CFCS), **Reference** (advarslens nummer og dato) og **Kildelink**, og vedhæft advarslen med dens TLP.
 - Listen viser åbne sager øverst og færdigbehandlede i 90 dage (*vis alle sager* viser også de ældre). Søgefeltet finder titel, kilde, reference og CVE-id, også i færdigbehandlede sager.
@@ -348,23 +349,26 @@ En sag er en **Sårbarhed**, en **Hændelse** eller **Planlagt arbejde**. Opret 
 - Hver CVE har id (fx *CVE-2026-109618*), emne, CVSS-score og alvorlighed (Kritisk ≥ 9, Høj ≥ 7, Medium ≥ 4, Lav > 0). Alvorligheden udledes af CVSS, hvis den ikke angives, og linket til cvefeed.io udfyldes automatisk.
 - **Alle CVE'er hører til en sag.** Klik **Ny CVE** på fanen *CVE'er*, og vælg i feltet **Sag** enten *Ny sag med denne CVE* (standard) eller en eksisterende sag. Bagefter lander du på sagen. Findes id'et allerede, kommer du til den eksisterende CVE i stedet for at lave en dublet. Harbinger opretter CVE'er via API'et og linker tilbage til sig selv.
 - **En CVE har ingen statusknapper.** Status skiftes på sagen, og CVE'ens side har et link til sagen, hvor vurdering, løsning og dokumenter står.
-- En CVE uden sag har boksen *Ikke i en sag* på sin side: **Ny sag med denne CVE** starter en ny, og **Føj til eksisterende sag** vælger en åben eller færdigbehandlet sag. CVE'en får sagens status.
+- En CVE uden sag har boksen *Ikke i en sag* på sin side: **Ny sag med denne CVE** starter en ny, og **Føj til eksisterende sag** vælger en åben eller færdigbehandlet sårbarhedssag. CVE'en får sagens status.
 - Listen viser åbne CVE'er øverst og færdigbehandlede i 90 dage. *vis alle CVE'er* øverst (eller *Alle* under Status) viser også de ældre. En søgning på id eller emne finder CVE'er i alle statusser, også færdigbehandlede ældre end 90 dage. For hver CVE i en sag står et link til sagen (*↳ Sag #n · titel*).
 
 ### Delopgaver
 
 En sårbarhedssag eller en hændelse kan have **delopgaver**: det arbejde, der skal være gjort, før sagen kan lukkes. Planlagt arbejde har ingen delopgaver.
 
-- En delopgave har status *Åben*, *Venter på patch*, *Venter på ny version*, *Udført*, *Ignoreret* eller *System fjernet*, og kan have en ansvarlig og en frist. Ventende delopgaver tæller for sig, så det ses, hvad der venter på en leverandør, og hvad vi selv kan tage fat på.
+- En delopgave har status *Åben*, *Venter på patch*, *Venter på ny version*, *Udført*, *Ignoreret* eller *System fjernet*, og kan have en ansvarlig og en frist. **Rediger eller slet** under en delopgave retter titel, ansvarlig og frist eller sletter den. Sagens tidslinje skriver, hvad der blev ændret eller slettet, og slettes den sidste åbne delopgave, bliver sagen *Klar til gennemsyn*. Ventende delopgaver tæller for sig, så det ses, hvad der venter på en leverandør, og hvad vi selv kan tage fat på.
 - Så længe en delopgave er åben eller venter, står sagen i *Patcher*. Når den sidste er lukket, skifter sagen af sig selv til **Klar til gennemsyn**, og derfra vælges *Færdigbehandlet* med udfald. En ny åben delopgave på en færdigbehandlet sag åbner sagen igen.
 - *Ignoreret* kræver en note med beslutningen og begrundelsen. *System fjernet* bruges, når systemet er taget ud af drift eller afinstalleret.
 - Fanen **Delopgaver** viser delopgaverne på tværs af sagerne. Rækken af felter er filteret: *Aktive*, *Overskredet*, *Alle* og hver status. En overskreden frist står med ordet *overskredet*, og antallet står i toppen. Sagens status står ved hver delopgave som *Sag: …*. Listen er sorteret efter frist.
-- **Mine delopgaver**: knappen **Alle | Mine** øverst skifter mellem alles delopgaver og dem, du står som ansvarlig på. Felterne tæller så kun dine. På en sag står *Dig* ved dine delopgaver. Har du aktive delopgaver, står *Mine delopgaver: N aktive · M overskredet →* på Sårbarheder-kortet på Kontrolpanelet, og linket går direkte til din liste (til de overskredne, hvis der er nogen).
+- **Mine delopgaver**: knappen **Alle | Mine** øverst skifter mellem alles delopgaver og dem, du står som ansvarlig på. Redaktører lander på *Mine*; læsere ser alles. Felterne tæller så kun dine. På en sag står *Dig* ved dine delopgaver. Har du aktive delopgaver, står *Mine delopgaver: N aktive · M overskredet →* på Sårbarheder-kortet på Kontrolpanelet, og linket går direkte til din liste (til de overskredne, hvis der er nogen).
 - Et link fra listen åbner sagen med *← Tilbage til delopgaverne*, og når du gemmer en delopgave, kommer du tilbage til listen med samme filter.
 
 ### Hændelser
 
-En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på *Sager*. Den har vurdering, løsning, delopgaver, vedhæftninger, links og kommentarer ligesom en sårbarhedssag, men normalt ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*. Skriv typen og alvoren i vurderingen. Delopgaverne vises også uden CVE'er, og redaktører kan tilføje en CVE fra den sammenfoldede boks **Tilføj CVE til sagen**.
+En hændelse (sikkerhedshændelse, systemfejl, netværks- eller dataproblem) oprettes med **Ny hændelse** på *Sager*. Den har vurdering, løsning, delopgaver, vedhæftninger, links og kommentarer ligesom en sårbarhedssag, men ingen CVE'er. Status er *Identificeret*, *Under behandling* eller *Færdigbehandlet*.
+
+- En hændelse har tre felter for sig: **Tidspunkt** (hvornår den skete eller blev opdaget), **Alvorlighed** (*Kritisk*, *Høj*, *Medium* eller *Lav*) og **Berørte** (hvem eller hvad er ramt). De står under titlen på sagen og ved hændelsen i ugeloggen og eksporten. Formularen viser dem kun, når typen er *Hændelse*, og eksemplet i *Vurdering* skifter med typen.
+- Ældre hændelser fik ved opdateringen til 1.26.0 sagens oprettelsestidspunkt som tidspunkt, og alvorligheden blev læst fra linjen *Alvorlighed: …* i vurderingen, hvor den fandtes.
 
 ### Planlagt arbejde
 

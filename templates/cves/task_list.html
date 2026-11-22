@@ -30,16 +30,17 @@
   {% cve_section_nav %}
 
   {% comment %}Scope switch: everyone's delopgaver or only those assigned to me.
-     It keeps the status filter; the tiles below count within the scope.{% endcomment %}
+     It keeps the status filter; the tiles below count within the scope.
+     Editors land on Mine (1.26.0), so "Alle" says mine=0 explicitly.{% endcomment %}
   <div class="segmented" role="group" aria-label="Hvis delopgaver" style="align-self: flex-start;">
-    <a href="?status={{ status }}" class="segmented-btn{% if not mine %} segmented-btn-active{% endif %}"{% if not mine %} aria-current="true"{% endif %}>Alle · {{ everyone_active }} aktive</a>
+    <a href="?status={{ status }}&amp;mine=0" class="segmented-btn{% if not mine %} segmented-btn-active{% endif %}"{% if not mine %} aria-current="true"{% endif %}>Alle · {{ everyone_active }} aktive</a>
     <a href="?status={{ status }}&amp;mine=1" class="segmented-btn{% if mine %} segmented-btn-active{% endif %}"{% if mine %} aria-current="true"{% endif %}>Mine · {{ my_active }} aktive</a>
   </div>
 
   {# One row of tiles is the filter: Aktive, Overskredet, Alle, then each status. #}
   <nav aria-label="Filtrér delopgaver" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
     {% for tile in tiles %}
-      <a href="?status={{ tile.key }}{% if mine %}&amp;mine=1{% endif %}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
+      <a href="?status={{ tile.key }}&amp;mine={% if mine %}1{% else %}0{% endif %}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
         <div class="label-eyebrow"{% if tile.bad %} style="color: var(--bad-ink);"{% endif %}>{{ tile.label }}</div>
         <div class="display" style="font-size: 32px; margin-top: 6px;{% if tile.bad %} color: var(--bad-ink);{% endif %}">{{ tile.count }}</div>
       </a>

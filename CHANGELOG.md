@@ -2,6 +2,30 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.26.0 — 2026-11-22
+
+### Added
+- **Hændelser har deres egne felter:** *Tidspunkt*, *Alvorlighed* (Kritisk, Høj, Medium, Lav) og *Berørte*. De står
+  under titlen på sagen og i ugeloggen og dens eksport, og formularen viser dem kun for en hændelse. Eksisterende hændelser får sagens
+  oprettelsestidspunkt som tidspunkt og alvorligheden fra linjen *Alvorlighed: …* i vurderingen, hvor den findes.
+  API'ets hændelses-endpoint udfylder felterne (også et nyt valgfrit `affected`), og sager i API'et har
+  `occurred_at`, `severity` og `affected`.
+- **Delopgaver kan rettes og slettes.** *Rediger eller slet* under en delopgave ændrer titel, ansvarlig og frist eller
+  sletter den. Sagens tidslinje skriver, hvad der blev ændret eller slettet, og slettes den sidste åbne delopgave,
+  bliver sagen *Klar til gennemsyn*.
+- **Ændringer i Vurdering og Løsning står i tidslinjen** som *Vurdering skrevet / ændret / slettet* (og det samme
+  for *Løsning / handling*) med navn og tidspunkt, også når Harbinger eller API'et ændrer dem. Linjerne kommer ikke
+  med i ugelogs-eksporten, ligesom statusskift.
+
+### Changed
+- **Kun sårbarhedssager har CVE'er.** Hændelser og planlagt arbejde kan ikke få CVE'er: hverken fra sagen, fra en
+  CVE's side, fra *Ny CVE* eller via API'et (400). Formularen viser kun feltet *CVE'er* for en sårbarhed, og en sag
+  med CVE'er kan ikke skiftes til en anden type.
+- **Redaktører lander på Mine delopgaver.** Fanen *Delopgaver* åbner på *Mine* for redaktører; *Alle* er ét klik væk.
+  Læsere ser stadig alles.
+- **Formularen for en ny sag følger typen:** overskriften (*Ny sårbarhedssag*, *Ny hændelse*, *Nyt planlagt
+  arbejde*) og eksemplet i *Vurdering* skifter, når typen skiftes.
+
 ## 1.25.1 — 2026-11-22
 
 ### Added

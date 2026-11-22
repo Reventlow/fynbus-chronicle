@@ -64,10 +64,11 @@ class TestKind:
 
     def test_create_incident_helper(self, editor):
         case = CVECase.create_incident(title="Backup", description="Manglende kopier.", user=editor,
-                                       occurred_at=at(2026, 10, 21, 8), type_label="Andet", severity_label="Høj",
+                                       occurred_at=at(2026, 10, 21, 8), type_label="Andet", severity="high", affected=" Alle ",
                                        resolved=True, resolution="Kopier genskabt.", solved_at=at(2026, 10, 22))
         assert (case.kind, case.state, case.solved_at, case.created_at) == ("incident", "solved", at(2026, 10, 22), at(2026, 10, 21, 8))
-        assert case.assessment.startswith("Manglende kopier.") and "Type: Andet · Alvorlighed: Høj" in case.assessment
+        assert case.assessment == "Manglende kopier.\n\n*Type: Andet*"
+        assert (case.occurred_at, case.severity, case.affected) == (at(2026, 10, 21, 8), "high", "Alle")
         assert case.solution == "Kopier genskabt."
 
 
@@ -171,7 +172,7 @@ class TestIncidentsRetired:
         assert response.status_code == 201
         case = CVECase.objects.get()
         assert (case.kind, case.state, case.solution) == ("incident", "solved", "MS løste det.")
-        assert "Type: Systemfejl · Alvorlighed: Høj" in case.assessment
+        assert "Type: Systemfejl" in case.assessment and case.severity == "high" and case.occurred_at
         data = response.json()
         assert data["incident"]["id"] == case.pk and data["case"]["kind"] == "incident"
         assert not Incident.objects.exists()

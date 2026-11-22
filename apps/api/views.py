@@ -386,7 +386,7 @@ def incident_create(request: HttpRequest, year: int, week: int) -> JsonResponse:
     case = CVECase.create_incident(
         title=title, description=description, user=request.api_user, occurred_at=occurred_at,
         type_label=dict(Incident.IncidentType.choices).get(incident_type, ""),
-        severity_label=dict(Incident.Severity.choices).get(severity, ""),
+        severity=severity, affected=str(data.get("affected") or ""),
         resolved=bool(data.get("resolved", False)),
         resolution=(data.get("resolution") or "").strip(),
     )
@@ -863,6 +863,8 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
         case = CVECase.objects.filter(pk=case_id).first()
         if case is None:
             return JsonResponse({"error": "not_found", "detail": f"No case {case_id}"}, status=404)
+        if inputs and not case.holds_cves:
+            return _invalid("cves", f"case {case.pk} is a {case.kind} case; only vulnerability cases hold CVEs")
 
     existing = {c.cve_id: c for c in CVE.objects.filter(cve_id__in=seen).select_related("case")}
     taken = [c for c in existing.values() if c.case_id and (case is None or c.case_id != case.pk)]
@@ -885,6 +887,7 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
                 )
             else:
                 changed = []
+                before = {field: getattr(case, field) for field in CVECase.TIMELINE_TEXTS}
                 for field, value in (("title", title), ("assessment", assessment), ("solution", solution),
                                      ("reference", reference)):
                     if value is not None and (value or field != "title") and getattr(case, field) != value:
@@ -898,6 +901,7 @@ def case_upsert(request: HttpRequest) -> JsonResponse:
                     changed.append("source")
                 if changed:
                     case.save(update_fields=[*changed, "updated_at"])
+                    case.log_text_changes(before, user)
             cves = []
             for fields in inputs:
                 cve = existing.get(fields["cve_id"])

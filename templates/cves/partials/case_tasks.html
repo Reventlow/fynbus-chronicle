@@ -26,6 +26,39 @@
           {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}{% if task.is_overdue %} (overskredet){% endif %}</span>{% endif %}
         </div>
         {% if task.note %}<div class="incident-meta" style="white-space: pre-wrap; margin-top: 4px;">{{ task.note }}</div>{% endif %}
+        {% if is_editor %}
+          {# Rediger (1.26.0): title, ansvarlig and frist; status and note keep the form on the right. #}
+          <details style="margin-top: 6px;">
+            <summary style="cursor: pointer; font-size: 12.5px; color: var(--ink-3);">Rediger eller slet</summary>
+            <form method="post" action="{% url 'cves:case-task-edit' case.pk task.pk %}" class="flex flex-wrap items-end gap-2" style="margin: 8px 0 0;">
+              {% csrf_token %}
+              {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+              <div style="flex: 2 1 220px; min-width: 0;">
+                <label for="task-{{ task.pk }}-title" class="input-label">Titel</label>
+                <input type="text" id="task-{{ task.pk }}-title" name="title" value="{{ task.title }}" maxlength="200" required class="field" style="width: 100%;">
+              </div>
+              <div>
+                <label for="task-{{ task.pk }}-assignee" class="input-label">Ansvarlig</label>
+                <select id="task-{{ task.pk }}-assignee" name="assignee" class="field">
+                  <option value="">Ingen ansvarlig</option>
+                  {% for person in assignable_users %}<option value="{{ person.pk }}"{% if person.pk == task.assignee_id %} selected{% endif %}>{{ person.get_full_name|default:person.username }}</option>{% endfor %}
+                  {% if task.assignee and not task.assignee.is_active %}<option value="{{ task.assignee_id }}" selected>{{ task.assignee.get_full_name|default:task.assignee.username }} (inaktiv)</option>{% endif %}
+                </select>
+              </div>
+              <div>
+                <label for="task-{{ task.pk }}-due" class="input-label">Frist</label>
+                <input type="date" id="task-{{ task.pk }}-due" name="due_date" value="{{ task.due_date|date:'Y-m-d' }}" class="field">
+              </div>
+              <button type="submit" class="btn btn-sm">Gem ændringer</button>
+            </form>
+            <form method="post" action="{% url 'cves:case-task-delete' case.pk task.pk %}" style="margin: 8px 0 0;"
+                  onsubmit="return confirm('Slet delopgaven »{{ task.title|escapejs }}«? Tidslinjen beholder en linje om det.');">
+              {% csrf_token %}
+              {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+              <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--bad-ink);">Slet delopgave</button>
+            </form>
+          </details>
+        {% endif %}
       </div>
       {% if is_editor %}
         <form method="post" action="{% url 'cves:case-task-status' case.pk task.pk %}" class="flex flex-wrap items-start gap-2" style="margin: 0;">
@@ -62,7 +95,7 @@
         <label for="task-new-assignee" class="input-label">Ansvarlig</label>
         <select id="task-new-assignee" name="assignee" class="field">
           <option value="">Ingen ansvarlig</option>
-          {% for user in assignable_users %}<option value="{{ user.pk }}">{{ user.get_full_name|default:user.username }}</option>{% endfor %}
+          {% for person in assignable_users %}<option value="{{ person.pk }}">{{ person.get_full_name|default:person.username }}</option>{% endfor %}
         </select>
       </div>
       <div>

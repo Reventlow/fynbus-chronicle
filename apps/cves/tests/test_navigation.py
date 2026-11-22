@@ -71,7 +71,7 @@ class TestIncidentTasks:
         task = CVETask.add(incident, title="Nulstil adgangskoder", user=editor)
         body = editor_client.get(incident.get_absolute_url()).content.decode()
         assert f'id="task-{task.pk}"' in body and "Tilføj delopgave" in body
-        assert "Tilføj CVE til sagen" in body  # an editor can still add a CVE
+        assert "Tilføj CVE til sagen" not in body and 'id="cves"' not in body  # 1.26.0: hændelser hold no CVEs
 
     def test_task_counter_does_not_count_waiting_twice(self, editor_client, case, editor):
         CVETask.add(case, title="a", user=editor)
@@ -87,17 +87,17 @@ class TestIncidentTasks:
     def test_overdue_says_so_in_words(self, editor_client, case, editor):
         CVETask.add(case, title="Sent", user=editor, due_date=timezone.localdate() - timedelta(days=2))
         assert "(overskredet)" in editor_client.get(case.get_absolute_url()).content.decode()
-        assert "1 overskredet" in editor_client.get(reverse("cves:task-list")).content.decode()
+        assert "1 overskredet" in editor_client.get(reverse("cves:task-list") + "?mine=0").content.decode()
 
 
 class TestNextRoundTrip:
     def test_task_list_links_carry_next_and_saving_returns(self, editor_client, case, editor):
         task = CVETask.add(case, title="Opdatér", user=editor)
-        list_url = reverse("cves:task-list") + "?status=open"
+        list_url = reverse("cves:task-list") + "?status=open&mine=0"
         body = editor_client.get(list_url).content.decode()
-        assert "?next=/cves/tasks/%3Fstatus%3Dopen#task-" in body
+        assert "?next=/cves/tasks/%3Fstatus%3Dopen%26mine%3D0#task-" in body
         page = editor_client.get(case.get_absolute_url(), {"next": list_url}).content.decode()
-        assert "Tilbage til delopgaverne" in page and f'name="next" value="{list_url}"' in page
+        assert "Tilbage til delopgaverne" in page and f'name="next" value="{list_url.replace("&", "&amp;")}"' in page
         response = editor_client.post(reverse("cves:case-task-status", args=[case.pk, task.pk]),
                                       {"status": "done", "next": list_url})
         assert response.url == list_url
@@ -223,7 +223,7 @@ class TestMineDelopgaver:
         assert 'href="?status=overdue&amp;mine=1"' in body  # tiles keep the scope
 
     def test_overdue_filter(self, editor_client, tasks):
-        everyone = editor_client.get(reverse("cves:task-list") + "?status=overdue")
+        everyone = editor_client.get(reverse("cves:task-list") + "?status=overdue&mine=0")
         assert sorted(self.titles(everyone)) == ["Kollegas", "Min sene"]
         mine = editor_client.get(reverse("cves:task-list") + "?status=overdue&mine=1")
         assert self.titles(mine) == ["Min sene"]

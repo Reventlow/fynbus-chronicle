@@ -33,6 +33,12 @@ class CVEAdmin(admin.ModelAdmin):
     search_fields = ("cve_id", "subject")
     readonly_fields = ("updated_at", "solved_at", "solved_by")
     inlines = [CVEAttachmentInline, CVELinkInline, CVECommentInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "case":  # only a vulnerability sag holds CVEs (1.26.0)
+            kwargs["queryset"] = CVECase.objects.holding_cves()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     fieldsets = (
         (None, {"fields": ("cve_id", "subject", "cvss", "severity", "cvefeed_url")}),
         ("Status", {"fields": ("state", "case", "solved_at", "solved_by")}),
