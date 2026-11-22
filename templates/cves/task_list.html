@@ -10,63 +10,72 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
+  The delopgaver list (layout 1.26.2, after a UI review). Header, the section
+  tabs, then one toolbar: whose (Alle | Mine) and which (Aktive | Overskredet
+  | Venter | Lukkede). The default "Aktive" view is grouped into Overskredet,
+  Kan tages fat på and Venter på leverandør. Each row is about the delopgave:
+  its deadline on the left (the bar's colour is the urgency), title and sag in
+  the middle, its own status on the right. The rules for the statuses live
+  on the sag's delopgaver card.
+{% endcomment %}
+<style>
+  /* The deadline column fits "12 dage over" (ServiceDesk's 76px fits an age like "3 d"); one column on a phone. */
+  .sd-ticket.task-row { grid-template-columns: 112px minmax(0, 1fr) auto; }
+  @media (max-width: 640px) { .sd-ticket.task-row { grid-template-columns: 1fr; } }
+</style>
 <div style="display: flex; flex-direction: column; gap: var(--gutter);">
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 20px;">
     <div class="label-eyebrow inline-flex items-center" style="gap: 10px; margin-bottom: 10px;">
       <span aria-hidden="true" style="display: inline-block; width: 24px; height: 2px; background: var(--accent); border-radius: 2px;"></span>
-      <span>{{ active_count }} aktiv{{ active_count|pluralize:"e" }}{% if overdue_count %} · <span style="color: var(--bad-ink);">{{ overdue_count }} overskredet</span>{% endif %}</span>
+      <span>Sårbarheder og hændelser</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 48px; line-height: 1.05;">
-      {% if mine %}Mine delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>{% else %}Delopgaver <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>{% endif %}
+      {% if mine %}Mine delopgaver{% else %}Delopgaver{% endif %} <span class="display-italic" style="color: var(--ink-3);">på tværs af sagerne.</span>
     </h1>
     <p style="margin-top: 12px; font-size: 14.5px; color: var(--ink-3); max-width: 640px; line-height: 1.5;">
-      Det arbejde, en sag kræver, før den kan lukkes. Ventende delopgaver tæller for sig, så det er tydeligt,
-      hvad der venter på en leverandør eller en ny version, og hvad vi selv kan tage fat på.
-      Ignorerede delopgaver har en note med det besluttede og begrundelsen.
-      <em>System fjernet</em> lukker en delopgave, hvis systemet er taget ud af drift eller afinstalleret.
+      Det, der skal gøres, før sagerne kan lukkes. Status, ansvarlig og frist ændres på sagen.
     </p>
   </div>
 
   {% cve_section_nav %}
 
-  {% comment %}Scope switch: everyone's delopgaver or only those assigned to me.
-     It keeps the status filter; the tiles below count within the scope.
-     Editors land on Mine (1.26.0), so "Alle" says mine=0 explicitly.{% endcomment %}
-  <div class="segmented" role="group" aria-label="Hvis delopgaver" style="align-self: flex-start;">
-    <a href="?status={{ status }}&amp;mine=0" class="segmented-btn{% if not mine %} segmented-btn-active{% endif %}"{% if not mine %} aria-current="true"{% endif %}>Alle · {{ everyone_active }} aktive</a>
-    <a href="?status={{ status }}&amp;mine=1" class="segmented-btn{% if mine %} segmented-btn-active{% endif %}"{% if mine %} aria-current="true"{% endif %}>Mine · {{ my_active }} aktive</a>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="segmented" role="group" aria-label="Hvis delopgaver">
+      <a href="?status={{ status }}&amp;mine=0" class="segmented-btn{% if not mine %} segmented-btn-active{% endif %}"{% if not mine %} aria-current="true"{% endif %}>Alle · {{ everyone_active }}</a>
+      <a href="?status={{ status }}&amp;mine=1" class="segmented-btn{% if mine %} segmented-btn-active{% endif %}"{% if mine %} aria-current="true"{% endif %}>Mine · {{ my_active }}</a>
+    </div>
+    <nav class="segmented" aria-label="Filtrér delopgaver">
+      {% for f in toolbar %}
+        <a href="?status={{ f.key }}&amp;mine={% if mine %}1{% else %}0{% endif %}"
+           class="segmented-btn{% if status == f.key %} segmented-btn-active{% endif %}"{% if status == f.key %} aria-current="true"{% endif %}>
+          {{ f.label }} <span class="num"{% if f.bad %} style="color: var(--bad-ink); font-weight: 600;"{% endif %}>{{ f.count }}</span>
+        </a>
+      {% endfor %}
+    </nav>
   </div>
 
-  {# One row of tiles is the filter: Aktive, Overskredet, Alle, then each status. #}
-  <nav aria-label="Filtrér delopgaver" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-    {% for tile in tiles %}
-      <a href="?status={{ tile.key }}&amp;mine={% if mine %}1{% else %}0{% endif %}" class="card" style="text-decoration: none; color: inherit; {% if status == tile.key %}outline: 2px solid var(--accent);{% endif %}"{% if status == tile.key %} aria-current="true"{% endif %}>
-        <div class="label-eyebrow"{% if tile.bad %} style="color: var(--bad-ink);"{% endif %}>{{ tile.label }}</div>
-        <div class="display" style="font-size: 32px; margin-top: 6px;{% if tile.bad %} color: var(--bad-ink);{% endif %}">{{ tile.count }}</div>
-      </a>
-    {% endfor %}
-  </nav>
-
-  <div class="card overflow-hidden" style="padding: 0;">
-    {% for task in tasks %}
-      <div class="incident-row" style="grid-template-columns: minmax(0, 1fr) auto;">
-        <span class="incident-rail" style="background: {{ task.case.state_color }};"></span>
-        <div style="min-width: 0;">
-          {% comment %}next= brings the user back to this filtered list after saving the delopgave on the sag.{% endcomment %}
-          <div class="incident-title"><a href="{% url 'cves:case-detail' task.case.pk %}?next={{ here|urlencode }}#task-{{ task.pk }}" style="color: inherit; text-decoration: none;">{{ task.title }}</a></div>
-          <div class="incident-meta">
-            <a href="{% url 'cves:case-detail' task.case.pk %}?next={{ here|urlencode }}#task-{{ task.pk }}">{% include "cves/partials/case_kind_icon.html" with case=task.case %}{{ task.case.get_kind_display }} · sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</a>
-            <span> · {{ task.get_status_display }}</span>
-            {% if task.assignee %}<span> · {{ task.assignee.get_full_name|default:task.assignee.username }}</span>{% endif %}
-            {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}{% if task.is_overdue %} (overskredet){% endif %}</span>{% endif %}
-          </div>
-          {% if task.note %}<div class="incident-meta" style="white-space: pre-wrap; margin-top: 4px;">{{ task.note }}</div>{% endif %}
-        </div>
-        <span class="task-status" style="align-self: center;" title="Sagens status"><span class="pill-dot" style="background: {{ task.case.state_color }};"></span>Sag: {{ task.case.get_state_display }}</span>
-      </div>
-    {% empty %}
-      <p style="padding: 36px 24px; margin: 0; text-align: center; font-size: 13px; color: var(--ink-4);">{% if mine %}Du har ingen delopgaver her.{% if status == 'active' %} Delopgaver, du står som ansvarlig på, kommer her.{% endif %}{% else %}Ingen delopgaver her.{% endif %}</p>
-    {% endfor %}
-  </div>
+  {% for group in groups %}
+    <section class="card sd-group" aria-labelledby="tasks-{{ group.key }}" style="padding: 0;">
+      <header class="sd-group-head">
+        <h2 id="tasks-{{ group.key }}"{% if group.key == 'overdue' %} style="color: var(--bad-ink);"{% endif %}>{{ group.title }} <span class="tab-count">{{ group.tasks|length }}</span></h2>
+        {% if group.hint %}<p>{{ group.hint }}</p>{% endif %}
+      </header>
+      {% for task in group.tasks %}
+        {% include "cves/partials/task_list_row.html" %}
+      {% empty %}
+        <p class="sd-empty">Ingen delopgaver her.</p>
+      {% endfor %}
+    </section>
+  {% empty %}
+    <div class="card" style="padding: 36px 24px; text-align: center; font-size: 13px; color: var(--ink-4);">
+      {% if mine %}
+        Du har ingen delopgaver under »{{ status_label }}«. Delopgaver, du står som ansvarlig på, kommer her.
+        <div style="margin-top: 8px;"><a href="?status={{ status }}&amp;mine=0">Vis alles →</a></div>
+      {% else %}
+        Ingen delopgaver under »{{ status_label }}«.
+      {% endif %}
+    </div>
+  {% endfor %}
 </div>
 {% endblock %}

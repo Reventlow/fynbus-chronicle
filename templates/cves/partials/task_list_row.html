@@ -1,0 +1,30 @@
+{% comment %}
+  One row of the delopgaver list (1.26.2), on the ServiceDesk row grid
+  (.sd-ticket): deadline | title + sag | the delopgave's own status.
+  The deadline bar is red when overdue and amber within a week or waiting;
+  a closed delopgave shows when it was closed. The link carries ?next= so
+  saving on the sag returns to this filtered list. Context: task, here, mine, user.
+{% endcomment %}
+{% with due=task.due_badge %}
+<div class="sd-ticket task-row" id="task-row-{{ task.pk }}">
+  <span class="sd-age" style="--age: {{ due.color }};"
+        title="{% if due.closed %}Lukket {{ task.decided_at|date:'j. M Y H:i' }}{% elif task.due_date %}Frist {{ task.due_date|date:'j. M Y' }}{% else %}Ingen frist{% endif %}">
+    <span class="sd-age-num">{% if due.closed %}{{ task.decided_at|date:"j. M"|default:"—" }}{% else %}{{ due.text }}{% endif %}</span>
+    <span class="sd-age-label">{% if due.closed or not task.due_date %}{{ due.label }}{% else %}{{ task.due_date|date:"j. M" }}{% endif %}</span>
+  </span>
+  <div class="sd-main">
+    <div class="sd-title">
+      <a href="{% url 'cves:case-detail' task.case.pk %}?next={{ here|urlencode }}#task-{{ task.pk }}" class="sd-subject" title="{{ task.title }}">{{ task.title }}</a>
+    </div>
+    <div class="incident-meta" style="white-space: normal;">
+      <span class="inline-flex items-center" style="gap: 4px;">{% include "cves/partials/case_kind_icon.html" with case=task.case %}{{ task.case.get_kind_display }} · sag #{{ task.case.pk }}: {{ task.case.title|truncatechars:70 }}</span>
+      <span>Sag: {{ task.case.state_label }}</span>
+      {% if not mine %}
+        <span>{% if task.assignee %}{% if task.assignee_id == user.pk %}<strong>Dig</strong>{% else %}{{ task.assignee.get_full_name|default:task.assignee.username }}{% endif %}{% else %}Ingen ansvarlig{% endif %}</span>
+      {% endif %}
+    </div>
+    {% if task.note %}<div class="incident-meta" style="margin-top: 4px; display: block; overflow: hidden; text-overflow: ellipsis;" title="{{ task.note }}">{{ task.note }}</div>{% endif %}
+  </div>
+  <span class="task-status" style="align-self: center;"><span class="pill-dot" style="background: {{ task.status_color }};"></span>{{ task.get_status_display }}</span>
+</div>
+{% endwith %}

@@ -2,6 +2,24 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.26.2 — 2026-11-22
+
+### Changed
+- **Delopgave-listen er bygget om** efter en gennemgang af en UI-ekspert:
+  - Én værktøjslinje: **Alle | Mine** til venstre og **Aktive | Overskredet | Venter | Lukkede** til højre, med tal.
+    De ni felter er væk. Et enkelt status-filter virker stadig via adressen (fx `?status=done`).
+  - *Aktive* er delt i tre grupper: **Overskredet**, **Kan tages fat på** og **Venter på leverandør**. Tomme grupper
+    vises ikke.
+  - Hver række handler om delopgaven: fristen til venstre (*3 dage over*, *i dag*, *om 4 dage*) med en farvet
+    streg (rød overskredet, gul inden for en uge eller venter), titel og sag i midten, delopgavens egen status til højre.
+    Ansvarlig vises under *Alle* (*Dig* ved dine), og en lang note står på én linje.
+  - Kortere indledning, og *Mine* uden delopgaver har et link til alles.
+  - Fanen *Delopgaver* tæller **aktive** (ikke "åbne", da én status hedder *Åben*).
+
+### Fixed
+- Rækkerne i delopgave-listen havde en forkert opdeling, så teksten blev skubbet ud til højre.
+- Fanernes tal (*3 åbne*) brydes ikke længere over to linjer på en telefon.
+
 ## 1.26.1 — 2026-11-22
 
 ### Fixed

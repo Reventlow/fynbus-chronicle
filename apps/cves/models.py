@@ -745,6 +745,40 @@ class CVETask(models.Model):
     def is_overdue(self) -> bool:
         return bool(self.is_open and self.due_date and self.due_date < timezone.localdate())
 
+    @property
+    def due_badge(self) -> dict:
+        """The deadline as the task list shows it (1.26.2): ``text`` ("3 dage over",
+        "i dag", "om 4 dage", "—"), ``label`` under it and the colour of the bar:
+        red when overdue, amber due within a week or waiting on a vendor.
+        A closed task shows when it was closed instead."""
+        if not self.is_open:
+            return {"text": "", "label": "lukket", "color": "var(--ink-5)", "closed": True}
+        waiting = self.status in (self.Status.WAITING_PATCH, self.Status.WAITING_RELEASE)
+        if not self.due_date:
+            return {"text": "—", "label": "ingen frist", "color": "var(--warn)" if waiting else "var(--ink-5)",
+                    "closed": False}
+        days = (self.due_date - timezone.localdate()).days
+        if days < 0:
+            text, color = f"{-days} {'dag' if days == -1 else 'dage'} over", "var(--bad)"
+        elif days == 0:
+            text, color = "i dag", "var(--warn)"
+        else:
+            text = f"om {days} {'dag' if days == 1 else 'dage'}"
+            color = "var(--warn)" if days <= 7 or waiting else "var(--ink-5)"
+        return {"text": text, "label": "frist", "color": color, "closed": False}
+
+    @property
+    def status_color(self) -> str:
+        """Dot colour for the task's own status: open (accent), waiting on a vendor
+        (amber), done (green), ignored or system removed (grey)."""
+        if self.status == self.Status.OPEN:
+            return "var(--accent)"
+        if self.status in (self.Status.WAITING_PATCH, self.Status.WAITING_RELEASE):
+            return "var(--warn)"
+        if self.status == self.Status.DONE:
+            return "var(--good)"
+        return "var(--ink-4)"
+
     @classmethod
     def add(cls, case: "CVECase", *, title: str, user=None, status: str = Status.OPEN,
             note: str = "", assignee=None, due_date=None) -> "CVETask":

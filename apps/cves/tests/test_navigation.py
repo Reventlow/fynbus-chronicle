@@ -87,7 +87,7 @@ class TestIncidentTasks:
     def test_overdue_says_so_in_words(self, editor_client, case, editor):
         CVETask.add(case, title="Sent", user=editor, due_date=timezone.localdate() - timedelta(days=2))
         assert "(overskredet)" in editor_client.get(case.get_absolute_url()).content.decode()
-        assert "1 overskredet" in editor_client.get(reverse("cves:task-list") + "?mine=0").content.decode()
+        assert "2 dage over" in editor_client.get(reverse("cves:task-list") + "?mine=0").content.decode()
 
 
 class TestNextRoundTrip:
@@ -219,7 +219,7 @@ class TestMineDelopgaver:
         assert response.context["active_count"] == 2 and response.context["overdue_count"] == 1
         body = response.content.decode()
         assert "<title>Mine delopgaver — FynBus Chronicle</title>" in body
-        assert "Alle · 3 aktive" in body and "Mine · 2 aktive" in body
+        assert "Alle · 3" in body and "Mine · 2" in body
         assert 'href="?status=overdue&amp;mine=1"' in body  # tiles keep the scope
 
     def test_overdue_filter(self, editor_client, tasks):
@@ -242,4 +242,4 @@ class TestMineDelopgaver:
 
     def test_empty_mine_explains(self, editor_client):
         body = editor_client.get(reverse("cves:task-list") + "?mine=1").content.decode()
-        assert "Du har ingen delopgaver her." in body
+        assert "Du har ingen delopgaver under »Aktive«." in body

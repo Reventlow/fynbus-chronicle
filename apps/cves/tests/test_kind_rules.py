@@ -238,7 +238,7 @@ class TestMineIsTheDefault:
         CVETask.add(case, title="Uden ansvarlig", user=editor)
         response = editor_client.get(reverse("cves:task-list"))
         assert not response.context["mine"] and self.titles(response) == ["Uden ansvarlig"]
-        assert "Mine · 0 aktive" in response.content.decode()
+        assert "Mine · 0" in response.content.decode()
 
     def test_explicit_mine_stays_even_when_empty(self, editor_client, case, editor):
         CVETask.add(case, title="Uden ansvarlig", user=editor)
@@ -340,3 +340,67 @@ class TestTextEditsOnTheTimeline:
         editor_client.post(reverse("cves:case-edit", args=[case.pk]),
                            {"kind": "vulnerability", "title": case.title, "assessment": "Berørt."})
         assert case.comments.get().kind == "state"  # the export lists only kind=comment
+
+
+class TestTaskListLayout:
+    """1.26.2: one toolbar, groups in the active view, rows about the delopgave."""
+
+    @pytest.fixture
+    def tasks(self, case, editor):
+        today = timezone.localdate()
+        return {
+            "late": CVETask.add(case, title="Sen", user=editor, due_date=today - timedelta(days=3)),
+            "open": CVETask.add(case, title="Åben", user=editor, due_date=today + timedelta(days=4)),
+            "waiting": CVETask.add(case, title="Venter", user=editor, status=CVETask.Status.WAITING_PATCH),
+            "done": CVETask.add(case, title="Gjort", user=editor, status=CVETask.Status.DONE),
+            "ignored": CVETask.add(case, title="Droppet", user=editor, status=CVETask.Status.IGNORED, note="Udfases"),
+        }
+
+    def get(self, client, query=""):
+        return client.get(reverse("cves:task-list") + "?mine=0" + query)
+
+    def test_active_view_is_grouped(self, editor_client, tasks):
+        groups = self.get(editor_client).context["groups"]
+        assert [(g["key"], [t.title for t in g["tasks"]]) for g in groups] == [
+            ("overdue", ["Sen"]), ("open", ["Åben"]), ("waiting", ["Venter"])]
+
+    def test_empty_groups_are_left_out(self, editor_client, case, editor):
+        CVETask.add(case, title="Kun venter", user=editor, status=CVETask.Status.WAITING_RELEASE)
+        assert [g["key"] for g in self.get(editor_client).context["groups"]] == ["waiting"]
+
+    def test_toolbar_counts_and_filters(self, editor_client, tasks):
+        response = self.get(editor_client)
+        assert {f["key"]: f["count"] for f in response.context["toolbar"]} == {
+            "active": 3, "overdue": 1, "waiting": 1, "closed": 2}
+        closed = self.get(editor_client, "&status=closed").context["groups"]
+        assert len(closed) == 1 and sorted(t.title for t in closed[0]["tasks"]) == ["Droppet", "Gjort"]
+        waiting = self.get(editor_client, "&status=waiting").context["groups"][0]["tasks"]
+        assert [t.title for t in waiting] == ["Venter"]
+
+    def test_old_filters_still_work_from_the_url(self, editor_client, tasks):
+        for query, titles in (("&status=done", ["Gjort"]), ("&status=all", ["Droppet", "Gjort", "Sen", "Venter", "Åben"])):
+            groups = self.get(editor_client, query).context["groups"]
+            assert sorted(t.title for t in groups[0]["tasks"]) == titles
+
+    def test_row_shows_deadline_status_and_sag(self, editor_client, tasks, case):
+        body = self.get(editor_client).content.decode()
+        assert "3 dage over" in body and "om 4 dage" in body and "ingen frist" in body
+        assert "Venter på patch</span>" in body and f"sag #{case.pk}: PHP session" in body
+        assert body.count('class="sd-ticket task-row"') == 3
+
+    def test_no_tile_grid(self, editor_client, tasks):
+        body = self.get(editor_client).content.decode()
+        assert "repeat(auto-fit" not in body and 'aria-label="Filtrér delopgaver"' in body
+
+    def test_tab_badge_says_aktive(self, editor_client, tasks):
+        assert "3 aktive" in self.get(editor_client).content.decode()
+
+    def test_due_badge(self, case, editor):
+        today = timezone.localdate()
+        cases = [(today - timedelta(days=1), "1 dag over", "var(--bad)"), (today, "i dag", "var(--warn)"),
+                 (today + timedelta(days=1), "om 1 dag", "var(--warn)"), (today + timedelta(days=30), "om 30 dage", "var(--ink-5)")]
+        for due, text, color in cases:
+            badge = CVETask(case=case, title="x", due_date=due).due_badge
+            assert (badge["text"], badge["color"]) == (text, color)
+        assert CVETask(case=case, title="x", status=CVETask.Status.WAITING_PATCH).due_badge["color"] == "var(--warn)"
+        assert CVETask(case=case, title="x", status=CVETask.Status.DONE).due_badge["closed"]
