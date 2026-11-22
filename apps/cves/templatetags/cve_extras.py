@@ -37,10 +37,11 @@ def owner_url(owner, name: str, *args) -> str:
     return owner.owner_url(name, *args)
 
 
-def _tab_count(open_count: int, total: int) -> dict:
-    """Tab badge: the open count on the badge, both numbers in its tooltip."""
-    return {"count": f"{open_count} åben" if open_count == 1 else f"{open_count} åbne",
-            "title": f"{open_count} {'åben' if open_count == 1 else 'åbne'} · {total} i alt"}
+def _tab_count(open_count: int, total: int, words: tuple[str, str] = ("åben", "åbne")) -> dict:
+    """Tab badge: the open count on the badge, both numbers in its tooltip.
+    ``words`` is (singular, plural); delopgaver say "aktiv/aktive", as one of their statuses is "Åben"."""
+    word = words[0] if open_count == 1 else words[1]
+    return {"count": f"{open_count} {word}", "title": f"{open_count} {word} · {total} i alt"}
 
 
 @register.inclusion_tag("components/tabs.html", takes_context=True)
@@ -65,7 +66,7 @@ def cve_section_nav(context) -> dict:
             {"key": "cves", "label": "CVE'er", "url": reverse("cves:list"),
              **_tab_count(CVE.objects.open().count(), CVE.objects.count())},
             {"key": "tasks", "label": "Delopgaver", "url": reverse("cves:task-list"),
-             **_tab_count(tasks.filter(status__in=CVETask.OPEN_STATUSES).count(), tasks.count())},
+             **_tab_count(tasks.filter(status__in=CVETask.OPEN_STATUSES).count(), tasks.count(), ("aktiv", "aktive"))},
         ],
         "current_tab": current,
         "nav_label": "Sårbarheder og hændelser",

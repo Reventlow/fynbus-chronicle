@@ -15,7 +15,7 @@
        class="tab-link{% if tab.key == current_tab %} tab-link-active{% endif %}"{% if tab.key == current_tab %} aria-current="page"{% endif %}>
       {{ tab.label }}
       {% if tab.count is not None and tab.count != "" %}
-        <span class="tab-count num"{% if tab.title %} title="{{ tab.title }}"{% endif %}>{{ tab.count }}</span>
+        <span class="tab-count num" style="white-space: nowrap;"{% if tab.title %} title="{{ tab.title }}"{% endif %}>{{ tab.count }}</span>
       {% endif %}
     </a>
   {% endfor %}

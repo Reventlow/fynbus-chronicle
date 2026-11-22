@@ -873,9 +873,16 @@ def task_delete(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
 TASK_LIST_FILTERS = {
     "active": "Aktive",
     "overdue": "Overskredet",
+    "waiting": "Venter",
+    "closed": "Lukkede",
     "all": "Alle",
     **{value: label for value, label in CVETask.Status.choices},
 }
+
+# The filters in the page's toolbar (1.26.2). The others ("all" and one status) still work from the URL.
+TASK_LIST_TOOLBAR = ("active", "overdue", "waiting", "closed")
+
+WAITING_STATUSES = (CVETask.Status.WAITING_PATCH, CVETask.Status.WAITING_RELEASE)
 
 
 def my_task_counts(user) -> dict:
@@ -888,18 +895,38 @@ def my_task_counts(user) -> dict:
     return {"active": mine.count(), "overdue": mine.filter(due_date__lt=timezone.localdate()).count()}
 
 
+def _task_groups(tasks: list, status: str) -> list[dict]:
+    """The list's sections. The default view (active) answers the morning questions in
+    three groups: overdue, open work we can do ourselves, and work waiting on a vendor;
+    empty groups are left out. Every other filter is one section."""
+    if status != "active":
+        return [{"key": status, "title": TASK_LIST_FILTERS[status], "hint": "", "tasks": tasks}]
+    groups = [
+        {"key": "overdue", "title": "Overskredet", "hint": "Fristen er passeret.",
+         "tasks": [t for t in tasks if t.is_overdue]},
+        {"key": "open", "title": "Kan tages fat på", "hint": "Åbne delopgaver, vi selv kan gøre noget ved.",
+         "tasks": [t for t in tasks if not t.is_overdue and t.status == CVETask.Status.OPEN]},
+        {"key": "waiting", "title": "Venter på leverandør", "hint": "Venter på en patch eller en ny version.",
+         "tasks": [t for t in tasks if not t.is_overdue and t.status in WAITING_STATUSES]},
+    ]
+    return [g for g in groups if g["tasks"]]
+
+
 @login_required
 def task_list(request: HttpRequest) -> HttpResponse:
     """Every sag's delopgaver in one place.
 
     ``?mine=1`` narrows to the delopgaver assigned to the user ("Mine"); the
-    tiles then count only those. ``?mine=0`` shows everyone's. Without the
+    counts then cover only those. ``?mine=0`` shows everyone's. Without the
     parameter, an editor with active delopgaver of their own gets "Mine";
     everyone else (viewers, and editors with nothing assigned) gets
-    everyone's, rather than an empty page. ``?status=`` picks a filter: "active" (the
-    default: open or waiting), "overdue" (active and past the deadline),
-    "all", or one status. Planlagt arbejde has no delopgaver, so none are
-    listed for it. Overdue ones come first, as the list is sorted by deadline.
+    everyone's, rather than an empty page.
+
+    ``?status=`` picks a filter. The toolbar offers "active" (the default:
+    open or waiting, grouped into overdue / open / waiting), "overdue",
+    "waiting" and "closed"; "all" and a single status still work from the
+    URL. Planlagt arbejde has no delopgaver, so none are listed for it.
+    Each section is sorted by deadline.
     """
     status = request.GET.get("status") or "active"
     if status not in TASK_LIST_FILTERS:
@@ -918,26 +945,38 @@ def task_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(status__in=CVETask.OPEN_STATUSES)
     elif status == "overdue":
         qs = qs.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=today)
+    elif status == "waiting":
+        qs = qs.filter(status__in=WAITING_STATUSES)
+    elif status == "closed":
+        qs = qs.filter(status__in=CVETask.CLOSED_STATUSES)
     elif status != "all":
         qs = qs.filter(status=status)
+    if status == "closed":
+        qs = qs.order_by(F("decided_at").desc(nulls_last=True), "-id")  # most recently closed first
+    else:
+        qs = qs.order_by(F("due_date").asc(nulls_last=True), "created_at", "id")
+    tasks = list(qs)
     totals = {value: 0 for value in CVETask.Status.values}
     for row in base.values("status").annotate(n=Count("id")):
         totals[row["status"]] = row["n"]
-    active = sum(totals[s] for s in CVETask.OPEN_STATUSES)
-    overdue = base.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=today).count()
-    tiles = [{"key": "active", "label": "Aktive", "count": active},
-             {"key": "overdue", "label": "Overskredet", "count": overdue, "bad": bool(overdue)},
-             {"key": "all", "label": "Alle", "count": sum(totals.values())},
-             *({"key": value, "label": label, "count": totals[value]} for value, label in CVETask.Status.choices)]
-    everyone_active = everyone.filter(status__in=CVETask.OPEN_STATUSES).count()
+    counts = {
+        "active": sum(totals[s] for s in CVETask.OPEN_STATUSES),
+        "overdue": base.filter(status__in=CVETask.OPEN_STATUSES, due_date__lt=today).count(),
+        "waiting": sum(totals[s] for s in WAITING_STATUSES),
+        "closed": sum(totals[s] for s in CVETask.CLOSED_STATUSES),
+    }
+    toolbar = [{"key": key, "label": TASK_LIST_FILTERS[key], "count": counts[key],
+                "bad": key == "overdue" and counts[key] > 0} for key in TASK_LIST_TOOLBAR]
     return render(request, "cves/task_list.html", {
-        "tasks": qs.order_by(F("due_date").asc(nulls_last=True), "created_at", "id"),
+        "tasks": tasks,
+        "groups": _task_groups(tasks, status),
         "status": status,
+        "status_label": TASK_LIST_FILTERS[status],
         "mine": mine,
-        "tiles": tiles,
-        "active_count": active,
-        "overdue_count": overdue,
-        "everyone_active": everyone_active,
+        "toolbar": toolbar,
+        "active_count": counts["active"],
+        "overdue_count": counts["overdue"],
+        "everyone_active": everyone.filter(status__in=CVETask.OPEN_STATUSES).count(),
         "my_active": my_counts["active"],
         "here": request.get_full_path(),
     })
