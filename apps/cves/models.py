@@ -325,11 +325,23 @@ class CaseTasksOpen(Exception):
         super().__init__(f"Sag #{case.pk} har {case.open_task_count()} åbne delopgaver")
 
 
+class CaseKindHoldsNoCVEs(Exception):
+    """Only a vulnerability sag holds CVEs (1.26.0)."""
+
+    def __init__(self, case: "CVECase"):
+        self.case = case
+        super().__init__(f"{case.get_kind_display()} kan ikke have CVE'er — kun en sårbarhedssag kan")
+
+
 class CVECaseQuerySet(models.QuerySet):
     open_during = CVEQuerySet.open_during
 
     def open(self) -> "CVECaseQuerySet":
         return self.exclude(state=CVE.State.SOLVED)
+
+    def holding_cves(self) -> "CVECaseQuerySet":
+        """The sager a CVE can be put in: vulnerability sager only."""
+        return self.filter(kind="vulnerability")
 
     def open_first(self) -> "CVECaseQuerySet":
         rank = Case(
@@ -390,6 +402,19 @@ class CVECase(models.Model):
     source_url = models.URLField(verbose_name="Kildelink", blank=True)
     due_date = models.DateField(verbose_name="Frist", null=True, blank=True,
                                 help_text="Til planlagt arbejde: hvornår det skal være gjort. Valgfri.")
+
+    # Incident facts (1.26.0). Only a hændelse uses them; the form hides them for the other kinds.
+    class Severity(models.TextChoices):
+        CRITICAL = "critical", "Kritisk"
+        HIGH = "high", "Høj"
+        MEDIUM = "medium", "Medium"
+        LOW = "low", "Lav"
+
+    occurred_at = models.DateTimeField(verbose_name="Tidspunkt", null=True, blank=True,
+                                       help_text="Hvornår hændelsen skete eller blev opdaget.")
+    severity = models.CharField(verbose_name="Alvorlighed", max_length=10, choices=Severity.choices, blank=True)
+    affected = models.CharField(verbose_name="Berørte", max_length=300, blank=True,
+                                help_text="Hvem eller hvad er ramt: systemer, afdelinger, brugere.")
 
     # Which sections the week log export shows for this case (see EXPORT_SECTIONS).
     export_assessment = models.BooleanField(verbose_name="Vurdering i ugelogs-eksport", default=True)
@@ -457,6 +482,26 @@ class CVECase(models.Model):
         """Only vulnerability cases are about CVEs (the CVE count and card)."""
         return self.kind == self.Kind.VULNERABILITY
 
+    @property
+    def incident_facts(self) -> str:
+        """"Tidspunkt 20.11.2026 08:15 · Alvorlighed: Høj · Berørte: …" for a hændelse (the
+        parts that are filled in), "" otherwise. The week log and its export show it."""
+        if not self.is_incident:
+            return ""
+        parts = []
+        if self.occurred_at:
+            parts.append(f"Tidspunkt {timezone.localtime(self.occurred_at):%d.%m.%Y %H:%M}")
+        if self.severity:
+            parts.append(f"Alvorlighed: {self.get_severity_display()}")
+        if self.affected:
+            parts.append(f"Berørte: {self.affected}")
+        return " · ".join(parts)
+
+    @property
+    def holds_cves(self) -> bool:
+        """Only a vulnerability sag holds CVEs; a hændelse or planlagt arbejde never does."""
+        return self.is_vulnerability
+
     # A planned task's states in its own words (see TASK_OUTCOMES in views).
     TASK_STATE_LABELS = {"identified": "Planlagt", "patching": "I gang", "review": "Til gennemsyn", "solved": "Udført"}
 
@@ -503,21 +548,22 @@ class CVECase(models.Model):
 
     @classmethod
     def create_incident(cls, *, title: str, description: str, user=None, occurred_at=None,
-                        type_label: str = "", severity_label: str = "", resolved: bool = False,
+                        type_label: str = "", severity: str = "", affected: str = "", resolved: bool = False,
                         resolution: str = "", solved_at=None) -> "CVECase":
-        """An incident case from the fields of an old logbook Hændelse (the
-        API's incident endpoint and the 1.12.0 move use it). Type, severity
-        and time go into the assessment as a closing line; a resolved
-        incident is færdigbehandlet at ``solved_at`` (default now)."""
+        """An incident case (the API's incident endpoint uses it).
+
+        Time, severity (a ``Severity`` value; anything else is dropped) and
+        who is affected go into the incident fields; the old logbook type
+        has no field and stays as a closing line in the assessment. A
+        resolved incident is færdigbehandlet at ``solved_at`` (default now)."""
         occurred_at = occurred_at or timezone.now()
-        facts = " · ".join(x for x in (
-            type_label and f"Type: {type_label}",
-            severity_label and f"Alvorlighed: {severity_label}",
-            f"Tidspunkt: {timezone.localtime(occurred_at):%d.%m.%Y %H:%M}",
-        ) if x)
+        description = description.strip()
+        assessment = f"{description}\n\n*Type: {type_label}*" if type_label else description
         case = cls.objects.create(
             kind=cls.Kind.INCIDENT, title=title[:200],
-            assessment=f"{description.strip()}\n\n*{facts}*".strip(),
+            occurred_at=occurred_at, affected=affected.strip()[:300],
+            severity=severity if severity in cls.Severity.values else "",
+            assessment=assessment.strip(),
             solution=resolution.strip(),
             state=cls.State.SOLVED if resolved else cls.State.IDENTIFIED,
             solved_at=(solved_at or timezone.now()) if resolved else None,
@@ -525,6 +571,20 @@ class CVECase(models.Model):
             created_by=user, created_at=occurred_at,
         )
         return case
+
+    # The texts whose edits go on the timeline (1.26.0): field -> name in the line.
+    TIMELINE_TEXTS = {"assessment": "Vurdering", "solution": "Løsning / handling"}
+
+    def log_text_changes(self, before: dict, user=None) -> None:
+        """Note on the timeline that the assessment or solution was written,
+        changed or cleared. ``before`` holds the old values (field -> text).
+        The line names the section only; the text itself is on the page."""
+        for field, name in self.TIMELINE_TEXTS.items():
+            old, new = (before.get(field) or "").strip(), (getattr(self, field) or "").strip()
+            if field not in before or old == new:
+                continue
+            verb = "skrevet" if not old else ("slettet" if not new else "ændret")
+            self._log(f"{name} {verb}", user)
 
     def _log(self, text: str, user=None, *, state: bool = True) -> None:
         CVEComment.objects.create(case=self, kind=CVEComment.Kind.STATE if state else CVEComment.Kind.COMMENT,
@@ -562,10 +622,14 @@ class CVECase(models.Model):
     def add_cves(self, cves, user=None) -> list["CVE"]:
         """Add CVEs to the case; they take the case's state.
 
-        Raises CaseConflict (adding nothing) if any is in another case.
+        Raises CaseConflict (adding nothing) if any is in another case, and
+        CaseKindHoldsNoCVEs if this is a hændelse or planlagt arbejde: only
+        a vulnerability sag holds CVEs (1.26.0).
         Returns the CVEs that were actually added (not already members).
         """
         cves = list(cves)
+        if cves and not self.holds_cves:
+            raise CaseKindHoldsNoCVEs(self)
         taken = [c for c in cves if c.case_id and c.case_id != self.pk]
         if taken:
             raise CaseConflict(taken)
@@ -721,6 +785,46 @@ class CVETask(models.Model):
         self.case._log(f"Opgave: {self.title} — {old_label} → {self.get_status_display()}{suffix}", user)
         self.case.sync_task_state(user)
         return True
+
+    def edit(self, user=None, *, title: str, assignee, due_date) -> bool:
+        """Change title, assignee and deadline (1.26.0); the timeline says what changed.
+        Status and note are changed with :meth:`set_status`. Returns False when nothing changed."""
+        title = (title or "").strip()[:200]
+        if not title:
+            raise ValueError("En delopgave skal have en titel.")
+
+        def who(u) -> str:
+            return (u.get_full_name() or u.username) if u else "ingen"
+
+        def when(d) -> str:
+            return d.strftime("%d.%m.%Y") if d else "ingen"
+
+        changes = []
+        if title != self.title:
+            changes.append(f"titel: {self.title} → {title}")
+        if (assignee.pk if assignee else None) != self.assignee_id:
+            changes.append(f"ansvarlig: {who(self.assignee)} → {who(assignee)}")
+        if due_date != self.due_date:
+            changes.append(f"frist: {when(self.due_date)} → {when(due_date)}")
+        if not changes:
+            return False
+        self.title, self.assignee, self.due_date = title, assignee, due_date
+        self.save(update_fields=["title", "assignee", "due_date", "updated_at"])
+        self.case._log(f"Delopgave ændret: {self.title} — " + ", ".join(changes), user)
+        return True
+
+    def remove(self, user=None) -> None:
+        """Delete the task (1.26.0), note it on the sag's timeline and re-apply the gate:
+        removing the last open delopgave makes the sag ready for review."""
+        case = self.case
+        case._log(f"Delopgave slettet: {self.title} ({self.get_status_display()})", user)
+        self.delete()
+        if case.tasks_gate and not case.tasks.exists() and case.state == case.State.PATCHING:
+            # The gate held the sag in Patcher; with no delopgaver left, sync_task_state
+            # leaves the state alone, so release it here as closing the last one would.
+            case.set_state(case.State.REVIEW, user)
+        else:
+            case.sync_task_state(user)
 
 
 class _OwnedMixin:

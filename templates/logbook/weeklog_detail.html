@@ -258,6 +258,7 @@
               {% if case.is_vulnerability %}<span class="task-status num">{% with n=case.cves.all|length %}{% if n %}{{ n }} CVE{{ n|pluralize:"'er" }}{% else %}Ingen CVE{% endif %}{% endwith %}</span>{% endif %}
               {% if case.solved_this_week %}<span class="task-status" style="color: var(--good-ink); font-weight: 500;">Færdigbehandlet denne uge</span>{% endif %}
             </div>
+            {% if case.incident_facts %}<div class="incident-meta">{{ case.incident_facts }}</div>{% endif %}
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-5);" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </a>

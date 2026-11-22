@@ -149,10 +149,10 @@ def test_state_button_refuses_solving_with_open_tasks(editor_client, case, edito
 def test_task_list_shows_counts_and_filters(editor_client, case, editor):
     CVETask.add(case, title="venter", user=editor, status=CVETask.Status.WAITING_PATCH)
     CVETask.add(case, title="gjort", user=editor, status=CVETask.Status.DONE)
-    response = editor_client.get(reverse("cves:task-list"))
+    response = editor_client.get(reverse("cves:task-list") + "?mine=0")
     assert response.status_code == 200
     assert response.context["active_count"] == 1
-    response = editor_client.get(reverse("cves:task-list") + "?status=done")
+    response = editor_client.get(reverse("cves:task-list") + "?status=done&mine=0")
     assert [t.title for t in response.context["tasks"]] == ["gjort"]
 
 

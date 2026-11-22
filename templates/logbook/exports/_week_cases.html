@@ -26,6 +26,9 @@
           {% if case.source %}{{ case.source_label }}{% if case.reference %} &middot; {% endif %}{% endif %}{{ case.reference }}{% if case.source or case.reference %}{% if case.cves.all or case.is_vulnerability %} &middot; {% endif %}{% endif %}{% for cve in case.cves.all %}<span style="font-family:monospace;">{{ cve.cve_id }}</span>{% if not forloop.last %}, {% endif %}{% empty %}{% if case.is_vulnerability %}Ingen CVE{% endif %}{% endfor %}{% if case.solved_this_week %}{% if case.source or case.reference or case.cves.all or case.is_vulnerability %} &middot; {% endif %}Færdigbehandlet denne uge{% endif %}
         </td>
       </tr>
+      {% if case.incident_facts %}
+      <tr><td colspan="3" style="padding:0 14px 8px 14px; font-size:9pt; color:#4A4540;">{{ case.incident_facts }}</td></tr>
+      {% endif %}
       {% if case.export_assessment and case.assessment %}
       <tr><td colspan="3" class="md" style="padding:0 14px 8px 14px; font-size:9pt; color:#4A4540;"><strong>Vurdering:</strong> {{ case.assessment|render_markdown }}</td></tr>
       {% endif %}

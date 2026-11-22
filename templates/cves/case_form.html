@@ -23,7 +23,15 @@
   #id_kind { display: flex; gap: 20px; }
   #id_kind label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 </style>
-<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 720px;">
+{% comment %}
+  kind follows the Type radio: the heading (new sag only), the incident fields
+  (Tidspunkt, Alvorlighed, Berørte; hændelse only) and the CVE'er field
+  (sårbarhed only) follow it. Without JavaScript every field shows and the
+  form's clean() sorts it out.
+{% endcomment %}
+<div style="display: flex; flex-direction: column; gap: var(--gutter); max-width: 720px;"
+     x-data="{ kind: '{{ form.kind.value|default:'vulnerability'|escapejs }}', headings: {{ new_headings_json|default:'{}' }} }"
+     @change="if ($event.target.name === 'kind') kind = $event.target.value">
   {% cve_section_nav %}
 
   <div style="border-bottom: 1px solid var(--hairline); padding-bottom: 16px;">
@@ -32,7 +40,7 @@
       <span>{% if object %}Rediger {{ object.get_kind_display|lower }}{% else %}Alle tre er sager: en sårbarhed (CVE'er med samme vurdering og løsning), en hændelse eller planlagt arbejde{% endif %}</span>
     </div>
     <h1 class="display" style="margin: 0; font-size: 36px; line-height: 1.1;">
-      {% if object %}Sag #{{ object.pk }}{% else %}{{ new_heading }}{% endif %}
+      {% if object %}Sag #{{ object.pk }}{% else %}<span x-text="headings[kind] || '{{ new_heading|escapejs }}'">{{ new_heading }}</span>{% endif %}
     </h1>
   </div>
 
@@ -43,7 +51,7 @@
     {% endif %}
 
     {% for field in form %}
-      <div>
+      <div{% if field.name in form.INCIDENT_FIELDS %} x-show="kind === 'incident'"{% elif field.name == 'cve_ids' %} x-show="kind === 'vulnerability'"{% endif %}>
         <label for="{{ field.id_for_label }}" class="input-label">{{ field.label }}</label>
         {{ field }}
         {% if field.help_text %}<p class="input-help">{{ field.help_text }}</p>{% endif %}

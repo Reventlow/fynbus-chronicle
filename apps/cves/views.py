@@ -9,6 +9,7 @@ Everyone logged in can read; writes need an editor (Viewer group members
 get 403 before anything is written).
 """
 
+import json
 from datetime import timedelta
 
 from django.conf import settings
@@ -29,13 +30,14 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import CreateView, DetailView, UpdateView
 
-from apps.accounts.permissions import EditorRequiredMixin, editor_required
+from apps.accounts.permissions import EditorRequiredMixin, editor_required, is_editor
 
 from .forms import (
     CVEAttachmentForm, CVECaseAddForm, CVECaseForm, CVECommentForm, CVECreateForm, CVEEditForm, CVELinkForm,
+    CVETaskEditForm,
 )
 from .models import (
-    CVE, CaseConflict, CaseTasksOpen, CVEAttachment, CVECase, CVEComment, CVELink, CVETask, normalise_cve_id,
+    CVE, CaseConflict, CaseKindHoldsNoCVEs, CaseTasksOpen, CVEAttachment, CVECase, CVEComment, CVELink, CVETask, normalise_cve_id,
 )
 
 # Solved CVEs older than this drop off the list unless "Alle" is picked.
@@ -118,9 +120,9 @@ class CVEDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["owner"] = self.object
         if not self.object.case_id:
-            # Every CVE should belong to a case: offer every case, open ones first.
-            context["open_cases"] = CVECase.objects.open().order_by("-updated_at")
-            context["closed_cases"] = CVECase.objects.filter(state=CVE.State.SOLVED).order_by("-updated_at")
+            # Every CVE should belong to a sag: offer every vulnerability sag, open ones first.
+            context["open_cases"] = CVECase.objects.holding_cves().open().order_by("-updated_at")
+            context["closed_cases"] = CVECase.objects.holding_cves().filter(state=CVE.State.SOLVED).order_by("-updated_at")
         context["links"] = self.object.links.select_related("added_by")
         context["attachments"] = self.object.attachments.select_related("uploaded_by")
         context["attachment_form"] = CVEAttachmentForm()
@@ -601,6 +603,13 @@ OUTCOMES_BY_KIND = {
 }
 
 
+NEW_HEADINGS = {
+    CVECase.Kind.VULNERABILITY: "Ny sårbarhedssag",
+    CVECase.Kind.INCIDENT: "Ny hændelse",
+    CVECase.Kind.TASK: "Nyt planlagt arbejde",
+}
+
+
 class CVECaseCreateView(EditorRequiredMixin, CreateView):
     """Start a case, optionally with CVE ids (``?cve_ids=`` prefills them,
     which the "Ny sag" button on a CVE page uses; ``?kind=incident`` or
@@ -614,8 +623,9 @@ class CVECaseCreateView(EditorRequiredMixin, CreateView):
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         kind = self.request.GET.get("kind")
-        context["new_heading"] = {CVECase.Kind.INCIDENT: "Ny hændelse",
-                                  CVECase.Kind.TASK: "Nyt planlagt arbejde"}.get(kind, "Ny sårbarhedssag")
+        context["new_heading"] = NEW_HEADINGS.get(kind, NEW_HEADINGS[CVECase.Kind.VULNERABILITY])
+        # The heading follows the Type radio (case_form.html).
+        context["new_headings_json"] = json.dumps({str(k): v for k, v in NEW_HEADINGS.items()})
         ids = [i for i in (self.request.GET.get("cve_ids") or "").split(",") if i.strip()]
         if len(ids) == 1:
             cve = CVE.objects.filter(cve_id=ids[0].strip().upper()).first()
@@ -662,8 +672,12 @@ class CVECaseUpdateView(EditorRequiredMixin, UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        # The form has already put the new values on the instance; read the old ones from the database.
+        before = CVECase.objects.values(*CVECase.TIMELINE_TEXTS).get(pk=self.object.pk)
+        response = super().form_valid(form)
+        self.object.log_text_changes(before, self.request.user)
         messages.success(self.request, f"Sag #{self.object.pk} er opdateret.")
-        return super().form_valid(form)
+        return response
 
     def get_success_url(self) -> str:
         return self.object.get_absolute_url()
@@ -708,8 +722,11 @@ def case_state(request: HttpRequest, pk: int) -> HttpResponse:
 @editor_required
 @require_POST
 def case_add_cves(request: HttpRequest, pk: int) -> HttpResponse:
-    """Add CVEs by id to a case (unknown ids are created)."""
+    """Add CVEs by id to a case (unknown ids are created). Only a vulnerability sag holds CVEs."""
     case = get_object_or_404(CVECase, pk=pk)
+    if not case.holds_cves:
+        messages.error(request, f"{case.get_kind_display()} kan ikke have CVE'er — kun en sårbarhedssag kan.")
+        return redirect(case.get_absolute_url())
     form = CVECaseAddForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors["cve_ids"][0])
@@ -747,6 +764,9 @@ def cve_join_case(request: HttpRequest, pk: int) -> HttpResponse:
         case.add_cves([cve], request.user)
     except CaseConflict:
         messages.error(request, f"{cve.cve_id} er allerede i sag #{cve.case_id}.")
+        return redirect(cve.get_absolute_url())
+    except CaseKindHoldsNoCVEs as exc:
+        messages.error(request, f"{exc}.")
         return redirect(cve.get_absolute_url())
     messages.success(request, f"{cve.cve_id} er føjet til sag #{case.pk}.")
     return redirect(case.get_absolute_url())
@@ -813,6 +833,43 @@ def task_status(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
     return _after_task(request, case)
 
 
+@login_required
+@editor_required
+@require_POST
+def task_edit(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
+    """Change a delopgave's title, assignee and deadline (``POST title, assignee, due_date``)."""
+    case = get_object_or_404(CVECase, pk=pk)
+    task = get_object_or_404(CVETask, pk=task_pk, case=case)
+    form = CVETaskEditForm(request.POST, instance=CVETask.objects.get(pk=task.pk))
+    if not form.is_valid():
+        field, errors = next(iter(form.errors.items()))
+        label = form.fields[field].label if field in form.fields else ""
+        messages.error(request, f"{label}: {errors[0]}" if label else errors[0])
+        return _after_task(request, case, ok=False)
+    try:
+        changed = task.edit(request.user, title=form.cleaned_data["title"],
+                            assignee=form.cleaned_data["assignee"], due_date=form.cleaned_data["due_date"])
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return _after_task(request, case, ok=False)
+    if changed:
+        messages.success(request, f"Delopgave opdateret: {task.title}")
+    return _after_task(request, case)
+
+
+@login_required
+@editor_required
+@require_POST
+def task_delete(request: HttpRequest, pk: int, task_pk: int) -> HttpResponse:
+    """Delete a delopgave. The sag's timeline keeps a line saying so."""
+    case = get_object_or_404(CVECase, pk=pk)
+    task = get_object_or_404(CVETask, pk=task_pk, case=case)
+    title = task.title
+    task.remove(request.user)
+    messages.success(request, f"Delopgave slettet: {title}")
+    return _after_task(request, case)
+
+
 TASK_LIST_FILTERS = {
     "active": "Aktive",
     "overdue": "Overskredet",
@@ -836,7 +893,9 @@ def task_list(request: HttpRequest) -> HttpResponse:
     """Every sag's delopgaver in one place.
 
     ``?mine=1`` narrows to the delopgaver assigned to the user ("Mine"); the
-    tiles then count only those. ``?status=`` picks a filter: "active" (the
+    tiles then count only those. ``?mine=0`` shows everyone's. Without the
+    parameter, editors get "Mine" (they are the ones delopgaver are
+    assigned to) and viewers get everyone's. ``?status=`` picks a filter: "active" (the
     default: open or waiting), "overdue" (active and past the deadline),
     "all", or one status. Planlagt arbejde has no delopgaver, so none are
     listed for it. Overdue ones come first, as the list is sorted by deadline.
@@ -844,7 +903,8 @@ def task_list(request: HttpRequest) -> HttpResponse:
     status = request.GET.get("status") or "active"
     if status not in TASK_LIST_FILTERS:
         status = "active"
-    mine = request.GET.get("mine") == "1"
+    mine_param = request.GET.get("mine")
+    mine = mine_param == "1" if mine_param in ("0", "1") else is_editor(request.user)
     everyone = CVETask.objects.exclude(case__kind=CVECase.Kind.TASK)
     base = everyone.filter(assignee=request.user) if mine else everyone
     today = timezone.localdate()
