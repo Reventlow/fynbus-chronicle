@@ -19,6 +19,13 @@
       <a href="{% url 'cves:list' %}" class="incident-toggle">CVE'er →</a>
     </div>
   </div>
+  {% if my_tasks.active %}
+    {# The user's own delopgaver, straight to the "Mine" list; overdue in red. #}
+    <a href="{% url 'cves:task-list' %}?mine=1{% if my_tasks.overdue %}&amp;status=overdue{% endif %}" class="incident-toggle"
+       style="display: block; padding: 0 24px 10px; font-size: 13px;">
+      Mine delopgaver: <span class="num">{{ my_tasks.active }}</span> aktiv{{ my_tasks.active|pluralize:"e" }}{% if my_tasks.overdue %} · <span class="num" style="color: var(--bad-ink);">{{ my_tasks.overdue }} overskredet</span>{% endif %} →
+    </a>
+  {% endif %}
 
   {% if cves or cases %}
     <div class="scrollbar-thin" style="overflow-y: auto;">

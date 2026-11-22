@@ -22,7 +22,7 @@
         <div class="incident-title">{{ task.title }}</div>
         <div class="incident-meta">
           <span>{{ task.get_status_display }}</span>
-          {% if task.assignee %}<span> · {{ task.assignee.get_full_name|default:task.assignee.username }}</span>{% endif %}
+          {% if task.assignee %}<span> · {% if task.assignee_id == user.pk %}<strong>Dig</strong>{% else %}{{ task.assignee.get_full_name|default:task.assignee.username }}{% endif %}</span>{% endif %}
           {% if task.due_date %}<span{% if task.is_overdue %} style="color: var(--bad-ink);"{% endif %}> · Frist {{ task.due_date|date:"d.m.Y" }}{% if task.is_overdue %} (overskredet){% endif %}</span>{% endif %}
         </div>
         {% if task.note %}<div class="incident-meta" style="white-space: pre-wrap; margin-top: 4px;">{{ task.note }}</div>{% endif %}

@@ -2,6 +2,15 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.25.1 — 2026-11-22
+
+### Added
+- **Mine delopgaver.** Delopgave-listen har en knap **Alle | Mine** øverst: *Mine* viser kun de delopgaver, du står
+  som ansvarlig på, og felterne tæller så kun dine. Et nyt felt **Overskredet** viser aktive delopgaver, hvis frist
+  er passeret (rødt, når der er nogen). På en sag står *Dig* ved dine egne delopgaver.
+- **Kontrolpanelet**: har du aktive delopgaver, står *Mine delopgaver: N aktive · M overskredet →* på
+  Sårbarheder-kortet. Linket går direkte til din liste, eller til de overskredne, hvis der er nogen.
+
 ## 1.25.0 — 2026-11-22
 
 Navigationen i *Sårbarheder og hændelser* er bygget om efter en gennemgang med en UI-ekspert og to brugertests.

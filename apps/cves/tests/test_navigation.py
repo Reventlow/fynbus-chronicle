@@ -193,3 +193,53 @@ class TestReviewFixes:
     def test_filter_form_keeps_the_without_sag_view(self, editor_client):
         body = editor_client.get(reverse("cves:list") + "?sag=ingen").content.decode()
         assert '<input type="hidden" name="sag" value="ingen">' in body
+
+
+class TestMineDelopgaver:
+    """1.25.1: "Mine" on the task list, an Overskredet filter, and the Kontrolpanel line."""
+
+    @pytest.fixture
+    def tasks(self, case, editor):
+        other = editor.__class__.objects.create_user("kollega", password="x")
+        late = timezone.localdate() - timedelta(days=3)
+        return {
+            "mine_late": CVETask.add(case, title="Min sene", user=editor, assignee=editor, due_date=late),
+            "mine": CVETask.add(case, title="Min", user=editor, assignee=editor),
+            "theirs": CVETask.add(case, title="Kollegas", user=editor, assignee=other, due_date=late),
+            "mine_done": CVETask.add(case, title="Min færdige", user=editor, assignee=editor,
+                                     status=CVETask.Status.DONE),
+        }
+
+    def titles(self, response):
+        return [t.title for t in response.context["tasks"]]
+
+    def test_mine_shows_only_my_active_tasks(self, editor_client, tasks):
+        response = editor_client.get(reverse("cves:task-list") + "?mine=1")
+        assert self.titles(response) == ["Min sene", "Min"]
+        assert response.context["active_count"] == 2 and response.context["overdue_count"] == 1
+        body = response.content.decode()
+        assert "<title>Mine delopgaver — FynBus Chronicle</title>" in body
+        assert "Alle · 3 aktive" in body and "Mine · 2 aktive" in body
+        assert 'href="?status=overdue&amp;mine=1"' in body  # tiles keep the scope
+
+    def test_overdue_filter(self, editor_client, tasks):
+        everyone = editor_client.get(reverse("cves:task-list") + "?status=overdue")
+        assert sorted(self.titles(everyone)) == ["Kollegas", "Min sene"]
+        mine = editor_client.get(reverse("cves:task-list") + "?status=overdue&mine=1")
+        assert self.titles(mine) == ["Min sene"]
+
+    def test_my_tasks_are_marked_on_the_sag(self, editor_client, case, tasks):
+        body = editor_client.get(case.get_absolute_url()).content.decode()
+        assert body.count("<strong>Dig</strong>") == 3 and "kollega" in body
+
+    def test_kontrolpanel_line(self, editor_client, tasks):
+        body = editor_client.get(reverse("dashboard:partial-cves")).content.decode()
+        assert "Mine delopgaver: <span class=\"num\">2</span> aktive" in body and "1 overskredet" in body
+        assert f'href="{reverse("cves:task-list")}?mine=1&amp;status=overdue"' in body
+
+    def test_no_line_without_tasks(self, editor_client):
+        assert "Mine delopgaver" not in editor_client.get(reverse("dashboard:partial-cves")).content.decode()
+
+    def test_empty_mine_explains(self, editor_client):
+        body = editor_client.get(reverse("cves:task-list") + "?mine=1").content.decode()
+        assert "Du har ingen delopgaver her." in body

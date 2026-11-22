@@ -549,8 +549,11 @@ class CVEsPartialView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/partials/cves_list.html"
 
     def get_context_data(self, **kwargs) -> dict:
+        from apps.cves.views import my_task_counts
+
         context = super().get_context_data(**kwargs)
         context.update(cve_overview())
+        context["my_tasks"] = my_task_counts(self.request.user)  # "Mine delopgaver" line
         return context
 
 
