@@ -992,7 +992,59 @@ def weeklog_cves(weeklog) -> dict:
         "week_vuln_count": len(cves) + len(cases),
         "week_summary": _week_summary(cases),
         "export_cases": [c for c in cases if c.in_week_export],
+        "week_task_stats": week_task_stats(weeklog),
     }
+
+
+def vuln_task_stats() -> dict:
+    """Delopgaver on vulnerability sager right now: ``open`` (status Åben, work we
+    can do ourselves) and ``waiting`` (waiting on a vendor's patch or new release).
+    The two are disjoint; closed delopgaver are in neither."""
+    waiting = (CVETask.Status.WAITING_PATCH, CVETask.Status.WAITING_RELEASE)
+    return CVETask.objects.filter(case__kind=CVECase.Kind.VULNERABILITY).aggregate(
+        open=Count("id", filter=Q(status=CVETask.Status.OPEN)),
+        waiting=Count("id", filter=Q(status__in=waiting)),
+    )
+
+
+def _is_running(weeklog) -> bool:
+    start, end = iso_week_bounds(weeklog.year, weeklog.week_number)
+    return start <= timezone.now() < end
+
+
+def record_week_task_stats(weeklog=None) -> dict | None:
+    """Write the current delopgave counts onto the running week's log.
+
+    ``weeklog`` defaults to this week's log, if it exists (none is created).
+    A log whose week has ended is left alone: its numbers are the snapshot of
+    how that week ended. Written with ``update()`` so a snapshot does not
+    bump the log's ``updated_at``. Returns the counts, or None when nothing
+    was written.
+    """
+    from apps.logbook.models import WeekLog  # logbook imports this module
+
+    if weeklog is None:
+        weeklog = WeekLog.get_current_week()
+    if weeklog is None or not _is_running(weeklog):
+        return None
+    stats = vuln_task_stats()
+    if (weeklog.vuln_tasks_open, weeklog.vuln_tasks_waiting) != (stats["open"], stats["waiting"]):
+        weeklog.vuln_tasks_open, weeklog.vuln_tasks_waiting = stats["open"], stats["waiting"]
+        if weeklog.pk:
+            WeekLog.objects.filter(pk=weeklog.pk).update(
+                vuln_tasks_open=stats["open"], vuln_tasks_waiting=stats["waiting"])
+    return stats
+
+
+def week_task_stats(weeklog) -> dict | None:
+    """The delopgave counts a week log shows: live (and recorded) while the
+    week runs, the stored snapshot after it. None for a week that was never
+    recorded, so old logs show nothing rather than today's numbers."""
+    if _is_running(weeklog):
+        return record_week_task_stats(weeklog)
+    if weeklog.vuln_tasks_open is None or weeklog.vuln_tasks_waiting is None:
+        return None
+    return {"open": weeklog.vuln_tasks_open, "waiting": weeklog.vuln_tasks_waiting}
 
 
 def _week_summary(cases) -> list[dict]:

@@ -2,6 +2,16 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.27.0 — 2026-11-22
+
+### Added
+- **Ugeloggen viser delopgaver på sårbarheder som tal.** Under diagrammet over sager står nu
+  *Delopgaver på sårbarheder: 5 åbne · 2 venter på leverandør*. *Åbne* er delopgaver med status *Åben* (dem, vi
+  selv kan gøre noget ved); *venter på leverandør* er *Venter på patch* og *Venter på ny version*. Tallene står på
+  siden og i PDF-, HTML-, mail- og Markdown-eksporten.
+  - Tallene følges, mens ugen løber (hver ændring af en delopgave opdaterer dem), og fryses, når ugen er slut, så en
+    gammel ugelog viser, hvordan ugen endte. En delopgaves status har ingen historik, så uger før 1.27.0 viser ingen tal.
+
 ## 1.26.3 — 2026-11-22
 
 ### Fixed

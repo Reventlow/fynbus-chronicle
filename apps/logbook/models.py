@@ -115,6 +115,24 @@ class WeekLog(models.Model):
         help_text="Åbne tickets med en liggetid på over 365 dage",
     )
 
+    # Delopgaver on vulnerability sager (1.27.0): a snapshot of how many are
+    # open and how many wait on a vendor (patch or new release). Kept fresh
+    # while the week runs and frozen once it ends, because a task's status has
+    # no history to rebuild an old week from. None = never recorded (weeks
+    # before 1.27.0), and the week log then shows nothing.
+    vuln_tasks_open = models.PositiveIntegerField(
+        verbose_name="Åbne delopgaver (sårbarheder)",
+        null=True,
+        blank=True,
+        help_text="Åbne delopgaver på sårbarhedssager ved ugens slutning",
+    )
+    vuln_tasks_waiting = models.PositiveIntegerField(
+        verbose_name="Delopgaver der venter på leverandør",
+        null=True,
+        blank=True,
+        help_text="Delopgaver på sårbarhedssager, der venter på patch eller ny version, ved ugens slutning",
+    )
+
     # Weekly summary
     summary = models.TextField(
         verbose_name="Ugeoversigt",

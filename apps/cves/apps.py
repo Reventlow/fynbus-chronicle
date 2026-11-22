@@ -6,3 +6,6 @@ class CvesConfig(AppConfig):
     name = "apps.cves"
     label = "cves"
     verbose_name = "Sårbarheder og hændelser"
+
+    def ready(self) -> None:
+        from apps.cves import signals  # noqa: F401  (registers the receivers)
