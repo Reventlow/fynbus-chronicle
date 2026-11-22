@@ -2,6 +2,14 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.26.3 — 2026-11-22
+
+### Fixed
+- **Admin virker med Microsoft-login, også fra et bogmærke.** Personale, der er logget ind med Microsoft, har altid haft
+  adgang til `/admin/`. Men et besøg på `/admin/` uden at være logget ind endte på Django-admins egen login-side, som
+  kun tager en adgangskode, og den afvises for alle andre end nødadgangskonti. Nu sendes man til Chronicles login-side
+  (med *Log ind med Microsoft*) og videre til admin bagefter. Nødadgang virker som før.
+
 ## 1.26.2 — 2026-11-22
 
 ### Changed
