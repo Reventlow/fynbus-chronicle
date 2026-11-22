@@ -2,6 +2,13 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.26.1 — 2026-11-22
+
+### Fixed
+- **Delopgaver åbner kun på Mine, når du har nogen.** En redaktør uden aktive delopgaver som ansvarlig lander på
+  *Alle* i stedet for en tom side. *Mine* er stadig ét klik væk.
+- **Fanerne Sager | CVE'er | Delopgaver** viste en lille lodret rullebjælke yderst til højre. Den er væk.
+
 ## 1.26.0 — 2026-11-22
 
 ### Added

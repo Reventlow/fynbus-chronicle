@@ -5,9 +5,11 @@
     current_tab  — key of active tab
     nav_label    — optional aria-label; given, the tabs are a <nav> landmark
   Each tab links via plain anchor; the active one carries aria-current. The
-  row scrolls sideways on a narrow screen instead of wrapping.
+  row scrolls sideways on a narrow screen instead of wrapping. overflow-y is
+  hidden and the 1px padding holds the active tab's underline (it sits 1px
+  lower, over the hairline); without them the row shows a vertical scrollbar.
 {% endcomment %}
-<{% if nav_label %}nav aria-label="{{ nav_label }}"{% else %}div{% endif %} class="tab-list" style="overflow-x: auto;">
+<{% if nav_label %}nav aria-label="{{ nav_label }}"{% else %}div{% endif %} class="tab-list" style="overflow-x: auto; overflow-y: hidden; padding-bottom: 1px;">
   {% for tab in tabs %}
     <a href="{{ tab.url }}"
        class="tab-link{% if tab.key == current_tab %} tab-link-active{% endif %}"{% if tab.key == current_tab %} aria-current="page"{% endif %}>

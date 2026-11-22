@@ -233,6 +233,18 @@ class TestMineIsTheDefault:
         assert not response.context["mine"] and self.titles(response) == ["Kollegas", "Min"]
         assert 'href="?status=overdue&amp;mine=0"' in response.content.decode()  # tiles keep the scope
 
+    def test_editor_without_own_tasks_lands_on_everyone(self, editor_client, case, editor):
+        """1.26.1: an empty Mine page is no landing page."""
+        CVETask.add(case, title="Uden ansvarlig", user=editor)
+        response = editor_client.get(reverse("cves:task-list"))
+        assert not response.context["mine"] and self.titles(response) == ["Uden ansvarlig"]
+        assert "Mine · 0 aktive" in response.content.decode()
+
+    def test_explicit_mine_stays_even_when_empty(self, editor_client, case, editor):
+        CVETask.add(case, title="Uden ansvarlig", user=editor)
+        response = editor_client.get(reverse("cves:task-list") + "?mine=1")
+        assert response.context["mine"] and self.titles(response) == []
+
     def test_viewer_lands_on_everyone(self, viewer_client, tasks):
         response = viewer_client.get(reverse("cves:task-list"))
         assert not response.context["mine"] and self.titles(response) == ["Kollegas", "Min"]
