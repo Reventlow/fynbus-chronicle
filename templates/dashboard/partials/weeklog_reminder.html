@@ -1,0 +1,76 @@
+{% comment %}
+  "Last week's log is not sent" reminder on the Kontrolpanel (FR #19).
+
+  Context: reminder (apps.dashboard.overview.weeklog_send_reminder, None for
+  viewers and once the log is sent). Included by dashboard/index.html and
+  re-fetched by itself every five minutes; once the log is sent the partial
+  answers with an empty body and the outerHTML swap removes the card.
+  Shows which week, a link to its log (or to create it), who should send it
+  (this week's rådighedsvagt, split weeks listed) and who has meldt klar.
+{% endcomment %}
+{% if reminder %}
+<div id="weeklog-reminder" class="card" role="status"
+     hx-get="{% url 'dashboard:partial-weeklog-reminder' %}"
+     hx-trigger="every 300s"
+     hx-swap="outerHTML"
+     style="border-left: 3px solid var(--warn); background: linear-gradient(180deg, var(--surface-1), color-mix(in oklch, var(--warn-soft) 70%, var(--surface-1)));">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div style="min-width: 0; flex: 1 1 320px;">
+      <div class="label-eyebrow inline-flex items-center" style="gap: 6px; color: var(--warn-ink);">
+        <span class="pill-dot" style="background: var(--warn);"></span>
+        Påmindelse · ugelog
+      </div>
+      <div style="margin-top: 8px; font-size: 18px; font-weight: 600; color: var(--ink-1); letter-spacing: -0.015em;">
+        {% if reminder.weeklog %}
+          Ugelog for <a href="{{ reminder.weeklog.get_absolute_url }}" style="color: inherit;">uge <span class="num">{{ reminder.week }}</span>, <span class="num">{{ reminder.year }}</span></a> er ikke sendt
+        {% else %}
+          Ugelog for uge <span class="num">{{ reminder.week }}</span>, <span class="num">{{ reminder.year }}</span> er ikke oprettet
+        {% endif %}
+      </div>
+
+      <div style="margin-top: 6px; font-size: 13.5px; color: var(--ink-3);">
+        {% if reminder.sender %}
+          Sendes af <strong style="color: var(--ink-1); font-weight: 600;">{{ reminder.sender.get_full_name|default:reminder.sender.username }}</strong>{% if reminder.sender.pk == user.pk %} (dig){% endif %}, som har rådighedsvagten i uge <span class="num">{{ reminder.oncall_week }}</span>.
+        {% else %}
+          Ingen har rådighedsvagten i uge <span class="num">{{ reminder.oncall_week }}</span> — <a href="{% url 'oncall:calendar' %}" style="color: var(--ink-2);">aftal hvem der sender</a>.
+        {% endif %}
+        {% if reminder.split %}
+          <span style="display: block; margin-top: 2px; font-size: 12px;">
+            Delt uge: {% for segment in reminder.split %}{{ segment.user.get_full_name|default:segment.user.username }} ({{ segment.range_label }}){% if not forloop.last %} · {% endif %}{% endfor %}
+          </span>
+        {% endif %}
+      </div>
+
+      {% if reminder.weeklog %}
+      <div style="margin-top: 14px;">
+        <div class="label-eyebrow">Klarmelding uge {{ reminder.week }}</div>
+        <div class="flex flex-wrap items-center gap-2" style="margin-top: 8px;">
+          {% for signoff in reminder.signoffs %}
+            <span class="pill pill-good" title="Meldt klar {{ signoff.created_at|date:'j. M Y · H:i' }}">
+              <span class="pill-dot"></span>
+              {{ signoff.user.get_full_name|default:signoff.user.username }}
+            </span>
+          {% empty %}
+            <span style="font-size: 13px; color: var(--ink-4);">Ingen har meldt klar.</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      {% if reminder.weeklog %}
+        <a href="{{ reminder.weeklog.get_absolute_url }}" class="btn btn-sm btn-primary">Gå til ugelog</a>
+        <form method="post" action="{% url 'logbook:weeklog-mark-emailed' reminder.year reminder.week %}" style="display: inline;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'dashboard:index' %}">
+          <button type="submit" class="btn btn-sm"
+                  title="Registrér at ugelogen er sendt uden om Chronicle, fx fra Outlook">Markér som sendt</button>
+        </form>
+      {% else %}
+        <a href="{% url 'logbook:weeklog-create' %}?year={{ reminder.year }}&amp;week={{ reminder.week }}" class="btn btn-sm btn-primary">Opret ugelog</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}

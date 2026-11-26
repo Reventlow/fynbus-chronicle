@@ -42,6 +42,11 @@ urlpatterns = [
         name="partial-headline",
     ),
     path(
+        "partials/weeklog-reminder/",
+        views.WeekLogReminderPartialView.as_view(),
+        name="partial-weeklog-reminder",
+    ),
+    path(
         "partials/open-breakdown/",
         views.OpenBreakdownPartialView.as_view(),
         name="partial-open-breakdown",

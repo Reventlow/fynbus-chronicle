@@ -1,0 +1,25 @@
+{% comment %}
+Send status of a week log (FR #19), in the detail page's meta line.
+
+Sent: "Sendt <dato> kl. <tid> af <navn>" (the latest send; the sender is
+left out when the user no longer exists). Not sent: "Ikke sendt", and for
+editors a "Markér som sendt" button for a report mailed outside Chronicle
+(POST with CSRF to logbook:weeklog-mark-emailed).
+
+Context: weeklog. is_editor comes from the accounts context processor.
+{% endcomment %}
+{% if weeklog.emailed_at %}
+  <span class="pill pill-good" title="Sidst sendt som email {{ weeklog.emailed_at|date:'j. M Y · H:i' }}">
+    <span class="pill-dot"></span>
+    Sendt {{ weeklog.emailed_at|date:"j. M Y" }} kl. {{ weeklog.emailed_at|date:"H:i" }}{% if weeklog.emailed_by %} af {{ weeklog.emailed_by.get_full_name|default:weeklog.emailed_by.username }}{% endif %}
+  </span>
+{% else %}
+  <span class="pill pill-warn"><span class="pill-dot"></span>Ikke sendt</span>
+  {% if is_editor %}
+    <form method="post" action="{% url 'logbook:weeklog-mark-emailed' weeklog.year weeklog.week_number %}" style="display: inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm" style="padding: 2px 8px; font-size: 12px;"
+              title="Registrér at ugelogen er sendt uden om Chronicle, fx fra Outlook">Markér som sendt</button>
+    </form>
+  {% endif %}
+{% endif %}

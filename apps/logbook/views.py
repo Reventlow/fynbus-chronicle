@@ -154,7 +154,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["absence_form"] = AbsenceForm()
         context["incident_form"] = IncidentForm()
         appearances = list(
-            self.object.priority_appearances.select_related("priority_item")
+            self.object.priority_appearances.select_related("priority_item", "created_by")
             .prefetch_related("priority_item__planner_links", "priority_item__ticket_links", "priority_item__course_links__folder", "priority_item__course_links__material__folder")
             .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
@@ -164,6 +164,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["task_total"] = len(appearances)
         context["task_done"] = done
         context["task_open"] = len(appearances) - done
+        context["absences"] = self.object.absences.select_related("created_by")
         incidents = list(self.object.incidents.all())
         context["incidents"] = incidents
         context["incident_critical"] = sum(1 for i in incidents if i.severity == "critical")
@@ -189,6 +190,16 @@ class WeekLogCreateView(EditorRequiredMixin, CreateView):
     model = WeekLog
     form_class = WeekLogForm
     template_name = "logbook/weeklog_form.html"
+
+    def get_initial(self) -> dict:
+        """Prefill year and week from ``?year=&week=`` (the Kontrolpanel's
+        reminder links here for a week whose log was never created)."""
+        initial = super().get_initial()
+        for param, field in (("year", "year"), ("week", "week_number")):
+            value = self.request.GET.get(param, "")
+            if value.isdigit():
+                initial[field] = int(value)
+        return initial
 
     def form_valid(self, form) -> HttpResponse:
         """Set created_by before saving."""
@@ -264,13 +275,14 @@ def weeklog_legacy_edit_redirect(request: HttpRequest, pk: int) -> HttpResponse:
 # =============================================================================
 
 
-def save_task_form(form) -> PriorityItem:
+def save_task_form(form, user=None) -> PriorityItem:
     """Save a form bound to a ``PriorityItem`` the way every edit does.
 
     Shared by the weeklog row form and the history page, so a status
     change means the same in both places: the task is marked active
     (``last_active_at``), and going from completed to anything else
-    reopens it, which also puts it on the current ISO week.
+    reopens it, which also puts it on the current ISO week (with
+    ``user`` as the one who added it there).
     """
     item = form.save(commit=False)
     was_completed = (
@@ -284,7 +296,7 @@ def save_task_form(form) -> PriorityItem:
     if was_completed and item.status != PriorityItem.Status.COMPLETED:
         # Reopen even when this week has no weeklog yet (as the ↺ button
         # does): otherwise auto_closed/closed_at would stay set on an open task.
-        item.reopen(into_weeklog=WeekLog.get_current_week())
+        item.reopen(into_weeklog=WeekLog.get_current_week(), by=user)
     return item
 
 
@@ -316,6 +328,7 @@ class PriorityItemCreateView(EditorRequiredMixin, CreateView):
             weeklog=weeklog,
             description=form.cleaned_data.get("description", "") or "",
             order=max_order + 1,
+            created_by=self.request.user,
         )
 
         from django.template.loader import render_to_string
@@ -375,7 +388,7 @@ class PriorityItemUpdateView(EditorRequiredMixin, UpdateView):
         # This week's description lives on the appearance, the rest on the task.
         self._appearance.description = form.cleaned_data.get("description", "") or ""
         self._appearance.save(update_fields=["description", "updated_at"])
-        item = save_task_form(form)
+        item = save_task_form(form, self.request.user)
 
         from django.template.response import TemplateResponse
 
@@ -539,7 +552,7 @@ def priority_item_task_edit(request: HttpRequest, pk: int) -> HttpResponse:
     was_completed = item.status == PriorityItem.Status.COMPLETED
     form = PriorityItemTaskForm(request.POST or None, instance=item)
     if request.method == "POST" and form.is_valid():
-        save_task_form(form)
+        save_task_form(form, request.user)
         messages.success(request, f"”{item.title}” er gemt.")
         response = HttpResponse(status=204)
         response["HX-Refresh"] = "true"
@@ -641,7 +654,7 @@ def priority_item_reopen(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("logbook:priority-item-history", pk=item.pk)
 
     current = WeekLog.get_current_week()
-    item.reopen(into_weeklog=current)
+    item.reopen(into_weeklog=current, by=request.user)
 
     if current is not None:
         messages.success(
@@ -778,7 +791,7 @@ def weeklog_add_existing_post(request: HttpRequest, pk: int) -> HttpResponse:
         ids = [int(i) for i in item_ids]
     except ValueError:
         ids = []
-    added = weeklog.add_existing_priority_items(ids)
+    added = weeklog.add_existing_priority_items(ids, user=request.user)
     if added:
         messages.success(
             request,
@@ -805,6 +818,7 @@ class AbsenceCreateView(EditorRequiredMixin, CreateView):
         """Set weeklog and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
+        form.instance.created_by = self.request.user
         self.object = form.save()
 
         from django.template.loader import render_to_string
@@ -1005,6 +1019,35 @@ def weeklog_signoff_toggle(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @login_required
+@editor_required
+@require_POST
+def weeklog_mark_emailed(request: HttpRequest, year: int, week: int) -> HttpResponse:
+    """Markér som sendt: record a report that went out outside Chronicle (FR #19).
+
+    For a week log mailed by hand (from Outlook, a downloaded PDF …), so
+    the Kontrolpanel stops reminding about it. Editor-only, POST with CSRF.
+    A week that is already recorded as sent is left alone: the action is
+    for the missing record, not for overwriting a real send.
+
+    Redirects to ``next`` when it is a local URL (the Kontrolpanel's
+    reminder sends the user back there), else to the week log.
+    """
+    weeklog = get_object_or_404(WeekLog, year=year, week_number=week)
+    if weeklog.is_emailed:
+        messages.info(request, f"{weeklog.week_label} er allerede registreret som sendt.")
+    else:
+        weeklog.mark_emailed(request.user)
+        logger.info("Week log %s marked as sent by %s", weeklog.week_label, request.user.get_username())
+        messages.success(request, f"{weeklog.week_label} er markeret som sendt.")
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect(weeklog.get_absolute_url())
+
+
+@login_required
 def meeting_minutes_card(request: HttpRequest, pk: int) -> HttpResponse:
     """Return the meeting minutes display card (for cancel)."""
     from django.template.response import TemplateResponse
@@ -1158,7 +1201,9 @@ def export_email(request: HttpRequest, year: int, week: int) -> HttpResponse:
             pdf_filename=f"ugelog_{weeklog.year}_uge{weeklog.week_number}.pdf",
             from_email=request.user.email,
         ),
-        send=lambda: send_weeklog_email(weeklog, format=fmt, from_email=request.user.email),
+        send=lambda: send_weeklog_email(
+            weeklog, format=fmt, from_email=request.user.email, sent_by=request.user
+        ),
         back_url=weeklog.get_absolute_url(),
         heading=f"Send ugelog {weeklog.week_label} som email",
     )

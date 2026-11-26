@@ -846,6 +846,12 @@ html[data-event="halloween"] .halloween-banner {
    content above its pattern; the actor is a child of <body> too, so win
    that back explicitly or it lands at the top of the page. */
 html body > .hw-actor { position: fixed; z-index: 70; }
+/* Same for the HTMX error toast (#htmx-error-toast, a direct child of <body>):
+   its layered `.error-toast { position: fixed }` loses to the unlayered theme
+   rule, so under any day-theme it fell into the page flow as a full-height
+   column beside the content (seen with the 1.28.0 Christmas theme). The id
+   outranks every skin's `body > *` rule, wherever that skin sits in the file. */
+html body > #htmx-error-toast { position: fixed; z-index: 60; }
 .hw-actor.hw-pause { animation-name: hw-cross-pause; }
 .hw-actor.hw-rtl   { animation-name: hw-cross-rtl; }
 .hw-ground { bottom: 8px; }
@@ -1337,6 +1343,739 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   font-weight: 500;
   letter-spacing: 0.12em;
   color: var(--accent);
+}
+
+/* =============================================================================
+   1.–26. dec — Jul (Christmas) skin
+   A winter palette. Light = nisse red accents on frost blue, spruce-green
+   ink. Dark = warm berry red on a midnight-blue winter night, frost-white
+   ink. Same plumbing as the other day-themes: data-event="christmas"
+   overrides the accent tokens, swaps the brand-mark glyph, lets a faint
+   snow fall behind the page and shows the sticky banner. On top of that:
+   - the scenes (static/js/christmas-parade.js): nisser, a snowball fight,
+     the Lucia procession, a reindeer, risalamande, a julehjerte, the
+     sleigh — styled under "The scenes" below (xm-*);
+   - the kalenderlys above the on-call card on the Kontrolpanel
+     (templates/components/christmas_candle.html) — under "Kalenderlys"
+     (xc-*).
+   ============================================================================= */
+html[data-event="christmas"] {
+  --accent:      oklch(0.54 0.18 27);    /* nisse red */
+  --accent-soft: oklch(0.96 0.018 230);  /* frost */
+  --accent-ink:  oklch(0.38 0.08 160);   /* spruce */
+  --chart-accent: rgb(196, 48, 43);
+  --xm-snow:     oklch(0.62 0.05 240);   /* blue-grey flakes read on cream paper */
+}
+html[data-event="christmas"].dark {
+  --accent:      oklch(0.68 0.16 25);    /* warm berry red */
+  --accent-soft: oklch(0.27 0.05 255);   /* winter night */
+  --accent-ink:  oklch(0.90 0.05 220);   /* frost white */
+  --chart-accent: rgb(232, 104, 92);
+  --xm-snow:     oklch(0.96 0.01 240);
+}
+
+/* Snowfall: one tall fixed layer of flakes behind the content, moved down
+   by exactly one tile (360 px; the 180 px tiles repeat twice in it) so the
+   loop is seamless. Only transform animates, so it stays on the
+   compositor. Still, with reduced motion. */
+html[data-event="christmas"] body::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -360px;
+  height: calc(100vh + 360px);
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, var(--xm-snow) 1.6px, transparent 2.3px),
+    radial-gradient(circle at 63% 42%, var(--xm-snow) 1.1px, transparent 1.7px),
+    radial-gradient(circle at 38% 77%, var(--xm-snow) 2px,   transparent 2.7px),
+    radial-gradient(circle at 86% 64%, var(--xm-snow) 1.3px, transparent 1.9px),
+    radial-gradient(circle at 74% 8%,  var(--xm-snow) 1.5px, transparent 2.1px),
+    radial-gradient(circle at 30% 40%, var(--xm-snow) 0.9px, transparent 1.4px),
+    radial-gradient(circle at 80% 85%, var(--xm-snow) 1px,   transparent 1.5px);
+  background-size: 360px 360px, 360px 360px, 360px 360px, 360px 360px, 360px 360px, 180px 180px, 180px 180px;
+  opacity: 0.32;
+  animation: xm-snowfall 48s linear infinite;
+}
+html[data-event="christmas"].dark body::before { opacity: 0.22; }
+@keyframes xm-snowfall {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(14px, 180px, 0); }
+  100% { transform: translate3d(0, 360px, 0); }
+}
+html[data-event="christmas"] body > * { position: relative; z-index: 1; }
+html[data-event="christmas"] body > .sidebar { position: sticky; z-index: 50; }
+
+/* Brand mark: a star (the top of the tree) in light mode, a snowflake in
+   dark mode — text glyphs, not emoji (\FE0E asks for the text form). */
+html[data-event="christmas"] .brand-mark { font-size: 0; }
+html[data-event="christmas"] .brand-mark::before {
+  content: "\2605";
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+html[data-event="christmas"].dark .brand-mark::before { content: "\2744\FE0E"; font-size: 17px; }
+
+/* Banner — same shape as the others, separate class for independence. */
+.christmas-banner { display: none; }
+html[data-event="christmas"] .christmas-banner {
+  display: block;
+  position: sticky;
+  top: var(--toolbar-h);
+  z-index: 30;
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--accent-soft) 94%, transparent) 0%,
+    color-mix(in oklch, var(--accent-soft) 72%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+.christmas-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.christmas-banner-glyph { flex: none; display: block; overflow: visible; }
+.christmas-banner-glyph .cb-tree   { fill: oklch(0.48 0.10 155); }
+.christmas-banner-glyph .cb-trunk  { fill: #8a5a2b; }
+.christmas-banner-glyph .cb-star   { fill: #e9b949; }
+.christmas-banner-glyph .cb-bauble { fill: var(--accent); }
+html.dark .christmas-banner-glyph .cb-tree { fill: oklch(0.68 0.11 155); }
+.christmas-banner-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+.christmas-banner-sep { color: var(--accent); opacity: 0.5; }
+.christmas-banner-msg {
+  color: var(--accent-ink);
+  font-weight: 500;
+  transition: opacity 0.22s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.christmas-banner-msg.is-fading { opacity: 0; }
+.christmas-footer-egg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+/* ---- Kalenderlys ----------------------------------------------------------
+   Rendered twice on the Kontrolpanel, above each on-call card; only the
+   copy above the visible card shows: the sidebar's (sidebar expanded) or
+   the dashboard's (.dash-oncall: phones and collapsed sidebar). The body's
+   height is --xc-left (0–1, set inline and by the script) times the full
+   height --xc-h; the 24 marks are anchored to the bottom, so the burned
+   ones slip away over the top edge as the body shrinks.
+
+   The sidebar is 100vh with overflow: hidden, and its nav grows with the
+   user's permissions, so the candle must never push the on-call card or
+   the footer (user menu, settings, collapse toggle) out of view: the
+   sidebar slot is the one item allowed to shrink (min-height: 0), so it
+   gives way first. When it had to give way, christmas-parade.js
+   (fitSidebarCandle) sets <html data-xc-cramped> and the dashboard's copy
+   takes over instead of a clipped candle. */
+.xc-slot { display: none; }
+html[data-event="christmas"] .xc-slot-sidebar {
+  display: block; margin: 0 10px 6px;
+  flex: 0 1 auto; min-height: 0; overflow: hidden;
+}
+html[data-event="christmas"][data-sidebar="collapsed"] .xc-slot-sidebar,
+html[data-event="christmas"][data-xc-cramped] .xc-slot-sidebar { display: none; }
+html[data-event="christmas"][data-sidebar="collapsed"] .xc-slot-dash,
+html[data-event="christmas"][data-xc-cramped] .xc-slot-dash { display: block; }
+@media (max-width: 767px) {
+  html[data-event="christmas"] .xc-slot-dash { display: block; }
+}
+
+.xc {
+  --xc-pitch: 6px;
+  --xc-h: calc(24 * var(--xc-pitch));
+  --xc-wax: #fbf7ec;
+  --xc-wax-shade: #e6dcc6;
+  --xc-mark: #b8322b;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.xc-slot-sidebar .xc { padding: 2px 4px 0; }
+.xc-slot-dash .xc { --xc-pitch: 7px; }
+/* Below ~1000px of height (most laptops and a 1080p browser window) the
+   full-size sidebar candle does not fit next to an admin's nav: it shrinks
+   and keeps only the tick lines. */
+@media (max-height: 1000px) {
+  .xc-slot-sidebar .xc { --xc-pitch: 4px; }
+  .xc-slot-sidebar .xc-marks span { font-size: 0; }
+}
+
+.xc-stage {
+  position: relative;
+  flex: none;
+  width: 54px;
+  height: calc(var(--xc-h) + 40px);
+}
+.xc-holder { position: absolute; left: 0; bottom: 0; display: block; overflow: visible; }
+.xc-dish     { fill: #c9a24a; }
+.xc-dish-rim { fill: #e3c172; }
+.xc-holly    { fill: #3f7a4f; }
+.xc-berry    { fill: #c8302b; }
+
+.xc-body {
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  width: 20px;
+  margin-left: -10px;
+  height: max(3px, calc(var(--xc-left) * var(--xc-h)));
+  transition: height 1.2s ease;
+}
+.xc-wax {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px 2px 1px 1px;
+  background: linear-gradient(90deg, var(--xc-wax-shade), var(--xc-wax) 35%, var(--xc-wax) 62%, var(--xc-wax-shade));
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.14);
+}
+.xc-marks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--xc-h);
+  display: flex;
+  flex-direction: column;
+}
+.xc-marks span {
+  flex: none;
+  height: var(--xc-pitch);
+  box-sizing: border-box;
+  font-family: var(--font-mono);
+  font-size: calc(var(--xc-pitch) - 1px);
+  font-weight: 600;
+  line-height: var(--xc-pitch);
+  text-align: center;
+  color: var(--xc-mark);
+  border-bottom: 0.5px solid color-mix(in srgb, var(--xc-mark) 40%, transparent);
+}
+/* The melted pool on top, warm while lit, and two drips down the sides. */
+.xc-pool {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, #fffdf5, var(--xc-wax-shade));
+}
+.xc[data-lit="1"] .xc-pool { background: radial-gradient(ellipse at 50% 40%, #fff6d6, #efd49b); }
+.xc-drip {
+  position: absolute;
+  top: 1px;
+  width: 4px;
+  border-radius: 0 0 3px 3px;
+  background: var(--xc-wax);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.12);
+}
+.xc-drip-1 { left: -1.5px; height: 11px; }
+.xc-drip-2 { right: -1.5px; height: 17px; }
+
+/* Flame, wick, glow and (once burnt out) a wisp of smoke ride on the top
+   of the body. */
+.xc-flame-slot {
+  position: absolute;
+  left: 50%;
+  width: 16px;
+  height: 30px;
+  margin-left: -8px;
+  bottom: calc(9px + max(3px, calc(var(--xc-left) * var(--xc-h))));
+  transition: bottom 1.2s ease;
+}
+.xc-wick {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1.6px;
+  height: 5px;
+  margin-left: -0.8px;
+  border-radius: 1px;
+  background: #2c2825;
+}
+.xc-flame {
+  position: absolute;
+  left: 0;
+  bottom: 3px;
+  display: block;
+  transform-origin: 50% 90%;
+  animation: xc-flicker 2.4s ease-in-out infinite;
+}
+.xc-flame-outer { fill: #f5a83a; }
+.xc-flame-inner { fill: #fff1b8; }
+.xc-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 196 90 / 0.38), rgb(255 196 90 / 0) 65%);
+  animation: xc-glow 2.4s ease-in-out infinite;
+}
+.xc-smoke { display: none; position: absolute; left: 0; bottom: 2px; overflow: visible; }
+.xc-smoke path { fill: none; stroke: var(--ink-4); stroke-width: 1.4; stroke-linecap: round; }
+.xc[data-lit="0"] .xc-flame,
+.xc[data-lit="0"] .xc-glow { display: none; }
+.xc[data-lit="0"] .xc-smoke { display: block; animation: xc-smoke 4s ease-in-out infinite; }
+@keyframes xc-flicker {
+  0%, 100% { transform: scale(1, 1) skewX(0deg); }
+  20%      { transform: scale(0.94, 1.06) skewX(2deg); }
+  40%      { transform: scale(1.03, 0.95) skewX(-2deg); }
+  60%      { transform: scale(0.97, 1.04) skewX(1deg); }
+  80%      { transform: scale(1.02, 0.97) skewX(-1deg); }
+}
+@keyframes xc-glow  { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+@keyframes xc-smoke { 0%, 100% { opacity: 0.35; transform: translateY(0); } 50% { opacity: 0.7; transform: translateY(-3px); } }
+
+.xc-text { min-width: 0; padding-bottom: 6px; }
+.xc-date {
+  margin-top: 4px;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 24px;
+  line-height: 1.05;
+  color: var(--ink-1);
+}
+.xc-slot-sidebar .xc-date { font-size: 20px; }
+.xc-caption { margin-top: 3px; font-size: 12px; line-height: 1.35; color: var(--ink-3); }
+
+/* ---- The scenes -----------------------------------------------------------
+   An actor is one fixed element (the script allows one at a time); most
+   cross the viewport (xm-cross*), with their parts animated inside. Never
+   catches the pointer. Each actor's run time arrives as --xm-ms. */
+.xm-actor {
+  --xm-outline: #2c2825;
+  position: fixed;
+  left: 0;
+  z-index: 70;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+  animation: xm-cross var(--xm-ms) linear forwards;
+}
+/* The day-theme rule body > * { position: relative } would otherwise pull
+   the actor into the page flow. */
+html body > .xm-actor { position: fixed; z-index: 70; }
+.xm-actor.xm-pause { animation-name: xm-cross-pause; }
+.xm-ground { bottom: 8px; }
+.xm-top    { top: 96px; }
+@media (max-width: 640px) { .xm-actor:not(.xm-strip) { scale: 0.75; } }
+.xm-actor svg { display: block; overflow: visible; }
+
+@keyframes xm-cross { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
+@keyframes xm-cross-pause {
+  0%   { transform: translateX(-100%); }
+  42%  { transform: translateX(42vw); }
+  62%  { transform: translateX(42vw); }
+  100% { transform: translateX(100vw); }
+}
+
+/* Every figure gets a thin dark outline (doubled drop-shadow) so white
+   beards and gowns read on the light theme and dark coats on the dark. */
+.xm-nisse, .xm-kid-svg, .xm-figure svg, .xm-deer, .xm-pig svg, .xm-sleigh, .xm-heart, .xm-bowl, .xm-hat-perch svg {
+  filter: drop-shadow(0 0 0.7px var(--xm-outline, #2c2825)) drop-shadow(0 0 0.7px var(--xm-outline, #2c2825)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.22));
+}
+
+/* Shared paints. */
+.xm-red    { fill: #c8302b; }
+.xm-white  { fill: #fbfaf6; }
+.xm-skin   { fill: #f1c7a3; }
+.xm-eye    { fill: #2c2825; }
+.xm-cheek  { fill: #ec8f80; opacity: 0.55; }
+.xm-gold   { fill: #e9b949; }
+.xm-berry  { fill: #c8302b; }
+
+/* Speech bubble, switched on and off by the script. -r anchors it to the
+   right, for speakers at the right edge of the screen. */
+.xm-bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: min(280px, 60vw);
+  transform: translateX(-30%) scale(0.6);
+  transform-origin: 30% 100%;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  background: #fffdf6;
+  color: #2c2825;
+  border: 1.5px solid #2c2825;
+  border-radius: 12px;
+  padding: 5px 10px;
+  font: 600 13px/1.3 'Inter Tight', system-ui, sans-serif;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.18);
+}
+.xm-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 26%;
+  border: 7px solid transparent;
+  border-top-color: #2c2825;
+}
+.xm-bubble.is-on { opacity: 1; transform: translateX(-30%) scale(1); }
+.xm-bubble-r { left: auto; right: 50%; transform: translateX(30%) scale(0.6); transform-origin: 70% 100%; }
+.xm-bubble-r.is-on { transform: translateX(30%) scale(1); }
+.xm-bubble-r::after { left: auto; right: 26%; }
+
+/* The nisse. */
+.xm-tunic  { fill: #7c8796; }
+.xm-sleeve { fill: none; stroke: #7c8796; stroke-width: 6; stroke-linecap: round; }
+.xm-wool   { fill: none; stroke: #5d6673; stroke-width: 6; stroke-linecap: round; }
+.xm-belt   { fill: none; stroke: #3b342e; stroke-width: 3; }
+.xm-buckle { fill: #e9b949; }
+.xm-clog   { fill: #8a5a2b; }
+.xm-beard  { fill: #fbfaf6; }
+.xm-nose   { fill: #e3897a; }
+.xm-leg-l  { transform-origin: 25px 70px; }
+.xm-leg-r  { transform-origin: 35px 70px; }
+.xm-arm-l  { transform-origin: 21px 53px; }
+.xm-arm-r  { transform-origin: 39px 53px; }
+.xm-cap    { transform-origin: 30px 32px; animation: xm-cap 1.2s ease-in-out infinite alternate; }
+@keyframes xm-cap { from { transform: rotate(-3deg); } to { transform: rotate(4deg); } }
+
+/* Walking: legs and arms swing in opposite phase, the body bobs. */
+.xm-walk .xm-nisse  { animation: xm-step 0.3s ease-in-out infinite alternate; }
+.xm-walk .xm-leg-l  { animation: xm-swing 0.6s ease-in-out infinite alternate; }
+.xm-walk .xm-leg-r  { animation: xm-swing 0.6s ease-in-out infinite alternate-reverse; }
+.xm-walk .xm-arm-l  { animation: xm-swing-arm 0.6s ease-in-out infinite alternate-reverse; }
+.xm-walk .xm-arm-r  { animation: xm-swing-arm 0.6s ease-in-out infinite alternate; }
+@keyframes xm-step      { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+@keyframes xm-swing     { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+@keyframes xm-swing-arm { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+
+/* Arm poses, after the walk rules so they win: carrying the bowl in front,
+   throwing glitter and pointing up at the stop (42–62 %). */
+.xm-carry .xm-arm   { animation: none; }
+.xm-carry .xm-arm-l { transform: rotate(-35deg); }
+.xm-carry .xm-arm-r { transform: rotate(35deg); }
+.xm-toss .xm-arm-r  { animation: xm-toss var(--xm-ms) linear forwards; }
+.xm-point .xm-arm-r { animation: xm-point var(--xm-ms) ease-in-out forwards; }
+@keyframes xm-toss {
+  0%, 40% { transform: rotate(0deg); }
+  43%     { transform: rotate(-150deg); }
+  46%     { transform: rotate(-110deg); }
+  49%     { transform: rotate(-150deg); }
+  54%, 100% { transform: rotate(0deg); }
+}
+@keyframes xm-point {
+  0%, 41% { transform: rotate(0deg); }
+  45%, 60% { transform: rotate(-145deg); }
+  64%, 100% { transform: rotate(0deg); }
+}
+
+/* The greeting sign, carried in front. */
+.xm-sign {
+  position: absolute;
+  left: 44px;
+  top: 34px;
+  background: #fffdf6;
+  color: #b3261e;
+  border: 1.5px solid #2c2825;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font: 700 10px/1.2 var(--font-mono);
+  white-space: nowrap;
+  transform: rotate(-5deg);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+}
+
+/* Glitter: 16 flecks burst from the raised hand at the stop and fall. */
+.xm-glitter { position: absolute; left: 44px; top: 34px; width: 0; height: 0; }
+.xm-glitter i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--c);
+  opacity: 0;
+  animation: xm-glitter 1.8s ease-out forwards;
+}
+@keyframes xm-glitter {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(45deg) scale(0.6); }
+  45%  { opacity: 1; transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1); }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) + 90px)) rotate(calc(var(--r) * 2)) scale(0.8); }
+}
+
+/* Teasing 1: a nisse pops up at a card's lower-right corner, reaches for
+   it while the card gets a little tug (rotate/translate, so the card's own
+   transform is left alone), then scampers off to the right. */
+.xm-actor.xm-perch { animation: xm-perch var(--xm-ms) ease-in-out forwards; }
+.xm-reach .xm-arm-l { animation: xm-reach var(--xm-ms) ease-in-out forwards; }
+@keyframes xm-perch {
+  0%   { transform: translateY(24px); opacity: 0; }
+  8%   { transform: translateY(0); opacity: 1; }
+  70%  { transform: translate(0, 0); opacity: 1; }
+  76%  { transform: translate(10px, -12px); opacity: 1; }
+  100% { transform: translate(150px, 0); opacity: 0; }
+}
+@keyframes xm-reach {
+  0%, 25%   { transform: rotate(0deg); }
+  30%       { transform: rotate(70deg); }
+  36%       { transform: rotate(55deg); }
+  42%       { transform: rotate(75deg); }
+  48%       { transform: rotate(55deg); }
+  54%       { transform: rotate(70deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
+.xm-tugged { animation: xm-tug 1.6s ease-in-out; transform-origin: 0 0; }
+@keyframes xm-tug {
+  0%   { rotate: 0deg;    translate: 0 0; }
+  20%  { rotate: 1.2deg;  translate: 2px 3px; }
+  40%  { rotate: -0.4deg; translate: 0 0; }
+  60%  { rotate: 0.7deg;  translate: 1px 1px; }
+  100% { rotate: 0deg;    translate: 0 0; }
+}
+
+/* Teasing 2: a tiny nisse hat lands on a heading's first letter and later
+   floats off again. */
+.xm-hatted { position: relative; }
+.xm-hat-perch {
+  position: absolute;
+  left: -12px;
+  top: -15px;
+  z-index: 1;
+  width: 26px;
+  height: 23px;
+  pointer-events: none;
+  rotate: -16deg;
+  animation: xm-hat-drop 0.9s cubic-bezier(.3, 1.5, .5, 1) both;
+}
+.xm-hat-perch svg { display: block; overflow: visible; }
+.xm-hat-perch.is-leaving { animation: xm-hat-leave 0.9s ease-in forwards; }
+@keyframes xm-hat-drop  { from { translate: 0 -60px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes xm-hat-leave { from { translate: 0 0; opacity: 1; } to { translate: 20px -50px; rotate: 20deg; opacity: 0; } }
+
+/* Snowball fight: a full-width strip along the bottom; the children stand
+   --xm-inset from the edges and the balls fly --xm-dist (both set by the
+   script from the window width). Ball 1 hits, ball 2 misses high, ball 3
+   knocks the right-hand child's hat off. Each ball is an outer span moving
+   sideways and an inner one doing the arc. */
+.xm-actor.xm-strip { left: 0; right: 0; bottom: 0; height: 120px; animation: xm-fade var(--xm-ms) linear forwards; }
+@keyframes xm-fade { 0% { opacity: 0; } 6% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+.xm-kid { position: absolute; bottom: 8px; display: block; }
+.xm-kid-l { left: var(--xm-inset);  --xm-coat: #3d6fb6; --xm-knit: #e9b949; }
+.xm-kid-r { right: var(--xm-inset); --xm-coat: #3f8a5a; --xm-knit: #c8302b; }
+.xm-kid-svg { animation: xm-bounce 0.8s ease-in-out infinite alternate; }
+.xm-kid-r .xm-kid-svg {
+  scale: -1 1;
+  animation: xm-bounce 0.8s ease-in-out infinite alternate, xm-hit 0.5s ease-in-out 3100ms;
+}
+@keyframes xm-bounce { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+@keyframes xm-hit {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25%      { transform: translateX(-4px) rotate(-8deg); }
+  60%      { transform: translateX(3px) rotate(5deg); }
+}
+.xm-coat      { fill: var(--xm-coat); }
+.xm-coat-line { fill: none; stroke: var(--xm-coat); stroke-width: 5; stroke-linecap: round; }
+.xm-mitten, .xm-scarf, .xm-knit { fill: var(--xm-knit); }
+.xm-knit-brim { fill: color-mix(in srgb, var(--xm-knit) 75%, #000); }
+.xm-pants     { fill: #3b4a5e; }
+.xm-boot      { fill: #4a3426; }
+.xm-smile     { fill: none; stroke: #7a3b2e; stroke-width: 1; stroke-linecap: round; }
+.xm-throw-arm { transform-origin: 34px 42px; }
+.xm-kid.is-throwing .xm-throw-arm { animation: xm-throw 0.45s ease-out; }
+@keyframes xm-throw { 0% { transform: rotate(0deg); } 35% { transform: rotate(-150deg); } 100% { transform: rotate(10deg); } }
+.xm-kid-hat { transform-origin: 25px 20px; }
+.xm-kid-r .xm-kid-hat { animation: xm-hat-fly 1.6s ease-out 10700ms forwards; }
+/* In the mirrored child, -x is away from the thrower. */
+@keyframes xm-hat-fly {
+  0%   { transform: none; }
+  40%  { transform: translate(-18px, -22px) rotate(-100deg); }
+  100% { transform: translate(-30px, 56px) rotate(-200deg); }
+}
+
+.xm-ball { position: absolute; left: calc(var(--xm-inset) + 38px); bottom: 56px; opacity: 0; }
+.xm-ball i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #dfe7ef 70%, #b9c6d3);
+  box-shadow: 0 0 0 1px rgb(44 40 37 / 0.55), 0 2px 3px rgb(0 0 0 / 0.2);
+}
+.xm-ball-1   { animation: xm-ball-x 1.3s linear 1800ms forwards; }
+.xm-ball-1 i { animation: xm-arc 1.3s linear 1800ms forwards; }
+.xm-ball-2   { left: auto; right: calc(var(--xm-inset) + 38px); animation: xm-ball-x-rtl 1.6s linear 6100ms forwards; }
+.xm-ball-2 i { animation: xm-arc-high 1.6s linear 6100ms forwards; }
+.xm-ball-3   { animation: xm-ball-x 1.3s linear 9400ms forwards; }
+.xm-ball-3 i { animation: xm-arc-hat 1.3s linear 9400ms forwards; }
+@keyframes xm-ball-x     { 0% { opacity: 1; transform: translateX(0); } 99% { opacity: 1; } 100% { opacity: 0; transform: translateX(var(--xm-dist)); } }
+@keyframes xm-ball-x-rtl { 0% { opacity: 1; transform: translateX(0); } 99% { opacity: 1; } 100% { opacity: 0; transform: translateX(calc(-1 * var(--xm-dist) - var(--xm-inset) - 80px)); } }
+@keyframes xm-arc {
+  0%   { transform: translateY(0);     animation-timing-function: ease-out; }
+  50%  { transform: translateY(-70px); animation-timing-function: ease-in; }
+  100% { transform: translateY(10px); }
+}
+@keyframes xm-arc-high {
+  0%   { transform: translateY(0);      animation-timing-function: ease-out; }
+  50%  { transform: translateY(-100px); animation-timing-function: ease-in; }
+  100% { transform: translateY(-20px); }
+}
+@keyframes xm-arc-hat {
+  0%   { transform: translateY(0);     animation-timing-function: ease-out; }
+  50%  { transform: translateY(-90px); animation-timing-function: ease-in; }
+  100% { transform: translateY(-14px); }
+}
+.xm-puff {
+  position: absolute;
+  right: calc(var(--xm-inset) + 10px);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 35%, #dfe7ef 55%, rgb(223 231 239 / 0) 70%);
+  opacity: 0;
+}
+.xm-puff-1 { bottom: 36px; animation: xm-puff 0.6s ease-out 3100ms forwards; }
+.xm-puff-2 { bottom: 62px; animation: xm-puff 0.6s ease-out 10700ms forwards; }
+@keyframes xm-puff { 0% { opacity: 1; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.8); } }
+
+/* The Lucia procession glides slowly; each figure sways a little out of
+   step with the one before. */
+.xm-row { display: flex; align-items: flex-end; gap: 6px; }
+.xm-figure { position: relative; display: block; }
+.xm-procession .xm-figure svg { animation: xm-glide 1.4s ease-in-out infinite alternate; }
+.xm-procession .xm-figure:nth-child(2n) svg { animation-delay: -0.7s; }
+.xm-procession .xm-figure:nth-child(3n) svg { animation-delay: -0.35s; }
+@keyframes xm-glide { from { transform: translateY(0) rotate(-1.5deg); } to { transform: translateY(-2px) rotate(1.5deg); } }
+.xm-gown      { fill: #fbfaf6; }
+.xm-gown-fold { fill: none; stroke: #d9dde3; stroke-width: 1; }
+.xm-sash      { fill: #c8302b; }
+.xm-hair-light { fill: #e8c77a; }
+.xm-hair-dark  { fill: #8a5a3b; }
+.xm-sing      { fill: #8a3b2e; }
+.xm-wreath    { fill: #3f7a4f; }
+.xm-candle    { fill: #fbfaf6; stroke: #cfd5dc; stroke-width: 0.4; }
+.xm-tiny-flame {
+  fill: #f5a83a;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: xm-tiny-flicker 0.5s ease-in-out infinite alternate;
+}
+@keyframes xm-tiny-flicker { from { transform: scale(1, 1); } to { transform: scale(0.85, 1.15); } }
+.xm-tinsel { fill: none; stroke: #c9d2dc; stroke-width: 1.6; stroke-dasharray: 1.4 1; }
+.xm-cone   { fill: #fbfaf6; stroke: #cfd5dc; stroke-width: 0.5; }
+.xm-stick  { fill: none; stroke: #8a5a2b; stroke-width: 1.4; }
+
+/* A reindeer rises from the bottom edge, tilts its head, ducks back. */
+.xm-actor.xm-peek { bottom: 0; animation: none; }
+.xm-peek-inner {
+  position: relative;
+  display: block;
+  transform: translateY(105%);
+  transform-origin: 50% 100%;
+  animation: xm-peek var(--xm-ms) ease-in-out forwards;
+}
+@keyframes xm-peek {
+  0%   { transform: translateY(105%); }
+  14%  { transform: translateY(18%); }
+  20%  { transform: translateY(24%) rotate(-4deg); }
+  45%  { transform: translateY(24%) rotate(5deg); }
+  70%  { transform: translateY(24%) rotate(0deg); }
+  88%  { transform: translateY(30%); }
+  100% { transform: translateY(105%); }
+}
+.xm-fur       { fill: #8b5e3c; }
+.xm-muzzle    { fill: #c79a72; }
+.xm-deer-nose { fill: #3b2a20; }
+.xm-antler    { fill: none; stroke: #d2b48c; stroke-width: 3; stroke-linecap: round; }
+.xm-collar    { fill: none; stroke: #c8302b; stroke-width: 4; stroke-linecap: round; }
+.xm-gold-fill { fill: #e9b949; }
+.xm-ear-l { transform-origin: 30px 36px; animation: xm-ear 1.8s ease-in-out infinite; }
+.xm-ear-r { transform-origin: 50px 36px; animation: xm-ear 1.8s ease-in-out infinite reverse; }
+@keyframes xm-ear { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-10deg); } }
+.xm-blink { transform-origin: 40px 41px; animation: xm-blink 3.2s infinite; }
+@keyframes xm-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+/* Risalamande: the nisse carries the bowl, the marzipan pig trots behind. */
+.xm-carrier { position: relative; display: block; }
+.xm-bowl { position: absolute; left: 12px; top: 52px; }
+.xm-porcelain { fill: #fbfaf6; }
+.xm-bowl-band { fill: none; stroke: #3d6fb6; stroke-width: 1.2; }
+.xm-rice      { fill: #f4ecd6; }
+.xm-cherry    { fill: #8e1b2a; }
+.xm-spoon     { fill: none; stroke: #b9c0c8; stroke-width: 1.6; stroke-linecap: round; }
+.xm-pig { position: relative; display: block; margin-right: 4px; }
+.xm-pig svg { animation: xm-step 0.3s ease-in-out infinite alternate; }
+.xm-pig-leg-a { animation: xm-paw 0.3s ease-in-out infinite alternate; }
+.xm-pig-leg-b { animation: xm-paw 0.3s ease-in-out infinite alternate-reverse; }
+@keyframes xm-paw { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+.xm-pink      { fill: #f3a9b8; }
+.xm-pink-dark { fill: #e48a9d; }
+.xm-tail      { fill: none; stroke: #e48a9d; stroke-width: 1.5; stroke-linecap: round; }
+
+/* A woven julehjerte floats down from the top, swaying like a leaf. */
+.xm-actor.xm-float { top: 0; animation: xm-fall var(--xm-ms) linear forwards; }
+@keyframes xm-fall {
+  0%   { transform: translateY(-80px); opacity: 0; }
+  5%   { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(78vh); opacity: 0; }
+}
+.xm-sway { display: block; transform-origin: 50% 0; animation: xm-sway 3.2s ease-in-out infinite alternate; }
+@keyframes xm-sway { from { transform: translateX(-28px) rotate(-16deg); } to { transform: translateX(28px) rotate(16deg); } }
+.xm-heart-red   { fill: #c8302b; }
+.xm-heart-white { fill: #fbfaf6; }
+.xm-heart rect  { stroke: rgb(44 40 37 / 0.18); stroke-width: 0.4; }
+.xm-heart .xm-heart-edge { fill: none; stroke: rgb(44 40 37 / 0.35); stroke-width: 0.6; }
+.xm-heart-handle { fill: none; stroke: #c8302b; stroke-width: 2.4; stroke-linecap: round; }
+
+/* The sleigh bobs across the sky; the reindeer gallop. */
+.xm-sleigh { animation: xm-sleigh-bob 1.6s ease-in-out infinite alternate; }
+@keyframes xm-sleigh-bob { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-10px) rotate(1deg); } }
+.xm-gallop-a, .xm-gallop-b { transform-box: fill-box; transform-origin: 50% 0; }
+.xm-gallop-a { animation: xm-gallop 0.35s ease-in-out infinite alternate; }
+.xm-gallop-b { animation: xm-gallop 0.35s ease-in-out infinite alternate-reverse; }
+@keyframes xm-gallop { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+.xm-fur-fill       { fill: #8b5e3c; }
+.xm-deer-leg       { fill: none; stroke: #6e4a2f; stroke-width: 2.6; stroke-linecap: round; }
+.xm-deer-nose-fill { fill: #3b2a20; }
+.xm-tail-white     { fill: none; stroke: #fbfaf6; stroke-width: 2; }
+.xm-rein           { fill: none; stroke: #e9b949; stroke-width: 1.2; }
+.xm-sack           { fill: #9c7a4f; }
+.xm-sleigh-body    { fill: #b3261e; }
+.xm-gold-line      { fill: none; stroke: #e9b949; stroke-width: 1.6; }
+.xm-runner         { fill: none; stroke: #e9b949; stroke-width: 2.4; stroke-linecap: round; }
+
+/* Reduced motion: no snowfall, no scenes, a still flame. The kalenderlys
+   still burns down (that is the date, not motion), without transitions. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-event="christmas"] body::before { animation: none; }
+  .xm-actor, .xm-hat-perch { display: none; }
+  .xm-tugged { animation: none; }
+  .xc-flame, .xc-glow, .xc-smoke, .xc[data-lit="0"] .xc-smoke { animation: none; }
+  .xc-body, .xc-flame-slot { transition: none; }
 }
 
 @layer base {
@@ -1882,6 +2621,7 @@ html[data-event="alzheimer"].dark .alzheimer-banner {
   }
   .theme-row.is-selected .theme-dot-auto { color: var(--accent-ink); }
   .theme-dot[data-theme="alzheimer"] { background: oklch(0.50 0.15 300); }
+  .theme-dot[data-theme="christmas"] { background: oklch(0.54 0.18 27); }
   .theme-dot[data-theme="halloween"] { background: oklch(0.66 0.17 50); }
   .theme-dot[data-theme="pirate"]    { background: oklch(0.50 0.10 200); }
   .theme-dot[data-theme="star-trek"] { background: oklch(0.55 0.16 240); }

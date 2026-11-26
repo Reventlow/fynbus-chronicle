@@ -58,6 +58,18 @@ class TestErrorToastMarkup:
 
         assert ".error-toast[hidden]" in css
 
+    def test_day_themes_cannot_pull_the_toast_into_the_page(self):
+        """Every day-theme sets the unlayered `html[data-event=…] body > * {
+        position: relative }`, which beats the layered `.error-toast { position:
+        fixed }`; the toast then sat in the page flow as a full-height column
+        (found with the 1.28.0 Christmas theme). An id-based override, which
+        outranks every skin wherever it sits in the file, keeps it fixed."""
+        from django.conf import settings
+
+        css = (settings.BASE_DIR / "static" / "src" / "input.css").read_text()
+
+        assert "html body > #htmx-error-toast { position: fixed;" in css
+
     def test_403_gets_its_own_wording(self, client, editor):
         """403 is the one users hit in practice — stale session or CSRF."""
         html = client.get(reverse("logbook:weeklog-list")).content.decode()

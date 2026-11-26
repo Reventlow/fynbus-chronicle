@@ -99,6 +99,12 @@ Overskriften siger, hvor mange tickets der er åbne i ServiceDesk, og om det er 
 
 Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
 
+### Påmindelse om ugelog
+
+Er sidste uges ugelog ikke sendt, viser kontrolpanelet en gul påmindelse under overskriften (kun for redaktører). Den siger hvilken uge det gælder, linker til ugeloggen (eller til at oprette den, hvis den mangler), og hvem der skal sende den: den der har **rådighedsvagten i den aktuelle uge**. Er ugen delt, nævnes den der har vagten lige nu, og alle vagtperioder står under. Kortet viser også, hvem der har meldt klar på ugeloggen.
+
+Påmindelsen forsvinder, så snart ugeloggen er sendt som email fra Chronicle. Er den sendt på anden vis (fx fra Outlook), så klik **Markér som sendt**. Påmindelsen kan ikke skjules under *Tilpas*.
+
 ### Nøgletal
 
 Fire kort: åbne tickets, nye og lukkede tickets i ugen og nettoændringen. Pilen på *Åbne tickets* starter en synkronisering.
@@ -162,6 +168,8 @@ Densitet virker oven på din egen opsætning. Under tandhjulet → **Densitet**:
 Adressen på en ugelog er `/logbook/<år>/<uge>/` — fx <https://chronicle.fynbus.net/logbook/2026/34/>. Ældre links med et id (`/logbook/39/`) sender dig videre til den rigtige uge.
 
 Øverst står ugens helpdesk-tal med forrige uges tal under hvert. Derunder: klarmelding, sammendrag, mødereferat, prioriterede opgaver (*N åbne af M*), fravær og hændelser (*N denne uge · M kritisk*).
+
+Linjen under overskriften viser, om ugeloggen er sendt: **Sendt 24. nov 2026 kl. 09:12 af Anna** (seneste afsendelse) eller **Ikke sendt**. Afsendelsen registreres, når ugeloggen sendes som email fra *Eksportér* (alle formater). Er den sendt uden om Chronicle, kan en redaktør klikke **Markér som sendt**. Uger sendt før funktionen kom, står som *Ikke sendt*.
 
 ### Klarmelding — "ikke mere at tilføje"
 
@@ -581,6 +589,7 @@ administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
 | 19. september og 1. oktober | Pirate Day |
 | 21. september | Verdens Alzheimerdag — lilla, med fakta og henvisninger til Alzheimerforeningen i banneret i stedet for vittigheder |
 | 24. oktober – 1. november | Halloween: græskar-orange, uhyggelige IT-råd i banneret, og indimellem krydser et spøgelse, et græskar, flagermus, et skelet, en zombie, en vampyr eller en varulv skærmen og laver noget fjollet, eller en edderkop firer sig ned fra toppen. Paraden kører ikke, hvis styresystemet er sat til at begrænse animationer |
+| 1.–26. december | Jul: nisserødt på frostblåt (mørk tilstand: en vinternat), stille snefald bag siden og julehygge blandet med IT-råd i banneret. Indimellem kommer en nisse forbi og spreder juleglæde — eller driller lidt (trækker i hjørnet af et kort, hænger en lille nissehue på en overskrift). Børn holder sneboldkamp langs bunden, et rensdyr kigger frem, en nisse kommer med risalamande og mandelgaven, et julehjerte daler ned, og slæden flyver forbi. Luciaoptoget er sjældent, men kommer altid én gang den 13. december (falder den 13. i en weekend, mandagen efter). På kontrolpanelet står et kalenderlys lige over rådighedsvagten: det er brændt ned til dagens dato og smelter langsomt videre i løbet af dagen; efter juleaften er det brændt ud. Ingen animationer, hvis styresystemet er sat til at begrænse dem |
 
 **Read-only Friday.** Hver fredag viser sitet et rødt banner øverst: ingen
 ændringer i produktion i dag — deploys, patches og "lige en lille rettelse"

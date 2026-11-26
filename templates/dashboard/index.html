@@ -33,6 +33,7 @@
           else if (theme === 'pirate') variant = 'pirate';
           else if (theme === 'star-trek') variant = darkMode ? 'klingon' : 'trek';
           else if (theme === 'halloween') variant = 'halloween';
+          else if (theme === 'christmas') variant = 'christmas';
           const g = {
             default: { morning: 'Godmorgen',         day: 'Goddag',              evening: 'Godaften',        night: 'Godnat' },
             rebel:   { morning: 'Morgenlys',         day: 'Hilsen',              evening: 'Aftenstjerne',    night: 'Sov i Kraften' },
@@ -41,6 +42,7 @@
             trek:    { morning: 'Morgen-shift',      day: 'Hilsen, kommandør',   evening: 'Aftenwatch',      night: 'Sov i fred' },
             klingon: { morning: 'nuqneH',            day: 'Qapla',               evening: 'Krigsskumring',   night: 'Sov i ære' },
             halloween: { morning: 'Uhyggelig morgen', day: 'Bøh',                 evening: 'Heksetime',       night: 'Spøgelsestime' },
+            christmas: { morning: 'God adventsmorgen', day: 'Glædelig december',  evening: 'Julehyggelig aften', night: 'Sov sødt, nissen våger' },
           };
           return g[variant][slot] + ', {{ user.first_name|default:user.get_short_name|default:user.username|escapejs }}';
         })()">Goddag, {{ user.first_name|default:user.get_short_name|default:user.username }}</span>
@@ -75,6 +77,9 @@
     {% endif %}
     </div>
   </div>
+
+  {# Last week's log not sent yet (FR #19): editors only, never hidden by "Tilpas". #}
+  {% include 'dashboard/partials/weeklog_reminder.html' %}
 
   {% comment %}
     The sections in the user's own order (apps/dashboard/layout.py); hidden

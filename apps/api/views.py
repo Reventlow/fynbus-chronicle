@@ -253,6 +253,7 @@ def priority_item_create(request: HttpRequest, year: int, week: int) -> JsonResp
         priority_item=item,
         weeklog=weeklog,
         description=(data.get("description") or "")[:5000],
+        created_by=request.api_user,
     )
     return JsonResponse({"priority_item": serialize_priority_item(item)}, status=201)
 
@@ -283,7 +284,7 @@ def priority_item_update(request: HttpRequest, item_id: int) -> JsonResponse:
     if was_completed and item.status != PriorityItem.Status.COMPLETED:
         current = WeekLog.get_current_week()
         if current is not None:
-            item.reopen(into_weeklog=current)
+            item.reopen(into_weeklog=current, by=request.api_user)
     return JsonResponse({"priority_item": serialize_priority_item(item)})
 
 
@@ -348,7 +349,7 @@ def weeklog_carry_priorities(request: HttpRequest, year: int, week: int) -> Json
             {"error": "invalid_field", "detail": "item_ids must be a list of integers"},
             status=400,
         )
-    added = weeklog.add_existing_priority_items(item_ids)
+    added = weeklog.add_existing_priority_items(item_ids, user=request.api_user)
     return JsonResponse({"added": added}, status=201 if added else 200)
 
 

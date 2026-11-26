@@ -406,7 +406,8 @@ def _priority_from(task: PlannerTask, user) -> PriorityItem:
         notes=task.description[:2000],
     )
     last = weeklog.priority_appearances.aggregate(m=models.Max("order"))["m"] or 0
-    PriorityItemAppearance.objects.create(priority_item=item, weeklog=weeklog, order=last + 1)
+    PriorityItemAppearance.objects.create(priority_item=item, weeklog=weeklog, order=last + 1,
+                                          created_by=user)
     return item
 
 
