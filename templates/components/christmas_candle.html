@@ -1,0 +1,57 @@
+{% comment %}
+  Kalenderlys (Christmas theme) — rendered by {% christmas_candle %}
+  (apps/themes/templatetags/christmas.py) right above an on-call card: the
+  sidebar's mini card ("sidebar") or the Kontrolpanel's card ("dash").
+  CSS shows it only while html[data-event="christmas"], and only the copy
+  that sits above the on-call card you can actually see (input.css, "Jul").
+
+  The candle is marked 1–24 from the top and burns down from the top: the
+  body's height is --xc-left (share of the candle left, 0–1) times the full
+  height, and the marks are anchored to the bottom, so the burned numbers
+  disappear over the top edge. The server renders it from local time; the
+  christmas-parade.js script recomputes --xc-left, data-lit and the two
+  text lines every few minutes (candleState, the mirror of
+  apps/themes/candle.py). After 24 December it is burnt down: a stub, no
+  flame, a wisp of smoke.
+{% endcomment %}
+{% if show %}
+<div class="xc-slot xc-slot-{{ variant }}">
+  <div class="xc{% if variant == 'dash' %} card{% endif %}" data-xc data-lit="{{ state.lit|yesno:'1,0' }}" style="--xc-left: {{ remaining }};">
+    <div class="xc-stage" aria-hidden="true">
+      <div class="xc-flame-slot">
+        <span class="xc-glow"></span>
+        <svg class="xc-flame" viewBox="0 0 20 32" width="16" height="26">
+          <path class="xc-flame-outer" d="M10 1 C13 8 18 13 18 20 A8 8 0 0 1 2 20 C2 13 7 9 10 1 Z"/>
+          <path class="xc-flame-inner" d="M10 11 C12 15 14 18 14 22 A4 4 0 0 1 6 22 C6 18 8 15 10 11 Z"/>
+        </svg>
+        <svg class="xc-smoke" viewBox="0 0 20 32" width="16" height="26">
+          <path d="M10 31 C6 26 14 22 10 17 C6 12 14 9 11 3"/>
+        </svg>
+        <span class="xc-wick"></span>
+      </div>
+      <div class="xc-body">
+        <div class="xc-wax">
+          <div class="xc-marks">{% for n in marks %}<span>{{ n }}</span>{% endfor %}</div>
+        </div>
+        <span class="xc-pool"></span>
+        <span class="xc-drip xc-drip-1"></span>
+        <span class="xc-drip xc-drip-2"></span>
+      </div>
+      <svg class="xc-holder" viewBox="0 0 60 18" width="54" height="16">
+        <ellipse class="xc-dish" cx="30" cy="12" rx="27" ry="5"/>
+        <ellipse class="xc-dish-rim" cx="30" cy="10.5" rx="22" ry="3.2"/>
+        <path class="xc-holly" d="M6 9 Q10 3 16 6 Q14 8 16 10 Q11 12 6 9 Z"/>
+        <path class="xc-holly" d="M54 9 Q50 3 44 6 Q46 8 44 10 Q49 12 54 9 Z"/>
+        <circle class="xc-berry" cx="17" cy="10" r="1.9"/>
+        <circle class="xc-berry" cx="19.5" cy="12" r="1.7"/>
+        <circle class="xc-berry" cx="43" cy="10" r="1.9"/>
+      </svg>
+    </div>
+    <div class="xc-text">
+      <div class="label-eyebrow">Kalenderlys</div>
+      <div class="xc-date"><span class="num" data-xc-day>{{ state.day }}</span>. december</div>
+      <div class="xc-caption" data-xc-caption>{{ caption }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}

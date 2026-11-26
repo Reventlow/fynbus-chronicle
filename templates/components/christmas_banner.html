@@ -1,0 +1,51 @@
+{% load theme_messages static %}
+{% comment %}
+  Christmas banner ("Jul") — only shown when the christmas theme is active
+  (1–26 Dec, user pick via the tweaks panel, or ?force-theme=christmas
+  preview). CSS hides it for any other theme so it can render
+  unconditionally.
+
+  Mirrors the other day-theme banners: DB-backed messages cycle every
+  2 minutes, initial pick is random, the JSON list ships in its own
+  <script> tag so straight quotes don't end x-data early.
+
+  The scenes script (nisser, a snowball fight, the Lucia procession, a
+  reindeer, risalamande, a julehjerte, the sleigh) is loaded here too; it
+  checks data-event on <html> before every scene, so it only plays while
+  the theme is actually on. It also keeps the Kontrolpanel's kalenderlys
+  burning (templates/components/christmas_candle.html).
+{% endcomment %}
+<script id="christmas-banner-messages" type="application/json">{% theme_messages_json "christmas" %}</script>
+<div class="christmas-banner" role="note" aria-label="Jul"
+     x-data="{
+       msgs: JSON.parse(document.getElementById('christmas-banner-messages').textContent),
+       idx: 0,
+       fade: false,
+       init() {
+         this.idx = Math.floor(Math.random() * this.msgs.length);
+         setInterval(() => {
+           this.fade = true;
+           setTimeout(() => {
+             this.idx = (this.idx + 1) % this.msgs.length;
+             this.fade = false;
+           }, 220);
+         }, 120000);
+       }
+     }">
+  <div class="christmas-banner-inner">
+    {# A small original fir tree with a star; the colours come from input.css. #}
+    <svg class="christmas-banner-glyph" viewBox="0 0 20 22" width="16" height="18" aria-hidden="true">
+      <path class="cb-tree" d="M10 3 L16 11 H13 L18 18 H2 L7 11 H4 Z"/>
+      <rect class="cb-trunk" x="8.5" y="18" width="3" height="3" rx="0.6"/>
+      <path class="cb-star" d="M10 0 L10.9 2 L13 2.2 L11.4 3.5 L11.9 5.6 L10 4.5 L8.1 5.6 L8.6 3.5 L7 2.2 L9.1 2 Z"/>
+      <circle class="cb-bauble" cx="8" cy="9.5" r="0.9"/>
+      <circle class="cb-bauble" cx="12.5" cy="14.5" r="0.9"/>
+    </svg>
+    <span class="christmas-banner-date">1.–26. dec</span>
+    <span class="christmas-banner-sep" aria-hidden="true">·</span>
+    <span class="christmas-banner-msg"
+          :class="{ 'is-fading': fade }"
+          x-text="msgs[idx]">Glædelig december!</span>
+  </div>
+</div>
+<script src="{% static 'js/christmas-parade.js' %}" defer></script>

@@ -1,3 +1,4 @@
+{% load christmas %}
 {% comment %}
   01 Nu: cases (left) and on-call + the current week (right). Cards the
   user hid are not rendered (section.show, apps/dashboard/layout.py); with
@@ -40,6 +41,11 @@
           the sidebar's card cannot be seen: on phones (no sidebar) and with
           the sidebar collapsed to icons (.dash-oncall, input.css).
         {% endcomment %}
+        {% comment %}
+          Christmas theme: the kalenderlys stands right above the on-call
+          card, and shows exactly when this card does (input.css, "Jul").
+        {% endcomment %}
+        {% christmas_candle "dash" %}
         <div class="dash-oncall" hx-get="{% url 'dashboard:partial-oncall' %}"
              hx-trigger="load, every 60s"
              hx-swap="innerHTML">

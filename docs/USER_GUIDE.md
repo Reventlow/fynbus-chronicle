@@ -589,6 +589,7 @@ administratoren kan tilføje eller flytte datoer under "Administrér skeduler".
 | 19. september og 1. oktober | Pirate Day |
 | 21. september | Verdens Alzheimerdag — lilla, med fakta og henvisninger til Alzheimerforeningen i banneret i stedet for vittigheder |
 | 24. oktober – 1. november | Halloween: græskar-orange, uhyggelige IT-råd i banneret, og indimellem krydser et spøgelse, et græskar, flagermus, et skelet, en zombie, en vampyr eller en varulv skærmen og laver noget fjollet, eller en edderkop firer sig ned fra toppen. Paraden kører ikke, hvis styresystemet er sat til at begrænse animationer |
+| 1.–26. december | Jul: nisserødt på frostblåt (mørk tilstand: en vinternat), stille snefald bag siden og julehygge blandet med IT-råd i banneret. Indimellem kommer en nisse forbi og spreder juleglæde — eller driller lidt (trækker i hjørnet af et kort, hænger en lille nissehue på en overskrift). Børn holder sneboldkamp langs bunden, et rensdyr kigger frem, en nisse kommer med risalamande og mandelgaven, et julehjerte daler ned, og slæden flyver forbi. Luciaoptoget er sjældent, men kommer altid én gang den 13. december (falder den 13. i en weekend, mandagen efter). På kontrolpanelet står et kalenderlys lige over rådighedsvagten: det er brændt ned til dagens dato og smelter langsomt videre i løbet af dagen; efter juleaften er det brændt ud. Ingen animationer, hvis styresystemet er sat til at begrænse dem |
 
 **Read-only Friday.** Hver fredag viser sitet et rødt banner øverst: ingen
 ændringer i produktion i dag — deploys, patches og "lige en lille rettelse"

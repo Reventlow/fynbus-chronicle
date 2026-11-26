@@ -5,7 +5,7 @@
   <html data-sidebar="collapsed"> by base.html so it applies before paint.
   Hidden below 768px; the toolbar's menu button takes over there.
 {% endcomment %}
-{% load static %}
+{% load static christmas %}
 {% url 'dashboard:index' as url_dashboard %}
 {% url 'logbook:weeklog-list' as url_weeklog %}
 {% url 'oncall:calendar' as url_oncall %}
@@ -120,6 +120,9 @@
   </nav>
 
   <div style="flex: 1;"></div>
+
+  {# Christmas theme: the kalenderlys stands above the on-call card, on the Kontrolpanel only. #}
+  {% if app == 'dashboard' and name == 'index' %}{% christmas_candle "sidebar" %}{% endif %}
 
   {# On-call mini card — same data as the dashboard card, polled every minute. #}
   <div class="sidebar-oncall"
