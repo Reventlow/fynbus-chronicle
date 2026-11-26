@@ -2,6 +2,42 @@
 
 All notable changes to FynBus Chronicle are documented here.
 
+## 1.28.0 — 2026-11-26
+
+### Added
+- **Påmindelse om udsendelse af ugelog (forslag #19).** Er sidste uges ugelog ikke sendt, viser kontrolpanelet en
+  gul påmindelse til redaktører. Den siger, hvilken uge det gælder, og linker til ugeloggen (eller til at oprette den).
+  Den viser også, hvem der skal sende den: den, der har rådighedsvagten i den aktuelle uge, med alle vagtperioder ved
+  en delt uge. Endelig viser den, hvem der har meldt klar. Påmindelsen forsvinder af sig selv, når ugeloggen er sendt.
+  - **Ugeloggen viser, om den er sendt:** *Sendt 24. nov 2026 kl. 09:12 af Anna* eller *Ikke sendt*. Afsendelsen
+    registreres automatisk, når ugeloggen sendes som mail fra Chronicle (alle formater, også fra admin).
+  - **Markér som sendt:** en redaktør kan registrere, at en ugelog er sendt uden om Chronicle, fx fra Outlook. Knappen
+    findes på ugeloggen og i påmindelsen. Uger sendt før denne version står som *Ikke sendt*; de er ikke efterregistreret.
+- **Hvem og hvornår på posterne i ugeloggen (forslag #20).** Under hver prioriteret opgave og hver bemanding står nu,
+  hvornår og af hvem den blev tilføjet, fx *Tilføjet 25.11.2026 kl. 08:55 af Mette Hansen*, og *· redigeret …*, hvis
+  den er rettet senere. Det er kun til internt brug på siden og kommer ikke med i mailen eller PDF-, HTML- og
+  Markdown-eksporten.
+  - Chronicle husker, hvem der satte en opgave på ugen eller registrerede en bemanding: fra siden, fra *Fra åbne*, ved
+    genåbning, fra Planner-kort og ServiceDesk-tickets, via API'et og i admin. Ældre poster viser kun tidspunktet.
+  - Opgaver, der blev overført ved indførelsen af ugeforekomster i maj 2026, får deres oprindelige oprettelsestid i
+    stedet for tidspunktet for overførslen.
+- **Jule-tema (forslag #21).** Nyt dagstema *Jul* fra 1. til 26. december, som også kan vælges i tema-panelet. Lyst
+  tema er nisserødt på frostblåt, mørkt tema er varm rød på en vinternat. Der falder stille sne bag siden, og banneret
+  blander julehygge med IT-råd. Forhåndsvis med `?force-theme=christmas`.
+  - **Nisser og julestemning.** Indimellem kommer en nisse forbi og spreder juleglæde med skilt, glimmer eller
+    risalamande med mandelgrisen i hælene. Nissen driller også lidt: trækker i hjørnet af et kort eller hænger en lille
+    nissehue på en overskrift. Børn holder sneboldkamp langs bunden, et rensdyr kigger frem, et flettet julehjerte daler
+    ned, og slæden flyver forbi. Luciaoptoget er sjældent, men kommer altid én gang den 13. december (mandagen efter,
+    når den 13. er en weekend, som i 2026). Alt er egne tegninger, intet fanger musen, og intet bevæger sig, hvis
+    styresystemet begrænser animationer.
+  - **Kalenderlys på kontrolpanelet.** Et kalenderlys med mærkerne 1–24 står lige over rådighedsvagten. Det er brændt
+    ned til dagens dato, smelter langsomt videre i løbet af dagen og flakker let. Efter juleaften er det brændt ud.
+
+### Fixed
+- **Fejlbeskeden nederst i hjørnet blev en hel kolonne under dagstemaer.** Under alle dagstemaer (jul, halloween,
+  Star Wars …) faldt den røde fejlboks ind i siden som en høj kolonne ved siden af indholdet i stedet for at ligge i
+  hjørnet. Den bliver nu i hjørnet.
+
 ## 1.27.1 — 2026-11-22
 
 ### Added

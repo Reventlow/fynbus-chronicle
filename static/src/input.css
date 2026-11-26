@@ -846,6 +846,12 @@ html[data-event="halloween"] .halloween-banner {
    content above its pattern; the actor is a child of <body> too, so win
    that back explicitly or it lands at the top of the page. */
 html body > .hw-actor { position: fixed; z-index: 70; }
+/* Same for the HTMX error toast (#htmx-error-toast, a direct child of <body>):
+   its layered `.error-toast { position: fixed }` loses to the unlayered theme
+   rule, so under any day-theme it fell into the page flow as a full-height
+   column beside the content (seen with the 1.28.0 Christmas theme). The id
+   outranks every skin's `body > *` rule, wherever that skin sits in the file. */
+html body > #htmx-error-toast { position: fixed; z-index: 60; }
 .hw-actor.hw-pause { animation-name: hw-cross-pause; }
 .hw-actor.hw-rtl   { animation-name: hw-cross-rtl; }
 .hw-ground { bottom: 8px; }
