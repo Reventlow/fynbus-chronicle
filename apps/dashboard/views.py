@@ -27,7 +27,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
-from apps.accounts.permissions import editor_required
+from apps.accounts.permissions import editor_required, is_editor
 from apps.cves.models import CVECase
 from apps.logbook.models import HelpdeskTicket, Incident, WeekLog
 from apps.oncall.models import OnCallDuty, OnCallSegment, current_watch
@@ -42,6 +42,7 @@ from .overview import (
     headline_delta,
     open_ticket_lists,
     sync_state,
+    weeklog_send_reminder,
 )
 
 # Documentation configuration
@@ -107,6 +108,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         interval = getattr(settings, "SERVICEDESK_SYNC_INTERVAL", 300)
         context["sync_minutes"] = str(max(1, round(interval / 60)))
         context["latest_change"] = _read_latest_changelog_entry()
+        context["reminder"] = reminder_for(self.request.user)
         layout = layout_for(self.request.user)
         context["layout"] = layout
         context["empty_in"] = empty_in(layout)
@@ -175,6 +177,28 @@ def headline_context() -> dict:
         ).count()
     context["sync"] = sync_state()
     return context
+
+
+def reminder_for(user) -> dict | None:
+    """The "send last week's log" reminder (FR #19), for editors only.
+
+    Viewers cannot send or mark a week log, so the reminder would only be
+    noise for them. Not part of the "Tilpas" layout: a reminder that can be
+    hidden is easy to miss, and it disappears by itself once the log is sent.
+    """
+    return weeklog_send_reminder() if is_editor(user) else None
+
+
+class WeekLogReminderPartialView(LoginRequiredMixin, TemplateView):
+    """HTMX partial: the reminder, re-fetched every few minutes so it goes
+    away (outerHTML swap with an empty body) once someone sends the log."""
+
+    template_name = "dashboard/partials/weeklog_reminder.html"
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["reminder"] = reminder_for(self.request.user)
+        return context
 
 
 class HeadlinePartialView(LoginRequiredMixin, TemplateView):

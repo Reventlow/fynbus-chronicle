@@ -1,6 +1,7 @@
 """
 Helpers behind the v3 Kontrolpanel: the headline sentence, sync freshness,
-the "Åbne tickets" bento, the CVE card and the changelog strip.
+the "Åbne tickets" bento, the CVE card, the changelog strip and the
+reminder to send last week's log.
 
 Kept free of request handling so the views stay thin and the wording
 rules can be tested on their own.
@@ -16,6 +17,7 @@ from django.utils import timezone
 
 from apps.cves.models import CVE, CVECase
 from apps.logbook.models import HelpdeskTicket, WeekLog
+from apps.oncall.models import OnCallDuty, OnCallSegment
 
 # Danish words for small counts, as the headline spells them out ("fire færre").
 _NUMBER_WORDS = {1: "én", 2: "to", 3: "tre", 4: "fire", 5: "fem", 6: "seks",
@@ -217,4 +219,59 @@ def cve_overview(days: int = 30, limit: int = 8, case_limit: int = 6) -> dict:
             state=CVE.State.SOLVED, solved_at__gte=cutoff
         ).count(),
         "window_days": days,
+    }
+
+
+def _reminder_sender(year: int, week: int, now: datetime) -> dict:
+    """Who should send last week's log: the rådighedsvagt of the current week.
+
+    A split week (mid-week handover, FR #5) names the holder covering
+    ``now`` (in a coverage gap: the week's first holder) and lists every
+    holder with their days in ``split``. Weeks without coverage segments
+    (data from before the segments existed) fall back to the base
+    assignee of ``OnCallDuty``. ``sender`` is None when nobody has the
+    week.
+    """
+    segments = list(OnCallSegment.for_week(year, week))
+    if segments:
+        covering = next((s for s in segments if s.start_at <= now < s.end_at), None)
+        sender = (covering or segments[0]).user
+        split = segments if len({s.user_id for s in segments}) > 1 else []
+        return {"sender": sender, "split": split}
+    duty = OnCallDuty.get_for_week(year, week)
+    return {"sender": duty.user if duty else None, "split": []}
+
+
+def weeklog_send_reminder(now: datetime | None = None) -> dict | None:
+    """The Kontrolpanel's "last week's log is not sent" reminder (FR #19).
+
+    Looks at the ISO week before ``now``. Returns None once that week's log
+    has been sent (or marked as sent); otherwise a dict with:
+
+    * ``year`` / ``week``: the week whose log is due;
+    * ``weeklog``: that log, or None when it was never created;
+    * ``signoffs``: its klarmeldinger, oldest first (empty without a log);
+    * ``sender`` / ``split``: who should send it, see ``_reminder_sender``;
+    * ``oncall_week``: the current week, whose rådighedsvagt sends.
+
+    Chronicle has no team roster, so the overview lists who has meldt
+    klar, not who is still missing.
+    """
+    now = now or timezone.now()
+    today = timezone.localdate(now)
+    year, week = WeekLog.previous_iso_week(today)
+    weeklog = WeekLog.objects.filter(year=year, week_number=week).first()
+    if weeklog is not None and weeklog.is_emailed:
+        return None
+    current = today.isocalendar()
+    signoffs = (
+        list(weeklog.signoffs.select_related("user").order_by("created_at")) if weeklog else []
+    )
+    return {
+        "year": year,
+        "week": week,
+        "weeklog": weeklog,
+        "signoffs": signoffs,
+        "oncall_week": current.week,
+        **_reminder_sender(current.year, current.week, now),
     }

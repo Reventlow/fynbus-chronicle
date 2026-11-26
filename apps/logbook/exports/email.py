@@ -8,6 +8,7 @@ import base64
 from email.mime.image import MIMEImage
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
@@ -101,15 +102,23 @@ def email_summary(subject: str, format: str, pdf_filename: str, from_email: str 
 
 
 def send_weeklog_email(
-    weeklog: WeekLog, format: str = "both", from_email: str | None = None
+    weeklog: WeekLog,
+    format: str = "both",
+    from_email: str | None = None,
+    sent_by: User | None = None,
 ) -> tuple[bool, str]:
     """
     Send a week log report via email.
+
+    A successful send, in any format, is recorded on the week log
+    (``emailed_at`` / ``emailed_by``, FR #19) so the Kontrolpanel can stop
+    reminding about it. A failed send records nothing.
 
     Args:
         weeklog: The WeekLog instance to send.
         format: Email format - "html", "pdf", or "both".
         from_email: Sender address. Falls back to DEFAULT_FROM_EMAIL.
+        sent_by: The user who sent it, recorded as ``emailed_by``.
 
     Returns:
         Tuple of (success: bool, message: str).
@@ -208,6 +217,7 @@ def send_weeklog_email(
     # Send email
     try:
         email.send(fail_silently=False)
-        return True, f"Email ({FORMAT_LABELS[format]}) sendt til {len(recipients)} modtager(e)."
     except Exception as e:
         return False, f"Fejl ved afsendelse af email: {e}"
+    weeklog.mark_emailed(sent_by)
+    return True, f"Email ({FORMAT_LABELS[format]}) sendt til {len(recipients)} modtager(e)."

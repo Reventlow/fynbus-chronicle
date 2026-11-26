@@ -8,6 +8,8 @@ These models track weekly IT activities including:
 - Security/system incidents
 """
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -165,6 +167,26 @@ class WeekLog(models.Model):
         help_text="Referat af mandagsmødet",
     )
 
+    # Sending (FR #19): when the report last went out by email, and who
+    # sent it. Set by send_weeklog_email on a successful send (any format)
+    # and by the "Markér som sendt" action for a report sent outside
+    # Chronicle. Empty for weeks sent before these fields existed: nothing
+    # recorded those sends, and they are deliberately not backfilled.
+    emailed_at = models.DateTimeField(
+        verbose_name="Sendt",
+        null=True,
+        blank=True,
+        help_text="Hvornår ugelogen sidst blev sendt som email",
+    )
+    emailed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="weeklogs_emailed",
+        verbose_name="Sendt af",
+    )
+
     # Metadata
     created_by = models.ForeignKey(
         User,
@@ -236,6 +258,33 @@ class WeekLog(models.Model):
             defaults={"created_by": user},
         )
         return weeklog
+
+    @classmethod
+    def previous_iso_week(cls, today=None) -> tuple[int, int]:
+        """(ISO year, ISO week) of the week before ``today`` (local date).
+
+        Going back seven days rather than subtracting one from the week
+        number keeps the year boundary right (week 1 → week 52/53).
+        """
+        today = today or timezone.localdate()
+        iso = (today - timedelta(days=7)).isocalendar()
+        return iso.year, iso.week
+
+    @property
+    def is_emailed(self) -> bool:
+        """True once the report has been sent (or marked as sent)."""
+        return self.emailed_at is not None
+
+    def mark_emailed(self, user: User | None = None) -> None:
+        """Record that the report went out now, sent by ``user``.
+
+        A later send overwrites the earlier one, so the page always shows
+        the latest send. Only the two sending fields are written: sending
+        changes nothing in the report, so "Sidst opdateret" stays put.
+        """
+        self.emailed_at = timezone.now()
+        self.emailed_by = user if user is not None and user.is_authenticated else None
+        self.save(update_fields=["emailed_at", "emailed_by"])
 
     @property
     def week_label(self) -> str:

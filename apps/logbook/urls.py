@@ -32,6 +32,12 @@ urlpatterns = [
         views.weeklog_signoff_toggle,
         name="weeklog-signoff-toggle",
     ),
+    # "Markér som sendt" for a report mailed outside Chronicle (FR #19)
+    path(
+        "<int:year>/<int:week>/mark-sent/",
+        views.weeklog_mark_emailed,
+        name="weeklog-mark-emailed",
+    ),
     # HTMX partials for meeting minutes
     path(
         "<int:pk>/meeting/edit/",

@@ -148,7 +148,7 @@ class WeekLogAdmin(admin.ModelAdmin):
         (
             "Metadata",
             {
-                "fields": ["created_by", "created_at", "updated_at"],
+                "fields": ["created_by", "created_at", "updated_at", ("emailed_at", "emailed_by")],
                 "classes": ["collapse"],
             },
         ),
@@ -254,7 +254,7 @@ class WeekLogAdmin(admin.ModelAdmin):
         """Send selected week logs via email."""
         for weeklog in queryset:
             success, message = send_weeklog_email(
-                weeklog, from_email=request.user.email
+                weeklog, from_email=request.user.email, sent_by=request.user
             )
             level = "success" if success else "error"
             self.message_user(request, f"{weeklog.week_label}: {message}", level)

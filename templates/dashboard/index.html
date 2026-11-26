@@ -76,6 +76,9 @@
     </div>
   </div>
 
+  {# Last week's log not sent yet (FR #19): editors only, never hidden by "Tilpas". #}
+  {% include 'dashboard/partials/weeklog_reminder.html' %}
+
   {% comment %}
     The sections in the user's own order (apps/dashboard/layout.py); hidden
     ones are not rendered. Density modes still act on whole sections:

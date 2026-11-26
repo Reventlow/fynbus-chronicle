@@ -32,6 +32,7 @@
         {% endif %}
         <span>Sidst opdateret <span class="num" style="color: var(--ink-2);">{{ weeklog.updated_at|date:"j. M Y · H:i" }}</span></span>
         <span class="pill pill-accent">Publiceret</span>
+        {% include 'logbook/partials/send_status.html' %}
       </div>
     </div>
     {% if is_editor %}

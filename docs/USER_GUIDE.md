@@ -99,6 +99,12 @@ Overskriften siger, hvor mange tickets der er åbne i ServiceDesk, og om det er 
 
 Stopper synkroniseringen med ServiceDesk, skifter linjen til **"Synk med ServiceDesk fejlede"**, overskriften siger hvor gamle tallene er, og nøgletallene markeres **forældet**. Knappen **Prøv igen** starter en synkronisering med det samme.
 
+### Påmindelse om ugelog
+
+Er sidste uges ugelog ikke sendt, viser kontrolpanelet en gul påmindelse under overskriften (kun for redaktører). Den siger hvilken uge det gælder, linker til ugeloggen (eller til at oprette den, hvis den mangler), og hvem der skal sende den: den der har **rådighedsvagten i den aktuelle uge**. Er ugen delt, nævnes den der har vagten lige nu, og alle vagtperioder står under. Kortet viser også, hvem der har meldt klar på ugeloggen.
+
+Påmindelsen forsvinder, så snart ugeloggen er sendt som email fra Chronicle. Er den sendt på anden vis (fx fra Outlook), så klik **Markér som sendt**. Påmindelsen kan ikke skjules under *Tilpas*.
+
 ### Nøgletal
 
 Fire kort: åbne tickets, nye og lukkede tickets i ugen og nettoændringen. Pilen på *Åbne tickets* starter en synkronisering.
@@ -162,6 +168,8 @@ Densitet virker oven på din egen opsætning. Under tandhjulet → **Densitet**:
 Adressen på en ugelog er `/logbook/<år>/<uge>/` — fx <https://chronicle.fynbus.net/logbook/2026/34/>. Ældre links med et id (`/logbook/39/`) sender dig videre til den rigtige uge.
 
 Øverst står ugens helpdesk-tal med forrige uges tal under hvert. Derunder: klarmelding, sammendrag, mødereferat, prioriterede opgaver (*N åbne af M*), fravær og hændelser (*N denne uge · M kritisk*).
+
+Linjen under overskriften viser, om ugeloggen er sendt: **Sendt 24. nov 2026 kl. 09:12 af Anna** (seneste afsendelse) eller **Ikke sendt**. Afsendelsen registreres, når ugeloggen sendes som email fra *Eksportér* (alle formater). Er den sendt uden om Chronicle, kan en redaktør klikke **Markér som sendt**. Uger sendt før funktionen kom, står som *Ikke sendt*.
 
 ### Klarmelding — "ikke mere at tilføje"
 

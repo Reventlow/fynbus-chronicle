@@ -105,7 +105,7 @@ def test_post_sends_with_posted_format_and_redirects(send, client, editor, weekl
 
     assert response.status_code == 302
     assert response["Location"] == weeklog.get_absolute_url()
-    send.assert_called_once_with(weeklog, format="pdf", from_email="gre@fynbus.dk")
+    send.assert_called_once_with(weeklog, format="pdf", from_email="gre@fynbus.dk", sent_by=editor)
 
 
 @patch("apps.logbook.views.send_weeklog_email", return_value=(False, "Fejl ved afsendelse af email: boom"))
