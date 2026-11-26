@@ -205,7 +205,7 @@
     </div>
 
     <div id="absences-list">
-      {% for absence in weeklog.absences.all %}
+      {% for absence in absences %}
         {% include 'logbook/partials/absence_row.html' %}
       {% empty %}
         <p style="text-align: center; color: var(--ink-4); padding: 24px;" id="no-absences">

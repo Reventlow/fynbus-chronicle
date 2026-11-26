@@ -219,6 +219,21 @@ class WeekLogAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
 
+    def save_formset(self, request: HttpRequest, form, formset, change: bool) -> None:
+        """Stamp entries added through the inlines with the admin user.
+
+        Appearances and absences carry ``created_by`` for the week log
+        page's "Tilføjet … af …" line; existing rows keep theirs.
+        """
+        instances = formset.save(commit=False)
+        for obj in instances:
+            if obj.pk is None and isinstance(obj, (PriorityItemAppearance, Absence)):
+                obj.created_by = request.user
+            obj.save()
+        for obj in formset.deleted_objects:
+            obj.delete()
+        formset.save_m2m()
+
     @admin.action(description="Eksporter valgte ugelogs som PDF")
     def export_pdf(self, request: HttpRequest, queryset) -> HttpResponse:
         """Export selected week logs as PDF."""
@@ -289,21 +304,35 @@ class PriorityItemAdmin(admin.ModelAdmin):
 class PriorityItemAppearanceAdmin(admin.ModelAdmin):
     """Per-week appearance rows — useful for spot-checking history."""
 
-    list_display = ["priority_item", "weeklog", "order", "updated_at"]
+    list_display = ["priority_item", "weeklog", "order", "created_by", "updated_at"]
     list_filter = ["weeklog__year"]
     search_fields = ["priority_item__title", "description"]
     ordering = ["-weeklog__year", "-weeklog__week_number", "order"]
     autocomplete_fields = ["priority_item", "weeklog"]
+    readonly_fields = ["created_by", "created_at", "updated_at"]
+
+    def save_model(self, request: HttpRequest, obj, form, change: bool) -> None:
+        """Set created_by on new appearances."""
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Absence)
 class AbsenceAdmin(admin.ModelAdmin):
     """Admin for viewing all absences."""
 
-    list_display = ["staff_name", "absence_type", "start_date", "end_date", "weeklog"]
+    list_display = ["staff_name", "absence_type", "start_date", "end_date", "weeklog", "created_by"]
     list_filter = ["absence_type", "weeklog__year"]
     search_fields = ["staff_name", "notes"]
     date_hierarchy = "start_date"
+    readonly_fields = ["created_by", "created_at", "updated_at"]
+
+    def save_model(self, request: HttpRequest, obj, form, change: bool) -> None:
+        """Set created_by on new absences."""
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Incident)

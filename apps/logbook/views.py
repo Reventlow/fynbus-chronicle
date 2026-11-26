@@ -154,7 +154,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["absence_form"] = AbsenceForm()
         context["incident_form"] = IncidentForm()
         appearances = list(
-            self.object.priority_appearances.select_related("priority_item")
+            self.object.priority_appearances.select_related("priority_item", "created_by")
             .prefetch_related("priority_item__planner_links", "priority_item__ticket_links", "priority_item__course_links__folder", "priority_item__course_links__material__folder")
             .filter(priority_item__deleted_at__isnull=True)
             .order_by("order", "id")
@@ -164,6 +164,7 @@ class WeekLogDetailView(LoginRequiredMixin, DetailView):
         context["task_total"] = len(appearances)
         context["task_done"] = done
         context["task_open"] = len(appearances) - done
+        context["absences"] = self.object.absences.select_related("created_by")
         incidents = list(self.object.incidents.all())
         context["incidents"] = incidents
         context["incident_critical"] = sum(1 for i in incidents if i.severity == "critical")
@@ -274,13 +275,14 @@ def weeklog_legacy_edit_redirect(request: HttpRequest, pk: int) -> HttpResponse:
 # =============================================================================
 
 
-def save_task_form(form) -> PriorityItem:
+def save_task_form(form, user=None) -> PriorityItem:
     """Save a form bound to a ``PriorityItem`` the way every edit does.
 
     Shared by the weeklog row form and the history page, so a status
     change means the same in both places: the task is marked active
     (``last_active_at``), and going from completed to anything else
-    reopens it, which also puts it on the current ISO week.
+    reopens it, which also puts it on the current ISO week (with
+    ``user`` as the one who added it there).
     """
     item = form.save(commit=False)
     was_completed = (
@@ -294,7 +296,7 @@ def save_task_form(form) -> PriorityItem:
     if was_completed and item.status != PriorityItem.Status.COMPLETED:
         # Reopen even when this week has no weeklog yet (as the ↺ button
         # does): otherwise auto_closed/closed_at would stay set on an open task.
-        item.reopen(into_weeklog=WeekLog.get_current_week())
+        item.reopen(into_weeklog=WeekLog.get_current_week(), by=user)
     return item
 
 
@@ -326,6 +328,7 @@ class PriorityItemCreateView(EditorRequiredMixin, CreateView):
             weeklog=weeklog,
             description=form.cleaned_data.get("description", "") or "",
             order=max_order + 1,
+            created_by=self.request.user,
         )
 
         from django.template.loader import render_to_string
@@ -385,7 +388,7 @@ class PriorityItemUpdateView(EditorRequiredMixin, UpdateView):
         # This week's description lives on the appearance, the rest on the task.
         self._appearance.description = form.cleaned_data.get("description", "") or ""
         self._appearance.save(update_fields=["description", "updated_at"])
-        item = save_task_form(form)
+        item = save_task_form(form, self.request.user)
 
         from django.template.response import TemplateResponse
 
@@ -549,7 +552,7 @@ def priority_item_task_edit(request: HttpRequest, pk: int) -> HttpResponse:
     was_completed = item.status == PriorityItem.Status.COMPLETED
     form = PriorityItemTaskForm(request.POST or None, instance=item)
     if request.method == "POST" and form.is_valid():
-        save_task_form(form)
+        save_task_form(form, request.user)
         messages.success(request, f"”{item.title}” er gemt.")
         response = HttpResponse(status=204)
         response["HX-Refresh"] = "true"
@@ -651,7 +654,7 @@ def priority_item_reopen(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("logbook:priority-item-history", pk=item.pk)
 
     current = WeekLog.get_current_week()
-    item.reopen(into_weeklog=current)
+    item.reopen(into_weeklog=current, by=request.user)
 
     if current is not None:
         messages.success(
@@ -788,7 +791,7 @@ def weeklog_add_existing_post(request: HttpRequest, pk: int) -> HttpResponse:
         ids = [int(i) for i in item_ids]
     except ValueError:
         ids = []
-    added = weeklog.add_existing_priority_items(ids)
+    added = weeklog.add_existing_priority_items(ids, user=request.user)
     if added:
         messages.success(
             request,
@@ -815,6 +818,7 @@ class AbsenceCreateView(EditorRequiredMixin, CreateView):
         """Set weeklog and return row partial plus OOB to close form."""
         weeklog_id = self.request.GET.get("weeklog")
         form.instance.weeklog_id = weeklog_id
+        form.instance.created_by = self.request.user
         self.object = form.save()
 
         from django.template.loader import render_to_string

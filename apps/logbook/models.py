@@ -18,6 +18,31 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+class EntryMetaMixin:
+    """Who added a week-log entry, and whether it was edited afterwards.
+
+    Mixed into the entries a user adds on the week log page (priority
+    appearances, absences) so the page can print a discreet "Tilføjet …
+    af …" line under each one. Internal only: the exports (mail, PDF,
+    HTML, Markdown) never show it. Expects ``created_at`` and
+    ``updated_at`` on the model; ``created_by`` may be NULL for rows from
+    before it existed and for rows the system created on its own.
+    """
+
+    #: ``updated_at`` must be at least this far past ``created_at`` before
+    #: the entry counts as edited; the create path itself can touch the
+    #: row a moment after it was made.
+    EDITED_AFTER = timedelta(minutes=1)
+
+    @property
+    def edited_at(self):
+        """When the entry was last edited, or None if it never clearly was."""
+        created, updated = self.created_at, getattr(self, "updated_at", None)
+        if created and updated and updated - created >= self.EDITED_AFTER:
+            return updated
+        return None
+
+
 class WeekLog(models.Model):
     """
     Represents a weekly IT log entry.
@@ -427,10 +452,13 @@ class WeekLog(models.Model):
             item.auto_close()
         return len(stale)
 
-    def add_existing_priority_items(self, item_ids) -> int:
+    def add_existing_priority_items(self, item_ids, *, user: User | None = None) -> int:
         """Carry the given priority items into this weeklog by creating
         appearance rows for any that aren't already present. Bumps each
         item's ``last_active_at`` so the auto-close clock resets.
+
+        ``user`` is the person who picked the tasks; it is stored as the
+        new appearances' ``created_by``.
 
         Returns the number of appearances actually created.
         """
@@ -452,6 +480,7 @@ class WeekLog(models.Model):
                 priority_item=item,
                 weeklog=self,
                 order=next_order,
+                created_by=user,
             )
             next_order += 1
             added += 1
@@ -733,13 +762,17 @@ class PriorityItem(models.Model):
             self.deleted_at = timezone.now()
             self.save(update_fields=["merged_into", "deleted_at", "updated_at"])
 
-    def reopen(self, *, into_weeklog: WeekLog | None = None) -> None:
+    def reopen(
+        self, *, into_weeklog: WeekLog | None = None, by: User | None = None
+    ) -> None:
         """Flip the item back to ongoing and bump last_active_at.
 
         If ``into_weeklog`` is supplied, an appearance for that week is
         created (if it doesn't already exist) so the item shows up there
         immediately. Used by the "toggle open" UX which automatically
-        adds reopened tasks to the current week.
+        adds reopened tasks to the current week. ``by`` is the user who
+        reopened it, stored as that new appearance's ``created_by``
+        (None when the system reopens it, e.g. a Planner sync).
         """
         self.status = self.Status.ONGOING
         self.auto_closed = False
@@ -752,16 +785,17 @@ class PriorityItem(models.Model):
             PriorityItemAppearance.objects.get_or_create(
                 priority_item=self,
                 weeklog=into_weeklog,
+                defaults={"created_by": by},
             )
 
 
-class PriorityItemAppearance(models.Model):
+class PriorityItemAppearance(EntryMetaMixin, models.Model):
     """A priority task's appearance in a single weekly log.
 
     Carries the per-week description and the per-week display order.
-    One row per (task, weeklog) pair. Auto-created by the carry-over
-    flow when a current weeklog is opened, or explicitly by the user
-    when they add a task on a given week.
+    One row per (task, weeklog) pair. Created when a user adds a task on
+    a given week (new, from the open tasks, from Planner or ServiceDesk,
+    or by reopening it), or through the API. ``created_by`` records who.
     """
 
     priority_item = models.ForeignKey(
@@ -785,6 +819,15 @@ class PriorityItemAppearance(models.Model):
     order = models.PositiveIntegerField(
         verbose_name="Rækkefølge",
         default=0,
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="priority_appearances_added",
+        verbose_name="Tilføjet af",
+        help_text="Brugeren der satte opgaven på ugen. NULL for ældre rækker og for rækker systemet selv har lavet.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -839,7 +882,7 @@ class WeekLogSignoff(models.Model):
         return f"{self.user.username} klar @ {self.weeklog.week_label}"
 
 
-class Absence(models.Model):
+class Absence(EntryMetaMixin, models.Model):
     """
     Tracks staff absences for IT planning purposes.
 
@@ -883,7 +926,17 @@ class Absence(models.Model):
         max_length=200,
         blank=True,
     )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="absences_added",
+        verbose_name="Tilføjet af",
+        help_text="Brugeren der registrerede fraværet. NULL for ældre rækker.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Bemanding"

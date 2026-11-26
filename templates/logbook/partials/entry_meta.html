@@ -1,0 +1,8 @@
+{% comment %}
+  "Tilføjet 25.11.2026 kl. 08:55 af Navn" under a week-log entry (forslag #20),
+  plus "· redigeret …" when it was clearly edited later. Internal only: the
+  exports (mail, PDF, HTML, Markdown) have their own templates and must never
+  include this partial. Times render in TIME_ZONE (Europe/Copenhagen).
+  Context: `entry`, a PriorityItemAppearance or Absence (EntryMetaMixin).
+{% endcomment %}
+<div class="entry-meta" style="margin-top: 4px; font-size: 11.5px; line-height: 1.45; color: var(--ink-4);">Tilføjet <span class="num">{{ entry.created_at|date:"d.m.Y \k\l. H:i" }}</span>{% if entry.created_by %} af {{ entry.created_by.get_full_name|default:entry.created_by.username }}{% endif %}{% with edited=entry.edited_at %}{% if edited %} · redigeret <span class="num">{{ edited|date:"d.m.Y \k\l. H:i" }}</span>{% endif %}{% endwith %}</div>

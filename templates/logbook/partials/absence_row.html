@@ -17,6 +17,7 @@
     {% if absence.notes %}
       <div class="linkified" style="font-size: 12px; color: var(--ink-4); margin-top: 2px;">{{ absence.notes|urlize }}</div>
     {% endif %}
+    {% include 'logbook/partials/entry_meta.html' with entry=absence %}
   </div>
 
   <span class="pill pill-info">{{ absence.get_absence_type_display }}</span>

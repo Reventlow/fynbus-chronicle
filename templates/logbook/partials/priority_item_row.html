@@ -85,6 +85,7 @@
       {% endcomment %}
       <p class="linkified" style="margin: 4px 0 0; font-size: 12px; color: var(--ink-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.notes|urlize }}</p>
     {% endif %}
+    {% include 'logbook/partials/entry_meta.html' with entry=appearance %}
   </div>
 
   <span class="pill {% if item.priority == 'high' %}pill-bad{% elif item.priority == 'medium' %}pill-warn{% else %}pill-neutral{% endif %}" style="margin-top: 1px;">
